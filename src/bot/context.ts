@@ -5,13 +5,7 @@ import type { HydrateFlavor } from "@grammyjs/hydrate";
 import type { I18nFlavor } from "@grammyjs/i18n";
 import type { ParseModeFlavor } from "@grammyjs/parse-mode";
 import type { Logger } from "#root/logger.js";
-
-export type SessionData = {
-  name?: string;
-  description?: string;
-  image?: string;
-  minted?: boolean;
-};
+import { User } from "#root/bot/models/user.js";
 
 type ExtendedContextFlavor = {
   logger: Logger;
@@ -21,7 +15,7 @@ export type Context = ParseModeFlavor<
   HydrateFlavor<
     DefaultContext &
       ExtendedContextFlavor &
-      SessionFlavor<SessionData> &
+      SessionFlavor<User> &
       I18nFlavor &
       AutoChatActionFlavor
   >

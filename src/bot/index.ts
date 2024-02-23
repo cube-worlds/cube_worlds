@@ -2,26 +2,23 @@ import { autoChatAction } from "@grammyjs/auto-chat-action";
 import { hydrate } from "@grammyjs/hydrate";
 import { hydrateReply, parseMode } from "@grammyjs/parse-mode";
 import { BotConfig, StorageAdapter, Bot as TelegramBot, session } from "grammy";
-import {
-  Context,
-  SessionData,
-  createContextConstructor,
-} from "#root/bot/context.js";
+import { Context, createContextConstructor } from "#root/bot/context.js";
 import {
   adminFeature,
   languageFeature,
   unhandledFeature,
-  welcomeFeature,
-  startFeature,
+  resetFeature,
+  mintFeature,
 } from "#root/bot/features/index.js";
 import { errorHandler } from "#root/bot/handlers/index.js";
 import { i18n, isMultipleLocales } from "#root/bot/i18n.js";
 import { updateLogger } from "#root/bot/middlewares/index.js";
 import { config } from "#root/config.js";
 import { logger } from "#root/logger.js";
+import { User } from "#root/bot/models/user.js";
 
 type Options = {
-  sessionStorage?: StorageAdapter<SessionData>;
+  sessionStorage?: StorageAdapter<User>;
   config?: Omit<BotConfig<Context>, "ContextConstructor">;
 };
 
@@ -52,9 +49,9 @@ export function createBot(token: string, options: Options = {}) {
   protectedBot.use(i18n);
 
   // Handlers
-  protectedBot.use(startFeature);
+  protectedBot.use(mintFeature);
   protectedBot.use(languageFeature);
-  protectedBot.use(welcomeFeature);
+  protectedBot.use(resetFeature);
   protectedBot.use(adminFeature);
 
   if (isMultipleLocales) {

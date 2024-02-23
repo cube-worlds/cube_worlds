@@ -5,7 +5,7 @@ language_command =
 setcommands_command =
     .description = Set bot commands
 
-welcome = Welcome!
+reset = State was reseted. Press /start
 language = 
     .select = Please, select your language
     .changed = Language successfully changed!
