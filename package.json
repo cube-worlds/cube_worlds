@@ -1,7 +1,7 @@
 {
-  "name": "telegram-bot-template",
+  "name": "real-nft-bot",
   "version": "0.1.0",
-  "description": "Telegram bot starter template",
+  "description": "Telegram bot for NFT",
   "type": "module",
   "imports": {
     "#root/*": "./build/src/*"
