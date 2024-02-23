@@ -7,7 +7,10 @@ import type { ParseModeFlavor } from "@grammyjs/parse-mode";
 import type { Logger } from "#root/logger.js";
 
 export type SessionData = {
-  // field?: string;
+  name?: string;
+  description?: string;
+  image?: string;
+  minted?: boolean;
 };
 
 type ExtendedContextFlavor = {

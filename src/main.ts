@@ -5,9 +5,15 @@ import { createBot } from "#root/bot/index.js";
 import { config } from "#root/config.js";
 import { logger } from "#root/logger.js";
 import { createServer } from "#root/server/index.js";
+import mongoose from "mongoose";
+import { MongoDBAdapter, ISession } from "@grammyjs/storage-mongodb";
+import { SessionData } from "./bot/context.js";
 
 try {
-  const bot = createBot(config.BOT_TOKEN);
+  await mongoose.connect(config.MONGO);
+  const collection = mongoose.connection.db.collection<ISession>("users");
+  const storage = new MongoDBAdapter<SessionData>({ collection });
+  const bot = createBot(config.BOT_TOKEN, { sessionStorage: storage });
   const server = await createServer(bot);
 
   // Graceful shutdown

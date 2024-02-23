@@ -23,6 +23,7 @@ const createConfigFromEnvironment = (environment: NodeJS.ProcessEnv) => {
     BOT_ALLOWED_UPDATES: z
       .array(z.enum(API_CONSTANTS.ALL_UPDATE_TYPES))
       .default([]),
+    MONGO: z.string(),
     BOT_ADMINS: z.array(z.number()).default([]),
   });
 

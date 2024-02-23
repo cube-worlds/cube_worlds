@@ -85,7 +85,6 @@ feature.callbackQuery(
       }
       case SelectImageButton.Done: {
         await ctx.editMessageReplyMarkup({});
-        // await ctx.react("🎉");
         break;
       }
       default: {
