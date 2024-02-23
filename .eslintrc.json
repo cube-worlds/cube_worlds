@@ -11,17 +11,13 @@
   ],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
-    "project": [
-      "tsconfig.json"
-    ]
+    "project": ["tsconfig.json"]
   },
-  "plugins": [
-    "@typescript-eslint",
-    "prettier",
-    "unicorn",
-    "import"
-  ],
+  "plugins": ["@typescript-eslint", "prettier", "unicorn", "import"],
   "rules": {
+    // Note: you must disable the base rule as it can report incorrect errors
+    "no-shadow": "off",
+    "@typescript-eslint/no-shadow": "warn",
     "@typescript-eslint/no-unused-vars": [
       "error",
       {
