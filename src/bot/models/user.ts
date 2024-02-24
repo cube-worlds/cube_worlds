@@ -11,5 +11,7 @@ export type User = {
   name?: string;
   description?: string;
   image?: string;
+  wallet?: string;
+  votes?: number;
   minted?: boolean;
 };
