@@ -1,7 +1,7 @@
 import { Composer } from "grammy";
 import type { Context } from "#root/bot/context.js";
 import { logHandle } from "#root/bot/helpers/logging.js";
-// import { config } from "#root/config.js";
+import { config } from "#root/config.js";
 import { changeImageData } from "../callback-data/image-selection.js";
 import {
   SelectImageButton,
@@ -27,6 +27,15 @@ feature.command("mint", logHandle("command-mint"), async (ctx) => {
     case UserState.WaitName: {
       break;
     }
+    case UserState.Submited: {
+      ctx.reply(
+        ctx.t("speedup", {
+          inviteLink: `https://t.me/${ctx.me.username}?start=${ctx.chat.id}`,
+          collectionAddress: config.COLLECTION_ADDRESS,
+        }),
+      );
+      break;
+    }
     // default = UserState.WaitImage:
     default: {
       sendPhoto(ctx);
@@ -50,7 +59,14 @@ feature.callbackQuery(
         break;
       }
       case SelectImageButton.Done: {
-        await ctx.editMessageReplyMarkup({});
+        ctx.session.state = UserState.Submited;
+        ctx.editMessageReplyMarkup({});
+        ctx.reply(
+          ctx.t("speedup", {
+            inviteLink: `https://t.me/${ctx.me.username}?start=${ctx.chat.id}`,
+            collectionAddress: config.COLLECTION_ADDRESS,
+          }),
+        );
         break;
       }
       default: {

@@ -25,6 +25,7 @@ const createConfigFromEnvironment = (environment: NodeJS.ProcessEnv) => {
       .default([]),
     MONGO: z.string(),
     BOT_ADMINS: z.array(z.number()).default([]),
+    COLLECTION_ADDRESS: z.string(),
   });
 
   if (config.BOT_MODE === "webhook") {
