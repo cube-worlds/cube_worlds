@@ -1,7 +1,6 @@
 import { Composer } from "grammy";
 import type { Context } from "#root/bot/context.js";
 import { logHandle } from "#root/bot/helpers/logging.js";
-import { vote } from "#root/bot/helpers/database.js";
 
 const composer = new Composer<Context>();
 
@@ -13,10 +12,11 @@ feature.command("start", logHandle("command-start"), async (ctx) => {
     const author = await ctx.getAuthor();
     const premium = author.user.is_premium ?? false;
     const add = premium ? 50 : 5;
-    const added = await vote(payload, add);
-    const isUpdated = added.modifiedCount > 0;
-    ctx.reply(`You are successfully vote for ${payload}`);
-    ctx.logger.info({ isUpdated });
+    ctx.logger.error(add);
+    // const isUpdated = added.modifiedCount > 0;
+    ctx.reply(
+      `You are successfully vote for ${payload}. You votes: ${ctx.dbuser.votes}`,
+    );
   }
 });
 

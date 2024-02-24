@@ -6,14 +6,10 @@ import { config } from "#root/config.js";
 import { logger } from "#root/logger.js";
 import { createServer } from "#root/server/index.js";
 import mongoose from "mongoose";
-import { MongoDBAdapter, ISession } from "@grammyjs/storage-mongodb";
-import { User } from "#root/bot/models/user.js";
 
 try {
   await mongoose.connect(config.MONGO);
-  const collection = mongoose.connection.db.collection<ISession>("users");
-  const storage = new MongoDBAdapter<User>({ collection });
-  const bot = createBot(config.BOT_TOKEN, { sessionStorage: storage });
+  const bot = createBot(config.BOT_TOKEN, {});
   const server = await createServer(bot);
 
   // Graceful shutdown

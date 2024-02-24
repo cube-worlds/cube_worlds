@@ -2,13 +2,13 @@ import { Composer } from "grammy";
 import type { Context } from "#root/bot/context.js";
 import { logHandle } from "#root/bot/helpers/logging.js";
 import { config } from "#root/config.js";
-import { changeImageData } from "../callback-data/image-selection.js";
+import { changeImageData } from "#root/bot/callback-data/image-selection.js";
+import { UserState } from "#root/bot/models/user.js";
 import {
   SelectImageButton,
   getUserProfilePhoto,
   sendPhoto,
-} from "../helpers/photo.js";
-import { UserState } from "../models/user.js";
+} from "#root/bot/helpers/photo.js";
 
 const composer = new Composer<Context>();
 
@@ -20,7 +20,8 @@ feature.command("mint", logHandle("command-mint"), async (ctx) => {
   // const { username } = author.user; // can be undefined
   // const name = `${author.user.first_name} ${author.user.last_name}`;
   // const description = "Super puper mega cool warrior"
-  switch (ctx.session.state) {
+
+  switch (ctx.dbuser.state) {
     case UserState.WaitDescription: {
       break;
     }
@@ -59,7 +60,10 @@ feature.callbackQuery(
         break;
       }
       case SelectImageButton.Done: {
-        ctx.session.state = UserState.Submited;
+        if (ctx.dbuser) {
+          ctx.dbuser.state = UserState.Submited;
+          ctx.dbuser.save();
+        }
         ctx.editMessageReplyMarkup({});
         ctx.reply(
           ctx.t("speedup", {

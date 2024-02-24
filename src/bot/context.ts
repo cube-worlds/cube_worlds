@@ -6,8 +6,14 @@ import type { I18nFlavor } from "@grammyjs/i18n";
 import type { ParseModeFlavor } from "@grammyjs/parse-mode";
 import type { Logger } from "#root/logger.js";
 import { User } from "#root/bot/models/user.js";
+import { DocumentType } from "@typegoose/typegoose";
+
+export type SessionData = {
+  // field?: string;
+};
 
 type ExtendedContextFlavor = {
+  dbuser: DocumentType<User>;
   logger: Logger;
 };
 
@@ -15,18 +21,21 @@ export type Context = ParseModeFlavor<
   HydrateFlavor<
     DefaultContext &
       ExtendedContextFlavor &
-      SessionFlavor<User> &
+      SessionFlavor<SessionData> &
       I18nFlavor &
       AutoChatActionFlavor
   >
 >;
 
 interface Dependencies {
+  dbuser?: DocumentType<User>;
   logger: Logger;
 }
 
 export function createContextConstructor({ logger }: Dependencies) {
   return class extends DefaultContext implements ExtendedContextFlavor {
+    dbuser!: DocumentType<User>;
+
     logger: Logger;
 
     constructor(update: Update, api: Api, me: UserFromGetMe) {

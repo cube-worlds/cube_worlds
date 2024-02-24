@@ -1,5 +1,5 @@
 import type { Context } from "#root/bot/context.js";
-import { changeImageData } from "../callback-data/image-selection.js";
+import { changeImageData } from "#root/bot/callback-data/image-selection.js";
 
 export enum SelectImageButton {
   Refresh = "image-refresh",

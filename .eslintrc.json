@@ -1,4 +1,5 @@
 {
+  "ignorePatterns": ["build/src/*"],
   "env": {
     "es2021": true,
     "node": true

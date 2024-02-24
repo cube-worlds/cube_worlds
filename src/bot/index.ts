@@ -2,7 +2,11 @@ import { autoChatAction } from "@grammyjs/auto-chat-action";
 import { hydrate } from "@grammyjs/hydrate";
 import { hydrateReply, parseMode } from "@grammyjs/parse-mode";
 import { BotConfig, StorageAdapter, Bot as TelegramBot, session } from "grammy";
-import { Context, createContextConstructor } from "#root/bot/context.js";
+import {
+  Context,
+  SessionData,
+  createContextConstructor,
+} from "#root/bot/context.js";
 import {
   adminFeature,
   languageFeature,
@@ -16,14 +20,14 @@ import { i18n, isMultipleLocales } from "#root/bot/i18n.js";
 import { updateLogger } from "#root/bot/middlewares/index.js";
 import { config } from "#root/config.js";
 import { logger } from "#root/logger.js";
-import { User } from "#root/bot/models/user.js";
+import attachUser from "#root/bot/middlewares/attach-user.js";
 
 type Options = {
-  sessionStorage?: StorageAdapter<User>;
+  sessionStorage?: StorageAdapter<SessionData>;
   config?: Omit<BotConfig<Context>, "ContextConstructor">;
 };
 
-export function createBot(token: string, options: Options = {}) {
+export function createBot(token: string, options: Options) {
   const { sessionStorage } = options;
   const bot = new TelegramBot(token, {
     ...options.config,
@@ -47,6 +51,7 @@ export function createBot(token: string, options: Options = {}) {
       storage: sessionStorage,
     }),
   );
+  protectedBot.use(attachUser);
   protectedBot.use(i18n);
 
   // Handlers
