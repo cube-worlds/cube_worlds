@@ -1,3 +1,4 @@
+import { queueMenu } from "#root/bot/keyboards/queue-menu.js";
 import { autoChatAction } from "@grammyjs/auto-chat-action";
 import { hydrate } from "@grammyjs/hydrate";
 import { hydrateReply, parseMode } from "@grammyjs/parse-mode";
@@ -15,6 +16,7 @@ import {
   mintFeature,
   startFeature,
   diceFeature,
+  queueFeature,
 } from "#root/bot/features/index.js";
 import { errorHandler } from "#root/bot/handlers/index.js";
 import { i18n, isMultipleLocales } from "#root/bot/i18n.js";
@@ -54,6 +56,7 @@ export function createBot(token: string, options: Options) {
   );
   protectedBot.use(attachUser);
   protectedBot.use(i18n);
+  protectedBot.use(queueMenu);
 
   // Handlers
   protectedBot.use(startFeature);
@@ -61,6 +64,7 @@ export function createBot(token: string, options: Options) {
   protectedBot.use(languageFeature);
   protectedBot.use(resetFeature);
   protectedBot.use(diceFeature);
+  protectedBot.use(queueFeature);
   protectedBot.use(adminFeature);
 
   if (isMultipleLocales) {

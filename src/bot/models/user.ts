@@ -39,3 +39,7 @@ export function findOrCreateUser(id: number) {
     },
   );
 }
+
+export function findQueue() {
+  return UserModel.find().sort({ votes: -1 }).limit(10);
+}

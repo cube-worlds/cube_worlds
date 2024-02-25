@@ -2,7 +2,7 @@ import { Composer } from "grammy";
 import type { Context } from "#root/bot/context.js";
 import { logHandle } from "#root/bot/helpers/logging.js";
 import { UserState } from "#root/bot/models/user.js";
-import { voteScore } from "../helpers/votes.js";
+import { voteScore } from "#root/bot/helpers/votes.js";
 
 const composer = new Composer<Context>();
 
