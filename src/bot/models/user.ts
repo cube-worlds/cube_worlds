@@ -1,4 +1,5 @@
 import { getModelForClass, modelOptions, prop } from "@typegoose/typegoose";
+import { TimeStamps } from "@typegoose/typegoose/lib/defaultClasses.js";
 
 export enum UserState {
   WaitImage = "WaitImage",
@@ -9,7 +10,7 @@ export enum UserState {
 }
 
 @modelOptions({ schemaOptions: { timestamps: true } })
-export class User {
+export class User extends TimeStamps {
   @prop({ type: Number, required: true, index: true, unique: true })
   id!: number;
 
@@ -21,6 +22,9 @@ export class User {
 
   @prop({ type: Number, required: false, default: 0 })
   votes!: number;
+
+  @prop({ type: Date, required: true, default: new Date(+0) })
+  dicedAt!: Date;
 }
 
 const UserModel = getModelForClass(User);

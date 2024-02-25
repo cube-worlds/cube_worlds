@@ -19,5 +19,9 @@ speedup = You're currently waiting in line, and to move up the queue, you can:
     — Donate any amount of Toncoin from your wallet to the collection address <code>{$collectionAddress}</code>
     — Invite friends to vote for you using link <code>{$inviteLink}</code>
     — Roll the dice by using the command /dice every hour
+
+dice = 
+    .wait = Wait {$minutes} min {$seconds} sec
+    .success = "Success result {$score}! Waiting you after 1 hour"
         
         

@@ -9,6 +9,7 @@ import {
   getUserProfilePhoto,
   sendPhoto,
 } from "#root/bot/helpers/photo.js";
+import { voteScore } from "../helpers/votes.js";
 
 const composer = new Composer<Context>();
 
@@ -71,6 +72,8 @@ feature.callbackQuery(
             collectionAddress: config.COLLECTION_ADDRESS,
           }),
         );
+        ctx.dbuser.votes = await voteScore(ctx);
+        ctx.dbuser.save();
         break;
       }
       default: {
