@@ -12,7 +12,7 @@ feature.command("reset", logHandle("command-reset"), async (ctx) => {
   if (ctx.dbuser.minted) {
     return ctx.reply("You already had minted NFT");
   }
-  ctx.dbuser.state = UserState.WaitImage;
+  ctx.dbuser.state = UserState.WaitDescription;
   ctx.dbuser.votes = await voteScore(ctx);
   ctx.dbuser.save();
   return ctx.reply(ctx.t("reset"));

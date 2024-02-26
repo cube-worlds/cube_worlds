@@ -1,13 +1,11 @@
-import { photoKeyboard, SelectImageButton } from "#root/bot/keyboards/photo.js";
-import { Composer, InputMediaBuilder } from "grammy";
+import { Composer } from "grammy";
 import type { Context } from "#root/bot/context.js";
 import { logHandle } from "#root/bot/helpers/logging.js";
 import { config } from "#root/config.js";
-import { changeImageData } from "#root/bot/callback-data/image-selection.js";
 import { UserState } from "#root/bot/models/user.js";
-import { getUserProfilePhoto, sendPhoto } from "#root/bot/helpers/photo.js";
-import { voteScore } from "#root/bot/helpers/votes.js";
+import { getUserProfilePhoto } from "#root/bot/helpers/photo.js";
 import { Address } from "ton-core";
+import { voteScore } from "../helpers/votes.js";
 
 const composer = new Composer<Context>();
 
@@ -36,14 +34,22 @@ feature.on("message:text", logHandle("message-handler")).filter(
 
 feature.command("mint", logHandle("command-mint"), async (ctx) => {
   switch (ctx.dbuser.state) {
-    case UserState.WaitImage: {
-      sendPhoto(ctx);
-      break;
-    }
     case UserState.WaitDescription: {
-      break;
-    }
-    case UserState.WaitName: {
+      const photo = await getUserProfilePhoto(ctx);
+      if (!photo) {
+        return ctx.reply(
+          "Make sure that you upload image to your telegram profile",
+        );
+      }
+
+      const author = await ctx.getAuthor();
+      ctx.dbuser.name = `${author.user.first_name}${author.user.username ? ` "${author.user.username}" ` : " "}${author.user.last_name === undefined ? "" : author.user.last_name}`;
+      ctx.dbuser.description = "Super puper mega cool warrior";
+      ctx.dbuser.state = UserState.WaitWallet;
+      ctx.dbuser.votes = await voteScore(ctx);
+      ctx.dbuser.save();
+      ctx.reply(ctx.t("wallet.wait"));
+      // TODO: save user provided description
       break;
     }
     case UserState.WaitWallet: {
@@ -64,43 +70,5 @@ feature.command("mint", logHandle("command-mint"), async (ctx) => {
     }
   }
 });
-
-feature.callbackQuery(
-  changeImageData.filter(),
-  logHandle("keyboard-image-select"),
-  async (ctx) => {
-    const { select } = changeImageData.unpack(ctx.callbackQuery.data);
-    switch (select) {
-      case SelectImageButton.Refresh: {
-        const photo = await getUserProfilePhoto(ctx);
-        if (!photo) {
-          return;
-        }
-        const newMedia = InputMediaBuilder.photo(photo.file_id);
-        ctx.editMessageMedia(newMedia, {
-          reply_markup: { inline_keyboard: photoKeyboard },
-        });
-        break;
-      }
-      case SelectImageButton.Done: {
-        if (ctx.dbuser) {
-          const author = await ctx.getAuthor();
-          ctx.dbuser.name = `${author.user.first_name}${author.user.username ? ` "${author.user.username}" ` : " "}${author.user.last_name === undefined ? "" : author.user.last_name}`;
-          ctx.dbuser.description = "Super puper mega cool warrior";
-          ctx.dbuser.state = UserState.WaitWallet;
-          ctx.dbuser.save();
-        }
-        ctx.editMessageReplyMarkup({});
-        ctx.reply(ctx.t("wallet.wait"));
-        ctx.dbuser.votes = await voteScore(ctx);
-        ctx.dbuser.save();
-        break;
-      }
-      default: {
-        break;
-      }
-    }
-  },
-);
 
 export { composer as mintFeature };

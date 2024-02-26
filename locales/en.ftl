@@ -14,6 +14,7 @@ language =
 admin =
     .commands-updated = Commands updated.
 unhandled = Unrecognized command. Try /mint
+wrong = Something went wrong
 
 speedup = You're currently waiting in line, and to move up the queue, you can:
     — Donate any amount of Toncoin from your wallet to the collection address <code>{$collectionAddress}</code>
