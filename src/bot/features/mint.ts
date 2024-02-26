@@ -1,14 +1,11 @@
-import { Composer } from "grammy";
+import { photoKeyboard, SelectImageButton } from "#root/bot/keyboards/photo.js";
+import { Composer, InputMediaBuilder } from "grammy";
 import type { Context } from "#root/bot/context.js";
 import { logHandle } from "#root/bot/helpers/logging.js";
 import { config } from "#root/config.js";
 import { changeImageData } from "#root/bot/callback-data/image-selection.js";
 import { UserState } from "#root/bot/models/user.js";
-import {
-  SelectImageButton,
-  getUserProfilePhoto,
-  sendPhoto,
-} from "#root/bot/helpers/photo.js";
+import { getUserProfilePhoto, sendPhoto } from "#root/bot/helpers/photo.js";
 import { voteScore } from "#root/bot/helpers/votes.js";
 import { Address } from "ton-core";
 
@@ -79,8 +76,10 @@ feature.callbackQuery(
         if (!photo) {
           return;
         }
-        ctx.deleteMessage();
-        sendPhoto(ctx);
+        const newMedia = InputMediaBuilder.photo(photo.file_id);
+        ctx.editMessageMedia(newMedia, {
+          reply_markup: { inline_keyboard: photoKeyboard },
+        });
         break;
       }
       case SelectImageButton.Done: {

@@ -1,10 +1,5 @@
 import type { Context } from "#root/bot/context.js";
-import { changeImageData } from "#root/bot/callback-data/image-selection.js";
-
-export enum SelectImageButton {
-  Refresh = "image-refresh",
-  Done = "image-done",
-}
+import { photoKeyboard } from "#root/bot/keyboards/photo.js";
 
 export async function getUserProfilePhoto(ctx: Context) {
   const photos = await ctx.getUserProfilePhotos();
@@ -14,10 +9,14 @@ export async function getUserProfilePhoto(ctx: Context) {
     const photo = lastPhotoArray?.sort(
       (a, b) => (b.file_size ?? 0) - (a.file_size ?? 0),
     )[0];
-    if (photo) {
-      // ctx.logger.debug(lastPhotoArray);
-      return ctx.api.getFile(photo.file_id);
-    }
+    if (photo) return photo;
+  }
+}
+
+export async function getUserProfileFile(ctx: Context) {
+  const photo = await getUserProfilePhoto(ctx);
+  if (photo) {
+    return ctx.api.getFile(photo.file_id);
   }
 }
 
@@ -32,22 +31,7 @@ export async function sendPhoto(ctx: Context) {
   // TODO: transform to WARRIOR IMAGE!!!
   await ctx.replyWithPhoto(photo.file_id, {
     reply_markup: {
-      inline_keyboard: [
-        [
-          {
-            text: "🔄 Refresh",
-            callback_data: changeImageData.pack({
-              select: SelectImageButton.Refresh,
-            }),
-          },
-          {
-            text: "✅ Done",
-            callback_data: changeImageData.pack({
-              select: SelectImageButton.Done,
-            }),
-          },
-        ],
-      ],
+      inline_keyboard: photoKeyboard,
     },
   });
 }
