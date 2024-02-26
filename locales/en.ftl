@@ -23,5 +23,9 @@ speedup = You're currently waiting in line, and to move up the queue, you can:
 dice = 
     .wait = Wait {$minutes} min {$seconds} sec
     .success = "Success result {$score}! Waiting you after 1 hour"
+
+wallet = 
+    .wait = Please provide me with your TON wallet address which will receive the NFT.
+    .incorrect = Please provide correct TON wallet address.
         
         

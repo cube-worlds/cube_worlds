@@ -25,6 +25,21 @@ export class User extends TimeStamps {
 
   @prop({ type: Date, required: true, default: new Date(+0) })
   dicedAt!: Date;
+
+  @prop({ type: String })
+  name?: string;
+
+  @prop({ type: String })
+  description?: string;
+
+  @prop({ type: String })
+  image?: string;
+
+  @prop({ type: String })
+  wallet?: string;
+
+  @prop({ type: Boolean })
+  minted?: boolean;
 }
 
 const UserModel = getModelForClass(User);

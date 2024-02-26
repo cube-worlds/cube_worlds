@@ -9,24 +9,48 @@ import {
   getUserProfilePhoto,
   sendPhoto,
 } from "#root/bot/helpers/photo.js";
-import { voteScore } from "../helpers/votes.js";
+import { voteScore } from "#root/bot/helpers/votes.js";
+import { Address } from "ton-core";
 
 const composer = new Composer<Context>();
 
 const feature = composer.chatType("private");
 
-feature.command("mint", logHandle("command-mint"), async (ctx) => {
-  // const author = await ctx.getAuthor();
-  // const premium = author.user.is_premium ?? false;
-  // const { username } = author.user; // can be undefined
-  // const name = `${author.user.first_name} ${author.user.last_name}`;
-  // const description = "Super puper mega cool warrior"
+feature.on("message:text", logHandle("message-handler")).filter(
+  (ctx) => ctx.dbuser.state === UserState.WaitWallet,
+  async (ctx) => {
+    try {
+      const address = Address.parse(ctx.message.text);
+      ctx.dbuser.wallet = address.toString();
+      ctx.dbuser.state = UserState.Submited;
+      ctx.dbuser.save();
+      ctx.reply(
+        ctx.t("speedup", {
+          inviteLink: `https://t.me/${ctx.me.username}?start=${ctx.chat.id}`,
+          collectionAddress: config.COLLECTION_ADDRESS,
+        }),
+      );
+    } catch (error) {
+      ctx.reply(ctx.t("wallet.incorrect"));
+      ctx.logger.warn((error as Error).message);
+    }
+  },
+);
 
+feature.command("mint", logHandle("command-mint"), async (ctx) => {
   switch (ctx.dbuser.state) {
+    case UserState.WaitImage: {
+      sendPhoto(ctx);
+      break;
+    }
     case UserState.WaitDescription: {
       break;
     }
     case UserState.WaitName: {
+      break;
+    }
+    case UserState.WaitWallet: {
+      ctx.reply(ctx.t("wallet.wait"));
       break;
     }
     case UserState.Submited: {
@@ -38,9 +62,8 @@ feature.command("mint", logHandle("command-mint"), async (ctx) => {
       );
       break;
     }
-    // default = UserState.WaitImage:
     default: {
-      sendPhoto(ctx);
+      break;
     }
   }
 });
@@ -62,16 +85,14 @@ feature.callbackQuery(
       }
       case SelectImageButton.Done: {
         if (ctx.dbuser) {
-          ctx.dbuser.state = UserState.Submited;
+          const author = await ctx.getAuthor();
+          ctx.dbuser.name = `${author.user.first_name}${author.user.username ? ` "${author.user.username}" ` : " "}${author.user.last_name === undefined ? "" : author.user.last_name}`;
+          ctx.dbuser.description = "Super puper mega cool warrior";
+          ctx.dbuser.state = UserState.WaitWallet;
           ctx.dbuser.save();
         }
         ctx.editMessageReplyMarkup({});
-        ctx.reply(
-          ctx.t("speedup", {
-            inviteLink: `https://t.me/${ctx.me.username}?start=${ctx.chat.id}`,
-            collectionAddress: config.COLLECTION_ADDRESS,
-          }),
-        );
+        ctx.reply(ctx.t("wallet.wait"));
         ctx.dbuser.votes = await voteScore(ctx);
         ctx.dbuser.save();
         break;
