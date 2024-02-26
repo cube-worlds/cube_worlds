@@ -13,10 +13,13 @@ feature.command("start", logHandle("command-start"), async (ctx) => {
     const premium = author.user.is_premium ?? false;
     const add = premium ? 50 : 5;
     ctx.logger.error(add);
+    ctx.reply("TODO: there will be vote for user");
     // const isUpdated = added.modifiedCount > 0;
-    ctx.reply(
-      `You are successfully vote for ${payload}. You votes: ${ctx.dbuser.votes}`,
-    );
+    // ctx.reply(
+    //   `You are successfully vote for ${payload}. You votes: ${ctx.dbuser.votes}`,
+    // );
+  } else {
+    ctx.reply(ctx.t("unhandled"));
   }
 });
 

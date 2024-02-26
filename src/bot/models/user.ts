@@ -38,8 +38,8 @@ export class User extends TimeStamps {
   @prop({ type: String })
   wallet?: string;
 
-  @prop({ type: Boolean })
-  minted?: boolean;
+  @prop({ type: Boolean, required: true, default: false })
+  minted!: boolean;
 }
 
 const UserModel = getModelForClass(User);
@@ -56,5 +56,7 @@ export function findOrCreateUser(id: number) {
 }
 
 export function findQueue() {
-  return UserModel.find().sort({ votes: -1 }).limit(10);
+  return UserModel.find({ minted: false, state: UserState.Submited })
+    .sort({ votes: -1 })
+    .limit(10);
 }
