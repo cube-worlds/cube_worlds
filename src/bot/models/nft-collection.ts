@@ -1,4 +1,3 @@
-/* eslint-disable class-methods-use-this */
 import {
   Address,
   Cell,
@@ -9,14 +8,15 @@ import {
   SendMode,
 } from "ton-core";
 import { encodeOffChainContent, OpenedWallet } from "#root/bot/helpers/ton.js";
+import { TonClient } from "ton";
 
 export type collectionData = {
   ownerAddress: Address;
   royaltyPercent: number;
   royaltyAddress: Address;
   nextItemIndex: number;
-  collectionContentUrl: string;
-  commonContentUrl: string;
+  collectionContentUrl: string; // path to collection.json
+  commonContentUrl: string; // base url with ended /
 };
 
 export type mintParameters = {
@@ -24,7 +24,7 @@ export type mintParameters = {
   itemOwnerAddress: Address;
   itemIndex: number;
   amount: bigint;
-  commonContentUrl: string;
+  contentUri: string;
 };
 
 export class NftCollection {
@@ -32,6 +32,27 @@ export class NftCollection {
 
   constructor(data: collectionData) {
     this.data = data;
+  }
+
+  static async fetchNextItemIndex(
+    nftCollectionAddress: Address,
+    testnet: boolean,
+  ): Promise<number> {
+    const toncenterBaseEndpoint: string = testnet
+      ? "https://testnet.toncenter.com"
+      : "https://toncenter.com";
+
+    const client = new TonClient({
+      endpoint: `${toncenterBaseEndpoint}/api/v2/jsonRPC`,
+      apiKey: process.env.TONCENTER_API_KEY,
+    });
+
+    const { stack } = await client.runMethod(
+      nftCollectionAddress,
+      "get_collection_data",
+    );
+    const nextItemIndex = stack.readBigNumber();
+    return Number(nextItemIndex);
   }
 
   public async deploy(wallet: OpenedWallet): Promise<number> {
@@ -74,24 +95,6 @@ export class NftCollection {
     return seqno;
   }
 
-  public createMintBody(parameters: mintParameters): Cell {
-    const body = beginCell();
-    body.storeUint(1, 32);
-    body.storeUint(parameters.queryId || 0, 64);
-    body.storeUint(parameters.itemIndex, 64);
-    body.storeCoins(parameters.amount);
-
-    const nftItemContent = beginCell();
-    nftItemContent.storeAddress(parameters.itemOwnerAddress);
-
-    const uriContent = beginCell();
-    uriContent.storeBuffer(Buffer.from(parameters.commonContentUrl));
-    nftItemContent.storeRef(uriContent.endCell());
-
-    body.storeRef(nftItemContent.endCell());
-    return body.endCell();
-  }
-
   public get stateInit(): StateInit {
     const code = this.createCodeCell();
     const data = this.createDataCell();
@@ -103,6 +106,7 @@ export class NftCollection {
     return contractAddress(0, this.stateInit);
   }
 
+  // eslint-disable-next-line class-methods-use-this
   private createCodeCell(): Cell {
     const NftCollectionCodeBoc =
       "te6cckECFAEAAh8AART/APSkE/S88sgLAQIBYgkCAgEgBAMAJbyC32omh9IGmf6mpqGC3oahgsQCASAIBQIBIAcGAC209H2omh9IGmf6mpqGAovgngCOAD4AsAAvtdr9qJofSBpn+pqahg2IOhph+mH/SAYQAEO4tdMe1E0PpA0z/U1NQwECRfBNDUMdQw0HHIywcBzxbMyYAgLNDwoCASAMCwA9Ra8ARwIfAFd4AYyMsFWM8WUAT6AhPLaxLMzMlx+wCAIBIA4NABs+QB0yMsCEsoHy//J0IAAtAHIyz/4KM8WyXAgyMsBE/QA9ADLAMmAE59EGOASK3wAOhpgYC42Eit8H0gGADpj+mf9qJofSBpn+pqahhBCDSenKgpQF1HFBuvgoDoQQhUZYBWuEAIZGWCqALnixJ9AQpltQnlj+WfgOeLZMAgfYBwGyi544L5cMiS4ADxgRLgAXGBEuAB8YEYGYHgAkExIREAA8jhXU1DAQNEEwyFAFzxYTyz/MzMzJ7VTgXwSED/LwACwyNAH6QDBBRMhQBc8WE8s/zMzMye1UAKY1cAPUMI43gED0lm+lII4pBqQggQD6vpPywY/egQGTIaBTJbvy9AL6ANQwIlRLMPAGI7qTAqQC3gSSbCHis+YwMlBEQxPIUAXPFhPLP8zMzMntVABgNQLTP1MTu/LhklMTugH6ANQwKBA0WfAGjhIBpENDyFAFzxYTyz/MzMzJ7VSSXwXiN0CayQ==";

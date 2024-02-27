@@ -1,20 +1,12 @@
 import { TonClient } from "ton";
 import { Address, beginCell, Cell, internal, SendMode, toNano } from "ton-core";
 import { OpenedWallet } from "#root/bot/helpers/ton.js";
-import {
-  NftCollection,
-  mintParameters,
-} from "#root/bot/models/nft-collection.js";
+import { mintParameters } from "#root/bot/models/nft-collection.js";
 
 export class NftItem {
-  private collection: NftCollection;
-
-  constructor(collection: NftCollection) {
-    this.collection = collection;
-  }
-
   public async deploy(
     wallet: OpenedWallet,
+    collectionAddress: Address,
     parameters: mintParameters,
   ): Promise<number> {
     const seqno = await wallet.contract.getSeqno();
@@ -24,13 +16,32 @@ export class NftItem {
       messages: [
         internal({
           value: "0.05",
-          to: this.collection.address,
-          body: this.collection.createMintBody(parameters),
+          to: collectionAddress,
+          body: this.createMintBody(parameters),
         }),
       ],
       sendMode: SendMode.IGNORE_ERRORS + SendMode.PAY_GAS_SEPARATELY,
     });
     return seqno;
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  public createMintBody(parameters: mintParameters): Cell {
+    const body = beginCell();
+    body.storeUint(1, 32);
+    body.storeUint(parameters.queryId || 0, 64);
+    body.storeUint(parameters.itemIndex, 64);
+    body.storeCoins(parameters.amount);
+
+    const nftItemContent = beginCell();
+    nftItemContent.storeAddress(parameters.itemOwnerAddress);
+
+    const uriContent = beginCell();
+    uriContent.storeBuffer(Buffer.from(parameters.contentUri));
+    nftItemContent.storeRef(uriContent.endCell());
+
+    body.storeRef(nftItemContent.endCell());
+    return body.endCell();
   }
 
   static async getAddressByIndex(

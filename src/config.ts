@@ -26,6 +26,10 @@ const createConfigFromEnvironment = (environment: NodeJS.ProcessEnv) => {
     MONGO: z.string(),
     BOT_ADMINS: z.array(z.number()).default([]),
     COLLECTION_ADDRESS: z.string(),
+    PINATA_API_KEY: z.string(),
+    PINATA_API_SECRET: z.string(),
+    MNEMONICS: z.string(),
+    TONCENTER_API_KEY: z.string(),
   });
 
   if (config.BOT_MODE === "webhook") {
