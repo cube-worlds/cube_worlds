@@ -19,14 +19,6 @@ export type collectionData = {
   commonContentUrl: string; // base url with ended /
 };
 
-export type mintParameters = {
-  queryId: number;
-  itemOwnerAddress: Address;
-  itemIndex: number;
-  amount: bigint;
-  contentUri: string;
-};
-
 export class NftCollection {
   private data: collectionData;
 

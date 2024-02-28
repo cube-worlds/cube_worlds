@@ -6,19 +6,15 @@
     "esModuleInterop": true,
     "preserveWatchOutput": true,
     "noEmit": true,
-    "module": "NodeNext",
+    "module": "ES2022",
     "target": "ES2021",
-    "moduleResolution": "NodeNext",
+    "moduleResolution": "Node",
     "sourceMap": true,
     "outDir": "build",
     "rootDir": ".",
     "paths": {
-      "#root/*": [
-        "./src/*"
-      ]
+      "#root/*": ["./src/*"]
     }
   },
-  "include": [
-    "src/**/*"
-  ]
+  "include": ["src/**/*"]
 }

@@ -1,13 +1,20 @@
 import { TonClient } from "ton";
 import { Address, beginCell, Cell, internal, SendMode, toNano } from "ton-core";
 import { OpenedWallet } from "#root/bot/helpers/ton.js";
-import { mintParameters } from "#root/bot/models/nft-collection.js";
+
+export type nftMintParameters = {
+  queryId: number;
+  itemOwnerAddress: Address;
+  itemIndex: number;
+  amount: bigint;
+  commonContentUrl: string;
+};
 
 export class NftItem {
   public async deploy(
     wallet: OpenedWallet,
     collectionAddress: Address,
-    parameters: mintParameters,
+    parameters: nftMintParameters,
   ): Promise<number> {
     const seqno = await wallet.contract.getSeqno();
     await wallet.contract.sendTransfer({
@@ -26,7 +33,7 @@ export class NftItem {
   }
 
   // eslint-disable-next-line class-methods-use-this
-  public createMintBody(parameters: mintParameters): Cell {
+  public createMintBody(parameters: nftMintParameters): Cell {
     const body = beginCell();
     body.storeUint(1, 32);
     body.storeUint(parameters.queryId || 0, 64);
@@ -37,7 +44,7 @@ export class NftItem {
     nftItemContent.storeAddress(parameters.itemOwnerAddress);
 
     const uriContent = beginCell();
-    uriContent.storeBuffer(Buffer.from(parameters.contentUri));
+    uriContent.storeBuffer(Buffer.from(parameters.commonContentUrl));
     nftItemContent.storeRef(uriContent.endCell());
 
     body.storeRef(nftItemContent.endCell());

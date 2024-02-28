@@ -22,13 +22,12 @@ feature.command(
       royaltyPercent: 0.49,
       royaltyAddress: wallet.contract.address,
       nextItemIndex: 0,
-
-      collectionContentUrl: `ipfs://QmXXjER4hMHLp6ESJFG21A7yrWaoBE57cLyAHKyt1XiFpF/collection.json`,
-      commonContentUrl: ``,
+      collectionContentUrl: "",
+      commonContentUrl: "",
     };
     const collection = new NftCollection(collectionData);
     const seqno = await collection.deploy(wallet);
-    ctx.logger.info(`Collection deployed: ${collection.address}`);
+    ctx.logger.info(`Collection will be deployed at: ${collection.address}`);
     await waitSeqno(seqno, wallet);
     ctx.reply(`Collection deployed: ${collection.address}`);
   },
