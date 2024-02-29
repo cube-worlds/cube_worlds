@@ -28,11 +28,13 @@ export async function pinFileToIPFS(
   const fp = folderPath(index);
   const imageFileName =
     imageURL.slice((imageURL.lastIndexOf("/") ?? 0) + 1) ?? "";
-  fs.writeFile(path.join(fp, imageFileName), buffer, (_error) => {});
+  const fileExtension = imageFileName.split(".").pop();
+  const newFileName = `${index}.${fileExtension}`;
+  fs.writeFile(path.join(fp, newFileName), buffer, (_error) => {});
 
   const stream = Readable.from(buffer);
   const response = await pinata.pinFileToIPFS(stream, {
-    pinataMetadata: { name: imageFileName },
+    pinataMetadata: { name: newFileName },
   });
   return response.IpfsHash;
 }

@@ -48,6 +48,7 @@ feature.callbackQuery(
       }
       case SelectImageButton.Done: {
         ctx.chatAction = "upload_document";
+        ctx.editMessageReplyMarkup({});
 
         const user = ctx.dbuser; // TODO: change to selected user
         const address = Address.parse(config.COLLECTION_ADDRESS);
