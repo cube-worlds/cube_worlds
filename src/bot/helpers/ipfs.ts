@@ -1,16 +1,7 @@
 import { config } from "#root/config.js";
 import pinataSDK from "@pinata/sdk";
-import fs from "node:fs";
-import path from "node:path";
 import { Readable } from "node:stream";
-
-function folderPath(index: number): string {
-  const fp = `./data/${index}/`;
-  if (!fs.existsSync(fp)) {
-    fs.mkdirSync(fp, { recursive: true });
-  }
-  return fp;
-}
+import { saveImage, saveJSON } from "./files";
 
 export async function pinFileToIPFS(
   index: number,
@@ -25,12 +16,11 @@ export async function pinFileToIPFS(
   const image = await fetch(imageURL);
   const arrayBuffer = await image.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
-  const fp = folderPath(index);
   const imageFileName =
     imageURL.slice((imageURL.lastIndexOf("/") ?? 0) + 1) ?? "";
   const fileExtension = imageFileName.split(".").pop();
   const newFileName = `${index}.${fileExtension}`;
-  fs.writeFile(path.join(fp, newFileName), buffer, (_error) => {});
+  saveImage(index, newFileName, buffer);
 
   const stream = Readable.from(buffer);
   const response = await pinata.pinFileToIPFS(stream, {
@@ -48,13 +38,7 @@ export async function pinJSONToIPFS(
     pinataApiKey: config.PINATA_API_KEY,
     pinataSecretApiKey: config.PINATA_API_SECRET,
   });
-  const fp = folderPath(index);
-  fs.writeFile(
-    path.join(fp, `${index}.json`),
-    JSON.stringify(json),
-    (_error) => {},
-  );
-
+  saveJSON(index, json);
   const response = await pinata.pinJSONToIPFS(json, {
     pinataMetadata: { name: `${index}.json` },
   });

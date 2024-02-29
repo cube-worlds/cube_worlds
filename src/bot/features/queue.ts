@@ -29,18 +29,18 @@ feature.callbackQuery(
     const { select } = changeImageData.unpack(ctx.callbackQuery.data);
     switch (select) {
       case SelectImageButton.Refresh: {
-        // TODO: change to AI generated image
-        const photo = await getUserProfileFile(ctx);
-        if (!photo) {
+        const randomAva = await getUserProfileFile(ctx);
+        if (!randomAva) {
           return ctx.reply(ctx.t("wrong"));
         }
 
-        const photoUrl = `https://api.telegram.org/file/bot${config.BOT_TOKEN}/${photo.file_path}`;
-        // TODO: change to selected user
-        ctx.dbuser.image = photoUrl;
-        ctx.dbuser.save();
+        const photoUrl = `https://api.telegram.org/file/bot${config.BOT_TOKEN}/${randomAva.file_path}`;
 
-        const newMedia = InputMediaBuilder.photo(photo.file_id);
+        const user = ctx.dbuser; // TODO: change to selected user
+        user.image = photoUrl;
+        user.save();
+
+        const newMedia = InputMediaBuilder.photo(randomAva.file_id);
         ctx.editMessageMedia(newMedia, {
           reply_markup: { inline_keyboard: photoKeyboard },
         });
@@ -51,12 +51,7 @@ feature.callbackQuery(
         ctx.editMessageReplyMarkup({});
 
         const user = ctx.dbuser; // TODO: change to selected user
-        const address = Address.parse(config.COLLECTION_ADDRESS);
-        const testnet = true;
-        const nextItemIndex = await NftCollection.fetchNextItemIndex(
-          address,
-          testnet,
-        );
+        const nextItemIndex = await NftCollection.fetchNextItemIndex();
 
         const ipfsImageHash = await pinFileToIPFS(
           nextItemIndex,
@@ -72,7 +67,7 @@ feature.callbackQuery(
         ctx.logger.info(json);
         const ipfsJSONHash = await pinJSONToIPFS(nextItemIndex, json);
 
-        const wallet = await openWallet(config.MNEMONICS.split(" "), testnet);
+        const wallet = await openWallet(config.MNEMONICS.split(" "));
         const item = new NftItem();
         const userAddress = Address.parse(user.wallet ?? "");
         const parameters: nftMintParameters = {
@@ -83,12 +78,9 @@ feature.callbackQuery(
           commonContentUrl: `ipfs://${ipfsJSONHash}`,
         };
         ctx.logger.info(parameters);
-        const seqno = await item.deploy(wallet, address, parameters);
+        const seqno = await item.deploy(wallet, parameters);
         await waitSeqno(seqno, wallet);
-        const nftAddress = await NftItem.getAddressByIndex(
-          address,
-          nextItemIndex,
-        );
+        const nftAddress = await NftItem.getAddressByIndex(nextItemIndex);
         ctx.reply(nftAddress.toString());
         break;
       }

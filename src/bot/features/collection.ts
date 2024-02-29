@@ -16,7 +16,7 @@ feature.command(
   logHandle("command-collection"),
   chatAction("upload_document"),
   async (ctx) => {
-    const wallet = await openWallet(config.MNEMONICS!.split(" "), true);
+    const wallet = await openWallet(config.MNEMONICS!.split(" "));
     const collectionData = {
       ownerAddress: wallet.contract.address,
       royaltyPercent: 0.49,

@@ -30,6 +30,8 @@ const createConfigFromEnvironment = (environment: NodeJS.ProcessEnv) => {
     PINATA_API_SECRET: z.string(),
     MNEMONICS: z.string(),
     TONCENTER_API_KEY: z.string(),
+    TESTNET: z.boolean().default(true),
+    STABILITY_API_KEY: z.string(),
   });
 
   if (config.BOT_MODE === "webhook") {

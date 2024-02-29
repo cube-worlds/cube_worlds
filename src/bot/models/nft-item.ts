@@ -1,6 +1,7 @@
 import { TonClient } from "ton";
 import { Address, beginCell, Cell, internal, SendMode, toNano } from "ton-core";
 import { OpenedWallet } from "#root/bot/helpers/ton.js";
+import { config } from "#root/config";
 
 export type nftMintParameters = {
   queryId: number;
@@ -13,9 +14,9 @@ export type nftMintParameters = {
 export class NftItem {
   public async deploy(
     wallet: OpenedWallet,
-    collectionAddress: Address,
     parameters: nftMintParameters,
   ): Promise<number> {
+    const collectionAddress = Address.parse(config.COLLECTION_ADDRESS);
     const seqno = await wallet.contract.getSeqno();
     await wallet.contract.sendTransfer({
       seqno,
@@ -51,10 +52,8 @@ export class NftItem {
     return body.endCell();
   }
 
-  static async getAddressByIndex(
-    collectionAddress: Address,
-    itemIndex: number,
-  ): Promise<Address> {
+  static async getAddressByIndex(itemIndex: number): Promise<Address> {
+    const collectionAddress = Address.parse(config.COLLECTION_ADDRESS);
     const client = new TonClient({
       endpoint: "https://testnet.toncenter.com/api/v2/jsonRPC",
       apiKey: process.env.TONCENTER_API_KEY,

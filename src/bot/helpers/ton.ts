@@ -9,16 +9,16 @@ import {
   TonClient,
   WalletContractV4,
 } from "ton";
+import { config } from "#root/config";
 
 export type OpenedWallet = {
   contract: OpenedContract<WalletContractV4>;
   keyPair: KeyPair;
 };
 
-export async function openWallet(mnemonic: string[], testnet: boolean) {
+export async function openWallet(mnemonic: string[]) {
   const keyPair = await mnemonicToPrivateKey(mnemonic);
-
-  const toncenterBaseEndpoint: string = testnet
+  const toncenterBaseEndpoint: string = config.TESTNET
     ? "https://testnet.toncenter.com"
     : "https://toncenter.com";
 

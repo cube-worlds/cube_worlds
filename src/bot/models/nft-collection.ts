@@ -9,6 +9,7 @@ import {
 } from "ton-core";
 import { encodeOffChainContent, OpenedWallet } from "#root/bot/helpers/ton.js";
 import { TonClient } from "ton";
+import { config } from "#root/config";
 
 export type collectionData = {
   ownerAddress: Address;
@@ -26,11 +27,9 @@ export class NftCollection {
     this.data = data;
   }
 
-  static async fetchNextItemIndex(
-    nftCollectionAddress: Address,
-    testnet: boolean,
-  ): Promise<number> {
-    const toncenterBaseEndpoint: string = testnet
+  static async fetchNextItemIndex(): Promise<number> {
+    const nftCollectionAddress = Address.parse(config.COLLECTION_ADDRESS);
+    const toncenterBaseEndpoint: string = config.TESTNET
       ? "https://testnet.toncenter.com"
       : "https://toncenter.com";
 
