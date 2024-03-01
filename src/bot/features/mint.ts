@@ -12,6 +12,17 @@ const composer = new Composer<Context>();
 const feature = composer.chatType("private");
 
 feature.on("message:text", logHandle("message-handler")).filter(
+  (ctx) => ctx.dbuser.state === UserState.WaitDescription,
+  async (ctx) => {
+    ctx.dbuser.description = ctx.message.text;
+    ctx.dbuser.state = UserState.WaitWallet;
+    ctx.dbuser.save();
+    ctx.reply(ctx.t("description.success", { description: ctx.message.text }));
+    ctx.reply(ctx.t("wallet.wait"));
+  },
+);
+
+feature.on("message:text", logHandle("message-handler")).filter(
   (ctx) => ctx.dbuser.state === UserState.WaitWallet,
   async (ctx) => {
     try {
@@ -34,22 +45,28 @@ feature.on("message:text", logHandle("message-handler")).filter(
 
 feature.command("mint", logHandle("command-mint"), async (ctx) => {
   switch (ctx.dbuser.state) {
-    case UserState.WaitDescription: {
+    case UserState.WaitNothing: {
       const photo = await getUserProfilePhoto(ctx);
       if (!photo) {
         return ctx.reply(
           "Make sure that you upload image to your telegram profile",
         );
       }
-
       const author = await ctx.getAuthor();
-      ctx.dbuser.name = `${author.user.first_name}${author.user.username ? ` "${author.user.username}" ` : " "}${author.user.last_name === undefined ? "" : author.user.last_name}`;
-      ctx.dbuser.description = "Super puper mega cool warrior";
-      ctx.dbuser.state = UserState.WaitWallet;
+      if (!author.user.username) {
+        return ctx.reply(
+          "Make sure that you set username to your telegram profile",
+        );
+      }
+      ctx.dbuser.name = author.user.username;
       ctx.dbuser.votes = await voteScore(ctx);
+      ctx.dbuser.state = UserState.WaitDescription;
       ctx.dbuser.save();
-      ctx.reply(ctx.t("wallet.wait"));
-      // TODO: save user provided description
+      ctx.reply(ctx.t("description.wait"));
+      break;
+    }
+    case UserState.WaitDescription: {
+      ctx.reply(ctx.t("description.wait"));
       break;
     }
     case UserState.WaitWallet: {

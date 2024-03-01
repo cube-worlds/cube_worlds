@@ -2,6 +2,7 @@ import { getModelForClass, modelOptions, prop } from "@typegoose/typegoose";
 import { TimeStamps } from "@typegoose/typegoose/lib/defaultClasses.js";
 
 export enum UserState {
+  WaitNothing = "WaitNothing",
   WaitDescription = "WaitDescription",
   WaitWallet = "WaitWallet",
   Submited = "Submited",
@@ -15,7 +16,7 @@ export class User extends TimeStamps {
   @prop({ type: String, required: true, default: "en" })
   language!: string;
 
-  @prop({ type: String, required: false, default: UserState.WaitDescription })
+  @prop({ type: String, required: false, default: UserState.WaitNothing })
   state!: UserState;
 
   @prop({ type: Number, required: false, default: 0 })
@@ -32,6 +33,9 @@ export class User extends TimeStamps {
 
   @prop({ type: String })
   image?: string;
+
+  @prop({ type: String })
+  avatar?: string;
 
   @prop({ type: String })
   wallet?: string;

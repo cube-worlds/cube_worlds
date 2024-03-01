@@ -23,6 +23,7 @@ export function saveImage(
 export async function saveImageFromUrl(
   imageURL: string,
   index: number,
+  original: boolean,
 ): Promise<string> {
   const image = await fetch(imageURL);
   const arrayBuffer = await image.arrayBuffer();
@@ -30,7 +31,7 @@ export async function saveImageFromUrl(
   const imageFileName =
     imageURL.slice((imageURL.lastIndexOf("/") ?? 0) + 1) ?? "";
   const fileExtension = imageFileName.split(".").pop();
-  const newFileName = `${index}.${fileExtension}`;
+  const newFileName = `${original ? "ava_" : ""}${index}.${fileExtension}`;
   return saveImage(index, newFileName, buffer);
 }
 
