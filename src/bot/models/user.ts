@@ -62,3 +62,12 @@ export function findQueue() {
     .sort({ votes: -1 })
     .limit(10);
 }
+
+export async function placeInLine(votes: number): Promise<number> {
+  const count = await UserModel.countDocuments({
+    minted: false,
+    state: UserState.Submited,
+    votes: { $gt: votes },
+  });
+  return count + 1;
+}

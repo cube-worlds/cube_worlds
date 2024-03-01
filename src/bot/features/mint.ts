@@ -2,7 +2,7 @@ import { Composer } from "grammy";
 import type { Context } from "#root/bot/context.js";
 import { logHandle } from "#root/bot/helpers/logging.js";
 import { config } from "#root/config.js";
-import { UserState } from "#root/bot/models/user.js";
+import { UserState, placeInLine } from "#root/bot/models/user.js";
 import { getUserProfilePhoto } from "#root/bot/helpers/photo.js";
 import { Address } from "ton-core";
 import { voteScore } from "../helpers/votes.js";
@@ -32,8 +32,10 @@ feature.on("message:text", logHandle("message-handler")).filter(
       ctx.dbuser.wallet = address.toString();
       ctx.dbuser.state = UserState.Submited;
       ctx.dbuser.save();
+      const place = await placeInLine(ctx.dbuser.votes);
       ctx.reply(
         ctx.t("speedup", {
+          place,
           inviteLink: `https://t.me/${ctx.me.username}?start=${ctx.chat.id}`,
           collectionAddress: config.COLLECTION_ADDRESS,
         }),
@@ -76,8 +78,10 @@ feature.command("mint", logHandle("command-mint"), async (ctx) => {
       break;
     }
     case UserState.Submited: {
+      const place = await placeInLine(ctx.dbuser.votes);
       ctx.reply(
         ctx.t("speedup", {
+          place,
           inviteLink: `https://t.me/${ctx.me.username}?start=${ctx.chat.id}`,
           collectionAddress: config.COLLECTION_ADDRESS,
         }),

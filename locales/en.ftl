@@ -17,14 +17,14 @@ unhandled = Unrecognized command. Try /mint
 wrong = Something went wrong
 submitted = You have already submitted a request.
 
-speedup = You're currently waiting in line, and to move up the queue, you can:
+speedup = You are currently in line number {$place}. To move up the queue, you could:
     — Donate any amount of Toncoin from your wallet to the collection address <code>{$collectionAddress}</code>
     — Invite friends to vote for you using link <code>{$inviteLink}</code>
     — Roll the dice by using the command /dice every hour
 
 dice = 
     .wait = Please wait another {$minutes} min {$seconds} sec
-    .success = "Success result {$score}! We will be waiting for you again in one hour."
+    .success = Success result {$score}! You are {$place}th in line. We will be waiting for you again in one hour.
 
 description = 
     .wait = Please provide information about yourself as much as you can. This information will help us to create NFT for you.
