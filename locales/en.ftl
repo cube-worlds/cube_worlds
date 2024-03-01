@@ -24,7 +24,7 @@ speedup = You are currently in line number {$place}. To move up the queue, you c
 
 dice = 
     .wait = Please wait another {$minutes} min {$seconds} sec
-    .success = Success result {$score}! You are {$place}th in line. We will be waiting for you again in one hour.
+    .success = {$score}! Congratulations! You are {$place}th in line. We look forward to seeing you again in one hour.
 
 description = 
     .wait = Please provide information about yourself as much as you can. This information will help us to create NFT for you.
