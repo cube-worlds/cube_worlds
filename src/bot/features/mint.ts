@@ -17,7 +17,9 @@ feature.on("message:text", logHandle("message-handler")).filter(
     ctx.dbuser.description = ctx.message.text;
     ctx.dbuser.state = UserState.WaitWallet;
     ctx.dbuser.save();
-    ctx.reply(ctx.t("description.success", { description: ctx.message.text }));
+    await ctx.reply(
+      ctx.t("description.success", { description: ctx.message.text }),
+    );
     ctx.reply(ctx.t("wallet.wait"));
   },
 );

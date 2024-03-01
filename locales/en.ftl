@@ -22,11 +22,15 @@ speedup = You're currently waiting in line, and to move up the queue, you can:
     — Roll the dice by using the command /dice every hour
 
 dice = 
-    .wait = Wait {$minutes} min {$seconds} sec
-    .success = "Success result {$score}! Waiting you after 1 hour"
+    .wait = Please wait another {$minutes} min {$seconds} sec
+    .success = "Success result {$score}! We will be waiting for you again in one hour."
+
+description = 
+    .wait = Please provide information about yourself as much as you can. This information will help us to create NFT for you.
+    .success = Information <code>{$description}</code> has been saved. If you made a mistake or would like to change description, please use the command /reset
 
 wallet = 
-    .wait = Please provide me with your TON wallet address which will receive the NFT.
+    .wait = Now please provide me with your TON wallet address that will receive the NFT.
     .incorrect = Please provide correct TON wallet address.
         
         

@@ -61,9 +61,9 @@ export function createBot(token: string, options: Options) {
 
   // Handlers
   protectedBot.use(startFeature);
+  protectedBot.use(resetFeature);
   protectedBot.use(mintFeature);
   protectedBot.use(languageFeature);
-  protectedBot.use(resetFeature);
   protectedBot.use(diceFeature);
   protectedBot.use(queueFeature);
   protectedBot.use(collectionFeature);
