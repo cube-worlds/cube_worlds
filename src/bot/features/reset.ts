@@ -10,11 +10,7 @@ const feature = composer.chatType("private");
 
 feature.command("reset", logHandle("command-reset"), async (ctx) => {
   if (ctx.dbuser.state === UserState.Submited || ctx.dbuser.minted) {
-    let status = "submitted request";
-    if (ctx.dbuser.minted) {
-      status = "minted NFT";
-    }
-    return ctx.reply(`You already ${status}`);
+    return ctx.reply(ctx.t("submitted"));
   }
   ctx.dbuser.state = UserState.WaitNothing;
   ctx.dbuser.votes = await voteScore(ctx);

@@ -15,6 +15,7 @@ admin =
     .commands-updated = Commands updated.
 unhandled = Unrecognized command. Try /mint
 wrong = Something went wrong
+submitted = You have already submitted a request.
 
 speedup = You're currently waiting in line, and to move up the queue, you can:
     — Donate any amount of Toncoin from your wallet to the collection address <code>{$collectionAddress}</code>
@@ -32,5 +33,4 @@ description =
 wallet = 
     .wait = Now please provide me with your TON wallet address that will receive the NFT.
     .incorrect = Please provide correct TON wallet address.
-        
-        
+    
