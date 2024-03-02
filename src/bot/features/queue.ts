@@ -14,6 +14,7 @@ import { openWallet, waitSeqno } from "../helpers/ton.js";
 import { NftItem, nftMintParameters } from "../models/nft-item.js";
 import { pinFileToIPFS, pinJSONToIPFS } from "../helpers/ipfs.js";
 import { generate } from "../helpers/generation.js";
+import { randomAttributes } from "../helpers/attributes.js";
 
 const composer = new Composer<Context>();
 
@@ -69,7 +70,7 @@ feature.callbackQuery(
             name: user.name,
             description: user.description,
             image: `ipfs://${ipfsImageHash}`,
-            attributes: [{ trait_type: "strength", value: "20" }],
+            attributes: randomAttributes(),
           };
           ctx.logger.info(json);
           const ipfsJSONHash = await pinJSONToIPFS(nextItemIndex, json);
