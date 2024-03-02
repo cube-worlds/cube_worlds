@@ -133,7 +133,9 @@ export function randomAttributes(): TraitType[] {
     "Faith",
     "Bellicosity",
   ];
-  return attributes.map((attribute) => {
-    return { trait_type: attribute, value: randomValue() };
-  });
+  return attributes
+    .map((attribute) => {
+      return { trait_type: attribute, value: randomValue() };
+    })
+    .sort((trait1, trait2) => -(trait1.value - trait2.value));
 }
