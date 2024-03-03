@@ -3,10 +3,12 @@
 /* eslint-disable no-await-in-loop */
 import { KeyPair, mnemonicToPrivateKey } from "ton-crypto";
 import {
+  Address,
   beginCell,
   Cell,
   OpenedContract,
   TonClient,
+  Transaction,
   WalletContractV4,
 } from "ton";
 import { config } from "#root/config";
@@ -16,23 +18,31 @@ export type OpenedWallet = {
   keyPair: KeyPair;
 };
 
+const toncenterBaseEndpoint: string = config.TESTNET
+  ? "https://testnet.toncenter.com"
+  : "https://toncenter.com";
+
+export const tonClient = new TonClient({
+  endpoint: `${toncenterBaseEndpoint}/api/v2/jsonRPC`,
+  apiKey: process.env.TONCENTER_API_KEY,
+});
+
+export async function getTransactions(
+  address: Address,
+  afterLT: string,
+): Promise<Transaction[]> {
+  return tonClient.getTransactions(address, { lt: afterLT, limit: 100 });
+}
+
 export async function openWallet(mnemonic: string[]) {
   const keyPair = await mnemonicToPrivateKey(mnemonic);
-  const toncenterBaseEndpoint: string = config.TESTNET
-    ? "https://testnet.toncenter.com"
-    : "https://toncenter.com";
-
-  const client = new TonClient({
-    endpoint: `${toncenterBaseEndpoint}/api/v2/jsonRPC`,
-    apiKey: process.env.TONCENTER_API_KEY,
-  });
 
   const wallet = WalletContractV4.create({
     workchain: 0,
     publicKey: keyPair.publicKey,
   });
 
-  const contract = client.open(wallet);
+  const contract = tonClient.open(wallet);
   return { contract, keyPair };
 }
 

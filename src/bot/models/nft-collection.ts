@@ -7,8 +7,11 @@ import {
   StateInit,
   SendMode,
 } from "ton-core";
-import { encodeOffChainContent, OpenedWallet } from "#root/bot/helpers/ton.js";
-import { TonClient } from "ton";
+import {
+  encodeOffChainContent,
+  OpenedWallet,
+  tonClient,
+} from "#root/bot/helpers/ton.js";
 import { config } from "#root/config";
 
 export type collectionData = {
@@ -29,21 +32,23 @@ export class NftCollection {
 
   static async fetchNextItemIndex(): Promise<number> {
     const nftCollectionAddress = Address.parse(config.COLLECTION_ADDRESS);
-    const toncenterBaseEndpoint: string = config.TESTNET
-      ? "https://testnet.toncenter.com"
-      : "https://toncenter.com";
 
-    const client = new TonClient({
-      endpoint: `${toncenterBaseEndpoint}/api/v2/jsonRPC`,
-      apiKey: process.env.TONCENTER_API_KEY,
-    });
-
-    const { stack } = await client.runMethod(
+    const { stack } = await tonClient.runMethod(
       nftCollectionAddress,
       "get_collection_data",
     );
     const nextItemIndex = stack.readBigNumber();
     return Number(nextItemIndex);
+  }
+
+  static async getNftAddressByIndex(itemIndex: number): Promise<Address> {
+    const collectionAddress = Address.parse(config.COLLECTION_ADDRESS);
+    const response = await tonClient.runMethod(
+      collectionAddress,
+      "get_nft_address_by_index",
+      [{ type: "int", value: BigInt(itemIndex) }],
+    );
+    return response.stack.readAddress();
   }
 
   public async deploy(wallet: OpenedWallet): Promise<number> {

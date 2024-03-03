@@ -82,14 +82,17 @@ feature.callbackQuery(
             queryId: 0,
             itemOwnerAddress: userAddress,
             itemIndex: nextItemIndex,
-            amount: toNano("0.05"),
+            amount: toNano("0.01"),
             commonContentUrl: `ipfs://${ipfsJSONHash}`,
           };
           ctx.logger.info(parameters);
           const seqno = await item.deploy(wallet, parameters);
           await waitSeqno(seqno, wallet);
-          const nftAddress = await NftItem.getAddressByIndex(nextItemIndex);
-          ctx.reply(nftAddress.toString());
+          const nft = await NftCollection.getNftAddressByIndex(nextItemIndex);
+          ctx.reply(
+            `https://${config.TESTNET ? "testnet." : ""}getgems.io/collection/${config.COLLECTION_ADDRESS}/${nft.toString()}`,
+            { link_preview_options: { is_disabled: true } },
+          );
           break;
         }
         default: {
