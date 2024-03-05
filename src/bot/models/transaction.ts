@@ -42,14 +42,17 @@ import { TimeStamps } from "@typegoose/typegoose/lib/defaultClasses";
   options: { customName: "trx" },
 })
 export class Transaction extends TimeStamps {
-  @prop({ type: BigInt, required: true, index: true })
-  lt!: bigint;
+  @prop({ type: Number, required: true, index: true })
+  utime!: number;
+
+  @prop({ type: Number, required: true })
+  lt!: number;
 
   @prop({ type: String, required: true })
   address!: string;
 
-  @prop({ type: BigInt, required: true })
-  coins!: bigint;
+  @prop({ type: Number, required: true })
+  coins!: number;
 
   @prop({ type: String, required: true })
   hash!: string;
@@ -57,7 +60,6 @@ export class Transaction extends TimeStamps {
 
 export const TransactionModel = getModelForClass(Transaction);
 
-export async function getLastestLt(): Promise<bigint> {
-  const latestLt = await TransactionModel.findOne().sort({ lt: -1 });
-  return latestLt?.lt ?? BigInt(0);
+export async function getLastestTransaction() {
+  return TransactionModel.findOne().sort({ utime: -1 });
 }

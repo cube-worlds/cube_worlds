@@ -1,66 +1,62 @@
-/* eslint-disable no-return-await */
-/* eslint-disable no-await-in-loop */
-/* eslint-disable no-restricted-syntax */
-/* eslint-disable no-param-reassign */
-/* eslint-disable no-console */
-
 import { logger } from "#root/logger";
-import {
-  Address,
-  CommonMessageInfoInternal,
-  Transaction,
-  fromNano,
-} from "@ton/core";
+import { Address, fromNano } from "@ton/core";
 import { config } from "#root/config";
-import { tonClient } from "./helpers/ton";
-import { TransactionModel, getLastestLt } from "./models/transaction";
+import TonWeb from "tonweb";
+import { TransactionModel, getLastestTransaction } from "./models/transaction";
 import { findUserByAddress } from "./models/user";
 
 export class BlockchainSubscription {
-  // TON transaction has composite ID: account address (on which the transaction took place) + transaction LT (logical time) + transaction hash.
-  // So TxID = address+LT+hash, these three parameters uniquely identify the transaction.
-  // In our case, we are monitoring one wallet and the address is `accountAddress`.
+  static client = new TonWeb(
+    new TonWeb.HttpProvider(
+      `https://${config.TESTNET ? "testnet." : ""}toncenter.com/api/v2/jsonRPC`,
+      { apiKey: config.TONCENTER_API_KEY },
+    ),
+  );
+
   private static async getTransactions(
     address: Address,
-    lt: string,
-  ): Promise<Transaction[]> {
-    const COUNT = 100;
-
+    offsetTransactionLT: string | number | undefined,
+    offsetTransactionHash: string | undefined,
+  ) {
+    const limit = 100;
     try {
-      return await tonClient.getTransactions(address, {
-        limit: COUNT,
-        lt,
-      });
+      return await this.client.provider.getTransactions(
+        address.toString(),
+        limit,
+        offsetTransactionLT,
+        offsetTransactionHash,
+      );
     } catch (error) {
       logger.error(error);
       return [];
     }
   }
 
-  static async processTrx(trx: Transaction) {
-    if (trx.inMessage && trx.outMessagesCount === 0) {
-      const inMessage = trx.inMessage.info as CommonMessageInfoInternal;
-      if (inMessage.bounced) {
-        return;
-      }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static async processTrx(tx: any) {
+    if (tx.in_msg.source && tx.out_msgs.length === 0) {
+      const { utime } = tx;
+      const { value, source } = tx.in_msg;
+      const { lt, hash } = tx.transaction_id;
 
-      const address = inMessage.src; // dest
       const trxModel = new TransactionModel();
-      trxModel.lt = trx.lt;
-      trxModel.address = address.toString();
-      trxModel.coins = inMessage.value.coins;
-      trxModel.hash = trx.hash();
+      trxModel.utime = utime;
+      trxModel.lt = lt;
+      trxModel.address = source;
+      trxModel.coins = value;
+      trxModel.hash = hash;
       await trxModel.save();
 
-      const user = await findUserByAddress(address);
+      const user = await findUserByAddress(source);
       if (user) {
-        const ton = Number(fromNano(inMessage.value.coins));
+        // amount in nano-Toncoins (1 Toncoin = 1e9 nano-Toncoins)
+        const ton = Number(fromNano(value));
         const points = Math.round(ton * 100_000);
         logger.info(`${ton} => ${points}`);
         user.votes += points;
         await user.save();
       } else {
-        logger.error(`USER WITH ADDRESS ${address} NOT FOUND`);
+        logger.error(`USER WITH ADDRESS ${source} NOT FOUND`);
       }
     }
   }
@@ -73,14 +69,18 @@ export class BlockchainSubscription {
       isProcessing = true;
 
       try {
-        const latestLt = await getLastestLt();
+        const latestTrx = await getLastestTransaction();
         const address = Address.parse(config.COLLECTION_ADDRESS);
         const trxs = await BlockchainSubscription.getTransactions(
           address,
-          `${latestLt + BigInt(1)}`,
+          latestTrx?.lt,
+          latestTrx?.hash,
         );
+        // eslint-disable-next-line no-restricted-syntax
         for (const trx of trxs) {
-          this.processTrx(trx);
+          if (trx.utime > (latestTrx?.utime ?? 0)) {
+            this.processTrx(trx);
+          }
         }
       } catch (error) {
         logger.error(error);
