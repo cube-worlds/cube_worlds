@@ -1,11 +1,11 @@
 #!/usr/bin/env tsx
-
 import { onShutdown } from "node-graceful-shutdown";
 import { createBot } from "#root/bot/index.js";
 import { config } from "#root/config.js";
 import { logger } from "#root/logger.js";
 import { createServer } from "#root/server/index.js";
 import mongoose from "mongoose";
+import { BlockchainSubscription } from "./bot/blockchain-subscription";
 
 try {
   await mongoose.connect(config.MONGO);
@@ -19,6 +19,8 @@ try {
     await server.close();
     await bot.stop();
   });
+
+  BlockchainSubscription.start();
 
   if (config.BOT_MODE === "webhook") {
     // to prevent receiving updates before the bot is ready
