@@ -1,5 +1,11 @@
-import { getModelForClass, modelOptions, prop } from "@typegoose/typegoose";
+import {
+  getModelForClass,
+  modelOptions,
+  prop,
+  DocumentType,
+} from "@typegoose/typegoose";
 import { TimeStamps } from "@typegoose/typegoose/lib/defaultClasses.js";
+import { Address } from "@ton/core";
 
 export enum UserState {
   WaitNothing = "WaitNothing",
@@ -55,6 +61,13 @@ export function findOrCreateUser(id: number) {
       new: true,
     },
   );
+}
+
+export async function findUserByAddress(
+  address: Address,
+): Promise<DocumentType<User> | null> {
+  const wallet = address.toString();
+  return UserModel.findOne({ wallet });
 }
 
 export function findQueue() {

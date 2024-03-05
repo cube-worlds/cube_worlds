@@ -1,4 +1,4 @@
-import { Address, beginCell, Cell, internal, SendMode } from "ton-core";
+import { Address, beginCell, Cell, internal, SendMode } from "@ton/core";
 import { OpenedWallet } from "#root/bot/helpers/ton.js";
 import { config } from "#root/config";
 

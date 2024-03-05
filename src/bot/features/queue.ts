@@ -5,7 +5,7 @@ import { logHandle } from "#root/bot/helpers/logging.js";
 import { queueMenu } from "#root/bot/keyboards/queue-menu.js";
 import { isAdmin } from "#root/bot/filters/is-admin.js";
 import { config } from "#root/config.js";
-import { Address, toNano } from "ton-core";
+import { Address, toNano } from "@ton/core";
 import { PhotoSize } from "@grammyjs/types";
 import { changeImageData } from "../callback-data/image-selection.js";
 import { SelectImageButton, photoKeyboard } from "../keyboards/photo.js";

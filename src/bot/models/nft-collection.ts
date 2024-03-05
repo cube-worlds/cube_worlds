@@ -6,7 +6,7 @@ import {
   contractAddress,
   StateInit,
   SendMode,
-} from "ton-core";
+} from "@ton/core";
 import {
   encodeOffChainContent,
   OpenedWallet,

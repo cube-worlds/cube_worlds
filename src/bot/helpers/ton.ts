@@ -1,7 +1,7 @@
 /* eslint-disable no-plusplus */
 /* eslint-disable no-use-before-define */
 /* eslint-disable no-await-in-loop */
-import { KeyPair, mnemonicToPrivateKey } from "ton-crypto";
+import { KeyPair, mnemonicToPrivateKey } from "@ton/crypto";
 import {
   Address,
   beginCell,
@@ -10,7 +10,7 @@ import {
   TonClient,
   Transaction,
   WalletContractV4,
-} from "ton";
+} from "@ton/ton";
 import { config } from "#root/config";
 
 export type OpenedWallet = {

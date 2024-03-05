@@ -4,7 +4,7 @@ import { logHandle } from "#root/bot/helpers/logging.js";
 import { config } from "#root/config.js";
 import { UserState, placeInLine } from "#root/bot/models/user.js";
 import { getUserProfilePhoto } from "#root/bot/helpers/photo.js";
-import { Address } from "ton-core";
+import { Address } from "@ton/core";
 import { voteScore } from "../helpers/votes.js";
 
 const composer = new Composer<Context>();
