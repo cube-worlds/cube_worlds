@@ -38,7 +38,7 @@ export class Subscription {
         offsetTransactionHash,
       );
     } catch (error) {
-      logger.error(error);
+      logger.error(`Trxs error: ${(error as Error).message}`);
       return [];
     }
   }
@@ -58,12 +58,12 @@ export class Subscription {
       trxModel.hash = hash;
       await trxModel.save();
 
+      const ton = fromNano(value);
       const user = await findUserByAddress(source);
       if (user) {
         // amount in nano-Toncoins (1 Toncoin = 1e9 nano-Toncoins)
-        const ton = fromNano(value);
         const points = Math.round(Number(ton) * 100_000);
-        logger.info(`${ton} => ${points}`);
+        logger.debug(`${ton} => ${points}`);
         user.votes += points;
         await user.save();
 
@@ -78,11 +78,11 @@ export class Subscription {
           i18n.t(user.language, "speedup", {
             place,
             inviteLink: `https://t.me/${this.bot.botInfo.username}?start=${user.id}`,
-            collectionAddress: config.COLLECTION_ADDRESS,
+            collectionOwner: config.COLLECTION_OWNER,
           }),
         );
       } else {
-        logger.error(`USER WITH ADDRESS ${source} NOT FOUND`);
+        logger.error(`USER NOT FOUND FOR: ${ton} TON from ${source} `);
       }
     }
   }
@@ -96,10 +96,10 @@ export class Subscription {
 
       try {
         const latestTx = await getLastestTransaction();
-        logger.info(`Latest tx: ${latestTx?.lt}:${latestTx?.hash}`);
-        const address = Address.parse(config.COLLECTION_ADDRESS);
+        logger.debug(`Latest tx: ${latestTx?.lt}:${latestTx?.hash}`);
+        const collectionOwner = Address.parse(config.COLLECTION_OWNER);
         const txs = await this.getTransactions(
-          address,
+          collectionOwner,
           latestTx?.lt,
           latestTx?.hash,
         );
@@ -110,7 +110,7 @@ export class Subscription {
           }
         }
       } catch (error) {
-        logger.error(error);
+        logger.error(`Start error: ${(error as Error).message}`);
       }
 
       isProcessing = false;

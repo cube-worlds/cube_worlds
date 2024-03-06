@@ -80,7 +80,10 @@ export async function placeInLine(votes: number): Promise<number> {
   const count = await UserModel.countDocuments({
     minted: false,
     state: UserState.Submited,
-    votes: { $gt: votes },
+    votes: { $gte: votes },
   });
-  return count + 1;
+  if (count === 0) {
+    return 1;
+  }
+  return count;
 }

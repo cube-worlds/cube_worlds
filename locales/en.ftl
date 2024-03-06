@@ -19,7 +19,7 @@ submitted = You have already submitted a request.
 
 bet = Your bet {$ton} TON has been accepted.
 speedup = You are currently in line number {$place}. To move up the queue, you could:
-    — Donate any amount of Toncoin from your wallet to the collection address <code>{$collectionAddress}</code>
+    — Donate any amount of Toncoin from your wallet to the address <code>{$collectionOwner}</code>
     — Invite friends to vote for you using link <code>{$inviteLink}</code>
     — Roll the dice by using the command /dice every hour
 

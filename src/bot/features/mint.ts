@@ -37,7 +37,7 @@ feature.on("message:text", logHandle("message-handler")).filter(
         ctx.t("speedup", {
           place,
           inviteLink: `https://t.me/${ctx.me.username}?start=${ctx.chat.id}`,
-          collectionAddress: config.COLLECTION_ADDRESS,
+          collectionOwner: config.COLLECTION_OWNER,
         }),
       );
     } catch (error) {
@@ -83,7 +83,7 @@ feature.command("mint", logHandle("command-mint"), async (ctx) => {
         ctx.t("speedup", {
           place,
           inviteLink: `https://t.me/${ctx.me.username}?start=${ctx.chat.id}`,
-          collectionAddress: config.COLLECTION_ADDRESS,
+          collectionOwner: config.COLLECTION_OWNER,
         }),
       );
       break;
