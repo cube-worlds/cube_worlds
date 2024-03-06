@@ -40,3 +40,4 @@ queue = Queue
 no_photo = Make sure you upload images to your Telegram profile. If so, make sure everyone can see your photos:
     Settings -> Privacy & Security -> Who can see my photos -> Everybody
 no_username = Make sure that you set username to your telegram profile
+subscribe_required = Please subscribe to our channel 💎 @cube_worlds 💎 to continue 

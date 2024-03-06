@@ -50,6 +50,14 @@ feature.on("message:text", logHandle("message-handler")).filter(
 feature.command("mint", logHandle("command-mint"), async (ctx) => {
   switch (ctx.dbuser.state) {
     case UserState.WaitNothing: {
+      const subscriber = await ctx.api.getChatMember(
+        "@cube_worlds",
+        ctx.dbuser.id,
+      );
+      const validStatuses = ["creator", "administrator", "member"];
+      if (!validStatuses.includes(subscriber.status)) {
+        return ctx.reply(ctx.t("subscribe_required"));
+      }
       const photo = await getUserProfilePhoto(ctx, ctx.dbuser.id);
       if (!photo) {
         return ctx.reply(ctx.t("no_photo"));
