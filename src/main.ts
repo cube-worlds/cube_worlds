@@ -5,7 +5,7 @@ import { config } from "#root/config.js";
 import { logger } from "#root/logger.js";
 import { createServer } from "#root/server/index.js";
 import mongoose from "mongoose";
-import { BlockchainSubscription } from "./bot/blockchain-subscription";
+import { Subscription } from "#root/bot/subscription";
 
 try {
   await mongoose.connect(config.MONGO);
@@ -20,7 +20,8 @@ try {
     await bot.stop();
   });
 
-  BlockchainSubscription.start();
+  const subscription = new Subscription(bot);
+  subscription.start();
 
   if (config.BOT_MODE === "webhook") {
     // to prevent receiving updates before the bot is ready

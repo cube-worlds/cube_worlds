@@ -1,5 +1,4 @@
 import { modelOptions, prop, getModelForClass } from "@typegoose/typegoose";
-import { TimeStamps } from "@typegoose/typegoose/lib/defaultClasses";
 
 /**
 {
@@ -38,10 +37,10 @@ import { TimeStamps } from "@typegoose/typegoose/lib/defaultClasses";
  */
 
 @modelOptions({
-  schemaOptions: { timestamps: true },
-  options: { customName: "trx" },
+  schemaOptions: { timestamps: false },
+  options: { customName: "tx" },
 })
-export class Transaction extends TimeStamps {
+export class Transaction {
   @prop({ type: Number, required: true, index: true })
   utime!: number;
 

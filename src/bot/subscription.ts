@@ -1,21 +1,32 @@
+import { i18n } from "#root/bot/i18n.js";
+/* eslint-disable class-methods-use-this */
 import { logger } from "#root/logger";
 import { Address, fromNano } from "@ton/core";
 import { config } from "#root/config";
 import TonWeb from "tonweb";
+import { Api, Bot, RawApi } from "grammy";
 import { TransactionModel, getLastestTransaction } from "./models/transaction";
-import { findUserByAddress } from "./models/user";
+import { findUserByAddress, placeInLine } from "./models/user";
+import { Context } from "./context";
 
-export class BlockchainSubscription {
-  static client = new TonWeb(
-    new TonWeb.HttpProvider(
-      `https://${config.TESTNET ? "testnet." : ""}toncenter.com/api/v2/jsonRPC`,
-      { apiKey: config.TONCENTER_API_KEY },
-    ),
-  );
+export class Subscription {
+  bot: Bot<Context, Api<RawApi>>;
 
-  private static async getTransactions(
+  client: TonWeb;
+
+  constructor(bot: Bot<Context, Api<RawApi>>) {
+    this.bot = bot;
+    this.client = new TonWeb(
+      new TonWeb.HttpProvider(
+        `https://${config.TESTNET ? "testnet." : ""}toncenter.com/api/v2/jsonRPC`,
+        { apiKey: config.TONCENTER_API_KEY },
+      ),
+    );
+  }
+
+  private async getTransactions(
     address: Address,
-    offsetTransactionLT: string | number | undefined,
+    offsetTransactionLT: number | undefined,
     offsetTransactionHash: string | undefined,
   ) {
     const limit = 100;
@@ -33,7 +44,7 @@ export class BlockchainSubscription {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  static async processTrx(tx: any) {
+  private async processTrx(tx: any) {
     if (tx.in_msg.source && tx.out_msgs.length === 0) {
       const { utime } = tx;
       const { value, source } = tx.in_msg;
@@ -50,18 +61,33 @@ export class BlockchainSubscription {
       const user = await findUserByAddress(source);
       if (user) {
         // amount in nano-Toncoins (1 Toncoin = 1e9 nano-Toncoins)
-        const ton = Number(fromNano(value));
-        const points = Math.round(ton * 100_000);
+        const ton = fromNano(value);
+        const points = Math.round(Number(ton) * 100_000);
         logger.info(`${ton} => ${points}`);
         user.votes += points;
         await user.save();
+
+        await this.bot.api.sendMessage(
+          user.id,
+          i18n.t(user.language, "bet", { ton }),
+        );
+
+        const place = await placeInLine(user.votes);
+        this.bot.api.sendMessage(
+          user.id,
+          i18n.t(user.language, "speedup", {
+            place,
+            inviteLink: `https://t.me/${this.bot.botInfo.username}?start=${user.id}`,
+            collectionAddress: config.COLLECTION_ADDRESS,
+          }),
+        );
       } else {
         logger.error(`USER WITH ADDRESS ${source} NOT FOUND`);
       }
     }
   }
 
-  static async start() {
+  async start() {
     let isProcessing = false;
 
     const tick = async () => {
@@ -69,17 +95,18 @@ export class BlockchainSubscription {
       isProcessing = true;
 
       try {
-        const latestTrx = await getLastestTransaction();
+        const latestTx = await getLastestTransaction();
+        logger.info(`Latest tx: ${latestTx?.lt}:${latestTx?.hash}`);
         const address = Address.parse(config.COLLECTION_ADDRESS);
-        const trxs = await BlockchainSubscription.getTransactions(
+        const txs = await this.getTransactions(
           address,
-          latestTrx?.lt,
-          latestTrx?.hash,
+          latestTx?.lt,
+          latestTx?.hash,
         );
         // eslint-disable-next-line no-restricted-syntax
-        for (const trx of trxs) {
-          if (trx.utime > (latestTrx?.utime ?? 0)) {
-            this.processTrx(trx);
+        for (const tx of txs) {
+          if (tx.utime > (latestTx?.utime ?? 0)) {
+            this.processTrx(tx);
           }
         }
       } catch (error) {
@@ -89,7 +116,7 @@ export class BlockchainSubscription {
       isProcessing = false;
     };
 
-    setInterval(tick, 20 * 1000);
+    setInterval(tick, 30 * 1000);
     tick();
   }
 }
