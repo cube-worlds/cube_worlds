@@ -7,14 +7,15 @@ import { isAdmin } from "#root/bot/filters/is-admin.js";
 import { config } from "#root/config.js";
 import { Address, toNano } from "@ton/core";
 import { PhotoSize } from "@grammyjs/types";
-import { changeImageData } from "../callback-data/image-selection.js";
-import { SelectImageButton, photoKeyboard } from "../keyboards/photo.js";
-import { NftCollection } from "../models/nft-collection.js";
-import { openWallet, waitSeqno } from "../helpers/ton.js";
-import { NftItem, nftMintParameters } from "../models/nft-item.js";
-import { pinFileToIPFS, pinJSONToIPFS } from "../helpers/ipfs.js";
-import { generate } from "../helpers/generation.js";
-import { randomAttributes } from "../helpers/attributes.js";
+import { changeImageData } from "#root/bot/callback-data/image-selection.js";
+import { SelectImageButton, photoKeyboard } from "#root/bot/keyboards/photo.js";
+import { NftCollection } from "#root/bot/models/nft-collection.js";
+import { openWallet, waitSeqno } from "#root/bot/helpers/ton.js";
+import { NftItem, nftMintParameters } from "#root/bot/models/nft-item.js";
+import { pinFileToIPFS, pinJSONToIPFS } from "#root/bot/helpers/ipfs.js";
+import { generate } from "#root/bot/helpers/generation.js";
+import { randomAttributes } from "#root/bot/helpers/attributes.js";
+import { findUserById } from "#root/bot/models/user.js";
 
 const composer = new Composer<Context>();
 
@@ -29,11 +30,18 @@ feature.callbackQuery(
   logHandle("keyboard-image-select"),
   async (ctx) => {
     try {
+      const selectedUserId = ctx.dbuser.selectedUser;
+      if (!selectedUserId) {
+        return ctx.reply(ctx.t("wrong"));
+      }
+      const user = await findUserById(selectedUserId);
+      if (!user) {
+        return ctx.reply(ctx.t("wrong"));
+      }
       ctx.chatAction = "upload_document";
       const { select } = changeImageData.unpack(ctx.callbackQuery.data);
       switch (select) {
         case SelectImageButton.Refresh: {
-          const user = ctx.dbuser; // TODO: change to selected user
           if (!user.avatar) {
             return ctx.reply(ctx.t("wrong"));
           }
@@ -58,7 +66,6 @@ feature.callbackQuery(
         case SelectImageButton.Done: {
           ctx.editMessageReplyMarkup({});
 
-          const user = ctx.dbuser; // TODO: change to selected user
           const nextItemIndex = await NftCollection.fetchNextItemIndex();
 
           const ipfsImageHash = await pinFileToIPFS(

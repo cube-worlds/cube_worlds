@@ -1,6 +1,8 @@
 import { Composer } from "grammy";
 import type { Context } from "#root/bot/context.js";
 import { logHandle } from "#root/bot/helpers/logging.js";
+import { VoteModel, isUserAlreadyVoted } from "#root/bot/models/vote";
+import { findUserById } from "#root/bot/models/user";
 
 const composer = new Composer<Context>();
 
@@ -9,15 +11,31 @@ const feature = composer.chatType("private");
 feature.command("start", logHandle("command-start"), async (ctx) => {
   const payload = ctx.match;
   if (payload) {
+    const giverId = ctx.dbuser.id;
+    const receiverId = Number(payload);
+    const receiver = await findUserById(receiverId);
+    if (!receiver) {
+      return ctx.reply("No receiver exists");
+    }
+    if (receiverId === giverId) {
+      return ctx.reply("You can't vote for yourself");
+    }
+    if (await isUserAlreadyVoted(giverId)) {
+      return ctx.reply("You already voted");
+    }
     const author = await ctx.getAuthor();
     const premium = author.user.is_premium ?? false;
     const add = premium ? 50 : 5;
-    ctx.logger.error(add);
-    ctx.reply("TODO: there will be vote for user");
-    // const isUpdated = added.modifiedCount > 0;
-    // ctx.reply(
-    //   `You are successfully vote for ${payload}. You votes: ${ctx.dbuser.votes}`,
-    // );
+    const voteModel = new VoteModel();
+    voteModel.giver = giverId;
+    voteModel.receiver = receiverId;
+    voteModel.quantity = add;
+    await voteModel.save();
+
+    receiver.votes += add;
+    await receiver.save();
+
+    ctx.reply(`You are successfully vote for @${receiver.name}!`);
   } else {
     ctx.reply(ctx.t("unhandled"));
   }

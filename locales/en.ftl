@@ -35,3 +35,8 @@ wallet =
     .wait = Now please provide me with your TON wallet address that will receive the NFT.
     .incorrect = Please provide correct TON wallet address.
     
+queue = Queue
+
+no_photo = Make sure you upload images to your Telegram profile. If so, make sure everyone can see your photos:
+    Settings -> Privacy & Security -> Who can see my photos -> Everybody
+no_username = Make sure that you set username to your telegram profile

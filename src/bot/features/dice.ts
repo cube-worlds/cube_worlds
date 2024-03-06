@@ -1,7 +1,7 @@
 import { Composer } from "grammy";
 import type { Context } from "#root/bot/context.js";
 import { logHandle } from "#root/bot/helpers/logging.js";
-import { placeInLine } from "../models/user";
+import { placeInLine } from "#root/bot/models/user";
 
 function timeUnitsBetween(startDate: Date, endDate: Date) {
   let delta = Math.abs(endDate.getTime() - startDate.getTime()) / 1000;

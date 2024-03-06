@@ -5,7 +5,7 @@ import { config } from "#root/config.js";
 import { UserState, placeInLine } from "#root/bot/models/user.js";
 import { getUserProfilePhoto } from "#root/bot/helpers/photo.js";
 import { Address } from "@ton/core";
-import { voteScore } from "../helpers/votes.js";
+import { voteScore } from "#root/bot/helpers/votes.js";
 
 const composer = new Composer<Context>();
 
@@ -50,17 +50,13 @@ feature.on("message:text", logHandle("message-handler")).filter(
 feature.command("mint", logHandle("command-mint"), async (ctx) => {
   switch (ctx.dbuser.state) {
     case UserState.WaitNothing: {
-      const photo = await getUserProfilePhoto(ctx);
+      const photo = await getUserProfilePhoto(ctx, ctx.dbuser.id);
       if (!photo) {
-        return ctx.reply(
-          "Make sure that you upload image to your telegram profile",
-        );
+        return ctx.reply(ctx.t("no_photo"));
       }
       const author = await ctx.getAuthor();
       if (!author.user.username) {
-        return ctx.reply(
-          "Make sure that you set username to your telegram profile",
-        );
+        return ctx.reply(ctx.t("no_username"));
       }
       ctx.dbuser.name = author.user.username;
       ctx.dbuser.votes = await voteScore(ctx);

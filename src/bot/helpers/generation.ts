@@ -41,7 +41,8 @@ export async function generate(
     // "blue pen ink drawing of adventure character",
     // "Blue pen and wash picture of the face and shoulders of a hedgehog in semi profile with a happy face, face in the center of the frame, semi profile, with sharp blue lines, no fill color just the outline, plain white background with no fill, in the style of Michelangelo sketch, makes the viewer happy",
     // "sketch, bold use of line, in the style of Peter Paul Rubens, light gray, intense close-ups, i can't believe how beautiful this",
-    "fully pixed professional 3d cartoon portrait of hero adventure warrior with melee weapon, beautiful big cartoon eyes, pixar art style character, octane render, highly detailed, golden hour",
+    // "fully pixed professional 3d cartoon portrait of hero adventure warrior with melee weapon, beautiful big cartoon eyes, pixar art style character, octane render, highly detailed, golden hour",
+    "fully pixed professional 3d cartoon portrait, beautiful big cartoon eyes, pixar art style character, octane render, highly detailed, golden hour",
   );
   formData.append("text_prompts[0][weight]", "1");
 

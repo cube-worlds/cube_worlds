@@ -48,6 +48,10 @@ export class User extends TimeStamps {
 
   @prop({ type: Boolean, required: true, default: false })
   minted!: boolean;
+
+  // for admin
+  @prop({ type: Number, required: false })
+  selectedUser?: number;
 }
 
 const UserModel = getModelForClass(User);
@@ -68,6 +72,12 @@ export async function findUserByAddress(
 ): Promise<DocumentType<User> | null> {
   const wallet = address.toString();
   return UserModel.findOne({ wallet });
+}
+
+export async function findUserById(
+  id: number,
+): Promise<DocumentType<User> | null> {
+  return UserModel.findOne({ id });
 }
 
 export function findQueue() {

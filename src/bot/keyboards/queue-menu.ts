@@ -3,10 +3,10 @@ import { Menu } from "@grammyjs/menu";
 import { Context } from "#root/bot/context.js";
 import { findQueue } from "#root/bot/models/user.js";
 import { config } from "#root/config.js";
+import { getUserProfileFile } from "#root/bot/helpers/photo.js";
+import { saveImageFromUrl } from "#root/bot/helpers/files.js";
+import { NftCollection } from "#root/bot/models/nft-collection.js";
 import { photoKeyboard } from "./photo.js";
-import { getUserProfileFile } from "../helpers/photo.js";
-import { saveImageFromUrl } from "../helpers/files.js";
-import { NftCollection } from "../models/nft-collection.js";
 
 export const queueMenu = new Menu("queue").dynamic(async (_, range) => {
   const queue = await findQueue();
@@ -16,7 +16,11 @@ export const queueMenu = new Menu("queue").dynamic(async (_, range) => {
         const context = ctx as unknown as Context;
         context.chatAction = "upload_document";
 
-        const randomAva = await getUserProfileFile(context);
+        const currentUser = context.dbuser;
+        currentUser.selectedUser = item.id;
+        await currentUser.save();
+
+        const randomAva = await getUserProfileFile(context, item.id ?? 0);
         if (!randomAva) {
           return context.reply(context.t("wrong"));
         }
@@ -29,7 +33,7 @@ export const queueMenu = new Menu("queue").dynamic(async (_, range) => {
 
         context.replyWithPhoto(randomAva.file_id, {
           caption: `[${item.name}](tg://user?id=${item.id})\n\n${item.description}`,
-          parse_mode: "MarkdownV2",
+          parse_mode: "Markdown",
           reply_markup: {
             inline_keyboard: photoKeyboard,
           },

@@ -1,7 +1,8 @@
 import type { Context } from "#root/bot/context.js";
 
-export async function getUserProfilePhoto(ctx: Context) {
-  const photos = await ctx.getUserProfilePhotos();
+export async function getUserProfilePhoto(ctx: Context, userId: number) {
+  const photos = await ctx.api.getUserProfilePhotos(userId);
+  ctx.logger.info(photos);
   if (photos.total_count > 0) {
     const lastPhotoArray =
       photos.photos[Math.floor(Math.random() * photos.photos.length)];
@@ -12,8 +13,8 @@ export async function getUserProfilePhoto(ctx: Context) {
   }
 }
 
-export async function getUserProfileFile(ctx: Context) {
-  const photo = await getUserProfilePhoto(ctx);
+export async function getUserProfileFile(ctx: Context, userId: number) {
+  const photo = await getUserProfilePhoto(ctx, userId);
   if (photo) {
     return ctx.api.getFile(photo.file_id);
   }
