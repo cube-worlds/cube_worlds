@@ -50,8 +50,18 @@ export class User extends TimeStamps {
   minted!: boolean;
 
   // for admin
-  @prop({ type: Number, required: false })
+
+  @prop({ type: Number })
   selectedUser?: number;
+
+  @prop({ type: String })
+  nftDescription?: string;
+
+  @prop({ type: String })
+  nftImage?: string;
+
+  @prop({ type: String })
+  nftJson?: string;
 }
 
 const UserModel = getModelForClass(User);

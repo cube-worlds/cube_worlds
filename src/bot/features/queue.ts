@@ -2,7 +2,7 @@
 import { Composer, InputFile, InputMediaBuilder } from "grammy";
 import type { Context } from "#root/bot/context.js";
 import { logHandle } from "#root/bot/helpers/logging.js";
-import { queueMenu } from "#root/bot/keyboards/queue-menu.js";
+import { queueMenu, sendUserMetadata } from "#root/bot/keyboards/queue-menu.js";
 import { isAdmin } from "#root/bot/filters/is-admin.js";
 import { config } from "#root/config.js";
 import { Address, toNano } from "@ton/core";
@@ -34,19 +34,23 @@ feature.callbackQuery(
       if (!selectedUserId) {
         return ctx.reply(ctx.t("wrong"));
       }
-      const user = await findUserById(selectedUserId);
-      if (!user) {
+      const selectedUser = await findUserById(selectedUserId);
+      if (!selectedUser) {
         return ctx.reply(ctx.t("wrong"));
       }
-      ctx.chatAction = "upload_document";
       const { select } = changeImageData.unpack(ctx.callbackQuery.data);
+      ctx.editMessageReplyMarkup({});
       switch (select) {
         case SelectImageButton.Refresh: {
-          if (!user.avatar) {
+          if (!selectedUser.avatar) {
             return ctx.reply(ctx.t("wrong"));
           }
+          ctx.chatAction = "upload_document";
           const nextItemIndex = await NftCollection.fetchNextItemIndex();
-          const generatedFilePath = await generate(user.avatar, nextItemIndex);
+          const generatedFilePath = await generate(
+            selectedUser.avatar,
+            nextItemIndex,
+          );
           const inputFile = new InputFile(generatedFilePath);
           const newMedia = InputMediaBuilder.photo(inputFile);
           const newMessage = await ctx.editMessageMedia(newMedia, {
@@ -59,44 +63,61 @@ feature.callbackQuery(
               (b.file_size ?? 0) - (a.file_size ?? 0),
           )[0].file_id;
           const file = await ctx.api.getFile(fileId);
-          user.image = `https://api.telegram.org/file/bot${config.BOT_TOKEN}/${file.file_path}`;
-          user.save();
+          selectedUser.image = `https://api.telegram.org/file/bot${config.BOT_TOKEN}/${file.file_path}`;
+          await selectedUser.save();
           break;
         }
-        case SelectImageButton.Done: {
-          ctx.editMessageReplyMarkup({});
+        case SelectImageButton.Description: {
+          break;
+        }
 
+        case SelectImageButton.Upload: {
           const nextItemIndex = await NftCollection.fetchNextItemIndex();
-
           const ipfsImageHash = await pinFileToIPFS(
             nextItemIndex,
-            user.image ?? "",
+            selectedUser.image ?? "",
           );
           ctx.logger.info(ipfsImageHash);
           const json = {
-            name: user.name,
-            description: user.description,
+            name: selectedUser.name,
+            description: selectedUser.description,
             image: `ipfs://${ipfsImageHash}`,
             attributes: randomAttributes(),
           };
           ctx.logger.info(json);
           const ipfsJSONHash = await pinJSONToIPFS(nextItemIndex, json);
+          selectedUser.nftImage = ipfsImageHash;
+          selectedUser.nftJson = ipfsJSONHash;
+          await selectedUser.save();
+          await sendUserMetadata(ctx, selectedUser, true);
+          break;
+        }
+        case SelectImageButton.Done: {
+          if (!selectedUser.nftDescription) {
+            return ctx.reply("Empty description");
+          }
+          if (!selectedUser.nftJson || !selectedUser.nftImage) {
+            return ctx.reply("Empty NFT metadata");
+          }
+          ctx.chatAction = "upload_document";
+
+          const nextItemIndex = await NftCollection.fetchNextItemIndex();
 
           const wallet = await openWallet(config.MNEMONICS.split(" "));
           const item = new NftItem();
-          const userAddress = Address.parse(user.wallet ?? "");
+          const userAddress = Address.parse(selectedUser.wallet ?? "");
           const parameters: nftMintParameters = {
             queryId: 0,
             itemOwnerAddress: userAddress,
             itemIndex: nextItemIndex,
             amount: toNano("0.01"),
-            commonContentUrl: `ipfs://${ipfsJSONHash}`,
+            commonContentUrl: `ipfs://${selectedUser.nftJson}`,
           };
           ctx.logger.info(parameters);
           const seqno = await item.deploy(wallet, parameters);
           await waitSeqno(seqno, wallet);
           const nft = await NftCollection.getNftAddressByIndex(nextItemIndex);
-          ctx.reply(
+          await ctx.reply(
             `https://${config.TESTNET ? "testnet." : ""}getgems.io/collection/${config.COLLECTION_ADDRESS}/${nft.toString()}`,
             { link_preview_options: { is_disabled: true } },
           );
@@ -108,8 +129,9 @@ feature.callbackQuery(
       }
     } catch (error) {
       ctx.logger.warn(error as Error);
-      return ctx.reply((error as Error).message);
+      await ctx.reply((error as Error).message);
     }
+    ctx.chatAction = null;
   },
 );
 

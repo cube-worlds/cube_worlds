@@ -30,17 +30,14 @@ export class Subscription {
     offsetTransactionHash: string | undefined,
   ) {
     const limit = 100;
-    try {
-      return await this.client.provider.getTransactions(
-        address.toString(),
-        limit,
-        offsetTransactionLT,
-        offsetTransactionHash,
-      );
-    } catch (error) {
-      logger.error(`Trxs error: ${(error as Error).message}`);
-      return [];
-    }
+    return this.client.provider.getTransactions(
+      address.toString(),
+      limit,
+      offsetTransactionLT,
+      offsetTransactionHash,
+      undefined,
+      true,
+    );
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -110,7 +107,7 @@ export class Subscription {
           }
         }
       } catch (error) {
-        logger.error(`Start error: ${(error as Error).message}`);
+        logger.error(`Subscription error: ${error}`);
       }
 
       isProcessing = false;

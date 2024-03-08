@@ -37,7 +37,9 @@ feature.command("start", logHandle("command-start"), async (ctx) => {
 
     ctx.reply(`You are successfully vote for @${receiver.name}!`);
   } else {
-    ctx.reply(ctx.t("unhandled"));
+    ctx.reply(ctx.t("start"), {
+      link_preview_options: { show_above_text: true },
+    });
   }
 });
 
