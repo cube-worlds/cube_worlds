@@ -33,6 +33,7 @@ const createConfigFromEnvironment = (environment: NodeJS.ProcessEnv) => {
     TONCENTER_API_KEY: z.string(),
     TESTNET: z.boolean().default(true),
     STABILITY_API_KEY: z.string(),
+    OPENAI_API_KEY: z.string(),
   });
 
   if (config.BOT_MODE === "webhook") {
