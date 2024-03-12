@@ -10,15 +10,15 @@ export enum SelectImageButton {
 export const photoKeyboard = [
   [
     {
-      text: "🔄 Regenerate",
-      callback_data: changeImageData.pack({
-        select: SelectImageButton.Refresh,
-      }),
-    },
-    {
       text: "📝 Description",
       callback_data: changeImageData.pack({
         select: SelectImageButton.Description,
+      }),
+    },
+    {
+      text: "🔄 Regenerate",
+      callback_data: changeImageData.pack({
+        select: SelectImageButton.Refresh,
       }),
     },
   ],

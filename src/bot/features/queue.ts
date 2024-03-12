@@ -1,8 +1,12 @@
 /* eslint-disable unicorn/no-null */
-import { Composer, InputFile, InputMediaBuilder } from "grammy";
+import { Composer, InputFile } from "grammy";
 import type { Context } from "#root/bot/context.js";
 import { logHandle } from "#root/bot/helpers/logging.js";
-import { queueMenu, sendUserMetadata } from "#root/bot/keyboards/queue-menu.js";
+import {
+  photoCaption,
+  queueMenu,
+  sendUserMetadata,
+} from "#root/bot/keyboards/queue-menu.js";
 import { isAdmin } from "#root/bot/filters/is-admin.js";
 import { config } from "#root/config.js";
 import { Address, toNano } from "@ton/core";
@@ -16,6 +20,7 @@ import { pinFileToIPFS, pinJSONToIPFS } from "#root/bot/helpers/ipfs.js";
 import { generate } from "#root/bot/helpers/generation.js";
 import { randomAttributes } from "#root/bot/helpers/attributes.js";
 import { findUserById } from "#root/bot/models/user.js";
+import { ChatGPTAPI } from "chatgpt";
 
 const composer = new Composer<Context>();
 
@@ -41,6 +46,27 @@ feature.callbackQuery(
       const { select } = changeImageData.unpack(ctx.callbackQuery.data);
       ctx.editMessageReplyMarkup({});
       switch (select) {
+        case SelectImageButton.Description: {
+          const api = new ChatGPTAPI({
+            apiKey: config.OPENAI_API_KEY,
+            completionParams: {
+              max_tokens: 512,
+            },
+          });
+          const name = selectedUser.name ?? "";
+          const info = selectedUser.description ?? "";
+          const result = await api.sendMessage(
+            // `Write the beginning of the new RPG character's story named "${name}".
+            `Write an inspiring text about a person named "${name}" who has decided to start a journey.
+            You can also use this additional information: ${info}. 
+            Response MUST BE up to 500 characters maximum`,
+          );
+          selectedUser.nftDescription = result.text.slice(0, 700);
+          await selectedUser.save();
+          await sendUserMetadata(ctx, selectedUser);
+          break;
+        }
+
         case SelectImageButton.Refresh: {
           if (!selectedUser.avatar) {
             return ctx.reply(ctx.t("wrong"));
@@ -52,10 +78,17 @@ feature.callbackQuery(
             nextItemIndex,
           );
           const inputFile = new InputFile(generatedFilePath);
-          const newMedia = InputMediaBuilder.photo(inputFile);
-          const newMessage = await ctx.editMessageMedia(newMedia, {
-            reply_markup: { inline_keyboard: photoKeyboard },
+          // const newMedia = InputMediaBuilder.photo(inputFile);
+          const newMessage = await ctx.replyWithPhoto(inputFile, {
+            caption: photoCaption(selectedUser),
+            parse_mode: "Markdown",
+            reply_markup: {
+              inline_keyboard: photoKeyboard,
+            },
           });
+          // const newMessage = await ctx.editMessageMedia(newMedia, {
+          //   reply_markup: { inline_keyboard: photoKeyboard },
+          // });
           ctx.logger.error(newMessage);
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const fileId = (newMessage as any).photo.sort(
@@ -67,11 +100,14 @@ feature.callbackQuery(
           await selectedUser.save();
           break;
         }
-        case SelectImageButton.Description: {
-          break;
-        }
 
         case SelectImageButton.Upload: {
+          if (!selectedUser.nftDescription) {
+            return ctx.reply("Empty description");
+          }
+          if (!selectedUser.image) {
+            return ctx.reply("Empty image");
+          }
           const nextItemIndex = await NftCollection.fetchNextItemIndex();
           const ipfsImageHash = await pinFileToIPFS(
             nextItemIndex,
@@ -80,7 +116,7 @@ feature.callbackQuery(
           ctx.logger.info(ipfsImageHash);
           const json = {
             name: selectedUser.name,
-            description: selectedUser.description,
+            description: selectedUser.nftDescription,
             image: `ipfs://${ipfsImageHash}`,
             attributes: randomAttributes(),
           };
@@ -89,9 +125,10 @@ feature.callbackQuery(
           selectedUser.nftImage = ipfsImageHash;
           selectedUser.nftJson = ipfsJSONHash;
           await selectedUser.save();
-          await sendUserMetadata(ctx, selectedUser, true);
+          await sendUserMetadata(ctx, selectedUser);
           break;
         }
+
         case SelectImageButton.Done: {
           if (!selectedUser.nftDescription) {
             return ctx.reply("Empty description");
