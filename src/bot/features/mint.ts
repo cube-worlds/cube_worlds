@@ -11,6 +11,14 @@ const composer = new Composer<Context>();
 
 const feature = composer.chatType("private");
 
+function isAddressValid(a: Address): boolean {
+  try {
+    return a.workChain === 0 || a.workChain === -1;
+  } catch {
+    return false;
+  }
+}
+
 feature.on("message:text", logHandle("message-handler")).filter(
   (ctx) => ctx.dbuser.state === UserState.WaitDescription,
   async (ctx) => {
@@ -29,6 +37,10 @@ feature.on("message:text", logHandle("message-handler")).filter(
   async (ctx) => {
     try {
       const address = Address.parse(ctx.message.text);
+      const valid = isAddressValid(address);
+      if (!valid) {
+        return ctx.reply(ctx.t("wallet.incorrect"));
+      }
       ctx.dbuser.wallet = address.toString();
       ctx.dbuser.state = UserState.Submited;
       ctx.dbuser.save();
