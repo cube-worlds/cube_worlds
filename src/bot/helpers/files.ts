@@ -35,11 +35,8 @@ export async function saveImageFromUrl(
   return saveImage(index, newFileName, buffer);
 }
 
-export function saveJSON(index: number, json: object) {
-  const fp = folderPath(index);
-  fs.writeFile(
-    path.join(fp, `${index}.json`),
-    JSON.stringify(json),
-    (_error) => {},
-  );
+export function saveJSON(index: number, json: object): string {
+  const jsonPath = path.join(folderPath(index), `${index}.json`);
+  fs.writeFile(jsonPath, JSON.stringify(json), (_error) => {});
+  return jsonPath;
 }

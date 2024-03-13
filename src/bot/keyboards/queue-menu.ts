@@ -11,14 +11,10 @@ import { photoKeyboard } from "#root/bot/keyboards/photo.js";
 
 export function photoCaption(user: User) {
   return `[${user.name}](tg://user?id=${user.id})
-
 Comment: \`${user.description?.slice(0, 1000) ?? ""}\`
-
 Description: \`${user.nftDescription ?? ""}\`
-
-Image: ${user.nftImage ? `[ipfs](https://ipfs.io/ipfs/${user.nftImage})` : ""}
-
-JSON: ${user.nftJson ? `[ipfs](https://ipfs.io/ipfs/${user.nftJson})` : ""}
+${user.nftImage ? `[Image](https://ipfs.io/ipfs/${user.nftImage}) | ` : ""} ${user.nftJson ? `[JSON](https://ipfs.io/ipfs/${user.nftJson})` : ""}
+Minted: ${user.minted ? "✅" : "❌"} ${user.nftUrl ?? ""}
 `;
 }
 

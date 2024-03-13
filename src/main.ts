@@ -5,7 +5,7 @@ import { config } from "#root/config.js";
 import { logger } from "#root/logger.js";
 import { createServer } from "#root/server/index.js";
 import mongoose from "mongoose";
-import { Subscription } from "#root/bot/subscription";
+import { Subscription } from "#root/bot/subscription.js";
 
 try {
   await mongoose.connect(config.MONGO);

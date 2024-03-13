@@ -12,7 +12,7 @@ import {
   OpenedWallet,
   tonClient,
 } from "#root/bot/helpers/ton.js";
-import { config } from "#root/config";
+import { config } from "#root/config.js";
 
 export type collectionData = {
   ownerAddress: Address;

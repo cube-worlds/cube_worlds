@@ -11,7 +11,7 @@ import {
   Transaction,
   WalletContractV4,
 } from "@ton/ton";
-import { config } from "#root/config";
+import { config } from "#root/config.js";
 
 export type OpenedWallet = {
   contract: OpenedContract<WalletContractV4>;
@@ -29,9 +29,15 @@ export const tonClient = new TonClient({
 
 export async function getTransactions(
   address: Address,
-  afterLT: string,
+  lt: string,
+  hash: string,
 ): Promise<Transaction[]> {
-  return tonClient.getTransactions(address, { lt: afterLT, limit: 100 });
+  return tonClient.getTransactions(address, {
+    lt,
+    hash,
+    limit: 100,
+    archival: true,
+  });
 }
 
 export async function openWallet(mnemonic: string[]) {

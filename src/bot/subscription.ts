@@ -1,13 +1,15 @@
 import { i18n } from "#root/bot/i18n.js";
-/* eslint-disable class-methods-use-this */
-import { logger } from "#root/logger";
+import { logger } from "#root/logger.js";
 import { Address, fromNano } from "@ton/core";
-import { config } from "#root/config";
-import TonWeb from "tonweb";
+import { config } from "#root/config.js";
 import { Api, Bot, RawApi } from "grammy";
-import { TransactionModel, getLastestTransaction } from "./models/transaction";
-import { findUserByAddress, placeInLine } from "./models/user";
-import { Context } from "./context";
+import TonWeb from "tonweb";
+import { Context } from "#root/bot/context.js";
+import { findUserByAddress, placeInLine } from "#root/bot/models/user.js";
+import {
+  TransactionModel,
+  getLastestTransaction,
+} from "#root/bot/models/transaction.js";
 
 export class Subscription {
   bot: Bot<Context, Api<RawApi>>;

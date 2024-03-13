@@ -1,7 +1,7 @@
 import fetch from "node-fetch";
 import FormData from "form-data";
 import fs from "node:fs";
-import { config } from "#root/config";
+import { config } from "#root/config.js";
 
 export async function generate(
   filePath: string,

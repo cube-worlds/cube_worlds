@@ -1,8 +1,8 @@
 import { Composer } from "grammy";
 import type { Context } from "#root/bot/context.js";
 import { logHandle } from "#root/bot/helpers/logging.js";
-import { VoteModel, isUserAlreadyVoted } from "#root/bot/models/vote";
-import { findUserById } from "#root/bot/models/user";
+import { findUserById } from "#root/bot/models/user.js";
+import { VoteModel, isUserAlreadyVoted } from "#root/bot/models/vote.js";
 
 const composer = new Composer<Context>();
 

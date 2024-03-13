@@ -62,6 +62,9 @@ export class User extends TimeStamps {
 
   @prop({ type: String })
   nftJson?: string;
+
+  @prop({ type: String })
+  nftUrl?: string;
 }
 
 const UserModel = getModelForClass(User);

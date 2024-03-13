@@ -16,7 +16,7 @@ import { SelectImageButton, photoKeyboard } from "#root/bot/keyboards/photo.js";
 import { NftCollection } from "#root/bot/models/nft-collection.js";
 import { openWallet, waitSeqno } from "#root/bot/helpers/ton.js";
 import { NftItem, nftMintParameters } from "#root/bot/models/nft-item.js";
-import { pinFileToIPFS, pinJSONToIPFS } from "#root/bot/helpers/ipfs.js";
+import { pinImageURLToIPFS, pinJSONToIPFS } from "#root/bot/helpers/ipfs.js";
 import { generate } from "#root/bot/helpers/generation.js";
 import { randomAttributes } from "#root/bot/helpers/attributes.js";
 import { findUserById } from "#root/bot/models/user.js";
@@ -109,7 +109,7 @@ feature.callbackQuery(
             return ctx.reply("Empty image");
           }
           const nextItemIndex = await NftCollection.fetchNextItemIndex();
-          const ipfsImageHash = await pinFileToIPFS(
+          const ipfsImageHash = await pinImageURLToIPFS(
             nextItemIndex,
             selectedUser.image ?? "",
           );
@@ -151,13 +151,21 @@ feature.callbackQuery(
             commonContentUrl: `ipfs://${selectedUser.nftJson}`,
           };
           ctx.logger.info(parameters);
+
+          selectedUser.minted = true;
+          await selectedUser.save();
+
           const seqno = await item.deploy(wallet, parameters);
           await waitSeqno(seqno, wallet);
           const nft = await NftCollection.getNftAddressByIndex(nextItemIndex);
-          await ctx.reply(
-            `https://${config.TESTNET ? "testnet." : ""}getgems.io/collection/${config.COLLECTION_ADDRESS}/${nft.toString()}`,
-            { link_preview_options: { is_disabled: true } },
-          );
+
+          const nftUrl = `https://${config.TESTNET ? "testnet." : ""}getgems.io/collection/${config.COLLECTION_ADDRESS}/${nft.toString()}`;
+          selectedUser.nftUrl = nftUrl;
+          await selectedUser.save();
+
+          await ctx.reply(nftUrl, {
+            link_preview_options: { is_disabled: true },
+          });
           break;
         }
         default: {

@@ -3,16 +3,16 @@ import pinataSDK from "@pinata/sdk";
 import { Readable } from "node:stream";
 import { saveImage, saveJSON } from "./files";
 
-export async function pinFileToIPFS(
+// eslint-disable-next-line new-cap
+const pinata = new pinataSDK({
+  pinataApiKey: config.PINATA_API_KEY,
+  pinataSecretApiKey: config.PINATA_API_SECRET,
+});
+
+export async function pinImageURLToIPFS(
   index: number,
   imageURL: string,
 ): Promise<string> {
-  // eslint-disable-next-line new-cap
-  const pinata = new pinataSDK({
-    pinataApiKey: config.PINATA_API_KEY,
-    pinataSecretApiKey: config.PINATA_API_SECRET,
-  });
-
   const image = await fetch(imageURL);
   const arrayBuffer = await image.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
@@ -33,13 +33,8 @@ export async function pinJSONToIPFS(
   index: number,
   json: object,
 ): Promise<string> {
-  // eslint-disable-next-line new-cap
-  const pinata = new pinataSDK({
-    pinataApiKey: config.PINATA_API_KEY,
-    pinataSecretApiKey: config.PINATA_API_SECRET,
-  });
-  saveJSON(index, json);
-  const response = await pinata.pinJSONToIPFS(json, {
+  const jsonPath = saveJSON(index, json);
+  const response = await pinata.pinFromFS(jsonPath, {
     pinataMetadata: { name: `${index}.json` },
   });
   return response.IpfsHash;
