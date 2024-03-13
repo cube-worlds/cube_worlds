@@ -14,7 +14,7 @@ export function photoCaption(user: User) {
 Comment: \`${user.description?.slice(0, 1000) ?? ""}\`
 Description: \`${user.nftDescription ?? ""}\`
 ${user.nftImage ? `[Image](https://ipfs.io/ipfs/${user.nftImage}) | ` : ""} ${user.nftJson ? `[JSON](https://ipfs.io/ipfs/${user.nftJson})` : ""}
-Minted: ${user.minted ? "✅" : "❌"} ${user.nftUrl ?? ""}
+Minted: ${user.minted ? "✅" : "❌"} ${user.nftUrl ? `[NFT](${user.nftUrl})` : ""}
 `;
 }
 
