@@ -43,7 +43,7 @@ export class User extends TimeStamps {
   @prop({ type: String })
   avatar?: string;
 
-  @prop({ type: String })
+  @prop({ type: String, unique: true })
   wallet?: string;
 
   @prop({ type: Boolean, required: true, default: false })

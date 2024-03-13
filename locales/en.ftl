@@ -42,6 +42,7 @@ description =
 wallet = 
     .wait = Now please provide me with your TON wallet address that will receive the NFT.
     .incorrect = Please provide correct TON wallet address.
+    .already_exists = Wallet ${wallet} already exists.
     
 queue = Queue
 

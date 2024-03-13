@@ -2,7 +2,11 @@ import { Composer } from "grammy";
 import type { Context } from "#root/bot/context.js";
 import { logHandle } from "#root/bot/helpers/logging.js";
 import { config } from "#root/config.js";
-import { UserState, placeInLine } from "#root/bot/models/user.js";
+import {
+  UserState,
+  findUserByAddress,
+  placeInLine,
+} from "#root/bot/models/user.js";
 import { getUserProfilePhoto } from "#root/bot/helpers/photo.js";
 import { Address } from "@ton/core";
 import { voteScore } from "#root/bot/helpers/votes.js";
@@ -40,6 +44,12 @@ feature.on("message:text", logHandle("message-handler")).filter(
       const valid = isAddressValid(address);
       if (!valid) {
         return ctx.reply(ctx.t("wallet.incorrect"));
+      }
+      const alreadyExistedWallet = await findUserByAddress(address);
+      if (alreadyExistedWallet) {
+        return ctx.reply(
+          ctx.t("wallet.already_exists", { wallet: address.toString() }),
+        );
       }
       ctx.dbuser.wallet = address.toString();
       ctx.dbuser.state = UserState.Submited;
