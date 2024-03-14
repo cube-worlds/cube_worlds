@@ -16,6 +16,9 @@ feature.command(
   logHandle("command-collection"),
   chatAction("upload_document"),
   async (ctx) => {
+    if (config.COLLECTION_ADDRESS) {
+      return ctx.reply("Collection already deployed!");
+    }
     const wallet = await openWallet(config.MNEMONICS!.split(" "));
     const collectionData = {
       ownerAddress: wallet.contract.address,
