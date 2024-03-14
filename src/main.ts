@@ -5,7 +5,7 @@ import { config } from "#root/config.js";
 import { logger } from "#root/logger.js";
 import { createServer } from "#root/server/index.js";
 import mongoose from "mongoose";
-import { Subscription } from "#root/bot/subscription.js";
+import { Subscription } from "#root/bot/subscription";
 
 try {
   await mongoose.connect(config.MONGO);
@@ -21,7 +21,7 @@ try {
   });
 
   const subscription = new Subscription(bot);
-  subscription.start();
+  subscription.startProcessTransactions();
 
   if (config.BOT_MODE === "webhook") {
     // to prevent receiving updates before the bot is ready

@@ -1,4 +1,43 @@
-import { modelOptions, prop, getModelForClass } from "@typegoose/typegoose";
+import {
+  modelOptions,
+  prop,
+  getModelForClass,
+  DocumentType,
+} from "@typegoose/typegoose";
+
+@modelOptions({
+  schemaOptions: { timestamps: false },
+  options: { customName: "tx" },
+})
+export class Transaction {
+  @prop({ type: Number, required: true, index: true })
+  utime!: number;
+
+  @prop({ type: Number, required: true })
+  lt!: number;
+
+  @prop({ type: String, required: true })
+  address!: string;
+
+  @prop({ type: Number, required: true })
+  coins!: number;
+
+  @prop({ type: String, required: true })
+  hash!: string;
+}
+
+export const TransactionModel = getModelForClass(Transaction);
+
+export async function getLastestTransaction() {
+  return TransactionModel.findOne().sort({ utime: -1 });
+}
+
+export async function findTransaction(
+  lt: number,
+  hash: string,
+): Promise<DocumentType<Transaction> | null> {
+  return TransactionModel.findOne({ lt, hash });
+}
 
 /**
 {
@@ -35,30 +74,3 @@ import { modelOptions, prop, getModelForClass } from "@typegoose/typegoose";
       "out_msgs": []
     }
  */
-
-@modelOptions({
-  schemaOptions: { timestamps: false },
-  options: { customName: "tx" },
-})
-export class Transaction {
-  @prop({ type: Number, required: true, index: true })
-  utime!: number;
-
-  @prop({ type: Number, required: true })
-  lt!: number;
-
-  @prop({ type: String, required: true })
-  address!: string;
-
-  @prop({ type: Number, required: true })
-  coins!: number;
-
-  @prop({ type: String, required: true })
-  hash!: string;
-}
-
-export const TransactionModel = getModelForClass(Transaction);
-
-export async function getLastestTransaction() {
-  return TransactionModel.findOne().sort({ utime: -1 });
-}

@@ -1,7 +1,7 @@
 import { config } from "#root/config.js";
 import pinataSDK from "@pinata/sdk";
 import { Readable } from "node:stream";
-import { saveImage, saveJSON } from "./files";
+import { saveImage, saveJSON } from "#root/bot/helpers/files";
 
 // eslint-disable-next-line new-cap
 const pinata = new pinataSDK({
