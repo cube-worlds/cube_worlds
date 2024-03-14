@@ -59,30 +59,30 @@ export class Subscription {
 
       const ton = fromNano(value);
       const user = await findUserByAddress(source);
-      if (user) {
-        // amount in nano-Toncoins (1 Toncoin = 1e9 nano-Toncoins)
-        const points = Math.round(Number(ton) * 100_000);
-        logger.debug(`${ton} => ${points}`);
-        user.votes += points;
-        await user.save();
-
-        await this.bot.api.sendMessage(
-          user.id,
-          i18n.t(user.language, "bet", { ton }),
-        );
-
-        const place = await placeInLine(user.votes);
-        this.bot.api.sendMessage(
-          user.id,
-          i18n.t(user.language, "speedup", {
-            place,
-            inviteLink: `https://t.me/${this.bot.botInfo.username}?start=${user.id}`,
-            collectionOwner: config.COLLECTION_OWNER,
-          }),
-        );
-      } else {
-        logger.error(`USER NOT FOUND FOR: ${ton} TON from ${source} `);
+      if (!user) {
+        logger.error(`USER NOT FOUND FOR: ${ton} TON from ${source}`);
+        return;
       }
+      // amount in nano-Toncoins (1 Toncoin = 1e9 nano-Toncoins)
+      const points = Math.round(Number(ton) * 100_000);
+      logger.debug(`${ton} => ${points}`);
+      user.votes += points;
+      await user.save();
+
+      await this.bot.api.sendMessage(
+        user.id,
+        i18n.t(user.language, "bet", { ton }),
+      );
+
+      const place = await placeInLine(user.votes);
+      this.bot.api.sendMessage(
+        user.id,
+        i18n.t(user.language, "speedup", {
+          place,
+          inviteLink: `https://t.me/${this.bot.botInfo.username}?start=${user.id}`,
+          collectionOwner: config.COLLECTION_OWNER,
+        }),
+      );
     }
   }
 

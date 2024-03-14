@@ -147,7 +147,7 @@ feature.callbackQuery(
             queryId: 0,
             itemOwnerAddress: userAddress,
             itemIndex: nextItemIndex,
-            amount: toNano("0.01"),
+            amount: toNano("0.03"),
             commonContentUrl: `ipfs://${selectedUser.nftJson}`,
           };
           ctx.logger.info(parameters);

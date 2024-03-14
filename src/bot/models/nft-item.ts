@@ -1,4 +1,11 @@
-import { Address, beginCell, Cell, internal, SendMode } from "@ton/core";
+import {
+  Address,
+  beginCell,
+  Cell,
+  internal,
+  SendMode,
+  toNano,
+} from "@ton/core";
 import { OpenedWallet } from "#root/bot/helpers/ton.js";
 import { config } from "#root/config.js";
 
@@ -22,7 +29,7 @@ export class NftItem {
       secretKey: wallet.keyPair.secretKey,
       messages: [
         internal({
-          value: "0.05",
+          value: toNano("0.03"),
           to: collectionAddress,
           body: this.createMintBody(parameters),
         }),
