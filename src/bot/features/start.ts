@@ -35,12 +35,11 @@ feature.command("start", logHandle("command-start"), async (ctx) => {
     receiver.votes += add;
     await receiver.save();
 
-    ctx.reply(`You are successfully vote for @${receiver.name}!`);
-  } else {
-    ctx.reply(ctx.t("start"), {
-      link_preview_options: { show_above_text: true },
-    });
+    await ctx.reply(`You are successfully vote for @${receiver.name}!`);
   }
+  ctx.reply(ctx.t("start"), {
+    link_preview_options: { show_above_text: true },
+  });
 });
 
 export { composer as startFeature };
