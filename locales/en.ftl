@@ -17,13 +17,13 @@ unhandled = Unrecognized command. Try /mint
 wrong = Something went wrong
 submitted = You have already submitted a request.
 
-start = 🎮 Get ready for "<a href="https://www.notion.so/teleg/Immersive-Text-Based-Adventure-A-New-Era-of-Gaming-on-Telegram-TON-Blockchain-3a93687faa7b4595bfade11fc29eddca#1">Heroes of the Blocks</a>", new adventure game awaits! 
+start = 🎮 Get ready for "<a href="https://www.notion.so/teleg/Immersive-Text-Based-Adventure-A-New-Era-of-Gaming-on-Telegram-TON-Blockchain-3a93687faa7b4595bfade11fc29eddca">Cube Worlds</a>", new adventure game awaits! 
 
     🌟 Explore pixelated wonders, collect cube NFT heroes, and embark on thrilling quests.
     
     💎 Join now to /mint your free NFT character and prepare for the launch!
     
-    🔥 Are you ready to become a Hero of the Blocks?
+    🔥 Are you ready to become a Hero of the Cube Worlds?
 
 bet = Your bet {$ton} TON has been accepted.
 speedup = You are currently in line number {$place}. To move up the queue, you could:
