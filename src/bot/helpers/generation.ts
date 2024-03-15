@@ -25,14 +25,14 @@ export async function generate(
 
   formData.append(
     "text_prompts[0][text]",
-    "fully pixel professional 3d cartoon portrait, beautiful big cartoon eyes, pixar art style character, octane render, highly detailed, golden hour",
+    "fully pixel professional 3d cartoon portrait, beautiful big cartoon eyes, pixar art style character, golden hour",
   );
   formData.append("text_prompts[0][weight]", "1");
 
   // negative
   formData.append(
     "text_prompts[1][text]",
-    "photographic, photo, worst quality, bad eyes, bad anatomy, comics, cropped, cross-eyed, ugly, deformed, glitch, mutated, watermark, worst quality, unprofessional, jpeg artifacts, low quality",
+    "glasses, photographic, photo, worst quality, bad eyes, bad anatomy, cropped, cross-eyed, ugly, deformed, glitch, mutated, watermark, worst quality, unprofessional, jpeg artifacts, low quality",
   );
   formData.append("text_prompts[1][weight]", "-1");
 
