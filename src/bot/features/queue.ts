@@ -21,13 +21,14 @@ import { generate } from "#root/bot/helpers/generation.js";
 import { randomAttributes } from "#root/bot/helpers/attributes.js";
 import { findUserById } from "#root/bot/models/user.js";
 import { ChatGPTAPI } from "chatgpt";
+import { i18n } from "../i18n";
 
 const composer = new Composer<Context>();
 
 const feature = composer.chatType("private").filter(isAdmin);
 
 feature.command("queue", logHandle("command-queue"), async (ctx) => {
-  return ctx.reply(ctx.t("queue"), { reply_markup: queueMenu });
+  return ctx.reply(ctx.t("queue.title"), { reply_markup: queueMenu });
 });
 
 feature.callbackQuery(
@@ -147,7 +148,7 @@ feature.callbackQuery(
             queryId: 0,
             itemOwnerAddress: userAddress,
             itemIndex: nextItemIndex,
-            amount: toNano("0.03"),
+            amount: toNano("0.01"),
             commonContentUrl: `ipfs://${selectedUser.nftJson}`,
           };
           ctx.logger.info(parameters);
@@ -166,6 +167,11 @@ feature.callbackQuery(
           await ctx.reply(nftUrl, {
             link_preview_options: { is_disabled: true },
           });
+
+          await ctx.api.sendMessage(
+            selectedUser.id,
+            i18n.t(selectedUser.language, "queue.success", { url: nftUrl }),
+          );
           break;
         }
         default: {

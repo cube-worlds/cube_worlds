@@ -18,6 +18,7 @@ import {
   diceFeature,
   queueFeature,
   collectionFeature,
+  topupFeature,
 } from "#root/bot/features/index.js";
 import { errorHandler } from "#root/bot/handlers/index.js";
 import { i18n, isMultipleLocales } from "#root/bot/i18n.js";
@@ -67,6 +68,7 @@ export function createBot(token: string, options: Options) {
   protectedBot.use(diceFeature);
   protectedBot.use(queueFeature);
   protectedBot.use(collectionFeature);
+  protectedBot.use(topupFeature);
   protectedBot.use(adminFeature);
 
   if (isMultipleLocales) {

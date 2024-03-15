@@ -3,9 +3,12 @@
 /* eslint-disable no-await-in-loop */
 import { KeyPair, mnemonicToPrivateKey } from "@ton/crypto";
 import {
+  Address,
   beginCell,
   Cell,
+  internal,
   OpenedContract,
+  SendMode,
   TonClient,
   WalletContractV4,
 } from "@ton/ton";
@@ -35,6 +38,30 @@ export async function openWallet(mnemonic: string[]) {
 
   const contract = tonClient.open(wallet);
   return { contract, keyPair };
+}
+
+export async function topUpBalance(
+  wallet: OpenedWallet,
+  address: Address,
+  nftAmount: number,
+): Promise<number> {
+  const seqno = await wallet.contract.getSeqno();
+  const amount = nftAmount * 0.026;
+
+  await wallet.contract.sendTransfer({
+    seqno,
+    secretKey: wallet.keyPair.secretKey,
+    messages: [
+      internal({
+        value: amount.toString(),
+        to: address.toString({ bounceable: false }),
+        body: new Cell(),
+      }),
+    ],
+    sendMode: SendMode.PAY_GAS_SEPARATELY + SendMode.IGNORE_ERRORS,
+  });
+
+  return seqno;
 }
 
 function bufferToChunks(buff: Buffer, chunkSize: number) {

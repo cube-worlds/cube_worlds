@@ -42,11 +42,13 @@ description =
 wallet = 
     .wait = Now please provide me with your self-custodial <strong>TON wallet address that will receive the NFT</strong>. 
     
-        If you don't have a TON wallet yet, we recommend using <a href="https://tonkeeper.com">Tonkeeper</a>. However, you can also use <a href="https://ton.org/wallets?locale=en&filters[wallet_features][slug][$in]=nft&pagination[limit]=-1">any other wallet that supports NFTs</a>.
+        If you don't have a TON wallet yet, we recommend using <a href="https://tonkeeper.com">Tonkeeper</a>. However, you can also use <a href="https://ton.org/wallets?locale=en&filters[wallet_features][slug][$in]=nft">any other wallet that supports NFTs</a>.
     .incorrect = Please provide correct TON wallet address.
-    .already_exists = Wallet ${wallet} already exists.
+    .already_exists = Wallet {$wallet} already exists.
     
-queue = Queue
+queue = 
+    .title = Queue
+    .success = 🎉 Congratulations on successfully minted an NFT! This is an amazing achievement and we are thrilled to be part of your journey. Your NFT is now publicly available <a href="{$url}">here</a>. We hope you enjoy all the attention and appreciation that come with owning a unique piece of digital artwork. Stay tuned!
 
 no_photo = Make sure you upload images to your Telegram profile. If so, make sure everyone can see your photos:
     Settings -> Privacy & Security -> Who can see my photos -> Everybody

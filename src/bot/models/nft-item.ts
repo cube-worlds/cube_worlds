@@ -29,7 +29,7 @@ export class NftItem {
       secretKey: wallet.keyPair.secretKey,
       messages: [
         internal({
-          value: toNano("0.03"),
+          value: toNano("0.026"),
           to: collectionAddress,
           body: this.createMintBody(parameters),
         }),
