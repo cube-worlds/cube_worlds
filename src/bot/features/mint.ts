@@ -72,6 +72,10 @@ feature.on("message:text", logHandle("message-handler")).filter(
 );
 
 feature.command("mint", logHandle("command-mint"), async (ctx) => {
+  if (ctx.dbuser.minted) {
+    const url = ctx.dbuser.nftUrl ?? "";
+    return ctx.reply(ctx.t("queue.success", { url }));
+  }
   switch (ctx.dbuser.state) {
     case UserState.WaitNothing: {
       const subscriber = await ctx.api.getChatMember(
