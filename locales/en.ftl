@@ -33,14 +33,16 @@ speedup = You are currently in line number {$place}. To move up the queue, you c
 
 dice = 
     .wait = Please wait another {$minutes} min {$seconds} sec
-    .success = {$score}! Congratulations! You are {$place}th in line. We look forward to seeing you again in one hour.
+    .success = Congratulations, it's {$score}! Now you are {$place}th in line. We look forward to seeing you again in one hour.
 
 description = 
     .wait = Please provide information about yourself as much as you can. This information will help us to create NFT for you.
     .success = Information <code>{$description}</code> has been saved. If you made a mistake or would like to change description, please use the command /reset
 
 wallet = 
-    .wait = Now please provide me with your TON wallet address that will receive the NFT.
+    .wait = Now please provide me with your self-custodial <strong>TON wallet address that will receive the NFT</strong>. 
+    
+        If you don't have a TON wallet yet, we recommend using <a href="https://tonkeeper.com">Tonkeeper</a>. However, you can also use <a href="https://ton.org/wallets?locale=en&filters[wallet_features][slug][$in]=nft&pagination[limit]=-1">any other wallet that supports NFTs</a>.
     .incorrect = Please provide correct TON wallet address.
     .already_exists = Wallet ${wallet} already exists.
     

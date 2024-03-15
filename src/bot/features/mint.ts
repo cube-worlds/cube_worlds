@@ -32,7 +32,9 @@ feature.on("message:text", logHandle("message-handler")).filter(
     await ctx.reply(
       ctx.t("description.success", { description: ctx.message.text }),
     );
-    ctx.reply(ctx.t("wallet.wait"));
+    ctx.reply(ctx.t("wallet.wait"), {
+      link_preview_options: { is_disabled: true },
+    });
   },
 );
 
@@ -100,7 +102,9 @@ feature.command("mint", logHandle("command-mint"), async (ctx) => {
       break;
     }
     case UserState.WaitWallet: {
-      ctx.reply(ctx.t("wallet.wait"));
+      ctx.reply(ctx.t("wallet.wait"), {
+        link_preview_options: { is_disabled: true },
+      });
       break;
     }
     case UserState.Submited: {

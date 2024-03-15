@@ -2,6 +2,7 @@ import { Composer } from "grammy";
 import type { Context } from "#root/bot/context.js";
 import { logHandle } from "#root/bot/helpers/logging.js";
 import { placeInLine } from "#root/bot/models/user.js";
+import { sleep } from "../helpers/ton";
 
 function timeUnitsBetween(startDate: Date, endDate: Date) {
   let delta = Math.abs(endDate.getTime() - startDate.getTime()) / 1000;
@@ -57,6 +58,7 @@ feature.command("dice", logHandle("command-dice"), async (ctx) => {
   ctx.dbuser.dicedAt = now;
   await ctx.dbuser.save();
   const place = await placeInLine(ctx.dbuser.votes);
+  await sleep(3600);
   return ctx.reply(
     ctx.t("dice.success", { place, score: diceResult.dice.value }),
   );
