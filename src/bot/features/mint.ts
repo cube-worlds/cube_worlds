@@ -26,6 +26,9 @@ function isAddressValid(a: Address): boolean {
 feature.on("message:text", logHandle("message-handler")).filter(
   (ctx) => ctx.dbuser.state === UserState.WaitDescription,
   async (ctx) => {
+    if (ctx.message.text === "/mint") {
+      return ctx.reply(ctx.t("description.wait"));
+    }
     ctx.dbuser.description = ctx.message.text;
     ctx.dbuser.state = UserState.WaitWallet;
     ctx.dbuser.save();

@@ -14,7 +14,7 @@ import { PhotoSize } from "@grammyjs/types";
 import { changeImageData } from "#root/bot/callback-data/image-selection.js";
 import { SelectImageButton, photoKeyboard } from "#root/bot/keyboards/photo.js";
 import { NftCollection } from "#root/bot/models/nft-collection.js";
-import { openWallet, waitSeqno } from "#root/bot/helpers/ton.js";
+import { openWallet, sleep, waitSeqno } from "#root/bot/helpers/ton.js";
 import { NftItem, nftMintParameters } from "#root/bot/models/nft-item.js";
 import { pinImageURLToIPFS, pinJSONToIPFS } from "#root/bot/helpers/ipfs.js";
 import { generate } from "#root/bot/helpers/generation.js";
@@ -163,6 +163,8 @@ feature.callbackQuery(
           const nftUrl = `https://${config.TESTNET ? "testnet." : ""}getgems.io/collection/${config.COLLECTION_ADDRESS}/${nft.toString()}`;
           selectedUser.nftUrl = nftUrl;
           await selectedUser.save();
+
+          await sleep(10_000);
 
           await ctx.reply(nftUrl, {
             link_preview_options: { is_disabled: true },
