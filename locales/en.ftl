@@ -47,7 +47,7 @@ wallet =
     .already_exists = Wallet {$wallet} already exists.
     
 queue = 
-    .title = Queue
+    .title = In Queue: {$count}
     .success = 🎉 Congratulations on successfully minted an NFT! This is an amazing achievement and we are thrilled to be part of your journey. Your NFT is now publicly available <a href="{$url}">here</a>. We hope you enjoy all the attention and appreciation that come with owning a unique piece of digital artwork. Stay tuned!
 
 no_photo = Make sure you upload images to your Telegram profile. If so, make sure everyone can see your photos:

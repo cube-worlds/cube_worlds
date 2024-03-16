@@ -99,6 +99,10 @@ export function findQueue() {
     .limit(10);
 }
 
+export function countUsers(minted: boolean) {
+  return UserModel.countDocuments({ minted, state: UserState.Submited });
+}
+
 export async function placeInLine(votes: number): Promise<number> {
   const count = await UserModel.countDocuments({
     minted: false,

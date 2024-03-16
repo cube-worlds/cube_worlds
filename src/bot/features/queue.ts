@@ -19,7 +19,7 @@ import { NftItem, nftMintParameters } from "#root/bot/models/nft-item.js";
 import { pinImageURLToIPFS, pinJSONToIPFS } from "#root/bot/helpers/ipfs.js";
 import { generate } from "#root/bot/helpers/generation.js";
 import { randomAttributes } from "#root/bot/helpers/attributes.js";
-import { findUserById } from "#root/bot/models/user.js";
+import { countUsers, findUserById } from "#root/bot/models/user.js";
 import { ChatGPTAPI } from "chatgpt";
 import { i18n } from "../i18n";
 
@@ -28,7 +28,10 @@ const composer = new Composer<Context>();
 const feature = composer.chatType("private").filter(isAdmin);
 
 feature.command("queue", logHandle("command-queue"), async (ctx) => {
-  return ctx.reply(ctx.t("queue.title"), { reply_markup: queueMenu });
+  const count = await countUsers(false);
+  return ctx.reply(ctx.t("queue.title", { count }), {
+    reply_markup: queueMenu,
+  });
 });
 
 feature.callbackQuery(
