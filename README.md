@@ -1,4 +1,4 @@
-<h1 align="center">🤖 Cube Worlds</h1>
+# 🤖 [Cube Worlds](http://t.me/cube_worlds_bot)
 
 Cube Worlds game bot in Telegram bot.
 
