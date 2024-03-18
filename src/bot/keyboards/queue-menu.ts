@@ -52,10 +52,9 @@ export async function sendUserMetadata(
       // eslint-disable-next-line no-param-reassign
       selectedUser.state = UserState.WaitNothing;
       await selectedUser.save();
-      await context.api.sendMessage(
-        selectedUser.id,
-        `❌ ${i18n.t(selectedUser.language, "no_photo_after_submit")}`,
-      );
+      const message = `❌ ${i18n.t(selectedUser.language, "no_photo_after_submit")}`;
+      await context.api.sendMessage(selectedUser.id, message);
+      await context.api.sendMessage(adminUser.id, message);
     } else {
       return context.reply(context.t("wrong"));
     }
