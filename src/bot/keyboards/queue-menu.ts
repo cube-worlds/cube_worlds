@@ -21,27 +21,27 @@ Minted: ${user.minted ? "✅" : "❌"} ${user.nftUrl ? `[NFT](${user.nftUrl})` :
 
 export async function sendUserMetadata(
   context: Context,
-  user: DocumentType<User>,
+  selectedUser: DocumentType<User>,
 ) {
   context.chatAction = "upload_document";
 
-  const currentUser = context.dbuser;
-  currentUser.selectedUser = user.id;
-  await currentUser.save();
+  const adminUser = context.dbuser;
+  adminUser.selectedUser = selectedUser.id;
+  await adminUser.save();
 
   try {
-    const randomAva = await getUserProfileFile(context, user.id ?? 0);
+    const randomAva = await getUserProfileFile(context, selectedUser.id ?? 0);
     if (!randomAva) {
       return context.reply(context.t("wrong"));
     }
     const index = await NftCollection.fetchNextItemIndex();
     const photoUrl = `https://api.telegram.org/file/bot${config.BOT_TOKEN}/${randomAva.file_path}`;
     // eslint-disable-next-line no-param-reassign
-    user.avatar = await saveImageFromUrl(photoUrl, index, true);
-    await user.save();
+    selectedUser.avatar = await saveImageFromUrl(photoUrl, index, true);
+    await selectedUser.save();
 
     context.replyWithPhoto(randomAva.file_id, {
-      caption: photoCaption(user),
+      caption: photoCaption(selectedUser),
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: photoKeyboard,
@@ -49,12 +49,13 @@ export async function sendUserMetadata(
     });
   } catch (error) {
     if ((error as Error).message === "Zero count photos") {
-      context.api.sendMessage(
-        currentUser.id,
-        i18n.t(currentUser.language, "no_photo_after_submit"),
+      // eslint-disable-next-line no-param-reassign
+      selectedUser.state = UserState.WaitNothing;
+      await selectedUser.save();
+      await context.api.sendMessage(
+        selectedUser.id,
+        `❌ ${i18n.t(selectedUser.language, "no_photo_after_submit")}`,
       );
-      currentUser.state = UserState.WaitNothing;
-      currentUser.save();
     } else {
       return context.reply(context.t("wrong"));
     }
