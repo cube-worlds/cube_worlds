@@ -36,7 +36,7 @@ dice =
     .success = Congratulations, it's {$score}! Now you are {$place}th in line. We look forward to seeing you again in one hour.
 
 description = 
-    .wait = Please provide information about yourself as much as you can. This information will help us to create NFT for you.
+    .wait = Please share some details about yourself. This information will be used to create more precise and personalized description for your NFT
     .success = Information <code>{$description}</code> has been saved. If you made a mistake or would like to change description, please use the command /reset
 
 wallet = 
@@ -47,10 +47,11 @@ wallet =
     .already_exists = Wallet {$wallet} already exists.
     
 queue = 
-    .title = In Queue: {$count}
+    .title = {$count} in queue
     .success = 🎉 Congratulations on successfully minted an NFT! This is an amazing achievement and we are thrilled to be part of your journey. Your NFT is now publicly available <a href="{$url}">here</a>. We hope you enjoy all the attention and appreciation that come with owning a unique piece of digital artwork. Stay tuned!
 
 no_photo = Make sure you upload images to your Telegram profile. If so, make sure everyone can see your photos:
     Settings -> Privacy & Security -> Who can see my photos -> Everybody
+no_photo_after_submit = Access to your avatars is unavailable. Please resubmit your application again using the /mint command
 no_username = Make sure that you set username to your telegram profile
-subscribe_required = Please subscribe to our channel 💎 @cube_worlds 💎 to continue 
+subscribe_required = Subscribe to 💎 {$channel} 💎 to continue

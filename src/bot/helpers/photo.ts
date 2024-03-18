@@ -1,6 +1,10 @@
 import type { Context } from "#root/bot/context.js";
+import { PhotoSize } from "@grammyjs/types";
 
-export async function getUserProfilePhoto(ctx: Context, userId: number) {
+export async function getUserProfilePhoto(
+  ctx: Context,
+  userId: number,
+): Promise<PhotoSize> {
   const photos = await ctx.api.getUserProfilePhotos(userId);
   ctx.logger.info(photos);
   if (photos.total_count > 0) {
@@ -9,8 +13,9 @@ export async function getUserProfilePhoto(ctx: Context, userId: number) {
     const photo = lastPhotoArray?.sort(
       (a, b) => (b.file_size ?? 0) - (a.file_size ?? 0),
     )[0];
-    if (photo) return photo;
+    return photo;
   }
+  throw new Error("Zero count photos");
 }
 
 export async function getUserProfileFile(ctx: Context, userId: number) {

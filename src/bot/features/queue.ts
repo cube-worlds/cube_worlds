@@ -90,9 +90,6 @@ feature.callbackQuery(
               inline_keyboard: photoKeyboard,
             },
           });
-          // const newMessage = await ctx.editMessageMedia(newMedia, {
-          //   reply_markup: { inline_keyboard: photoKeyboard },
-          // });
           ctx.logger.error(newMessage);
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const fileId = (newMessage as any).photo.sort(

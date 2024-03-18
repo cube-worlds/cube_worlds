@@ -9,7 +9,7 @@ const composer = new Composer<Context>();
 const feature = composer.chatType("private");
 
 feature.command("reset", logHandle("command-reset"), async (ctx) => {
-  if (ctx.dbuser.state === UserState.Submited || ctx.dbuser.minted) {
+  if (ctx.dbuser.minted) {
     return ctx.reply(ctx.t("submitted"));
   }
   ctx.dbuser.state = UserState.WaitNothing;
