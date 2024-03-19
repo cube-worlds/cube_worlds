@@ -190,8 +190,8 @@ feature.on("message:text", logHandle("message-handler")).filter(
       if (!valid) {
         return ctx.reply(ctx.t("wallet.incorrect"));
       }
-      const alreadyExistedWallet = await findUserByAddress(address);
-      if (alreadyExistedWallet) {
+      const userWithWallet = await findUserByAddress(address);
+      if (userWithWallet && ctx.dbuser.id !== userWithWallet.id) {
         return ctx.reply(
           ctx.t("wallet.already_exists", { wallet: address.toString() }),
         );

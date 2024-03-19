@@ -49,7 +49,7 @@ wallet =
     
         If you don't have a TON wallet yet, we recommend using <a href="https://tonkeeper.com">Tonkeeper</a>. However, you can also use <a href="https://ton.org/wallets?locale=en&filters[wallet_features][slug][$in]=nft">any other wallet that supports NFTs</a>.
     .incorrect = Please provide correct TON wallet address.
-    .already_exists = Wallet {$wallet} already exists.
+    .already_exists = Wallet <code>{$wallet}</code> already exists.
     
 queue = 
     .title = {$count} in queue
