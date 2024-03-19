@@ -26,17 +26,22 @@ start = 🎮 Get ready for "<a href="https://teleg.notion.site/Immersive-Text-Ba
     🔥 Are you ready to become a Hero of the Cube Worlds?
 
 bet = Your bet {$ton} TON has been accepted.
-speedup = You are currently in line number {$place}. To move up the queue, you could:
-    — Donate any amount of Toncoin from your wallet to the address <code>{$collectionOwner}</code>
-    — Invite friends to vote for you using link <code>{$inviteLink}</code>
-    — Roll the dice by using the command /dice every hour
+speedup = You are currently <strong>number {$place}</strong> in line. To move up the queue, you could:
+    💰 Donate any amount of Toncoin from your wallet to the address <code>{$collectionOwner}</code>
+    👨‍👨‍👦‍👦 Invite friends to vote for you using link <code>{$inviteLink}</code>
+    🎲 Roll the dice by using the command /dice every hour
 
 dice = 
     .wait = Please wait another {$minutes} min {$seconds} sec
     .success = Congratulations, it's {$score}! Now you are {$place}th in line. We look forward to seeing you again in one hour.
 
 description = 
-    .wait = Please share some details about yourself. This information will be used to create more precise and personalized description for your NFT
+    .wait = Please share some details about yourself. This information will be used to create more precise and personalized description for your NFT.
+    .fill = Your profile description is:
+    
+    <code>{$bio}</code>
+    
+    Press <strong>Correct</strong> button or send me another text about yourself.
     .success = Information <code>{$description}</code> has been saved. If you made a mistake or would like to change description, please use the command /reset
 
 wallet = 

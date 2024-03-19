@@ -10,10 +10,36 @@ import {
 import { getUserProfilePhoto } from "#root/bot/helpers/photo.js";
 import { Address } from "@ton/core";
 import { voteScore } from "#root/bot/helpers/votes.js";
+import { Chat } from "grammy/types";
 
 const composer = new Composer<Context>();
 
 const feature = composer.chatType("private");
+
+async function getBio(ctx: Context) {
+  const chat = await ctx.getChat();
+  const { bio } = chat as Chat.PrivateGetChat;
+  return bio?.trim();
+}
+
+async function sendWaitDescription(ctx: Context) {
+  await ctx.reply(ctx.t("description.wait"));
+  const bio = await getBio(ctx);
+  if (bio) {
+    ctx.reply(ctx.t("description.fill", { bio }), {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: "✅ Correct",
+              callback_data: "correct_description",
+            },
+          ],
+        ],
+      },
+    });
+  }
+}
 
 async function isUserSubscribed(
   ctx: Context,
@@ -69,19 +95,22 @@ async function mintAction(
       ctx.dbuser.votes = await voteScore(ctx);
       ctx.dbuser.state = UserState.WaitDescription;
       ctx.dbuser.save();
-      ctx.reply(ctx.t("description.wait"));
+      sendWaitDescription(ctx);
       break;
     }
+
     case UserState.WaitDescription: {
-      ctx.reply(ctx.t("description.wait"));
+      sendWaitDescription(ctx);
       break;
     }
+
     case UserState.WaitWallet: {
       ctx.reply(ctx.t("wallet.wait"), {
         link_preview_options: { is_disabled: true },
       });
       break;
     }
+
     case UserState.Submited: {
       const place = await placeInLine(ctx.dbuser.votes);
       ctx.reply(
@@ -93,6 +122,7 @@ async function mintAction(
       );
       break;
     }
+
     default: {
       break;
     }
@@ -107,21 +137,23 @@ function isAddressValid(a: Address): boolean {
   }
 }
 
+async function saveDescription(ctx: Context, description: string) {
+  ctx.dbuser.description = description;
+  ctx.dbuser.state = UserState.WaitWallet;
+  ctx.dbuser.save();
+  await ctx.reply(ctx.t("description.success", { description }));
+  ctx.reply(ctx.t("wallet.wait"), {
+    link_preview_options: { is_disabled: true },
+  });
+}
+
 feature.on("message:text", logHandle("message-handler")).filter(
   (ctx) => ctx.dbuser.state === UserState.WaitDescription,
   async (ctx) => {
     if (ctx.message.text.startsWith("/")) {
-      return ctx.reply(ctx.t("description.wait"));
+      return sendWaitDescription(ctx);
     }
-    ctx.dbuser.description = ctx.message.text;
-    ctx.dbuser.state = UserState.WaitWallet;
-    ctx.dbuser.save();
-    await ctx.reply(
-      ctx.t("description.success", { description: ctx.message.text }),
-    );
-    ctx.reply(ctx.t("wallet.wait"), {
-      link_preview_options: { is_disabled: true },
-    });
+    saveDescription(ctx, ctx.message.text);
   },
 );
 
@@ -131,6 +163,20 @@ feature
     (ctx) => ctx.hasCallbackQuery("check_subscription"),
     async (ctx) => {
       mintAction(ctx, true);
+    },
+  );
+
+feature
+  .on("callback_query", logHandle("correct_description-callback-query"))
+  .filter(
+    (ctx) => ctx.hasCallbackQuery("correct_description"),
+    async (ctx) => {
+      const bio = await getBio(ctx);
+      if (bio) {
+        saveDescription(ctx, bio);
+      } else {
+        return ctx.reply("wrong");
+      }
     },
   );
 
