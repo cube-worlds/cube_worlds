@@ -174,6 +174,7 @@ feature
       const bio = await getBio(ctx);
       if (bio) {
         saveDescription(ctx, bio);
+        ctx.deleteMessage();
       } else {
         return ctx.reply("wrong");
       }
