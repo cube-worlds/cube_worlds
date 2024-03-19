@@ -26,7 +26,7 @@ start = 🎮 Get ready for "<a href="https://teleg.notion.site/Immersive-Text-Ba
 
 donation = 😍 Thank you for your donation! {$ton} TON has been accepted successfully! ❤️
 speedup = You are currently <strong>number {$place}</strong> in line. To move up the queue, you could:
-    💰 Donate any amount of Toncoin from your wallet to the address <code>{$collectionOwner}</code>
+    💰 Donate any amount of Toncoin from <strong>your wallet</strong> to the address <code>{$collectionOwner}</code>
     👨‍👨‍👦‍👦 Invite friends to vote for you using link <code>{$inviteLink}</code>
     🎲 Roll the dice by using the command /dice every hour
 
@@ -38,10 +38,14 @@ description =
     .wait = Please share some details about yourself. This information will be used to create more precise and personalized description for your NFT.
     .fill = Your profile description is:
     
-    <code>{$bio}</code>
+        <code>{$bio}</code>
+        
+        Press <strong>Correct</strong> button or send me another text about yourself.
+    .success = Your description
     
-    Press <strong>Correct</strong> button or send me another text about yourself.
-    .success = Information <code>{$description}</code> has been saved. If you made a mistake or would like to change description, please use the command /reset
+        <code>{$description}</code>
+        
+        has been saved. If you made a mistake or would like to change description, use the command /reset
 
 wallet = 
     .wait = Now please provide me with your self-custodial <strong>TON wallet address that will receive the NFT</strong>. 
