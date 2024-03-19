@@ -10,7 +10,8 @@ const feature = composer.chatType("private");
 
 feature.command("reset", logHandle("command-reset"), async (ctx) => {
   if (ctx.dbuser.minted) {
-    return ctx.reply(ctx.t("submitted"));
+    const url = ctx.dbuser.nftUrl ?? "";
+    return ctx.reply(ctx.t("queue.success", { url }));
   }
   ctx.dbuser.state = UserState.WaitNothing;
   ctx.dbuser.votes = await voteScore(ctx);

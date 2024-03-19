@@ -15,7 +15,6 @@ admin =
     .commands-updated = Commands updated.
 unhandled = Unrecognized command. Try /mint
 wrong = Something went wrong
-submitted = You have already submitted a request.
 
 start = 🎮 Get ready for "<a href="https://teleg.notion.site/Immersive-Text-Based-Adventure-A-New-Era-of-Gaming-on-Telegram-TON-Blockchain-3a93687faa7b4595bfade11fc29eddca?pvs=4">Cube Worlds</a>", new adventure game awaits! 
 

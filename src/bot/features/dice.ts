@@ -37,6 +37,9 @@ const composer = new Composer<Context>();
 const feature = composer.chatType("private");
 
 feature.command("dice", logHandle("command-dice"), async (ctx) => {
+  if (ctx.dbuser.minted) {
+    return ctx.reply(ctx.t("queue.success"));
+  }
   const waitMinutes = 60;
   const waitDate = new Date(
     ctx.dbuser.dicedAt.getTime() + waitMinutes * 60 * 1000,
