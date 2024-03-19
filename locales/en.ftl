@@ -24,7 +24,7 @@ start = 🎮 Get ready for "<a href="https://teleg.notion.site/Immersive-Text-Ba
     
     🔥 Are you ready to become a Hero of the Cube Worlds?
 
-bet = Your bet {$ton} TON has been accepted.
+donation = 😍 Thank you for your donation! {$ton} TON has been accepted successfully! ❤️
 speedup = You are currently <strong>number {$place}</strong> in line. To move up the queue, you could:
     💰 Donate any amount of Toncoin from your wallet to the address <code>{$collectionOwner}</code>
     👨‍👨‍👦‍👦 Invite friends to vote for you using link <code>{$inviteLink}</code>

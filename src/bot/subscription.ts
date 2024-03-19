@@ -29,6 +29,13 @@ export class Subscription {
     );
   }
 
+  sendMessageToAdmins(message: string) {
+    // eslint-disable-next-line no-restricted-syntax
+    for (const adminId of config.BOT_ADMINS) {
+      this.bot.api.sendMessage(adminId, message);
+    }
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onTransaction = async (tx: any) => {
     // It is important to check that Toncoins did not bounce back in case of an error
@@ -65,9 +72,9 @@ export class Subscription {
     const ton = fromNano(value);
     const user = await findUserByAddress(senderAddress);
     if (!user) {
-      return logger.error(
-        `USER NOT FOUND FOR: ${ton} TON from ${senderAddress.toString()}`,
-      );
+      const message = `USER NOT FOUND FOR: ${ton} TON from ${senderAddress.toString()}`;
+      this.sendMessageToAdmins(message);
+      return logger.error(message);
     }
 
     // amount in nano-Toncoins (1 Toncoin = 1e9 nano-Toncoins)
@@ -78,8 +85,10 @@ export class Subscription {
 
     await this.bot.api.sendMessage(
       user.id,
-      i18n.t(user.language, "bet", { ton }),
+      i18n.t(user.language, "donation", { ton }),
     );
+
+    this.sendMessageToAdmins(`🚀 RECEIVED ${ton} TON FROM ${user.name}`);
 
     const place = await placeInLine(user.votes);
     this.bot.api.sendMessage(
