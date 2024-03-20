@@ -14,7 +14,8 @@
     "dev": "tsc-watch --onSuccess \"tsx ./src/main.ts\"",
     "start": "tsc && tsx ./src/main.ts",
     "start:force": "tsx ./src/main.ts",
-    "prepare": "npx husky install"
+    "prepare": "npx husky install",
+    "update": "npx npm-check-updates -u"
   },
   "author": "deptyped <deptyped@gmail.com>",
   "license": "MIT",

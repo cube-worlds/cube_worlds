@@ -17,6 +17,7 @@ const createConfigFromEnvironment = (environment: NodeJS.ProcessEnv) => {
       },
     },
     BOT_TOKEN: z.string(),
+    BOT_NAME: z.string().default("cube_worlds_bot"),
     BOT_WEBHOOK: z.string().default(""),
     BOT_SERVER_HOST: z.string().default("0.0.0.0"),
     BOT_SERVER_PORT: port().default(80),

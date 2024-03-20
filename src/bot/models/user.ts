@@ -46,6 +46,9 @@ export class User extends TimeStamps {
   @prop({ type: String })
   wallet?: string;
 
+  @prop({ type: Number })
+  lastSendedPlace?: number; // for notification purposes
+
   @prop({ type: Boolean, required: true, default: false })
   minted!: boolean;
 

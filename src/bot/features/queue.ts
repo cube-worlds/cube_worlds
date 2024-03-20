@@ -22,6 +22,7 @@ import { randomAttributes } from "#root/bot/helpers/attributes.js";
 import { countUsers, findUserById } from "#root/bot/models/user.js";
 import { ChatGPTAPI } from "chatgpt";
 import { i18n } from "../i18n";
+import { sendNewPlaces } from "../helpers/telegram";
 
 const composer = new Composer<Context>();
 
@@ -164,7 +165,7 @@ feature.callbackQuery(
           selectedUser.nftUrl = nftUrl;
           await selectedUser.save();
 
-          await sleep(10_000);
+          await sleep(30_000);
 
           await ctx.reply(nftUrl, {
             link_preview_options: { is_disabled: true },
@@ -174,6 +175,8 @@ feature.callbackQuery(
             selectedUser.id,
             i18n.t(selectedUser.language, "queue.success", { url: nftUrl }),
           );
+
+          await sendNewPlaces(ctx.api);
           break;
         }
         default: {

@@ -2,15 +2,12 @@ import { Composer } from "grammy";
 import type { Context } from "#root/bot/context.js";
 import { logHandle } from "#root/bot/helpers/logging.js";
 import { config } from "#root/config.js";
-import {
-  UserState,
-  findUserByAddress,
-  placeInLine,
-} from "#root/bot/models/user.js";
+import { UserState, findUserByAddress } from "#root/bot/models/user.js";
 import { getUserProfilePhoto } from "#root/bot/helpers/photo.js";
 import { Address } from "@ton/core";
 import { voteScore } from "#root/bot/helpers/votes.js";
 import { Chat } from "grammy/types";
+import { sendPlaceInLine } from "../helpers/telegram";
 
 const composer = new Composer<Context>();
 
@@ -112,14 +109,7 @@ async function mintAction(
     }
 
     case UserState.Submited: {
-      const place = await placeInLine(ctx.dbuser.votes);
-      ctx.reply(
-        ctx.t("speedup", {
-          place,
-          inviteLink: `https://t.me/${ctx.me.username}?start=${ctx.dbuser.id}`,
-          collectionOwner: config.COLLECTION_OWNER,
-        }),
-      );
+      sendPlaceInLine(ctx.api, ctx.dbuser);
       break;
     }
 
@@ -199,14 +189,7 @@ feature.on("message:text", logHandle("message-handler")).filter(
       ctx.dbuser.wallet = address.toString();
       ctx.dbuser.state = UserState.Submited;
       ctx.dbuser.save();
-      const place = await placeInLine(ctx.dbuser.votes);
-      ctx.reply(
-        ctx.t("speedup", {
-          place,
-          inviteLink: `https://t.me/${ctx.me.username}?start=${ctx.chat.id}`,
-          collectionOwner: config.COLLECTION_OWNER,
-        }),
-      );
+      sendPlaceInLine(ctx.api, ctx.dbuser);
     } catch (error) {
       ctx.reply(ctx.t("wallet.incorrect"));
       ctx.logger.warn((error as Error).message);

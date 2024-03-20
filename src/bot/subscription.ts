@@ -3,7 +3,7 @@ import { logger } from "#root/logger";
 import TonWeb from "tonweb";
 import { Address, fromNano } from "@ton/core";
 import { Bot, Api, RawApi } from "grammy";
-import { findUserByAddress, placeInLine } from "#root/bot/models/user";
+import { findUserByAddress } from "#root/bot/models/user";
 import { i18n } from "#root/bot/i18n";
 import { Context } from "#root/bot/context";
 import {
@@ -12,6 +12,7 @@ import {
   getLastestTransaction,
 } from "#root/bot/models/transaction";
 import { AccountSubscription } from "#root/bot/helpers/account-subscription";
+import { sendPlaceInLine } from "./helpers/telegram";
 
 export class Subscription {
   bot: Bot<Context, Api<RawApi>>;
@@ -89,16 +90,7 @@ export class Subscription {
     );
 
     this.sendMessageToAdmins(`🚀 RECEIVED ${ton} TON FROM ${user.name}`);
-
-    const place = await placeInLine(user.votes);
-    this.bot.api.sendMessage(
-      user.id,
-      i18n.t(user.language, "speedup", {
-        place,
-        inviteLink: `https://t.me/${this.bot.botInfo.username}?start=${user.id}`,
-        collectionOwner: config.COLLECTION_OWNER,
-      }),
-    );
+    sendPlaceInLine(this.bot.api, user);
   };
 
   public async startProcessTransactions() {
