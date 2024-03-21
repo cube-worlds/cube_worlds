@@ -8,24 +8,26 @@ const composer = new Composer<Context>();
 const feature = composer.chatType("private").filter(isAdmin);
 
 feature.command("positive", logHandle("command-propmpts"), async (ctx) => {
+  const oldPositivePrompt = ctx.dbuser.positivePrompt;
   ctx.dbuser.positivePrompt = ctx.match;
   await ctx.dbuser.save();
   return ctx.reply(
     `POSITIVE PROMPT WAS UPDATED
 
-Old prompt: <code>${ctx.dbuser.positivePrompt ?? ""}</code>
-New prompt: <code>${ctx.match}</code>`,
+Old prompt: <code>${oldPositivePrompt}</code>
+New prompt: <code>${ctx.dbuser.positivePrompt}</code>`,
   );
 });
 
 feature.command("negative", logHandle("command-propmpts"), async (ctx) => {
-  ctx.dbuser.positivePrompt = ctx.match;
+  const oldNegativePrompt = ctx.dbuser.negativePrompt;
+  ctx.dbuser.negativePrompt = ctx.match;
   await ctx.dbuser.save();
   return ctx.reply(
     `NEGATIVE PROMPT WAS UPDATED
       
-Old prompt: <code>${ctx.dbuser.negativePrompt ?? ""}</code>
-New prompt: <code>${ctx.match}</code>`,
+Old prompt: <code>${oldNegativePrompt ?? ""}</code>
+New prompt: <code>${ctx.dbuser.negativePrompt}</code>`,
   );
 });
 
