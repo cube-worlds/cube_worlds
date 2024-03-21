@@ -63,7 +63,7 @@ feature.callbackQuery(
           const result = await api.sendMessage(
             // `Write the beginning of the new RPG character's story named "${name}".
             `Write an inspiring text about a person named "${name}" who has decided to start a journey.
-            You could also use this additional information: "${info}", but not required.
+            You could also use this additional information "${info}" if it feels appropriate.
             Response MUST BE up to 500 characters maximum`,
           );
           selectedUser.nftDescription = result.text.slice(0, 700);
