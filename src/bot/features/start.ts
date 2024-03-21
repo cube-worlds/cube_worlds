@@ -35,7 +35,7 @@ feature.command("start", logHandle("command-start"), async (ctx) => {
     receiver.votes += add;
     await receiver.save();
 
-    await ctx.reply(`You are successfully vote for @${receiver.name}!`);
+    await ctx.reply(ctx.t("vote.success", { name: receiver.name ?? "" }));
   }
   ctx.reply(ctx.t("start"), {
     link_preview_options: { is_disabled: true },

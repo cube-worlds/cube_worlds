@@ -24,6 +24,9 @@ start = 🎮 Get ready for "<a href="https://teleg.notion.site/Immersive-Text-Ba
     
     🔥 Are you ready to become a Hero of the Cube Worlds?
 
+vote = 
+    .success = You have successfully voted for @{$name}!
+
 donation = 😍 Thank you for your donation! {$ton} TON has been accepted successfully! ❤️
 speedup = You are currently <strong>number {$place}</strong> in line. To move up the queue, you could:
 
