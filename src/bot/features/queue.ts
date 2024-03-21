@@ -154,10 +154,11 @@ feature.callbackQuery(
           };
           ctx.logger.info(parameters);
 
+          const seqno = await item.deploy(wallet, parameters);
+
           selectedUser.minted = true;
           await selectedUser.save();
 
-          const seqno = await item.deploy(wallet, parameters);
           await waitSeqno(seqno, wallet);
           const nft = await NftCollection.getNftAddressByIndex(nextItemIndex);
 
