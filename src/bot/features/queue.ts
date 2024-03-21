@@ -81,6 +81,8 @@ feature.callbackQuery(
           const generatedFilePath = await generate(
             selectedUser.avatar,
             nextItemIndex,
+            ctx.dbuser.positivePrompt ?? "",
+            ctx.dbuser.negativePrompt ?? "",
           );
           const inputFile = new InputFile(generatedFilePath);
           // const newMedia = InputMediaBuilder.photo(inputFile);

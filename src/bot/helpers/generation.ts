@@ -6,6 +6,8 @@ import { config } from "#root/config.js";
 export async function generate(
   filePath: string,
   index: number,
+  positive: string,
+  negative: string,
 ): Promise<string> {
   const engineId = "stable-diffusion-v1-6"; // "stable-diffusion-xl-1024-v1-0",
   const apiHost = "https://api.stability.ai";
@@ -23,17 +25,10 @@ export async function generate(
 
   formData.append("style_preset", "pixel-art");
 
-  formData.append(
-    "text_prompts[0][text]",
-    "fully pixel professional 3d cartoon portrait, beautiful big cartoon eyes, pixar art style character, octane render, highly detailed, golden hour",
-  );
+  formData.append("text_prompts[0][text]", positive);
   formData.append("text_prompts[0][weight]", "1");
 
-  // negative
-  formData.append(
-    "text_prompts[1][text]",
-    "glasses, photographic, photo, worst quality, bad eyes, bad anatomy, comics, cropped, cross-eyed, ugly, deformed, glitch, mutated, watermark, worst quality, unprofessional, jpeg artifacts, low quality",
-  );
+  formData.append("text_prompts[1][text]", negative);
   formData.append("text_prompts[1][weight]", "-1");
 
   // [1 - 30] when 1 - mostly ignore the prompt, 30 - strictly follow

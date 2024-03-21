@@ -32,8 +32,7 @@ export async function sendNewPlaces(api: Api<RawApi>) {
   const users = await findQueue();
   // eslint-disable-next-line no-restricted-syntax
   for (const user of users) {
-    // eslint-disable-next-line no-await-in-loop
-    await sendPlaceInLine(api, user, false);
+    sendPlaceInLine(api, user, false);
     // eslint-disable-next-line no-await-in-loop
     await sleep(1000);
   }

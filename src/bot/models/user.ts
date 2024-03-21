@@ -68,6 +68,12 @@ export class User extends TimeStamps {
 
   @prop({ type: String })
   nftUrl?: string;
+
+  @prop({ type: String })
+  positivePrompt?: string;
+
+  @prop({ type: String })
+  negativePrompt?: string;
 }
 
 const UserModel = getModelForClass(User);
