@@ -16,8 +16,8 @@ feature.command("positive", logHandle("command-propmpts"), async (ctx) => {
     return ctx.reply(
       `POSITIVE PROMPT WAS UPDATED
   
-  Old prompt: <code>${oldPositivePrompt}</code>
-  New prompt: <code>${ctx.dbuser.positivePrompt}</code>`,
+Old prompt: <code>/positive ${oldPositivePrompt}</code>
+New prompt: <code>/positive ${ctx.dbuser.positivePrompt}</code>`,
     );
   }
   return ctx.reply(`<code>${oldPositivePrompt}</code>`);
@@ -32,8 +32,8 @@ feature.command("negative", logHandle("command-propmpts"), async (ctx) => {
     return ctx.reply(
       `NEGATIVE PROMPT WAS UPDATED
       
-Old prompt: <code>${oldNegativePrompt ?? ""}</code>
-New prompt: <code>${ctx.dbuser.negativePrompt}</code>`,
+Old prompt: <code>/negative ${oldNegativePrompt ?? ""}</code>
+New prompt: <code>/negative ${ctx.dbuser.negativePrompt}</code>`,
     );
   }
   return ctx.reply(`<code>${oldNegativePrompt}</code>`);
