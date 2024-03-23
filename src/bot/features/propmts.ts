@@ -20,7 +20,7 @@ Old prompt: <code>/positive ${oldPositivePrompt}</code>
 New prompt: <code>/positive ${ctx.dbuser.positivePrompt}</code>`,
     );
   }
-  return ctx.reply(`<code>${oldPositivePrompt}</code>`);
+  return ctx.reply(`<code>/positive ${oldPositivePrompt}</code>`);
 });
 
 feature.command("negative", logHandle("command-propmpts"), async (ctx) => {
@@ -36,7 +36,7 @@ Old prompt: <code>/negative ${oldNegativePrompt ?? ""}</code>
 New prompt: <code>/negative ${ctx.dbuser.negativePrompt}</code>`,
     );
   }
-  return ctx.reply(`<code>${oldNegativePrompt}</code>`);
+  return ctx.reply(`<code>/negative ${oldNegativePrompt}</code>`);
 });
 
 export { composer as promptsFeature };
