@@ -184,7 +184,7 @@ feature.callbackQuery(
             { link_preview_options: { is_disabled: true } },
           );
 
-          await sendNewPlaces(ctx.api);
+          sendNewPlaces(ctx.api);
           break;
         }
         default: {
