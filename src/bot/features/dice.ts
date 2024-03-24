@@ -66,7 +66,7 @@ feature.command("dice", logHandle("command-dice"), async (ctx) => {
   ctx.dbuser.dicedAt = now;
   await ctx.dbuser.save();
   const place = await placeInLine(ctx.dbuser.votes);
-  await sleep(3600);
+  await sleep(3000);
   return ctx.reply(
     ctx.t("dice.success", { place, score: diceResult.dice.value }),
   );

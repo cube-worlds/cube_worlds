@@ -26,11 +26,19 @@ export async function sendUserMetadata(
   context.chatAction = "upload_document";
 
   const adminUser = context.dbuser;
+  adminUser.avatarNumber =
+    adminUser.selectedUser === selectedUser.id
+      ? (adminUser.avatarNumber ?? -1) + 1
+      : 0;
   adminUser.selectedUser = selectedUser.id;
   await adminUser.save();
 
   try {
-    const randomAva = await getUserProfileFile(context, selectedUser.id ?? 0);
+    const randomAva = await getUserProfileFile(
+      context,
+      selectedUser.id ?? 0,
+      adminUser.avatarNumber ?? 0,
+    );
     if (!randomAva) {
       return context.reply(context.t("wrong"));
     }

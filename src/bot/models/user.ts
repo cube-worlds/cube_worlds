@@ -57,6 +57,9 @@ export class User extends TimeStamps {
   @prop({ type: Number })
   selectedUser?: number;
 
+  @prop({ type: Number })
+  avatarNumber?: number;
+
   @prop({ type: String })
   nftDescription?: string;
 
