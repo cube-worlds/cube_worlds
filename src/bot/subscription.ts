@@ -89,8 +89,12 @@ export class Subscription {
       i18n.t(user.language, "donation", { ton }),
     );
 
-    this.sendMessageToAdmins(`🚀 RECEIVED ${ton} TON FROM ${user.name}`);
-    sendPlaceInLine(this.bot.api, user);
+    this.sendMessageToAdmins(
+      `🚀 RECEIVED ${ton} TON FROM @${user.name}. Minted: ${user.minted ? "✅" : "❌"}`,
+    );
+    if (!user.minted) {
+      sendPlaceInLine(this.bot.api, user);
+    }
   };
 
   public async startProcessTransactions() {

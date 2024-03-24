@@ -52,8 +52,11 @@ async function mintAction(
   removeSubscriptionCheckMessage: boolean = false,
 ) {
   if (ctx.dbuser.minted) {
-    const url = ctx.dbuser.nftUrl ?? "";
-    return ctx.reply(ctx.t("queue.success", { url }));
+    const nftUrl = ctx.dbuser.nftUrl ?? "";
+    const collectionOwner = config.COLLECTION_OWNER;
+    return ctx.reply(ctx.t("queue.success", { nftUrl, collectionOwner }), {
+      link_preview_options: { is_disabled: true },
+    });
   }
 
   const channel = config.TELEGRAM_CHANNEL;

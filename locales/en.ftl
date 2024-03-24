@@ -62,7 +62,9 @@ wallet =
     
 queue = 
     .title = {$count} in queue
-    .success = 🎉 Congratulations on successfully minted an NFT! This is an amazing achievement and we are thrilled to be part of your journey. Your NFT is now publicly available <a href="{$url}">here</a>. We hope you enjoy all the attention and appreciation that come with owning a unique piece of digital artwork. Stay tuned!
+    .success = 🎉 Congrats on minting your NFT! We're excited to be part of your journey. Your NFT is now live <a href="{$nftUrl}">here</a>. Enjoy the attention that come with owning a unique digital artwork.
+
+        ❤️ To help us bring <a href="https://teleg.notion.site/Immersive-Text-Based-Adventure-A-New-Era-of-Gaming-on-Telegram-TON-Blockchain-3a93687faa7b4595bfade11fc29eddca?pvs=4">our game vision</a> to life, you can donate to address <code>{$collectionOwner}</code> or share bot with your friends. Thanks for your support!
 
 no_photo = Make sure you set avatar to your Telegram profile. If so, make sure everyone can see your photos:
     <strong>Settings -> Privacy & Security -> Who can see my photos -> Everybody</strong>

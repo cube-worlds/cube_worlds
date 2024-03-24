@@ -2,6 +2,7 @@ import { Composer } from "grammy";
 import type { Context } from "#root/bot/context.js";
 import { logHandle } from "#root/bot/helpers/logging.js";
 import { placeInLine } from "#root/bot/models/user.js";
+import { config } from "#root/config";
 import { sleep } from "../helpers/ton";
 
 function timeUnitsBetween(startDate: Date, endDate: Date) {
@@ -38,7 +39,11 @@ const feature = composer.chatType("private");
 
 feature.command("dice", logHandle("command-dice"), async (ctx) => {
   if (ctx.dbuser.minted) {
-    return ctx.reply(ctx.t("queue.success"));
+    const nftUrl = ctx.dbuser.nftUrl ?? "";
+    const collectionOwner = config.COLLECTION_OWNER;
+    return ctx.reply(ctx.t("queue.success", { nftUrl, collectionOwner }), {
+      link_preview_options: { is_disabled: true },
+    });
   }
   const waitMinutes = 60;
   const waitDate = new Date(

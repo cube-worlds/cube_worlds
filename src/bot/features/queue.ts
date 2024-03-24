@@ -174,9 +174,14 @@ feature.callbackQuery(
             link_preview_options: { is_disabled: true },
           });
 
+          const collectionOwner = config.COLLECTION_OWNER;
           await ctx.api.sendMessage(
             selectedUser.id,
-            i18n.t(selectedUser.language, "queue.success", { url: nftUrl }),
+            i18n.t(selectedUser.language, "queue.success", {
+              nftUrl,
+              collectionOwner,
+            }),
+            { link_preview_options: { is_disabled: true } },
           );
 
           await sendNewPlaces(ctx.api);
