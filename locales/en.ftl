@@ -28,7 +28,7 @@ vote =
     .success = You have successfully voted for @{$name}!
 
 donation = 😍 Thank you for your donation! {$ton} TON has been accepted successfully! ❤️
-speedup = You are currently <strong>number {$place}</strong> in line. To move up the queue, you could:
+speedup = You are currently {$place} in line. To move up the queue, you could:
 
     💰 Donate any amount of Toncoin from <strong>your wallet</strong> to the address <code>{$collectionOwner}</code>
 
