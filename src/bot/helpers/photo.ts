@@ -11,7 +11,7 @@ export async function getUserProfilePhoto(
   if (photos.total_count > 0) {
     const lastPhotoArray = photos.photos[avatarNumber % photos.photos.length];
     const photo = lastPhotoArray?.sort(
-      (a, b) => (b.file_size ?? 0) - (a.file_size ?? 0),
+      (a, b) => (b.file_size ?? b.width) - (a.file_size ?? a.width),
     )[0];
     return photo;
   }
