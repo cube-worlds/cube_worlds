@@ -1,4 +1,5 @@
 import type { Context } from "#root/bot/context.js";
+import { logger } from "#root/logger";
 import { PhotoSize } from "@grammyjs/types";
 
 export async function getUserProfilePhoto(
@@ -13,6 +14,7 @@ export async function getUserProfilePhoto(
     const photo = lastPhotoArray?.sort(
       (a, b) => (b.file_size ?? b.width) - (a.file_size ?? a.width),
     )[0];
+    logger.info(photo);
     return photo;
   }
   throw new Error("Zero count photos");
