@@ -66,7 +66,7 @@ async function mintAction(
       ctx.deleteMessage();
     }
   } else {
-    return ctx.reply(ctx.t("subscribe_required", { channel }), {
+    return ctx.reply(ctx.t("mint.subscribe_required", { channel }), {
       reply_markup: {
         inline_keyboard: [
           [
@@ -85,11 +85,11 @@ async function mintAction(
       try {
         await getUserProfilePhoto(ctx, ctx.dbuser.id);
       } catch {
-        return ctx.reply(ctx.t("no_photo"));
+        return ctx.reply(ctx.t("mint.no_photo"));
       }
       const author = await ctx.getAuthor();
       if (!author.user.username) {
-        return ctx.reply(ctx.t("no_username"));
+        return ctx.reply(ctx.t("mint.no_username"));
       }
       ctx.dbuser.name = author.user.username;
       ctx.dbuser.votes = await voteScore(ctx);

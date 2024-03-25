@@ -59,15 +59,17 @@ wallet =
         If you don't have a TON wallet yet, we recommend using <strong><a href="https://tonkeeper.com">Tonkeeper</a></strong>. However, you can also use <a href="https://ton.org/wallets?locale=en&filters[wallet_features][slug][$in]=nft">any other wallet that supports NFTs</a>.
     .incorrect = Please provide correct TON wallet address.
     .already_exists = Wallet <code>{$wallet}</code> already exists.
+
+mint = 
+    .no_username = Make sure that you set username to your telegram profile
+    .no_photo = Make sure you set avatar to your Telegram profile. If so, make sure everyone can see your photos:
+        <strong>Settings -> Privacy & Security -> Who can see my photos -> Everybody</strong>
+    .subscribe_required = Subscribe to 💎 {$channel} 💎 to continue
     
 queue = 
     .title = {$count} in queue
+    .no_photo_after_submit = Access to your avatars is unavailable. Please resubmit your request with the /mint command
+    .no_suitable_photo = Your avatars need to include at least one photo with people, preferably a portrait. Please add a suitable photo and resubmit your request with the /mint command
     .success = 🎉 Congrats on minting your NFT! We're excited to be part of your journey. Your NFT is now live <a href="{$nftUrl}">here</a>. Enjoy the attention that come with owning a unique digital artwork.
 
         ❤️ To help us bring <a href="https://teleg.notion.site/Immersive-Text-Based-Adventure-A-New-Era-of-Gaming-on-Telegram-TON-Blockchain-3a93687faa7b4595bfade11fc29eddca?pvs=4">our game vision</a> to life, you can donate to address <code>{$collectionOwner}</code> or share bot with your friends. Thanks for your support!
-
-no_photo = Make sure you set avatar to your Telegram profile. If so, make sure everyone can see your photos:
-    <strong>Settings -> Privacy & Security -> Who can see my photos -> Everybody</strong>
-no_photo_after_submit = Access to your avatars is unavailable. Please resubmit your application again using the /mint command
-no_username = Make sure that you set username to your telegram profile
-subscribe_required = Subscribe to 💎 {$channel} 💎 to continue

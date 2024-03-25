@@ -30,29 +30,31 @@ export async function sendUserMetadata(
   context.chatAction = "upload_document";
 
   const adminUser = context.dbuser;
-  adminUser.avatarNumber =
+  const avatarNumber =
     adminUser.selectedUser === selectedUser.id
       ? (adminUser.avatarNumber ?? -1) + 1
       : 0;
+  const selectedUserId: number = selectedUser.id;
+  adminUser.avatarNumber = avatarNumber;
   adminUser.selectedUser = selectedUser.id;
   await adminUser.save();
 
   try {
-    const randomAva = await getUserProfileFile(
+    const nextAvatar = await getUserProfileFile(
       context,
-      selectedUser.id ?? 0,
-      adminUser.avatarNumber ?? 0,
+      selectedUserId,
+      avatarNumber,
     );
-    if (!randomAva) {
+    if (!nextAvatar) {
       return context.reply(context.t("wrong"));
     }
     const index = await NftCollection.fetchNextItemIndex();
-    const photoUrl = `https://api.telegram.org/file/bot${config.BOT_TOKEN}/${randomAva.file_path}`;
+    const photoUrl = `https://api.telegram.org/file/bot${config.BOT_TOKEN}/${nextAvatar.file_path}`;
     // eslint-disable-next-line no-param-reassign
     selectedUser.avatar = await saveImageFromUrl(photoUrl, index, true);
     await selectedUser.save();
 
-    context.replyWithPhoto(randomAva.file_id, {
+    context.replyWithPhoto(nextAvatar.file_id, {
       caption: photoCaption(selectedUser),
       parse_mode: "Markdown",
       reply_markup: {
@@ -64,7 +66,7 @@ export async function sendUserMetadata(
       // eslint-disable-next-line no-param-reassign
       selectedUser.state = UserState.WaitNothing;
       await selectedUser.save();
-      const message = `❌ ${i18n.t(selectedUser.language, "no_photo_after_submit")}`;
+      const message = `❌ ${i18n.t(selectedUser.language, "queue.no_photo_after_submit")}`;
       await context.api.sendMessage(selectedUser.id, message);
       await context.api.sendMessage(adminUser.id, message);
     } else {
