@@ -29,4 +29,5 @@ export async function getUserProfileFile(
   if (photo) {
     return ctx.api.getFile(photo.file_id);
   }
+  throw new Error("No user photo");
 }
