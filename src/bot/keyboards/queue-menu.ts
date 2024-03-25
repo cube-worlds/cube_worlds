@@ -8,6 +8,7 @@ import { saveImageFromUrl } from "#root/bot/helpers/files.js";
 import { NftCollection } from "#root/bot/models/nft-collection.js";
 import { DocumentType } from "@typegoose/typegoose";
 import { photoKeyboard } from "#root/bot/keyboards/photo.js";
+import { logger } from "#root/logger";
 import { i18n } from "../i18n";
 
 export function photoCaption(user: User) {
@@ -67,6 +68,7 @@ export async function sendUserMetadata(
       await context.api.sendMessage(selectedUser.id, message);
       await context.api.sendMessage(adminUser.id, message);
     } else {
+      logger.error(error);
       return context.reply(context.t("wrong"));
     }
   }
