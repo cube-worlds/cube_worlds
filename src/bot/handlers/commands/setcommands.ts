@@ -27,12 +27,8 @@ function getPrivateChatCommands(localeCode: string): BotCommand[] {
 function getPrivateChatAdminCommands(localeCode: string): BotCommand[] {
   return [
     {
-      command: "setcommands",
-      description: i18n.t(localeCode, "setcommands_command.description"),
-    },
-    {
       command: "queue",
-      description: "🌚 Show queue",
+      description: "🔥 Show queue",
     },
     {
       command: "positive",
@@ -41,6 +37,14 @@ function getPrivateChatAdminCommands(localeCode: string): BotCommand[] {
     {
       command: "negative",
       description: "👎 Negative prompt",
+    },
+    {
+      command: "strength",
+      description: "💪 Strength for images",
+    },
+    {
+      command: "setcommands",
+      description: i18n.t(localeCode, "setcommands_command.description"),
     },
   ];
 }

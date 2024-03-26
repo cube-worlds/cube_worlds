@@ -20,6 +20,7 @@ import {
   collectionFeature,
   topupFeature,
   promptsFeature,
+  strengthFeature,
 } from "#root/bot/features/index.js";
 import { errorHandler } from "#root/bot/handlers/index.js";
 import { i18n, isMultipleLocales } from "#root/bot/i18n.js";
@@ -69,6 +70,7 @@ export function createBot(token: string, options: Options) {
   protectedBot.use(diceFeature);
   protectedBot.use(queueFeature);
   protectedBot.use(promptsFeature);
+  protectedBot.use(strengthFeature);
   protectedBot.use(collectionFeature);
   protectedBot.use(topupFeature);
   protectedBot.use(adminFeature);

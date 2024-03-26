@@ -77,6 +77,9 @@ export class User extends TimeStamps {
 
   @prop({ type: String })
   negativePrompt?: string;
+
+  @prop({ type: Number })
+  strength?: number;
 }
 
 const UserModel = getModelForClass(User);

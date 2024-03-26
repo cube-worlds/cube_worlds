@@ -97,7 +97,7 @@ feature.callbackQuery(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const fileId = (newMessage as any).photo.sort(
             (a: PhotoSize, b: PhotoSize) =>
-              (b.file_size ?? 0) - (a.file_size ?? 0),
+              (b.file_size ?? b.width) - (a.file_size ?? a.width),
           )[0].file_id;
           const file = await ctx.api.getFile(fileId);
           selectedUser.image = `https://api.telegram.org/file/bot${config.BOT_TOKEN}/${file.file_path}`;
