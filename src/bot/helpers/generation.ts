@@ -8,6 +8,7 @@ export async function generate(
   index: number,
   positive: string,
   negative: string,
+  strength: number,
 ): Promise<string> {
   const engineId = "stable-diffusion-v1-6"; // "stable-diffusion-xl-1024-v1-0",
   const apiHost = "https://api.stability.ai";
@@ -21,7 +22,7 @@ export async function generate(
   const formData = new FormData();
   formData.append("init_image", fs.readFileSync(filePath));
   formData.append("init_image_mode", "IMAGE_STRENGTH");
-  formData.append("image_strength", 0.35);
+  formData.append("image_strength", strength);
 
   formData.append("style_preset", "pixel-art");
 

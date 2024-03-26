@@ -83,6 +83,7 @@ feature.callbackQuery(
             nextItemIndex,
             ctx.dbuser.positivePrompt ?? "",
             ctx.dbuser.negativePrompt ?? "",
+            ctx.dbuser.strength ?? 0.35,
           );
           const inputFile = new InputFile(generatedFilePath);
           // const newMedia = InputMediaBuilder.photo(inputFile);
