@@ -54,10 +54,9 @@ description =
         has been saved. If you made a mistake or would like to change description, use the command /reset
 
 wallet = 
-    .wait = Now please provide me with your self-custodial <strong>TON address that will receive the NFT</strong>. 
+    .wait = 🚀 Now please provide me with your <strong>non-custodial TON address</strong> that will receive the NFT. 
     
-        If you don't have a TON wallet yet, we recommend using <strong><a href="https://tonkeeper.com">Tonkeeper</a></strong>. However, you can also use <a href="https://ton.org/wallets?locale=en&filters[wallet_features][slug][$in]=nft">any other wallet that supports NFTs</a>.
-    .incorrect = Please provide correct TON wallet address.
+        🛟 We recommend the Ton Space @wallet inside Telegram or <a href="https://tonkeeper.com">Tonkeeper</a> mobile app. ⚠️ Keep in mind that a regular @wallet won't work, make sure you create a Ton Space wallet inside.
     .already_exists = Wallet <code>{$wallet}</code> already exists.
 
 mint = 

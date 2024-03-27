@@ -181,7 +181,9 @@ feature.on("message:text", logHandle("message-handler")).filter(
       const address = Address.parse(ctx.message.text);
       const valid = isAddressValid(address);
       if (!valid) {
-        return ctx.reply(ctx.t("wallet.incorrect"));
+        return ctx.reply(ctx.t("wallet.wait"), {
+          link_preview_options: { is_disabled: true },
+        });
       }
       const userWithWallet = await findUserByAddress(address);
       if (userWithWallet && ctx.dbuser.id !== userWithWallet.id) {
@@ -194,7 +196,9 @@ feature.on("message:text", logHandle("message-handler")).filter(
       ctx.dbuser.save();
       sendPlaceInLine(ctx.api, ctx.dbuser);
     } catch (error) {
-      ctx.reply(ctx.t("wallet.incorrect"));
+      ctx.reply(ctx.t("wallet.wait"), {
+        link_preview_options: { is_disabled: true },
+      });
       ctx.logger.warn((error as Error).message);
     }
   },
