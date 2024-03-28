@@ -28,13 +28,13 @@ vote =
     .success = You have successfully voted for @{$name}!
 
 donation = 😍 Thank you for your donation! {$ton} TON has been accepted successfully! ❤️
-speedup = You are currently number {$place} in line. To move up the queue, you could:
+speedup = 🏁 You are number {$place} in line. To move up the queue, you could:
 
-    💰 Donate any amount of Toncoin from <strong>your wallet</strong> to the address <code>{$collectionOwner}</code>
+    💰 Donate Toncoin from <strong>your wallet</strong> to address <code>{$collectionOwner}</code>
 
-    👨‍👨‍👦‍👦 Invite friends to vote for you using link <code>{$inviteLink}</code>
+    👨‍👨‍👦‍👦 Invite friends using link <code>{$inviteLink}</code>
 
-    🎲 Roll the dice by using the command /dice every hour
+    🎲 Roll the dice using /dice every hour
 
 dice = 
     .wait = ⌛️ Please wait another {$minutes} min {$seconds} sec
@@ -42,16 +42,10 @@ dice =
 
 description = 
     .wait = Please share some details about yourself. This information will be used to create more precise and personalized description for your NFT.
-    .fill = Your profile description is:
-    
-        <code>{$bio}</code>
+    .fill = Your profile description: <code>{$bio}</code>
         
-        Press <strong>Correct</strong> button or send me another text about yourself.
-    .success = Your description
-    
-        <code>{$description}</code>
-        
-        has been saved. If you made a mistake or would like to change description, use the command /reset
+        Send me another text about yourself or press <strong>✅ Correct</strong> button
+    .success = Your description: <code>{$description}</code> has been saved. If you made a mistake or would like to change description, use the command /reset
 
 wallet = 
     .wait = 🚀 Now please provide me with your <strong>non-custodial TON address</strong> that will receive the NFT. 
@@ -63,7 +57,7 @@ mint =
     .no_username = Make sure that you set username to your telegram profile
     .no_photo = Make sure you set avatar to your Telegram profile. If so, make sure everyone can see your photos:
         <strong>Settings -> Privacy & Security -> Who can see my photos -> Everybody</strong>
-    .subscribe_required = Subscribe to 💎 {$channel} 💎 to continue
+    .subscribe_required = Subscribe 💎 {$channel} 💎 to continue
     
 queue = 
     .title = {$count} in queue
