@@ -1,7 +1,7 @@
 import { config } from "#root/config";
 import { Api, RawApi } from "grammy";
 import { DocumentType } from "@typegoose/typegoose";
-import { User, findQueue, placeInLine } from "../models/user";
+import { User, countUsers, findQueue, placeInLine } from "../models/user";
 import { i18n } from "../i18n";
 import { sleep } from "./ton";
 
@@ -29,6 +29,7 @@ export async function sendPlaceInLine(
   sendAnyway = true,
 ) {
   const place = await placeInLine(user.votes);
+  const totalPlaces = await countUsers(false);
   const lastSendedPlace = user.lastSendedPlace ?? Number.MAX_SAFE_INTEGER;
   const placeDecreased = place < lastSendedPlace;
   if (sendAnyway || placeDecreased) {
@@ -36,6 +37,7 @@ export async function sendPlaceInLine(
       user.id,
       i18n.t(user.language, "speedup", {
         place: toEmoji(place),
+        total: toEmoji(totalPlaces + 39),
         inviteLink: `https://t.me/${config.BOT_NAME}?start=${user.id}`,
         collectionOwner: config.COLLECTION_OWNER,
       }),
