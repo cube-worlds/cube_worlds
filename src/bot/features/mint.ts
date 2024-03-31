@@ -59,7 +59,10 @@ async function mintAction(
     });
   }
 
-  const channel = config.TELEGRAM_CHANNEL;
+  let channel = "@cube_worlds";
+  if (ctx.dbuser.language === "ru") {
+    channel = "@cube_worlds_ru";
+  }
   const isSubscribed = await isUserSubscribed(ctx, channel);
   if (isSubscribed) {
     if (removeSubscriptionCheckMessage) {

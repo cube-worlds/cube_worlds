@@ -35,7 +35,6 @@ const createConfigFromEnvironment = (environment: NodeJS.ProcessEnv) => {
     TESTNET: z.boolean().default(true),
     STABILITY_API_KEY: z.string(),
     OPENAI_API_KEY: z.string(),
-    TELEGRAM_CHANNEL: z.string().default("@cube_worlds"),
   });
 
   if (config.BOT_MODE === "webhook") {
