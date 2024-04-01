@@ -1,70 +1,70 @@
 start_command = 
-    .description = 🥊 Start the bot
+    .description = 🚀 Стартовать бота
 language_command = 
-    .description = 🎎 Change language
+    .description = 🎎 Изменить язык
 setcommands_command =
-    .description = 🚅 Set bot commands
+    .description = 🚅 Установить команды бота
 mint_command = 
-    .description = 🚀 Mint your own NFT
+    .description = 💎 Создать свой собственный NFT
 dice_command =
-    .description = 🎲 Roll the dice
+    .description = 🎲 Бросить кости
 
-reset = The state has been reset. Please press /mint
+reset = Состояние сброшено. Пожалуйста, нажмите /mint
 language = 
-    .select = Please, select your language
-    .changed = Language successfully changed!
+    .select = Пожалуйста, выберите ваш язык
+    .changed = Язык успешно изменен!
 admin =
-    .commands-updated = Commands updated.
-unhandled = Unrecognized command. Try /mint
-wrong = Something went wrong
+    .commands-updated = Команды обновлены.
+unhandled = Неопознанная команда. Попробуйте /mint
+wrong = Что-то пошло не так
 
-start = 🎮 Get ready for "<a href="https://teleg.notion.site/Immersive-Text-Based-Adventure-A-New-Era-of-Gaming-on-Telegram-TON-Blockchain-3a93687faa7b4595bfade11fc29eddca?pvs=4">Cube Worlds</a>", new adventure game awaits! 
+start = 🎮 Приготовьтесь к "<a href="https://teleg.notion.site/Immersive-Text-Based-Adventure-A-New-Era-of-Gaming-on-Telegram-TON-Blockchain-3a93687faa7b4595bfade11fc29eddca?pvs=4">Кубическим мирам</a>", вас ждет новая приключенческая игра!
 
-    🌟 Explore pixelated wonders, collect cube NFT heroes, and embark on thrilling quests.
+    🌟 Исследуйте пиксельные чудеса, собирайте NFT кубических героев и отправляйтесь в захватывающие квесты.
     
-    💎 Join now to /mint your free NFT character and prepare for the launch!
+    💎 Делайте /mint NFT своего бесплатного персонажа и готовьтесь к запуску!
     
-    🔥 Are you ready to become a Hero of the Cube Worlds?
+    🔥 Готовы ли вы стать Героем Кубических миров?
 
 vote = 
-    .success = You have successfully voted for @{$name}!
+    .success = Вы успешно проголосовали за @{$name}!
 
-donation = 😍 Thank you for your donation! {$ton} TON has been accepted successfully! ❤️
-speedup = 🏁 You are number {$place} of {$total} in line. To move up the queue, you could:
+donation = 😍 Спасибо за вашу пожертвование! {$ton} TON успешно принят! ❤️
+speedup = 🏁 Вы на {$place}-м месте из {$total} в очереди. Чтобы продвинуться вперед в очереди, вы можете:
 
-    💰 Donate Toncoin from <strong>your wallet</strong> to address <code>{$collectionOwner}</code>
+    💰 Пожертвовать TON со <strong>своего кошелька</strong> на адрес <code>{$collectionOwner}</code>
 
-    👨‍👨‍👦‍👦 Invite friends using link <code>{$inviteLink}</code>
+    👨‍👨‍👦‍👦 Пригласить друзей, используя ссылку <code>{$inviteLink}</code>
 
-    🎲 Roll the dice using /dice every hour
+    🎲 Бросать кости с помощью команды /dice один раз в час
 
 dice = 
-    .wait = ⌛️ Please wait another {$minutes} min {$seconds} sec
-    .success = 🎉 Congratulations, it's {$score}! Now you are <strong>{$place}th</strong> in line. We look forward to seeing you again in one hour.
+    .wait = ⌛️ Пожалуйста, подождите еще {$minutes} мин {$seconds} сек
+    .success = 🎉 Поздравляем, выпало {$score}! Теперь вы <strong>{$place}-й</strong> в очереди. Мы ждем вас снова через час.
 
 description = 
-    .wait = Please share some details about yourself. This information will be used to create more precise and personalized description for your NFT.
-    .fill = Your profile description: <code>{$bio}</code>
+    .wait = Пожалуйста, поделитесь ключевыми деталями о себе. Эта информация будет использоваться для создания более точного и персонализированного описания вашего NFT.
+    .fill = Описание вашего профиля: <code>{$bio}</code>
         
-        Send me another text about yourself or press <strong>✅ Correct</strong> button
-    .success = Your description: <code>{$description}</code> has been saved. If you made a mistake or would like to change description, use the command /reset
+        Отправьте мне текст о себе или нажмите <strong>✅ Подтвердить</strong>
+    .success = Ваше описание: <code>{$description}</code> сохранено. Если вы ошиблись или хотите изменить описание, используйте команду /reset
 
 wallet = 
-    .wait = 🚀 Now please provide me with your <strong>non-custodial TON address</strong> that will receive the NFT. 
+    .wait = 🚀 Теперь, пожалуйста, предоставьте мне ваш <strong>некастодиальный адрес TON</strong>, который получит NFT. 
     
-        🛟 We recommend the Ton Space @wallet inside Telegram or <a href="https://tonkeeper.com">Tonkeeper</a> mobile app. ⚠️ Keep in mind that a regular @wallet won't work, make sure you create a Ton Space wallet inside.
-    .already_exists = Wallet <code>{$wallet}</code> already exists.
+        🛟 Мы рекомендуем Ton Space @wallet внутри Telegram или мобильное приложение <a href="https://tonkeeper.com">Tonkeeper</a>. ⚠️ Имейте в виду, что обычный @wallet не будет работать, убедитесь, что вы создали кошелек Ton Space внутри.
+    .already_exists = Кошелек <code>{$wallet}</code> уже существует.
 
 mint = 
-    .no_username = Make sure that you set username to your telegram profile
-    .no_photo = Make sure you set avatar to your Telegram profile. If so, make sure everyone can see your photos:
-        <strong>Settings -> Privacy & Security -> Who can see my photos -> Everybody</strong>
-    .subscribe_required = Subscribe 💎 {$channel} 💎 to continue
+    .no_username = Убедитесь, что вы установили никнейм в своем профиле Telegram
+    .no_photo = Убедитесь, что вы установили аватар в своем профиле Telegram. Если это так, убедитесь, что все могут видеть ваши фотографии:
+        <strong>Настройки -> Конфиденциальность и безопасность -> Кто может видеть мои фотографии -> Все</strong>
+    .subscribe_required = Подпишитесь на 💎 {$channel} 💎 чтобы продолжить
     
 queue = 
-    .title = {$count} in queue
-    .no_photo_after_submit = Access to your avatars is unavailable. Please resubmit your request with the /mint command
-    .no_suitable_photo = Your avatars need to include at least one photo with people, preferably a portrait. Please add a suitable photo and resubmit your request with the /mint command
-    .success = 🎉 Congrats on minting your NFT! We're excited to be part of your journey. Your NFT is now live <a href="{$nftUrl}">here</a>. Enjoy the attention that come with owning a unique digital artwork.
+    .title = {$count} в очереди
+    .no_photo_after_submit = Доступ к вашим аватаркам недоступен. Пожалуйста, повторно отправьте ваш запрос с помощью команды /mint
+    .no_suitable_photo = Ваши аватары должны включать как минимум одну фотографию с людьми, желательно портрет. Пожалуйста, добавьте подходящую фотографию и повторно отправьте ваш запрос с помощью команды /mint
+    .success = 🎉 Поздравляем с созданием вашего NFT! Мы рады быть частью вашего пути. Ваш NFT теперь доступен <a href="{$nftUrl}">здесь</a>. Наслаждайтесь вниманием, которое привлекает уникальное цифровое произведение искусства.
 
-        ❤️ To help us bring <a href="https://teleg.notion.site/Immersive-Text-Based-Adventure-A-New-Era-of-Gaming-on-Telegram-TON-Blockchain-3a93687faa7b4595bfade11fc29eddca?pvs=4">our game vision</a> to life, you can donate to address <code>{$collectionOwner}</code> or share bot with your friends. Thanks for your support!
+        ❤️ Чтобы помочь нам воплотить <a href="https://teleg.notion.site/Immersive-Text-Based-Adventure-A-New-Era-of-Gaming-on-Telegram-TON-Blockchain-3a93687faa7b4595bfade11fc29eddca?pvs=4">нашу игровую концепцию</a> в жизнь, вы можете сделать пожертвование на адрес <code>{$collectionOwner}</code> или поделиться ботом с друзьями. Спасибо за вашу поддержку!

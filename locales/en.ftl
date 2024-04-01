@@ -1,11 +1,11 @@
 start_command = 
-    .description = 🥊 Start the bot
+    .description = 🚀 Start the bot
 language_command = 
     .description = 🎎 Change language
 setcommands_command =
     .description = 🚅 Set bot commands
 mint_command = 
-    .description = 🚀 Mint your own NFT
+    .description = 💎 Mint your own NFT
 dice_command =
     .description = 🎲 Roll the dice
 
