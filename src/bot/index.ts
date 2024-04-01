@@ -58,8 +58,8 @@ export function createBot(token: string, options: Options) {
       storage: sessionStorage,
     }),
   );
-  protectedBot.use(attachUser);
   protectedBot.use(i18n);
+  protectedBot.use(attachUser);
   protectedBot.use(queueMenu);
 
   // Handlers

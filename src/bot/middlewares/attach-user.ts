@@ -11,5 +11,6 @@ export default async function attachUser(ctx: Context, next: NextFunction) {
     throw new Error("User not found");
   }
   ctx.dbuser = user;
+  await ctx.i18n.setLocale(ctx.dbuser.language);
   return next();
 }
