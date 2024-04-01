@@ -25,6 +25,8 @@ feature.callbackQuery(
 
     if (i18n.locales.includes(languageCode)) {
       await ctx.i18n.setLocale(languageCode);
+      ctx.dbuser.language = languageCode;
+      await ctx.dbuser.save();
 
       return ctx.editMessageText(ctx.t("language.changed"), {
         reply_markup: await createChangeLanguageKeyboard(ctx),
