@@ -6,6 +6,8 @@ setcommands_command =
     .description = 🚅 Set bot commands
 mint_command = 
     .description = 🚀 Mint your own NFT
+dice_command =
+    .description = 🎲 Roll the dice
 
 reset = The state has been reset. Please press /mint
 language = 

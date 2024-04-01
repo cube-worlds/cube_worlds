@@ -21,6 +21,10 @@ function getPrivateChatCommands(localeCode: string): BotCommand[] {
       command: "mint",
       description: i18n.t(localeCode, "mint_command.description"),
     },
+    {
+      command: "dice",
+      description: i18n.t(localeCode, "dice_command.description"),
+    },
   ];
 }
 
