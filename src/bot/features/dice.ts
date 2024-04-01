@@ -4,34 +4,8 @@ import { logHandle } from "#root/bot/helpers/logging.js";
 import { placeInLine } from "#root/bot/models/user.js";
 import { config } from "#root/config";
 import { sleep } from "../helpers/ton";
-
-function timeUnitsBetween(startDate: Date, endDate: Date) {
-  let delta = Math.abs(endDate.getTime() - startDate.getTime()) / 1000;
-  const isNegative = startDate > endDate ? -1 : 1;
-  const units: [
-    [string, number],
-    [string, number],
-    [string, number],
-    [string, number],
-  ] = [
-    ["days", 24 * 60 * 60],
-    ["hours", 60 * 60],
-    ["minutes", 60],
-    ["seconds", 1],
-  ];
-  // eslint-disable-next-line unicorn/no-array-reduce
-  return units.reduce(
-    // eslint-disable-next-line no-return-assign, @typescript-eslint/no-explicit-any
-    (accumulator: any, [key, value]) =>
-      (
-        // eslint-disable-next-line no-sequences
-        (accumulator[key] = Math.floor(delta / value) * isNegative),
-        (delta -= accumulator[key] * isNegative * value),
-        accumulator
-      ),
-    {},
-  );
-}
+import { toEmoji } from "../helpers/emoji";
+import { timeUnitsBetween } from "../helpers/time";
 
 const composer = new Composer<Context>();
 
@@ -65,7 +39,8 @@ feature.command("dice", logHandle("command-dice"), async (ctx) => {
   ctx.dbuser.votes += diceResult.dice.value;
   ctx.dbuser.dicedAt = now;
   await ctx.dbuser.save();
-  const place = await placeInLine(ctx.dbuser.votes);
+  const placeNumber = await placeInLine(ctx.dbuser.votes);
+  const place = toEmoji(placeNumber);
   await sleep(3000);
   return ctx.reply(
     ctx.t("dice.success", { place, score: diceResult.dice.value }),

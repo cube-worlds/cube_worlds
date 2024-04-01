@@ -40,7 +40,7 @@ speedup = 🏁 You are number {$place} of {$total} in line. To move up the queue
 
 dice = 
     .wait = ⌛️ Please wait another {$minutes} min {$seconds} sec
-    .success = 🎉 Congratulations, it's {$score}! Now you are <strong>{$place}th</strong> in line. We look forward to seeing you again in 5 minutes.
+    .success = 🎉 Congratulations, it's {$score}! Now you are {$place}th in line. We look forward to seeing you again in 5 minutes.
 
 description = 
     .wait = Please share some details about yourself. This information will be used to create more precise and personalized description for your NFT.
