@@ -28,6 +28,7 @@ import { updateLogger } from "#root/bot/middlewares/index.js";
 import { config } from "#root/config.js";
 import { logger } from "#root/logger.js";
 import attachUser from "#root/bot/middlewares/attach-user.js";
+import slapReaction from "./middlewares/reaction";
 
 type Options = {
   sessionStorage?: StorageAdapter<SessionData>;
@@ -58,6 +59,7 @@ export function createBot(token: string, options: Options) {
       storage: sessionStorage,
     }),
   );
+  protectedBot.use(slapReaction);
   protectedBot.use(i18n);
   protectedBot.use(attachUser);
   protectedBot.use(queueMenu);
@@ -66,7 +68,6 @@ export function createBot(token: string, options: Options) {
   protectedBot.use(startFeature);
   protectedBot.use(resetFeature);
   protectedBot.use(mintFeature);
-  protectedBot.use(languageFeature);
   protectedBot.use(diceFeature);
   protectedBot.use(queueFeature);
   protectedBot.use(promptsFeature);
