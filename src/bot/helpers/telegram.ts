@@ -6,6 +6,13 @@ import { i18n } from "../i18n";
 import { sleep } from "./ton";
 import { toEmoji } from "./emoji";
 
+export async function sendMessageToAdmins(api: Api<RawApi>, message: string) {
+  // eslint-disable-next-line no-restricted-syntax
+  for (const adminId of config.BOT_ADMINS) {
+    api.sendMessage(adminId, message);
+  }
+}
+
 export async function sendPlaceInLine(
   api: Api<RawApi>,
   user: DocumentType<User>,

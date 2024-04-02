@@ -12,7 +12,7 @@ import {
   getLastestTransaction,
 } from "#root/bot/models/transaction";
 import { AccountSubscription } from "#root/bot/helpers/account-subscription";
-import { sendPlaceInLine } from "./helpers/telegram";
+import { sendMessageToAdmins, sendPlaceInLine } from "./helpers/telegram";
 
 export class Subscription {
   bot: Bot<Context, Api<RawApi>>;
@@ -28,13 +28,6 @@ export class Subscription {
         { apiKey: config.TONCENTER_API_KEY },
       ),
     );
-  }
-
-  sendMessageToAdmins(message: string) {
-    // eslint-disable-next-line no-restricted-syntax
-    for (const adminId of config.BOT_ADMINS) {
-      this.bot.api.sendMessage(adminId, message);
-    }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -74,7 +67,7 @@ export class Subscription {
     const user = await findUserByAddress(senderAddress);
     if (!user) {
       const message = `USER NOT FOUND FOR: ${ton} TON from ${senderAddress.toString()}`;
-      this.sendMessageToAdmins(message);
+      sendMessageToAdmins(this.bot.api, message);
       return logger.error(message);
     }
 
@@ -89,7 +82,8 @@ export class Subscription {
       i18n.t(user.language, "donation", { ton }),
     );
 
-    this.sendMessageToAdmins(
+    sendMessageToAdmins(
+      this.bot.api,
       `🚀 RECEIVED ${ton} TON FROM @${user.name}. Minted: ${user.minted ? "✅" : "❌"}`,
     );
     if (!user.minted) {

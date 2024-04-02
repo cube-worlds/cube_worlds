@@ -22,6 +22,9 @@ export class User extends TimeStamps {
   @prop({ type: String, required: true, default: "en" })
   language!: string;
 
+  @prop({ type: Boolean })
+  languageSelected?: boolean;
+
   @prop({ type: String, required: false, default: UserState.WaitNothing })
   state!: UserState;
 
