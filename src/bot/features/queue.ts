@@ -21,8 +21,8 @@ import { generate } from "#root/bot/helpers/generation.js";
 import { randomAttributes } from "#root/bot/helpers/attributes.js";
 import { countUsers, findUserById } from "#root/bot/models/user.js";
 import { ChatGPTAPI } from "chatgpt";
-import { i18n } from "../i18n";
 import { sendNewPlaces } from "../helpers/telegram";
+import { sendMintedMessage } from "../middlewares/check-not-minted";
 
 const composer = new Composer<Context>();
 
@@ -177,15 +177,7 @@ feature.callbackQuery(
             link_preview_options: { is_disabled: true },
           });
 
-          const collectionOwner = config.COLLECTION_OWNER;
-          await ctx.api.sendMessage(
-            selectedUser.id,
-            i18n.t(selectedUser.language, "queue.success", {
-              nftUrl,
-              collectionOwner,
-            }),
-            { link_preview_options: { is_disabled: true } },
-          );
+          await sendMintedMessage(ctx);
 
           sendNewPlaces(ctx.api);
           break;

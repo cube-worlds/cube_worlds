@@ -1,13 +1,13 @@
 import { Composer } from "grammy";
 import type { Context } from "#root/bot/context.js";
 import { logHandle } from "#root/bot/helpers/logging.js";
-import { config } from "#root/config.js";
 import { UserState, findUserByAddress } from "#root/bot/models/user.js";
 import { getUserProfilePhoto } from "#root/bot/helpers/photo.js";
 import { Address } from "@ton/core";
 import { voteScore } from "#root/bot/helpers/votes.js";
 import { Chat } from "grammy/types";
 import { sendPlaceInLine } from "../helpers/telegram";
+import { sendMintedMessage } from "../middlewares/check-not-minted";
 
 const composer = new Composer<Context>();
 
@@ -52,11 +52,7 @@ async function mintAction(
   removeSubscriptionCheckMessage: boolean = false,
 ) {
   if (ctx.dbuser.minted) {
-    const nftUrl = ctx.dbuser.nftUrl ?? "";
-    const collectionOwner = config.COLLECTION_OWNER;
-    return ctx.reply(ctx.t("queue.success", { nftUrl, collectionOwner }), {
-      link_preview_options: { is_disabled: true },
-    });
+    return sendMintedMessage(ctx);
   }
 
   let channel = "@cube_worlds";
