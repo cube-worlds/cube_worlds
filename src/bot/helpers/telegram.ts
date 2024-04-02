@@ -27,7 +27,7 @@ export async function sendPlaceInLine(
       user.id,
       i18n.t(user.language, "speedup", {
         place: toEmoji(place),
-        total: toEmoji(totalPlaces + 39),
+        total: toEmoji(totalPlaces),
         inviteLink: `https://t.me/${config.BOT_NAME}?start=${user.id}`,
         collectionOwner: config.COLLECTION_OWNER,
       }),

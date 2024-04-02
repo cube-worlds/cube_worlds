@@ -35,16 +35,17 @@ feature.command("dice", logHandle("command-dice"), async (ctx) => {
       }),
     );
   }
-  const diceResult = await ctx.replyWithDice("🎲");
-  ctx.dbuser.votes += diceResult.dice.value;
+  const dice1 = ctx.replyWithDice("🎲");
+  const dice2 = ctx.replyWithDice("🎲");
+  const result = await Promise.all([dice1, dice2]);
+  const score = result[0].dice.value + result[1].dice.value;
+  ctx.dbuser.votes += score;
   ctx.dbuser.dicedAt = now;
   await ctx.dbuser.save();
   const placeNumber = await placeInLine(ctx.dbuser.votes);
   const place = toEmoji(placeNumber);
   await sleep(3000);
-  return ctx.reply(
-    ctx.t("dice.success", { place, score: diceResult.dice.value }),
-  );
+  return ctx.reply(ctx.t("dice.success", { place, score }));
 });
 
 export { composer as diceFeature };
