@@ -5,8 +5,8 @@ import { Context } from "../context";
 export function sendMintedMessage(ctx: Context) {
   const nftUrl = ctx.dbuser.nftUrl ?? "";
   const collectionOwner = config.COLLECTION_OWNER;
-  const text = ctx.t("mint.share");
-  const shareLink = `https://t.me/share/url?url=https://t.me/${config.BOT_NAME}&text=${text}`;
+  const url = `https://t.me/${config.BOT_NAME}?start=${ctx.dbuser.id}`;
+  const shareLink = `https://t.me/share/url?url=${url}&text=${ctx.t("mint.share")}`;
   return ctx.reply(
     ctx.t("queue.success", { nftUrl, collectionOwner, shareLink }),
     {
