@@ -1,6 +1,6 @@
-# 🤖 [Cube Worlds](http://t.me/cube_worlds_bot)
+# 💎 [Cube Worlds Bot](http://t.me/cube_worlds_bot) 💎
 
-Cube Worlds game bot in Telegram bot.
+Cube Worlds game inside Telegram bot.
 
 ## Features
 
