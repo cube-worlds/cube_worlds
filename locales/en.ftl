@@ -52,7 +52,9 @@ description =
 wallet = 
     .wait = 🚀 Now please provide me with your <strong>non-custodial TON address</strong> that will receive the NFT. 
     
-        🛟 We recommend the Ton Space @wallet inside Telegram or <a href="https://tonkeeper.com">Tonkeeper</a> mobile app. ⚠️ Keep in mind that a regular @wallet won't work, make sure you create a Ton Space wallet inside.
+        🛟 We recommend the Ton Space @wallet inside Telegram or <a href="https://tonkeeper.com">Tonkeeper</a> mobile app.
+        
+        ⚠️ Keep in mind that a regular @wallet won't work, make sure you create a Ton Space wallet inside.
     .already_exists = Wallet <code>{$wallet}</code> already exists.
 
 mint = 
