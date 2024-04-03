@@ -64,6 +64,7 @@ feature.callbackQuery(
             // `Write the beginning of the new RPG character's story named "${name}".
             `Write an inspiring text about a person named "${name}" who has decided to start a journey.
             You could also use this additional information "${info}" if it feels appropriate, translate into English.
+            Do NOT show text in original language.
             Response MUST BE up to 500 characters maximum`,
           );
           selectedUser.nftDescription = result.text.slice(0, 700);
@@ -105,6 +106,17 @@ feature.callbackQuery(
           const file = await ctx.api.getFile(fileId);
           selectedUser.image = `https://api.telegram.org/file/bot${config.BOT_TOKEN}/${file.file_path}`;
           await selectedUser.save();
+          break;
+        }
+
+        case SelectImageButton.Avatar: {
+          const nextAvatarNumber =
+            ctx.dbuser.selectedUser === selectedUser.id
+              ? (ctx.dbuser.avatarNumber ?? -1) + 1
+              : 0;
+          ctx.dbuser.avatarNumber = nextAvatarNumber;
+          await ctx.dbuser.save();
+          await sendUserMetadata(ctx, selectedUser);
           break;
         }
 

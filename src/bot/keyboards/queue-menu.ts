@@ -30,12 +30,7 @@ export async function sendUserMetadata(
   context.chatAction = "upload_document";
 
   const adminUser = context.dbuser;
-  const avatarNumber =
-    adminUser.selectedUser === selectedUser.id
-      ? (adminUser.avatarNumber ?? -1) + 1
-      : 0;
   const selectedUserId: number = selectedUser.id;
-  adminUser.avatarNumber = avatarNumber;
   adminUser.selectedUser = selectedUser.id;
   await adminUser.save();
 
@@ -43,7 +38,7 @@ export async function sendUserMetadata(
     const nextAvatar = await getUserProfileFile(
       context,
       selectedUserId,
-      avatarNumber,
+      adminUser.avatarNumber ?? 0,
     );
     if (!nextAvatar) {
       return context.reply(context.t("wrong"));
