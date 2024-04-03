@@ -67,6 +67,6 @@ queue =
     .no_photo_after_submit = Access to your avatars is unavailable. Please resubmit your request with the /mint command
     .no_square_avatars = It appears that you don't currently have an avatar with square dimensions, please upload
     .no_suitable_photo = Your avatars need to include at least one photo with people, preferably a portrait. Please add a suitable photo and resubmit your request with the /mint command
-    .success = 🎉 Congrats on minting your NFT! We're excited to be part of your journey. Your NFT is now live <a href="{$nftUrl}">here</a>. Enjoy the attention that come with owning a unique digital artwork. 💎
+    .success = 🎉 Congrats on minting your NFT! We're excited to be part of your journey. Your NFT is now live <a href="{$nftUrl}">here</a>. Enjoy the attention that come with owning a unique digital artwork 💎
 
         ❤️ To help us bring <a href="https://teleg.notion.site/Immersive-Text-Based-Adventure-A-New-Era-of-Gaming-on-Telegram-TON-Blockchain-3a93687faa7b4595bfade11fc29eddca?pvs=4">our game vision</a> to life, you can donate to address <code>{$collectionOwner}</code> or <a href="{$shareLink}">share bot with your friends</a>. Thanks for your support! 🤗

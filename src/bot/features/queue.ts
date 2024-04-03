@@ -171,20 +171,24 @@ feature.callbackQuery(
           selectedUser.nftUrl = nftUrl;
           await selectedUser.save();
 
-          await sleep(30_000);
+          const runAsync = async () => {
+            await sleep(60_000);
 
-          await ctx.reply(nftUrl, {
-            link_preview_options: { is_disabled: true },
-          });
+            await ctx.reply(nftUrl, {
+              link_preview_options: { is_disabled: true },
+            });
 
-          await sendMintedMessage(
-            ctx.api,
-            selectedUser.id,
-            selectedUser.language,
-            selectedUser.nftUrl ?? "",
-          );
+            await sendMintedMessage(
+              ctx.api,
+              selectedUser.id,
+              selectedUser.language,
+              selectedUser.nftUrl ?? "",
+            );
+          };
+          runAsync();
 
           sendNewPlaces(ctx.api);
+
           break;
         }
         default: {
