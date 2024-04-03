@@ -2,6 +2,7 @@ import { Api, Middleware, RawApi } from "grammy";
 import { config } from "#root/config";
 import { Context } from "../context";
 import { i18n } from "../i18n";
+import { shareTelegramLink } from "../helpers/telegram";
 
 export async function sendMintedMessage(
   api: Api<RawApi>,
@@ -10,11 +11,14 @@ export async function sendMintedMessage(
   nftUrl: string,
 ) {
   const collectionOwner = config.COLLECTION_OWNER;
-  const url = `https://t.me/${config.BOT_NAME}?start=${userId}`;
-  const shareLink = `https://t.me/share/url?url=${url}&text=${i18n.t(userLocale, "mint.share")}`;
+  const shareLink = shareTelegramLink(userId, i18n.t(userLocale, "mint.share"));
   return api.sendMessage(
     userId,
-    i18n.t(userLocale, "queue.success", { nftUrl, collectionOwner, shareLink }),
+    i18n.t(userLocale, "queue.success", {
+      nftUrl,
+      collectionOwner,
+      shareLink,
+    }),
     {
       link_preview_options: { is_disabled: true },
     },
