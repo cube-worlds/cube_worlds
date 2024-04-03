@@ -96,7 +96,9 @@ async function mintAction(
         return ctx.reply(ctx.t("mint.no_username"));
       }
       ctx.dbuser.name = author.user.username;
-      ctx.dbuser.votes = await voteScore(ctx);
+      if (!ctx.dbuser.votes) {
+        ctx.dbuser.votes = await voteScore(ctx);
+      }
       ctx.dbuser.state = UserState.WaitDescription;
       ctx.dbuser.save();
       sendWaitDescription(ctx);

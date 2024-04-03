@@ -15,7 +15,9 @@ feature.command(
   logHandle("command-reset"),
   async (ctx) => {
     ctx.dbuser.state = UserState.WaitNothing;
-    ctx.dbuser.votes = await voteScore(ctx);
+    if (!ctx.dbuser.votes) {
+      ctx.dbuser.votes = await voteScore(ctx);
+    }
     ctx.dbuser.save();
     return ctx.reply(ctx.t("reset"));
   },
