@@ -62,11 +62,19 @@ export async function sendUserMetadata(
       },
     });
   } catch (error) {
-    if ((error as Error).message === "No profile avatars") {
+    const errorMessage = (error as Error).message;
+    if (errorMessage === "No profile avatars") {
       // eslint-disable-next-line no-param-reassign
       selectedUser.state = UserState.WaitNothing;
       await selectedUser.save();
       const message = `❌ ${i18n.t(selectedUser.language, "queue.no_photo_after_submit")}`;
+      await context.api.sendMessage(selectedUser.id, message);
+      await context.api.sendMessage(adminUser.id, message);
+    } else if (errorMessage === "No square photos") {
+      // eslint-disable-next-line no-param-reassign
+      selectedUser.state = UserState.WaitNothing;
+      await selectedUser.save();
+      const message = `❌ ${i18n.t(selectedUser.language, "queue.no_square_avatars")}`;
       await context.api.sendMessage(selectedUser.id, message);
       await context.api.sendMessage(adminUser.id, message);
     } else {
