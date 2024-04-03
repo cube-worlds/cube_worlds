@@ -52,7 +52,12 @@ async function mintAction(
   removeSubscriptionCheckMessage: boolean = false,
 ) {
   if (ctx.dbuser.minted) {
-    return sendMintedMessage(ctx);
+    return sendMintedMessage(
+      ctx.api,
+      ctx.dbuser.id,
+      ctx.dbuser.language,
+      ctx.dbuser.nftUrl ?? "",
+    );
   }
 
   let channel = "@cube_worlds";

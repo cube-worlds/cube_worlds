@@ -177,7 +177,12 @@ feature.callbackQuery(
             link_preview_options: { is_disabled: true },
           });
 
-          await sendMintedMessage(ctx);
+          await sendMintedMessage(
+            ctx.api,
+            selectedUser.id,
+            selectedUser.language,
+            selectedUser.nftUrl ?? "",
+          );
 
           sendNewPlaces(ctx.api);
           break;
