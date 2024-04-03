@@ -171,8 +171,9 @@ feature.callbackQuery(
           selectedUser.nftUrl = nftUrl;
           await selectedUser.save();
 
-          const runAsync = async () => {
-            await sleep(60_000);
+          (async () => {
+            await sendNewPlaces(ctx.api);
+            await sleep(30_000);
             await sendMintedMessage(
               ctx.api,
               selectedUser.id,
@@ -186,11 +187,7 @@ feature.callbackQuery(
               selectedUser.language,
               selectedUser.nftUrl ?? "",
             );
-          };
-          runAsync();
-
-          sendNewPlaces(ctx.api);
-
+          })();
           break;
         }
         default: {
