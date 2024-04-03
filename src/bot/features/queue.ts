@@ -38,7 +38,7 @@ feature.command("queue", logHandle("command-queue"), async (ctx) => {
 feature.callbackQuery(
   changeImageData.filter(),
   logHandle("keyboard-image-select"),
-  async (ctx) => {
+  async (ctx: Context) => {
     try {
       const selectedUserId = ctx.dbuser.selectedUser;
       if (!selectedUserId) {
@@ -48,7 +48,7 @@ feature.callbackQuery(
       if (!selectedUser) {
         return ctx.reply(ctx.t("wrong"));
       }
-      const { select } = changeImageData.unpack(ctx.callbackQuery.data);
+      const { select } = changeImageData.unpack(ctx.callbackQuery?.data ?? "");
       ctx.editMessageReplyMarkup({});
       switch (select) {
         case SelectImageButton.Description: {

@@ -159,7 +159,7 @@ feature.on("message:text", logHandle("message-handler")).filter(
 feature
   .on("callback_query", logHandle("check-subscription-callback-query"))
   .filter(
-    (ctx) => ctx.hasCallbackQuery("check_subscription"),
+    (ctx: Context) => ctx.hasCallbackQuery("check_subscription"),
     async (ctx) => {
       mintAction(ctx, true);
     },
@@ -168,8 +168,8 @@ feature
 feature
   .on("callback_query", logHandle("correct_description-callback-query"))
   .filter(
-    (ctx) => ctx.hasCallbackQuery("correct_description"),
-    async (ctx) => {
+    (ctx: Context) => ctx.hasCallbackQuery("correct_description"),
+    async (ctx: Context) => {
       const bio = await getBio(ctx);
       if (bio) {
         saveDescription(ctx, bio);
