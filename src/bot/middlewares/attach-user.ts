@@ -17,7 +17,10 @@ export default async function attachUser(ctx: Context, next: NextFunction) {
     const locale = await ctx.i18n.getLocale();
     const localeSupported = i18n.locales.includes(locale);
     if (!localeSupported) {
-      sendMessageToAdmins(ctx.api, `🔠 Unsupported locale: ${locale}`);
+      sendMessageToAdmins(
+        ctx.api,
+        `🔠 Unsupported locale: ${locale} from @${ctx.from.username}`,
+      );
     }
     ctx.dbuser.language = localeSupported ? locale : "en";
     ctx.dbuser.languageSelected = true;

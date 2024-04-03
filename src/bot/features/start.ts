@@ -8,7 +8,7 @@ const composer = new Composer<Context>();
 
 const feature = composer.chatType("private");
 
-feature.command("start", logHandle("command-start"), async (ctx) => {
+async function checkReferal(ctx: Context) {
   const payload = ctx.match;
   if (payload) {
     const giverId = ctx.dbuser.id;
@@ -25,7 +25,7 @@ feature.command("start", logHandle("command-start"), async (ctx) => {
     }
     const author = await ctx.getAuthor();
     const premium = author.user.is_premium ?? false;
-    const add = premium ? 50 : 5;
+    const add = premium ? 1000 : 100;
     const voteModel = new VoteModel();
     voteModel.giver = giverId;
     voteModel.receiver = receiverId;
@@ -37,6 +37,10 @@ feature.command("start", logHandle("command-start"), async (ctx) => {
 
     await ctx.reply(ctx.t("vote.success", { name: receiver.name ?? "" }));
   }
+}
+
+feature.command("start", logHandle("command-start"), async (ctx) => {
+  await checkReferal(ctx);
   ctx.reply(ctx.t("start"), {
     link_preview_options: { is_disabled: true },
   });
