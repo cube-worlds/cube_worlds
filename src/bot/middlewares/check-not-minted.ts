@@ -3,7 +3,7 @@ import { config } from "#root/config";
 import { Context } from "../context";
 import { i18n } from "../i18n";
 
-export function sendMintedMessage(
+export async function sendMintedMessage(
   api: Api<RawApi>,
   userId: number,
   userLocale: string,

@@ -173,14 +173,16 @@ feature.callbackQuery(
 
           const runAsync = async () => {
             await sleep(60_000);
-
-            await ctx.reply(nftUrl, {
-              link_preview_options: { is_disabled: true },
-            });
-
             await sendMintedMessage(
               ctx.api,
               selectedUser.id,
+              selectedUser.language,
+              selectedUser.nftUrl ?? "",
+            );
+            // send the same to admin
+            await sendMintedMessage(
+              ctx.api,
+              ctx.dbuser.id,
               selectedUser.language,
               selectedUser.nftUrl ?? "",
             );
