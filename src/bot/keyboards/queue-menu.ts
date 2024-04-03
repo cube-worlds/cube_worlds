@@ -62,7 +62,7 @@ export async function sendUserMetadata(
       },
     });
   } catch (error) {
-    if ((error as Error).message === "Zero count photos") {
+    if ((error as Error).message === "No profile avatars") {
       // eslint-disable-next-line no-param-reassign
       selectedUser.state = UserState.WaitNothing;
       await selectedUser.save();
