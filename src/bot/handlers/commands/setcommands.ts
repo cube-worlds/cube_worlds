@@ -116,19 +116,24 @@ export async function setCommandsHandler(ctx: CommandContext<Context>) {
   }
 
   // set private chat commands for owner
-  await ctx.api.setMyCommands(
-    [
-      ...getPrivateChatCommands(DEFAULT_LANGUAGE_CODE),
-      ...getPrivateChatAdminCommands(DEFAULT_LANGUAGE_CODE),
-      ...(isMultipleLocales ? [getLanguageCommand(DEFAULT_LANGUAGE_CODE)] : []),
-    ],
-    {
-      scope: {
-        type: "chat",
-        chat_id: Number(config.BOT_ADMINS),
+  // eslint-disable-next-line no-restricted-syntax
+  for (const adminId of config.BOT_ADMINS) {
+    ctx.api.setMyCommands(
+      [
+        ...getPrivateChatCommands(DEFAULT_LANGUAGE_CODE),
+        ...getPrivateChatAdminCommands(DEFAULT_LANGUAGE_CODE),
+        ...(isMultipleLocales
+          ? [getLanguageCommand(DEFAULT_LANGUAGE_CODE)]
+          : []),
+      ],
+      {
+        scope: {
+          type: "chat",
+          chat_id: adminId,
+        },
       },
-    },
-  );
+    );
+  }
 
   return ctx.reply(ctx.t("admin.commands-updated"));
 }
