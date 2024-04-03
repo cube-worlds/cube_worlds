@@ -23,12 +23,15 @@ export async function sendPlaceInLine(
   const lastSendedPlace = user.lastSendedPlace ?? Number.MAX_SAFE_INTEGER;
   const placeDecreased = place < lastSendedPlace;
   if (sendAnyway || placeDecreased) {
+    const inviteLink = `https://t.me/${config.BOT_NAME}?start=${user.id}`;
+    const shareLink = `https://t.me/share/url?url=${inviteLink}&text=${i18n.t(user.language, "mint.share")}`;
     await api.sendMessage(
       user.id,
       i18n.t(user.language, "speedup", {
         place: toEmoji(place),
         total: toEmoji(totalPlaces),
-        inviteLink: `https://t.me/${config.BOT_NAME}?start=${user.id}`,
+        shareLink,
+        inviteLink,
         collectionOwner: config.COLLECTION_OWNER,
       }),
     );

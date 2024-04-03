@@ -34,7 +34,7 @@ speedup = 🏁 You are number {$place} of {$total} in line. To move up the queue
 
     💰 Donate Toncoin from <strong>your wallet</strong> to address <code>{$collectionOwner}</code>
 
-    👨‍👨‍👦‍👦 Invite friends using link <code>{$inviteLink}</code>
+    👨‍👨‍👦‍👦 <a href="{$shareLink}">Invite friends</a> using link <code>{$inviteLink}</code>
 
     🎲 Roll the dice using /dice every 5 minutes
 
