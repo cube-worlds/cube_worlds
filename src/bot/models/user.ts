@@ -117,6 +117,12 @@ export function findQueue() {
     .limit(10);
 }
 
+export function findAll(limit = 10) {
+  return UserModel.find({ votes: { $gte: 1 } })
+    .sort({ votes: -1 })
+    .limit(limit);
+}
+
 export function countUsers(minted: boolean) {
   return UserModel.countDocuments({ minted, state: UserState.Submited });
 }

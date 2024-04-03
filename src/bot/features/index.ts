@@ -10,3 +10,4 @@ export * from "./collection.js";
 export * from "./topup.js";
 export * from "./propmts.js";
 export * from "./strength.js";
+export * from "./whales.js";
