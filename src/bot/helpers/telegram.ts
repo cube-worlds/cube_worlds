@@ -1,6 +1,8 @@
 import { config } from "#root/config";
 import { Api, RawApi } from "grammy";
 import { DocumentType } from "@typegoose/typegoose";
+import { TranslationVariables } from "@grammyjs/i18n";
+import { logger } from "#root/logger";
 import { User, countUsers, findQueue, placeInLine } from "../models/user";
 import { i18n } from "../i18n";
 import { sleep } from "./ton";
@@ -37,15 +39,25 @@ export async function sendPlaceInLine(
       user.id,
       i18n.t(user.language, "mint.share"),
     );
+    const titleKey = `speedup.${user.minted ? "title_minted" : "title_not_minted"}`;
+    const titleVariables: TranslationVariables<string> = user.minted
+      ? {
+          points: user.votes.toLocaleString("en-US"),
+        }
+      : {
+          place: toEmoji(place),
+          total: toEmoji(totalPlaces),
+        };
+    logger.error(titleVariables);
     await api.sendMessage(
       user.id,
-      i18n.t(user.language, "speedup", {
-        place: toEmoji(place),
-        total: toEmoji(totalPlaces),
-        shareLink,
-        inviteLink,
-        collectionOwner: config.COLLECTION_OWNER,
-      }),
+      `${i18n.t(user.language, titleKey, titleVariables)}
+
+${i18n.t(user.language, "speedup.variants", {
+  shareLink,
+  inviteLink,
+  collectionOwner: config.COLLECTION_OWNER,
+})}`,
     );
     // eslint-disable-next-line no-param-reassign
     user.lastSendedPlace = place;

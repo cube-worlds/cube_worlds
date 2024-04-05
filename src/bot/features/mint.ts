@@ -97,7 +97,7 @@ async function mintAction(
       }
       ctx.dbuser.name = author.user.username;
       if (!ctx.dbuser.votes) {
-        ctx.dbuser.votes = await voteScore(ctx);
+        ctx.dbuser.votes = BigInt(await voteScore(ctx));
       }
       ctx.dbuser.state = UserState.WaitDescription;
       ctx.dbuser.save();

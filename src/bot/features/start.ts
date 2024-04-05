@@ -3,6 +3,7 @@ import type { Context } from "#root/bot/context.js";
 import { logHandle } from "#root/bot/helpers/logging.js";
 import { findUserById } from "#root/bot/models/user.js";
 import { VoteModel, isUserAlreadyVoted } from "#root/bot/models/vote.js";
+import { voteScore } from "../helpers/votes";
 
 const composer = new Composer<Context>();
 
@@ -23,16 +24,14 @@ async function checkReferal(ctx: Context) {
     if (await isUserAlreadyVoted(giverId)) {
       return ctx.reply("You already voted");
     }
-    const author = await ctx.getAuthor();
-    const premium = author.user.is_premium ?? false;
-    const add = premium ? 1000 : 100;
+    const add = await voteScore(ctx);
     const voteModel = new VoteModel();
     voteModel.giver = giverId;
     voteModel.receiver = receiverId;
     voteModel.quantity = add;
     await voteModel.save();
 
-    receiver.votes += add;
+    receiver.votes += BigInt(add);
     await receiver.save();
 
     await ctx.reply(ctx.t("vote.success", { name: receiver.name ?? "" }));

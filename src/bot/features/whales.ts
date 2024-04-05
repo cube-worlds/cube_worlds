@@ -21,7 +21,7 @@ feature.command("whales", logHandle("command-reset"), async (ctx) => {
   const queue = await findAll(25);
   const md = `\`\`\`\n${getMarkdownTable({
     table: {
-      head: ["User", "Scores"],
+      head: ["User", "$CUBE"],
       body: queue.map((v) => [
         String(removeMiddle(v.name ?? v.id)),
         String(v.votes),

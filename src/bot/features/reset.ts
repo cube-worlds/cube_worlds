@@ -16,7 +16,7 @@ feature.command(
   async (ctx) => {
     ctx.dbuser.state = UserState.WaitNothing;
     if (!ctx.dbuser.votes) {
-      ctx.dbuser.votes = await voteScore(ctx);
+      ctx.dbuser.votes = BigInt(await voteScore(ctx));
     }
     ctx.dbuser.save();
     return ctx.reply(ctx.t("reset"));

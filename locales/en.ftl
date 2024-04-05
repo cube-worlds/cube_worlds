@@ -30,9 +30,10 @@ vote =
     .success = You have successfully voted for @{$name}!
 
 donation = 😍 Thank you for your donation! {$ton} TON has been accepted successfully! ❤️
-speedup = 🏁 You are number {$place} of {$total} in line. To move up the queue, you could:
-
-    💰 Donate Toncoin from <strong>your wallet</strong> to address <code>{$collectionOwner}</code>
+speedup = 
+    .title_minted = 💎 You have {$points} $CUBE. To get even more, you can:
+    .title_not_minted = 🏁 You are number {$place} of {$total} in line. To move up the queue, you could:
+    .variants = 💰 Donate Toncoin from <strong>your wallet</strong> to address <code>{$collectionOwner}</code>
 
     👨‍👨‍👦‍👦 <a href="{$shareLink}">Invite friends</a> using link <code>{$inviteLink}</code>
 
@@ -40,7 +41,7 @@ speedup = 🏁 You are number {$place} of {$total} in line. To move up the queue
 
 dice = 
     .wait = ⌛️ Please wait another {$minutes} min {$seconds} sec
-    .success = 🎉 Congratulations, it's {$score}! Now you are {$place}th in line. We look forward to seeing you again in 5 minutes.
+    .success = 🎉 Congratulations, it's {$score}! We look forward to seeing you again in 5 minutes.
 
 description = 
     .wait = Please share some details about yourself. This information will be used to create more precise and personalized description for your NFT.
@@ -54,7 +55,7 @@ wallet =
     
         🛟 We recommend the Ton Space @wallet inside Telegram or <a href="https://tonkeeper.com">Tonkeeper</a> mobile app.
         
-        ⚠️ Keep in mind that a regular @wallet won't work, make sure you create a Ton Space wallet inside.
+        ⚠️ Keep in mind that a regular @wallet won't work. Make sure you create a Ton Space wallet inside.
     .already_exists = Wallet <code>{$wallet}</code> already exists.
 
 mint = 

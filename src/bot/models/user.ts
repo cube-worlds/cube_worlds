@@ -28,8 +28,8 @@ export class User extends TimeStamps {
   @prop({ type: String, required: false, default: UserState.WaitNothing })
   state!: UserState;
 
-  @prop({ type: Number, required: false, default: 0 })
-  votes!: number;
+  @prop({ type: BigInt, required: false, default: 0 })
+  votes!: bigint;
 
   @prop({ type: Date, required: true, default: new Date(+0) })
   dicedAt!: Date;
@@ -127,7 +127,7 @@ export function countUsers(minted: boolean) {
   return UserModel.countDocuments({ minted, state: UserState.Submited });
 }
 
-export async function placeInLine(votes: number): Promise<number> {
+export async function placeInLine(votes: bigint): Promise<number> {
   const count = await UserModel.countDocuments({
     minted: false,
     state: UserState.Submited,
