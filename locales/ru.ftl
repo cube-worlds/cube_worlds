@@ -5,9 +5,11 @@ language_command =
 setcommands_command =
     .description = 🚅 Установить команды бота
 mint_command = 
-    .description = 💎 Создать собственный NFT
+    .description = 💎 Создать свой NFT
 dice_command =
     .description = 🎲 Бросить кости
+whales_command =
+    .description = 🐳 Киты
 
 reset = Состояние сброшено. Пожалуйста, нажмите /mint
 language = 

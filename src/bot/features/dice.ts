@@ -10,7 +10,7 @@ const composer = new Composer<Context>();
 const feature = composer.chatType("private");
 
 feature.command("dice", logHandle("command-dice"), async (ctx) => {
-  const waitMinutes = 0; // 5;
+  const waitMinutes = 5;
   const waitDate = new Date(
     ctx.dbuser.dicedAt.getTime() + waitMinutes * 60 * 1000,
   );

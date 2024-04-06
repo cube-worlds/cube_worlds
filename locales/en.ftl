@@ -5,9 +5,11 @@ language_command =
 setcommands_command =
     .description = 🚅 Set bot commands
 mint_command = 
-    .description = 💎 Mint your own NFT
+    .description = 💎 Mint your NFT
 dice_command =
     .description = 🎲 Roll the dice
+whales_command =
+    .description = 🐳 Whales
 
 reset = The state has been reset. Please press /mint
 language = 
