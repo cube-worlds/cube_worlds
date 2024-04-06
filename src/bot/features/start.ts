@@ -38,7 +38,9 @@ async function checkReferal(ctx: Context) {
     receiver.votes += BigInt(add);
     await receiver.save();
 
-    await ctx.reply(ctx.t("vote.success", { name: receiver.name ?? "" }));
+    await ctx.reply(
+      ctx.t("vote.success", { name: receiver.name ?? receiver.id }),
+    );
   }
 }
 
