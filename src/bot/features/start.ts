@@ -3,6 +3,7 @@ import type { Context } from "#root/bot/context.js";
 import { logHandle } from "#root/bot/helpers/logging.js";
 import { findUserById } from "#root/bot/models/user.js";
 import { VoteModel, isUserAlreadyVoted } from "#root/bot/models/vote.js";
+import { logger } from "#root/logger";
 import { voteScore } from "../helpers/votes";
 
 const composer = new Composer<Context>();
@@ -25,6 +26,9 @@ async function checkReferal(ctx: Context) {
       return ctx.reply("You already voted");
     }
     const add = await voteScore(ctx);
+    logger.info(
+      `Add referral ${add} points to ${receiver.name ?? receiver.id}`,
+    );
     const voteModel = new VoteModel();
     voteModel.giver = giverId;
     voteModel.receiver = receiverId;
