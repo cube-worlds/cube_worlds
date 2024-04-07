@@ -1,7 +1,7 @@
 import { Composer } from "grammy";
 import type { Context } from "#root/bot/context.js";
 import { logHandle } from "#root/bot/helpers/logging.js";
-import { findTopWallets } from "#root/bot/models/user.js";
+import { countAllWallets, findTopWallets } from "#root/bot/models/user.js";
 import { getMarkdownTable } from "markdown-table-ts";
 import { bigIntWithCustomSeparator } from "../helpers/numbers";
 
@@ -19,11 +19,13 @@ function removeMiddle(s: string, cornerLength = 5) {
 }
 
 feature.command("whales", logHandle("command-reset"), async (ctx) => {
-  const queue = await findTopWallets(25);
-  const md = `\`\`\`\n${getMarkdownTable({
+  const count = await countAllWallets();
+  const topWallets = await findTopWallets(30);
+  const md = `${ctx.t("whales.count", { count })}
+\`\`\`\n${getMarkdownTable({
     table: {
       head: ["User", "$CUBE"],
-      body: queue.map((v) => [
+      body: topWallets.map((v) => [
         removeMiddle(v.wallet ?? "undefined"),
         bigIntWithCustomSeparator(v.votes),
       ]),

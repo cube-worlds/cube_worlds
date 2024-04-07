@@ -31,7 +31,11 @@ start = 🎮 Get ready for "<a href="https://teleg.notion.site/Immersive-Text-Ba
 vote = 
     .success = You have successfully voted for @{$name}!
 
+whales = 
+    .count = Whole wallets: {$count}
+
 donation = 😍 Thank you for your donation! {$ton} TON has been accepted successfully! ❤️
+
 speedup = 
     .title_minted = 💎 You have {$points} $CUBE. To get even more, you can:
     .title_not_minted = 🏁 You are number {$place} of {$total} in line. To move up the queue, you could:
