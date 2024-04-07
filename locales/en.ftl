@@ -35,7 +35,7 @@ vote =
     .success = You have successfully voted for @{$name}!
 
 whales = 
-    .count = Total wallets: {$count}
+    .count = Total {$points} $CUBE on {$count} wallets
 
 donation = 😍 Thank you for your donation! {$ton} TON has been accepted successfully! ❤️
 

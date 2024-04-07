@@ -117,6 +117,16 @@ export function findQueue() {
     .limit(10);
 }
 
+export async function countAllBalances(): Promise<number> {
+  const result = await UserModel.aggregate([
+    { $group: { _id: undefined, sum: { $sum: "$votes" } } },
+  ]);
+  if (result.length === 0) {
+    return 0;
+  }
+  return Number.parseFloat(result[0].sum);
+}
+
 export function countAllWallets(): Promise<number> {
   return UserModel.countDocuments({ wallet: { $exists: true } });
 }
