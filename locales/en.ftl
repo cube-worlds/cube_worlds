@@ -29,10 +29,13 @@ start = 🎮 Get ready for "<a href="https://teleg.notion.site/Immersive-Text-Ba
     🔥 Are you ready to become a Hero of the Cube Worlds?
 
 vote = 
+    .no_receiver = No receiver exists
+    .self_vote = You can't vote for yourself
+    .already = You already voted
     .success = You have successfully voted for @{$name}!
 
 whales = 
-    .count = Whole wallets: {$count}
+    .count = Total wallets: {$count}
 
 donation = 😍 Thank you for your donation! {$ton} TON has been accepted successfully! ❤️
 

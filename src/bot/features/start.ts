@@ -18,13 +18,13 @@ async function checkReferal(ctx: Context) {
     const receiverId = Number(payload);
     const receiver = await findUserById(receiverId);
     if (!receiver) {
-      return ctx.reply("No receiver exists");
+      return ctx.reply(ctx.t("vote.no_receiver"));
     }
     if (receiverId === giverId) {
-      return ctx.reply("You can't vote for yourself");
+      return ctx.reply(ctx.t("vote.self_vote"));
     }
     if (await isUserAlreadyVoted(giverId)) {
-      return ctx.reply("You already voted");
+      return ctx.reply(ctx.t("vote.already"));
     }
     const add = await voteScore(ctx);
     logger.info(
