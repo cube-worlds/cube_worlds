@@ -117,10 +117,11 @@ export function findQueue() {
     .limit(10);
 }
 
-export function findAll(limit = 10) {
-  return UserModel.find({ votes: { $gte: 1 } })
-    .sort({ votes: -1 })
-    .limit(limit);
+export function findTopWallets(limit: number) {
+  return UserModel.find({ wallet: { $exists: true } })
+    .select({ _id: 0, wallet: 1, votes: 1 })
+    .limit(limit)
+    .sort({ votes: -1 });
 }
 
 export function countUsers(minted: boolean) {

@@ -7,6 +7,7 @@ import { User, countUsers, findQueue, placeInLine } from "../models/user";
 import { i18n } from "../i18n";
 import { sleep } from "./ton";
 import { toEmoji } from "./emoji";
+import { bigIntWithCustomSeparator } from "./numbers";
 
 export async function sendMessageToAdmins(api: Api<RawApi>, message: string) {
   // eslint-disable-next-line no-restricted-syntax
@@ -42,7 +43,7 @@ export async function sendPlaceInLine(
     const titleKey = `speedup.${user.minted ? "title_minted" : "title_not_minted"}`;
     const titleVariables: TranslationVariables<string> = user.minted
       ? {
-          points: user.votes.toLocaleString("en-US"),
+          points: bigIntWithCustomSeparator(user.votes),
         }
       : {
           place: toEmoji(place),
