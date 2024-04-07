@@ -49,7 +49,6 @@ export async function sendPlaceInLine(
           place: toEmoji(place),
           total: toEmoji(totalPlaces),
         };
-    logger.error(titleVariables);
     await api.sendMessage(
       user.id,
       `${i18n.t(user.language, titleKey, titleVariables)}
@@ -63,6 +62,7 @@ ${i18n.t(user.language, "speedup.variants", {
     // eslint-disable-next-line no-param-reassign
     user.lastSendedPlace = place;
     await user.save();
+    logger.info(`Points ${user.votes} for user ${user.id}`);
     return true;
   }
   return false;

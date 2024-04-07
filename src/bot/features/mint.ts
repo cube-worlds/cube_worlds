@@ -118,7 +118,7 @@ async function mintAction(
     }
 
     case UserState.Submited: {
-      sendPlaceInLine(ctx.api, ctx.dbuser);
+      sendPlaceInLine(ctx.api, ctx.dbuser, true);
       break;
     }
 
@@ -200,7 +200,7 @@ feature.on("message:text", logHandle("message-handler")).filter(
       ctx.dbuser.wallet = address.toString();
       ctx.dbuser.state = UserState.Submited;
       ctx.dbuser.save();
-      sendPlaceInLine(ctx.api, ctx.dbuser);
+      sendPlaceInLine(ctx.api, ctx.dbuser, true);
     } catch (error) {
       ctx.reply(ctx.t("wallet.wait"), {
         link_preview_options: { is_disabled: true },

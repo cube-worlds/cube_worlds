@@ -5,6 +5,7 @@ import { findUserById } from "#root/bot/models/user.js";
 import { VoteModel, isUserAlreadyVoted } from "#root/bot/models/vote.js";
 import { logger } from "#root/logger";
 import { voteScore } from "../helpers/votes";
+import { sendPlaceInLine } from "../helpers/telegram";
 
 const composer = new Composer<Context>();
 
@@ -38,9 +39,8 @@ async function checkReferal(ctx: Context) {
     receiver.votes += BigInt(add);
     await receiver.save();
 
-    await ctx.reply(
-      ctx.t("vote.success", { name: receiver.name ?? receiver.id }),
-    );
+    ctx.reply(ctx.t("vote.success", { name: receiver.name ?? receiver.id }));
+    sendPlaceInLine(ctx.api, receiver, true);
   }
 }
 

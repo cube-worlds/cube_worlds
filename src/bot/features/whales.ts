@@ -9,8 +9,8 @@ const composer = new Composer<Context>();
 
 const feature = composer.chatType("private");
 
-function removeMiddle(s: string, cornerLength = 4) {
-  if (s.length < 8) {
+function removeMiddle(s: string, cornerLength = 5) {
+  if (s.length < cornerLength * 2) {
     return s;
   }
   const first = s.slice(0, cornerLength);
