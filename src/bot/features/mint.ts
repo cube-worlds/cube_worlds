@@ -142,13 +142,17 @@ function isAddressValid(a: Address): boolean {
 }
 
 async function saveDescription(ctx: Context, description: string) {
-  ctx.dbuser.description = description;
-  ctx.dbuser.state = UserState.WaitWallet;
-  ctx.dbuser.save();
-  await ctx.reply(ctx.t("description.success", { description }));
-  ctx.reply(ctx.t("wallet.wait"), {
-    link_preview_options: { is_disabled: true },
-  });
+  try {
+    ctx.dbuser.description = description;
+    ctx.dbuser.state = UserState.WaitWallet;
+    ctx.dbuser.save();
+    await ctx.reply(ctx.t("description.success", { description }));
+    ctx.reply(ctx.t("wallet.wait"), {
+      link_preview_options: { is_disabled: true },
+    });
+  } catch (error) {
+    logger.error(error);
+  }
 }
 
 feature.on("message:text", logHandle("message-handler")).filter(
@@ -207,9 +211,13 @@ feature.on("message:text", logHandle("message-handler")).filter(
       ctx.dbuser.save();
       sendPlaceInLine(ctx.api, ctx.dbuser, true);
     } catch (error) {
-      ctx.reply(ctx.t("wallet.wait"), {
-        link_preview_options: { is_disabled: true },
-      });
+      try {
+        ctx.reply(ctx.t("wallet.wait"), {
+          link_preview_options: { is_disabled: true },
+        });
+      } catch (error_) {
+        ctx.logger.error(error_);
+      }
       ctx.logger.warn((error as Error).message);
     }
   },
