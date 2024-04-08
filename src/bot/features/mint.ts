@@ -6,6 +6,7 @@ import { getUserProfilePhoto } from "#root/bot/helpers/photo.js";
 import { Address } from "@ton/core";
 import { voteScore } from "#root/bot/helpers/votes.js";
 import { Chat } from "grammy/types";
+import { logger } from "#root/logger";
 import { sendPlaceInLine } from "../helpers/telegram";
 import { sendMintedMessage } from "../middlewares/check-not-minted";
 
@@ -51,80 +52,84 @@ async function mintAction(
   ctx: Context,
   removeSubscriptionCheckMessage: boolean = false,
 ) {
-  if (ctx.dbuser.minted) {
-    return sendMintedMessage(
-      ctx.api,
-      ctx.dbuser.id,
-      ctx.dbuser.language,
-      ctx.dbuser.nftUrl ?? "",
-    );
-  }
-
-  let channel = "@cube_worlds";
-  if (ctx.dbuser.language === "ru") {
-    channel = "@cube_worlds_ru";
-  }
-  const isSubscribed = await isUserSubscribed(ctx, channel);
-  if (isSubscribed) {
-    if (removeSubscriptionCheckMessage) {
-      ctx.deleteMessage();
+  try {
+    if (ctx.dbuser.minted) {
+      return sendMintedMessage(
+        ctx.api,
+        ctx.dbuser.id,
+        ctx.dbuser.language,
+        ctx.dbuser.nftUrl ?? "",
+      );
     }
-  } else {
-    return ctx.reply(ctx.t("mint.subscribe_required", { channel }), {
-      reply_markup: {
-        inline_keyboard: [
-          [
-            {
-              text: "✅ Check subscription",
-              callback_data: "check_subscription",
-            },
+
+    let channel = "@cube_worlds";
+    if (ctx.dbuser.language === "ru") {
+      channel = "@cube_worlds_ru";
+    }
+    const isSubscribed = await isUserSubscribed(ctx, channel);
+    if (isSubscribed) {
+      if (removeSubscriptionCheckMessage) {
+        ctx.deleteMessage();
+      }
+    } else {
+      return ctx.reply(ctx.t("mint.subscribe_required", { channel }), {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: "✅ Check subscription",
+                callback_data: "check_subscription",
+              },
+            ],
           ],
-        ],
-      },
-    });
-  }
-
-  switch (ctx.dbuser.state) {
-    case UserState.WaitNothing: {
-      try {
-        await getUserProfilePhoto(ctx, ctx.dbuser.id);
-      } catch {
-        return ctx.reply(ctx.t("mint.no_photo"));
-      }
-      const author = await ctx.getAuthor();
-      if (!author.user.username) {
-        return ctx.reply(ctx.t("mint.no_username"));
-      }
-      ctx.dbuser.name = author.user.username;
-      if (!ctx.dbuser.votes) {
-        ctx.dbuser.votes = BigInt(await voteScore(ctx));
-      }
-      ctx.dbuser.state = UserState.WaitDescription;
-      ctx.dbuser.save();
-      sendWaitDescription(ctx);
-      break;
-    }
-
-    case UserState.WaitDescription: {
-      sendWaitDescription(ctx);
-      break;
-    }
-
-    case UserState.WaitWallet: {
-      ctx.reply(ctx.t("wallet.wait"), {
-        link_preview_options: { is_disabled: true },
+        },
       });
-      break;
     }
 
-    case UserState.Submited: {
-      sendPlaceInLine(ctx.api, ctx.dbuser, true);
-      break;
-    }
+    switch (ctx.dbuser.state) {
+      case UserState.WaitNothing: {
+        try {
+          await getUserProfilePhoto(ctx, ctx.dbuser.id);
+        } catch {
+          return ctx.reply(ctx.t("mint.no_photo"));
+        }
+        const author = await ctx.getAuthor();
+        if (!author.user.username) {
+          return ctx.reply(ctx.t("mint.no_username"));
+        }
+        ctx.dbuser.name = author.user.username;
+        if (!ctx.dbuser.votes) {
+          ctx.dbuser.votes = BigInt(await voteScore(ctx));
+        }
+        ctx.dbuser.state = UserState.WaitDescription;
+        ctx.dbuser.save();
+        sendWaitDescription(ctx);
+        break;
+      }
 
-    default: {
-      break;
+      case UserState.WaitDescription: {
+        sendWaitDescription(ctx);
+        break;
+      }
+
+      case UserState.WaitWallet: {
+        ctx.reply(ctx.t("wallet.wait"), {
+          link_preview_options: { is_disabled: true },
+        });
+        break;
+      }
+
+      case UserState.Submited: {
+        sendPlaceInLine(ctx.api, ctx.dbuser, true);
+        break;
+      }
+
+      default: {
+        break;
+      }
     }
+  } catch (error) {
+    logger.error(error);
   }
 }
 
