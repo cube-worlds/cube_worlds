@@ -5,14 +5,14 @@ import { TranslationVariables } from "@grammyjs/i18n";
 import { logger } from "#root/logger";
 import { User, countUsers, findQueue, placeInLine } from "../models/user";
 import { i18n } from "../i18n";
-import { sleep } from "./ton";
 import { toEmoji } from "./emoji";
 import { bigIntWithCustomSeparator } from "./numbers";
 
 export async function sendMessageToAdmins(api: Api<RawApi>, message: string) {
   // eslint-disable-next-line no-restricted-syntax
   for (const adminId of config.BOT_ADMINS) {
-    api.sendMessage(adminId, message);
+    // eslint-disable-next-line no-await-in-loop
+    await api.sendMessage(adminId, message);
   }
 }
 
@@ -72,8 +72,7 @@ export async function sendNewPlaces(api: Api<RawApi>) {
   const users = await findQueue();
   // eslint-disable-next-line no-restricted-syntax
   for (const user of users) {
-    sendPlaceInLine(api, user, false);
     // eslint-disable-next-line no-await-in-loop
-    await sleep(1000);
+    await sendPlaceInLine(api, user, false);
   }
 }

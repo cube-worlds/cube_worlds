@@ -49,7 +49,7 @@ export async function sendUserMetadata(
     selectedUser.avatar = await saveImageFromUrl(photoUrl, index, true);
     await selectedUser.save();
 
-    context.replyWithPhoto(nextAvatar.file_id, {
+    await context.replyWithPhoto(nextAvatar.file_id, {
       caption: photoCaption(selectedUser),
       parse_mode: "Markdown",
       reply_markup: {
@@ -85,7 +85,7 @@ export const queueMenu = new Menu("queue").dynamic(async (_, range) => {
     range
       .text(`(${user.votes}) ${user.name ?? user.wallet}`, async (ctx) => {
         const context = ctx as unknown as Context;
-        sendUserMetadata(context, user);
+        await sendUserMetadata(context, user);
       })
       .row();
   }

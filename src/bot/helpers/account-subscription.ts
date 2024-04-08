@@ -130,6 +130,6 @@ export class AccountSubscription {
     };
 
     setInterval(tick, 30 * 1000); // poll every 30 seconds
-    tick();
+    await tick();
   }
 }

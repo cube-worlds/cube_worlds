@@ -5,8 +5,8 @@ import type { Context } from "#root/bot/context.js";
 import { i18n } from "#root/bot/i18n.js";
 import { chunk } from "#root/bot/helpers/keyboard.js";
 
-export const createChangeLanguageKeyboard = async (ctx: Context) => {
-  const currentLocaleCode = ctx.dbuser.language; // await ctx.i18n.getLocale();
+export const createChangeLanguageKeyboard = (ctx: Context) => {
+  const currentLocaleCode = ctx.dbuser.language;
 
   const getLabel = (code: string) => {
     const isActive = code === currentLocaleCode;

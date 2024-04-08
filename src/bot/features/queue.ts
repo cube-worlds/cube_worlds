@@ -49,7 +49,7 @@ feature.callbackQuery(
         return ctx.reply(ctx.t("wrong"));
       }
       const { select } = changeImageData.unpack(ctx.callbackQuery?.data ?? "");
-      ctx.editMessageReplyMarkup({});
+      await ctx.editMessageReplyMarkup({});
       switch (select) {
         case SelectImageButton.Description: {
           const api = new ChatGPTAPI({
@@ -64,7 +64,7 @@ feature.callbackQuery(
             // `Write the beginning of the new RPG character's story named "${name}".
             `Write an inspiring text about a person named "${name}" who has decided to start a journey.
             You could also use this additional information "${info}" if it feels appropriate, translate into English.
-            Do NOT show text in original language.
+            Do NOT show text in original language and quotation marks.
             Response MUST BE up to 500 characters maximum`,
           );
           selectedUser.nftDescription = result.text.slice(0, 700);
@@ -150,10 +150,12 @@ feature.callbackQuery(
 
         case SelectImageButton.Done: {
           if (!selectedUser.nftDescription) {
-            return ctx.reply("Empty description");
+            await ctx.reply("Empty description");
+            return;
           }
           if (!selectedUser.nftJson || !selectedUser.nftImage) {
-            return ctx.reply("Empty NFT metadata");
+            await ctx.reply("Empty NFT metadata");
+            return;
           }
           ctx.chatAction = "upload_document";
 
@@ -183,9 +185,10 @@ feature.callbackQuery(
           selectedUser.nftUrl = nftUrl;
           await selectedUser.save();
 
+          // eslint-disable-next-line @typescript-eslint/no-floating-promises
           (async () => {
             await sendNewPlaces(ctx.api);
-            await sleep(30_000);
+            await sleep(40_000);
             await sendMintedMessage(
               ctx.api,
               selectedUser.id,

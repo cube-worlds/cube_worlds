@@ -36,7 +36,7 @@ feature.command("whales", logHandle("command-reset"), async (ctx) => {
       ]),
     },
   })}\n\`\`\``;
-  ctx.replyWithMarkdown(md);
+  await ctx.replyWithMarkdown(md);
 });
 
 export { composer as whalesFeature };

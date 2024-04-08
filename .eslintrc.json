@@ -8,7 +8,9 @@
     "airbnb-base",
     "plugin:@typescript-eslint/recommended",
     "plugin:unicorn/recommended",
-    "plugin:prettier/recommended"
+    "plugin:prettier/recommended",
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended"
   ],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
@@ -16,6 +18,9 @@
   },
   "plugins": ["@typescript-eslint", "prettier", "unicorn", "import"],
   "rules": {
+    "@typescript-eslint/await-thenable": "error",
+    "@typescript-eslint/require-await": "error",
+    "@typescript-eslint/no-floating-promises": "error",
     // Note: you must disable the base rule as it can report incorrect errors
     "no-shadow": "off",
     "@typescript-eslint/no-shadow": "warn",

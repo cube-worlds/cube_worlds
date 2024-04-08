@@ -67,7 +67,7 @@ export class Subscription {
     const user = await findUserByAddress(senderAddress);
     if (!user) {
       const message = `USER NOT FOUND FOR: ${ton} TON from ${senderAddress.toString()}`;
-      sendMessageToAdmins(this.bot.api, message);
+      await sendMessageToAdmins(this.bot.api, message);
       return logger.error(message);
     }
 
@@ -82,8 +82,8 @@ export class Subscription {
       i18n.t(user.language, "donation", { ton }),
     );
 
-    sendPlaceInLine(this.bot.api, user, true);
-    sendMessageToAdmins(
+    await sendPlaceInLine(this.bot.api, user, true);
+    await sendMessageToAdmins(
       this.bot.api,
       `🚀 RECEIVED ${ton} TON FROM @${user.name}. Minted: ${user.minted ? "✅" : "❌"}`,
     );
@@ -98,6 +98,6 @@ export class Subscription {
       startTime,
       this.onTransaction,
     );
-    accountSubscription.start();
+    await accountSubscription.start();
   }
 }

@@ -32,7 +32,7 @@ feature.command(
     const seqno = await collection.deploy(wallet);
     ctx.logger.info(`Collection will be deployed at: ${collection.address}`);
     await waitSeqno(seqno, wallet);
-    ctx.reply(`Collection deployed: ${collection.address}`);
+    await ctx.reply(`Collection deployed: ${collection.address}`);
   },
 );
 

@@ -12,7 +12,7 @@ export async function sendMintedMessage(
 ) {
   const collectionOwner = config.COLLECTION_OWNER;
   const shareLink = shareTelegramLink(userId, i18n.t(userLocale, "mint.share"));
-  return api.sendMessage(
+  await api.sendMessage(
     userId,
     i18n.t(userLocale, "queue.success", {
       nftUrl,

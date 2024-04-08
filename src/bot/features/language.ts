@@ -11,7 +11,7 @@ const feature = composer.chatType("private");
 
 feature.command("language", logHandle("command-language"), async (ctx) => {
   return ctx.reply(ctx.t("language.select"), {
-    reply_markup: await createChangeLanguageKeyboard(ctx),
+    reply_markup: createChangeLanguageKeyboard(ctx),
   });
 });
 
@@ -29,7 +29,7 @@ feature.callbackQuery(
       await ctx.dbuser.save();
 
       return ctx.editMessageText(ctx.t("language.changed"), {
-        reply_markup: await createChangeLanguageKeyboard(ctx),
+        reply_markup: createChangeLanguageKeyboard(ctx),
       });
     }
   },

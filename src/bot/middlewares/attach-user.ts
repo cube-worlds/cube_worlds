@@ -1,19 +1,11 @@
 import { NextFunction } from "grammy";
 import { findOrCreateUser } from "#root/bot/models/user.js";
 import { Context } from "#root/bot/context.js";
-import { logger } from "#root/logger";
 import { i18n } from "../i18n";
-import { sendMessageToAdmins } from "../helpers/telegram";
 
 export default async function attachUser(ctx: Context, next: NextFunction) {
   if (!ctx.from) {
     throw new Error("No from field found");
-  }
-  try {
-    ctx.chatAction = "upload_document";
-  } catch (error) {
-    logger.error(error);
-    return;
   }
   if (
     [
@@ -34,12 +26,12 @@ export default async function attachUser(ctx: Context, next: NextFunction) {
   if (!ctx.dbuser.languageSelected) {
     const locale = await ctx.i18n.getLocale();
     const localeSupported = i18n.locales.includes(locale);
-    if (!localeSupported) {
-      sendMessageToAdmins(
-        ctx.api,
-        `🔠 Unsupported locale: ${locale} from @${ctx.from.username}`,
-      );
-    }
+    // if (!localeSupported) {
+    //   await sendMessageToAdmins(
+    //     ctx.api,
+    //     `🔠 Unsupported locale: ${locale} from @${ctx.from.username}`,
+    //   );
+    // }
     ctx.dbuser.language = localeSupported ? locale : "en";
     ctx.dbuser.languageSelected = true;
     await ctx.dbuser.save();

@@ -13,9 +13,10 @@ feature.command("positive", logHandle("command-propmpts"), async (ctx) => {
   if (newPositivePrompt.trim()) {
     ctx.dbuser.positivePrompt = newPositivePrompt;
     await ctx.dbuser.save();
-    return ctx.reply(`<code>/positive ${ctx.dbuser.positivePrompt}</code>`);
+    await ctx.reply(`<code>/positive ${ctx.dbuser.positivePrompt}</code>`);
+    return;
   }
-  return ctx.reply(`<code>/positive ${oldPositivePrompt}</code>`);
+  await ctx.reply(`<code>/positive ${oldPositivePrompt}</code>`);
 });
 
 feature.command("negative", logHandle("command-propmpts"), async (ctx) => {
@@ -24,9 +25,10 @@ feature.command("negative", logHandle("command-propmpts"), async (ctx) => {
   if (newNegativePrompt.trim()) {
     ctx.dbuser.negativePrompt = newNegativePrompt;
     await ctx.dbuser.save();
-    return ctx.reply(`<code>/negative ${ctx.dbuser.negativePrompt}</code>`);
+    await ctx.reply(`<code>/negative ${ctx.dbuser.negativePrompt}</code>`);
+    return;
   }
-  return ctx.reply(`<code>/negative ${oldNegativePrompt}</code>`);
+  await ctx.reply(`<code>/negative ${oldNegativePrompt}</code>`);
 });
 
 export { composer as promptsFeature };

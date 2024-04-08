@@ -21,7 +21,7 @@ feature.command(
     const seqno = await topUpBalance(wallet, collectionAddress, 10);
     ctx.logger.info(`Collection ${collectionAddress} will be topUpped`);
     await waitSeqno(seqno, wallet);
-    ctx.reply(`Collection ${collectionAddress} topUpped!`);
+    await ctx.reply(`Collection ${collectionAddress} topUpped!`);
   },
 );
 

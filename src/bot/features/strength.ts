@@ -18,10 +18,7 @@ feature.command("strength", logHandle("command-strength"), async (ctx) => {
     await ctx.dbuser.save();
     return ctx.reply(`New strength: <code>/strength ${newStrength}</code>`);
   }
-  return ctx.reply(`Current strength: <code>/strength ${oldStrength}</code>
-  
-Strength close to 0 will produce an image nearly identical to the original,
-Strength to 1 will produce an image that greatly differs from the original.`);
+  return ctx.reply(`Current strength: <code>/strength ${oldStrength}</code>`);
 });
 
 export { composer as strengthFeature };

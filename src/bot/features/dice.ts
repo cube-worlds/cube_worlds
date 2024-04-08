@@ -26,6 +26,7 @@ feature.command("dice", logHandle("command-dice"), async (ctx) => {
       }),
     );
   }
+  // eslint-disable-next-line @typescript-eslint/no-floating-promises
   (async () => {
     const dice1 = ctx.replyWithDice("🎲");
     const dice2 = ctx.replyWithDice("🎲");

@@ -21,7 +21,7 @@ try {
   });
 
   const subscription = new Subscription(bot);
-  subscription.startProcessTransactions();
+  await subscription.startProcessTransactions();
 
   if (config.BOT_MODE === "webhook") {
     // to prevent receiving updates before the bot is ready
@@ -47,5 +47,5 @@ try {
   }
 } catch (error) {
   logger.error(error);
-  // process.exit(1);
+  process.exit(1);
 }

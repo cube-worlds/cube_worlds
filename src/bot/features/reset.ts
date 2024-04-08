@@ -18,8 +18,8 @@ feature.command(
     if (!ctx.dbuser.votes) {
       ctx.dbuser.votes = BigInt(await voteScore(ctx));
     }
-    ctx.dbuser.save();
-    return ctx.reply(ctx.t("reset"));
+    await ctx.dbuser.save();
+    await ctx.reply(ctx.t("reset"));
   },
 );
 

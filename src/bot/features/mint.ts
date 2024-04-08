@@ -6,7 +6,6 @@ import { getUserProfilePhoto } from "#root/bot/helpers/photo.js";
 import { Address } from "@ton/core";
 import { voteScore } from "#root/bot/helpers/votes.js";
 import { Chat } from "grammy/types";
-import { logger } from "#root/logger";
 import { sendPlaceInLine } from "../helpers/telegram";
 import { sendMintedMessage } from "../middlewares/check-not-minted";
 
@@ -24,7 +23,7 @@ async function sendWaitDescription(ctx: Context) {
   await ctx.reply(ctx.t("description.wait"));
   const bio = await getBio(ctx);
   if (bio) {
-    ctx.reply(ctx.t("description.fill", { bio }), {
+    await ctx.reply(ctx.t("description.fill", { bio }), {
       reply_markup: {
         inline_keyboard: [
           [
@@ -52,88 +51,80 @@ async function mintAction(
   ctx: Context,
   removeSubscriptionCheckMessage: boolean = false,
 ) {
-  try {
-    if (ctx.dbuser.minted) {
-      return sendMintedMessage(
-        ctx.api,
-        ctx.dbuser.id,
-        ctx.dbuser.language,
-        ctx.dbuser.nftUrl ?? "",
-      );
-    }
+  if (ctx.dbuser.minted) {
+    return sendMintedMessage(
+      ctx.api,
+      ctx.dbuser.id,
+      ctx.dbuser.language,
+      ctx.dbuser.nftUrl ?? "",
+    );
+  }
 
-    let channel = "@cube_worlds";
-    if (ctx.dbuser.language === "ru") {
-      channel = "@cube_worlds_ru";
+  let channel = "@cube_worlds";
+  if (ctx.dbuser.language === "ru") {
+    channel = "@cube_worlds_ru";
+  }
+  const isSubscribed = await isUserSubscribed(ctx, channel);
+  if (isSubscribed) {
+    if (removeSubscriptionCheckMessage) {
+      await ctx.deleteMessage();
     }
-    const isSubscribed = await isUserSubscribed(ctx, channel);
-    if (isSubscribed) {
-      if (removeSubscriptionCheckMessage) {
-        ctx.deleteMessage();
-      }
-    } else {
-      return ctx.reply(ctx.t("mint.subscribe_required", { channel }), {
-        reply_markup: {
-          inline_keyboard: [
-            [
-              {
-                text: "✅ Check subscription",
-                callback_data: "check_subscription",
-              },
-            ],
+  } else {
+    return ctx.reply(ctx.t("mint.subscribe_required", { channel }), {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: "✅ Check subscription",
+              callback_data: "check_subscription",
+            },
           ],
-        },
+        ],
+      },
+    });
+  }
+
+  switch (ctx.dbuser.state) {
+    case UserState.WaitNothing: {
+      try {
+        await getUserProfilePhoto(ctx, ctx.dbuser.id);
+      } catch {
+        return ctx.reply(ctx.t("mint.no_photo"));
+      }
+      const author = await ctx.getAuthor();
+      if (!author.user.username) {
+        return ctx.reply(ctx.t("mint.no_username"));
+      }
+      ctx.dbuser.name = author.user.username;
+      if (!ctx.dbuser.votes) {
+        ctx.dbuser.votes = BigInt(await voteScore(ctx));
+      }
+      ctx.dbuser.state = UserState.WaitDescription;
+      await ctx.dbuser.save();
+      await sendWaitDescription(ctx);
+      break;
+    }
+
+    case UserState.WaitDescription: {
+      await sendWaitDescription(ctx);
+      break;
+    }
+
+    case UserState.WaitWallet: {
+      await ctx.reply(ctx.t("wallet.wait"), {
+        link_preview_options: { is_disabled: true },
       });
+      break;
     }
 
-    switch (ctx.dbuser.state) {
-      case UserState.WaitNothing: {
-        try {
-          await getUserProfilePhoto(ctx, ctx.dbuser.id);
-        } catch {
-          return ctx.reply(ctx.t("mint.no_photo"));
-        }
-        const author = await ctx.getAuthor();
-        if (!author.user.username) {
-          return ctx.reply(ctx.t("mint.no_username"));
-        }
-        ctx.dbuser.name = author.user.username;
-        if (!ctx.dbuser.votes) {
-          ctx.dbuser.votes = BigInt(await voteScore(ctx));
-        }
-        ctx.dbuser.state = UserState.WaitDescription;
-        ctx.dbuser.save();
-        sendWaitDescription(ctx);
-        break;
-      }
-
-      case UserState.WaitDescription: {
-        sendWaitDescription(ctx);
-        break;
-      }
-
-      case UserState.WaitWallet: {
-        try {
-          ctx.reply(ctx.t("wallet.wait"), {
-            link_preview_options: { is_disabled: true },
-          });
-        } catch (error) {
-          logger.error(error);
-        }
-        break;
-      }
-
-      case UserState.Submited: {
-        sendPlaceInLine(ctx.api, ctx.dbuser, true);
-        break;
-      }
-
-      default: {
-        break;
-      }
+    case UserState.Submited: {
+      await sendPlaceInLine(ctx.api, ctx.dbuser, true);
+      break;
     }
-  } catch (error) {
-    logger.error(error);
+
+    default: {
+      break;
+    }
   }
 }
 
@@ -146,17 +137,13 @@ function isAddressValid(a: Address): boolean {
 }
 
 async function saveDescription(ctx: Context, description: string) {
-  try {
-    ctx.dbuser.description = description;
-    ctx.dbuser.state = UserState.WaitWallet;
-    ctx.dbuser.save();
-    await ctx.reply(ctx.t("description.success", { description }));
-    ctx.reply(ctx.t("wallet.wait"), {
-      link_preview_options: { is_disabled: true },
-    });
-  } catch (error) {
-    logger.error(error);
-  }
+  ctx.dbuser.description = description;
+  ctx.dbuser.state = UserState.WaitWallet;
+  await ctx.dbuser.save();
+  await ctx.reply(ctx.t("description.success", { description }));
+  await ctx.reply(ctx.t("wallet.wait"), {
+    link_preview_options: { is_disabled: true },
+  });
 }
 
 feature.on("message:text", logHandle("message-handler")).filter(
@@ -165,7 +152,7 @@ feature.on("message:text", logHandle("message-handler")).filter(
     if (ctx.message.text.startsWith("/")) {
       return sendWaitDescription(ctx);
     }
-    saveDescription(ctx, ctx.message.text);
+    await saveDescription(ctx, ctx.message.text);
   },
 );
 
@@ -174,7 +161,7 @@ feature
   .filter(
     (ctx: Context) => ctx.hasCallbackQuery("check_subscription"),
     async (ctx) => {
-      mintAction(ctx, true);
+      await mintAction(ctx, true);
     },
   );
 
@@ -185,8 +172,8 @@ feature
     async (ctx: Context) => {
       const bio = await getBio(ctx);
       if (bio) {
-        saveDescription(ctx, bio);
-        ctx.deleteMessage();
+        await saveDescription(ctx, bio);
+        await ctx.deleteMessage();
       } else {
         return ctx.reply("wrong");
       }
@@ -212,11 +199,11 @@ feature.on("message:text", logHandle("message-handler")).filter(
       }
       ctx.dbuser.wallet = address.toString();
       ctx.dbuser.state = UserState.Submited;
-      ctx.dbuser.save();
-      sendPlaceInLine(ctx.api, ctx.dbuser, true);
+      await ctx.dbuser.save();
+      await sendPlaceInLine(ctx.api, ctx.dbuser, true);
     } catch (error) {
       try {
-        ctx.reply(ctx.t("wallet.wait"), {
+        await ctx.reply(ctx.t("wallet.wait"), {
           link_preview_options: { is_disabled: true },
         });
       } catch (error_) {
