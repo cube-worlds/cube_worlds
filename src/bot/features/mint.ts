@@ -117,7 +117,7 @@ async function mintAction(
           ctx.reply(ctx.t("wallet.wait"), {
             link_preview_options: { is_disabled: true },
           });
-        } catch {
+        } catch (error) {
           logger.error(error);
         }
         break;
