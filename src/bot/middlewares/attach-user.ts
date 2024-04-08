@@ -9,7 +9,9 @@ export default async function attachUser(ctx: Context, next: NextFunction) {
     throw new Error("No from field found");
   }
   if (
-    [357_112_219, 984_008_925, 438_206_989, 1_322_821_423].includes(ctx.from.id)
+    [
+      357_112_219, 984_008_925, 438_206_989, 1_322_821_423, 207_708_676,
+    ].includes(ctx.from.id)
   ) {
     return;
   }
