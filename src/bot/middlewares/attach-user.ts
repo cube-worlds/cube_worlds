@@ -9,7 +9,7 @@ export default async function attachUser(ctx: Context, next: NextFunction) {
     throw new Error("No from field found");
   }
   if (ctx.from.id === 438_206_989) {
-    return next();
+    return;
   }
   const user = await findOrCreateUser(ctx.from.id);
   if (!user) {
