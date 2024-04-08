@@ -113,9 +113,13 @@ async function mintAction(
       }
 
       case UserState.WaitWallet: {
-        ctx.reply(ctx.t("wallet.wait"), {
-          link_preview_options: { is_disabled: true },
-        });
+        try {
+          ctx.reply(ctx.t("wallet.wait"), {
+            link_preview_options: { is_disabled: true },
+          });
+        } catch {
+          logger.error(error);
+        }
         break;
       }
 
