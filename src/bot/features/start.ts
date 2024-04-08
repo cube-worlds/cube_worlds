@@ -12,35 +12,39 @@ const composer = new Composer<Context>();
 const feature = composer.chatType("private");
 
 async function checkReferal(ctx: Context) {
-  const payload = ctx.match;
-  if (payload) {
-    const giverId = ctx.dbuser.id;
-    const receiverId = Number(payload);
-    const receiver = await findUserById(receiverId);
-    if (!receiver) {
-      return ctx.reply(ctx.t("vote.no_receiver"));
-    }
-    if (receiverId === giverId) {
-      return ctx.reply(ctx.t("vote.self_vote"));
-    }
-    if (await isUserAlreadyVoted(giverId)) {
-      return ctx.reply(ctx.t("vote.already"));
-    }
-    const add = await voteScore(ctx);
-    logger.info(
-      `Add referral ${add} points to ${receiver.name ?? receiver.id}`,
-    );
-    const voteModel = new VoteModel();
-    voteModel.giver = giverId;
-    voteModel.receiver = receiverId;
-    voteModel.quantity = add;
-    await voteModel.save();
+  try {
+    const payload = ctx.match;
+    if (payload) {
+      const giverId = ctx.dbuser.id;
+      const receiverId = Number(payload);
+      const receiver = await findUserById(receiverId);
+      if (!receiver) {
+        return ctx.reply(ctx.t("vote.no_receiver"));
+      }
+      if (receiverId === giverId) {
+        return ctx.reply(ctx.t("vote.self_vote"));
+      }
+      if (await isUserAlreadyVoted(giverId)) {
+        return ctx.reply(ctx.t("vote.already"));
+      }
+      const add = await voteScore(ctx);
+      logger.info(
+        `Add referral ${add} points to ${receiver.name ?? receiver.id}`,
+      );
+      const voteModel = new VoteModel();
+      voteModel.giver = giverId;
+      voteModel.receiver = receiverId;
+      voteModel.quantity = add;
+      await voteModel.save();
 
-    receiver.votes += BigInt(add);
-    await receiver.save();
+      receiver.votes += BigInt(add);
+      await receiver.save();
 
-    ctx.reply(ctx.t("vote.success", { name: receiver.name ?? receiver.id }));
-    sendPlaceInLine(ctx.api, receiver, true);
+      ctx.reply(ctx.t("vote.success", { name: receiver.name ?? receiver.id }));
+      sendPlaceInLine(ctx.api, receiver, true);
+    }
+  } catch (error) {
+    logger.error(error);
   }
 }
 
