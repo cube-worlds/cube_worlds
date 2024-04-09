@@ -26,7 +26,7 @@ function removeMiddle(s: string, cornerLength = 4) {
 feature.command("whales", logHandle("command-reset"), async (ctx) => {
   const points = bigIntWithCustomSeparator(BigInt(await countAllBalances()));
   const count = await countAllWallets();
-  const topWallets = await findTopWallets(30);
+  const topWallets = await findTopWallets(50);
   const body = topWallets.map((v, index) => [
     String(index + 1),
     removeMiddle(v.wallet ?? "undefined"),
