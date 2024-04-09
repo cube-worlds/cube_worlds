@@ -12,9 +12,7 @@ const feature = composer.chatType("private");
 
 feature.command("dice", logHandle("command-dice"), async (ctx) => {
   if (!ctx.dbuser.wallet || ctx.dbuser.state !== UserState.Submited) {
-    await ctx.reply(ctx.t("start"), {
-      link_preview_options: { is_disabled: true },
-    });
+    await ctx.reply(ctx.t("unhandled"));
     return;
   }
   const waitMinutes = 5;
