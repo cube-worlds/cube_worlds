@@ -101,8 +101,17 @@ export function findOrCreateUser(id: number) {
 export async function findUserByAddress(
   address: Address,
 ): Promise<DocumentType<User> | null> {
-  const wallet = address.toString();
-  return UserModel.findOne({ wallet });
+  // EQ address
+  const bounceableAddress = address.toString({ bounceable: true });
+  // UQ address
+  const nonBounceableAddress = address.toString({ bounceable: false });
+  const user = await UserModel.findOne({
+    wallet: bounceableAddress,
+  });
+  if (user) {
+    return user;
+  }
+  return UserModel.findOne({ wallet: nonBounceableAddress });
 }
 
 export async function findUserById(
