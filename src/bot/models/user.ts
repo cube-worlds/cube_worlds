@@ -142,7 +142,7 @@ export function countAllWallets(): Promise<number> {
 
 export function findTopWallets(limit: number) {
   return UserModel.find({ wallet: { $exists: true } })
-    .select({ _id: 0, wallet: 1, votes: 1 })
+    .select({ _id: 0, wallet: 1, votes: 1, minted: 1 })
     .limit(limit)
     .sort({ votes: -1 });
 }
