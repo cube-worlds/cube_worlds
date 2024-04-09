@@ -4,12 +4,19 @@ import { logHandle } from "#root/bot/helpers/logging.js";
 import { sleep } from "../helpers/ton";
 import { timeUnitsBetween } from "../helpers/time";
 import { sendPlaceInLine } from "../helpers/telegram";
+import { UserState } from "../models/user";
 
 const composer = new Composer<Context>();
 
 const feature = composer.chatType("private");
 
 feature.command("dice", logHandle("command-dice"), async (ctx) => {
+  if (!ctx.dbuser.wallet || ctx.dbuser.state !== UserState.Submited) {
+    await ctx.reply(ctx.t("start"), {
+      link_preview_options: { is_disabled: true },
+    });
+    return;
+  }
   const waitMinutes = 5;
   const waitDate = new Date(
     ctx.dbuser.dicedAt.getTime() + waitMinutes * 60 * 1000,

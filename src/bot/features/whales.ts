@@ -29,7 +29,7 @@ feature.command("whales", logHandle("command-reset"), async (ctx) => {
   const md = `${ctx.t("whales.count", { points, count })}
 \`\`\`\n${getMarkdownTable({
     table: {
-      head: ["User", "$CUBE"],
+      head: ["Wallet", "$CUBE"],
       body: topWallets.map((v) => [
         removeMiddle(v.wallet ?? "undefined"),
         bigIntWithCustomSeparator(v.votes),
