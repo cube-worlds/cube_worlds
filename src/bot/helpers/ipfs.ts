@@ -39,3 +39,7 @@ export async function pinJSONToIPFS(
   });
   return response.IpfsHash;
 }
+
+export async function unpin(hash: string) {
+  return pinata.unpin(hash);
+}

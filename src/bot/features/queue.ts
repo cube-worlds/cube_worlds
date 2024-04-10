@@ -16,7 +16,11 @@ import { SelectImageButton, photoKeyboard } from "#root/bot/keyboards/photo.js";
 import { NftCollection } from "#root/bot/models/nft-collection.js";
 import { openWallet, sleep, waitSeqno } from "#root/bot/helpers/ton.js";
 import { NftItem, nftMintParameters } from "#root/bot/models/nft-item.js";
-import { pinImageURLToIPFS, pinJSONToIPFS } from "#root/bot/helpers/ipfs.js";
+import {
+  pinImageURLToIPFS,
+  pinJSONToIPFS,
+  unpin,
+} from "#root/bot/helpers/ipfs.js";
 import { generate } from "#root/bot/helpers/generation.js";
 import { randomAttributes } from "#root/bot/helpers/attributes.js";
 import { countUsers, findUserById } from "#root/bot/models/user.js";
@@ -127,6 +131,15 @@ feature.callbackQuery(
           if (!selectedUser.image) {
             return ctx.reply("Empty image");
           }
+
+          if (selectedUser.nftImage && selectedUser.nftJson) {
+            await unpin(selectedUser.nftImage);
+            selectedUser.nftImage = "";
+            await unpin(selectedUser.nftJson);
+            selectedUser.nftJson = "";
+            await selectedUser.save();
+          }
+
           const nextItemIndex = await NftCollection.fetchNextItemIndex();
           const ipfsImageHash = await pinImageURLToIPFS(
             nextItemIndex,
