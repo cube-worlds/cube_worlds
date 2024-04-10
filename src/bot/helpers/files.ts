@@ -37,6 +37,6 @@ export async function saveImageFromUrl(
 
 export function saveJSON(index: number, json: object): string {
   const jsonPath = path.join(folderPath(index), `${index}.json`);
-  fs.writeFile(jsonPath, JSON.stringify(json), (_error) => {});
+  fs.writeFileSync(jsonPath, JSON.stringify(json));
   return jsonPath;
 }
