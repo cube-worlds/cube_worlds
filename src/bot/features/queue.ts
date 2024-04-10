@@ -198,20 +198,22 @@ feature.callbackQuery(
           selectedUser.nftUrl = nftUrl;
           await selectedUser.save();
 
+          await sendNewPlaces(ctx.api);
+
+          // send to admin first
+          await sendMintedMessage(
+            ctx.api,
+            ctx.dbuser.id,
+            selectedUser.language,
+            selectedUser.nftUrl ?? "",
+          );
+
           // eslint-disable-next-line @typescript-eslint/no-floating-promises
           (async () => {
-            await sendNewPlaces(ctx.api);
-            await sleep(40_000);
+            await sleep(60_000);
             await sendMintedMessage(
               ctx.api,
               selectedUser.id,
-              selectedUser.language,
-              selectedUser.nftUrl ?? "",
-            );
-            // send the same to admin
-            await sendMintedMessage(
-              ctx.api,
-              ctx.dbuser.id,
               selectedUser.language,
               selectedUser.nftUrl ?? "",
             );
