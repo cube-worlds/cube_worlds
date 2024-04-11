@@ -10,6 +10,7 @@ import { DocumentType } from "@typegoose/typegoose";
 import { photoKeyboard } from "#root/bot/keyboards/photo.js";
 import { logger } from "#root/logger";
 import { i18n } from "../i18n";
+import { adminIndex } from "../helpers/telegram";
 
 export function photoCaption(user: User) {
   return `@[${user.name}](tg://user?id=${user.id})
@@ -43,10 +44,17 @@ export async function sendUserMetadata(
     if (!nextAvatar) {
       return context.reply(context.t("wrong"));
     }
-    const index = await NftCollection.fetchNextItemIndex();
+    const itemIndex = await NftCollection.fetchNextItemIndex();
     const photoUrl = `https://api.telegram.org/file/bot${config.BOT_TOKEN}/${nextAvatar.file_path}`;
+
+    const admIndex = adminIndex(context.dbuser.id);
     // eslint-disable-next-line no-param-reassign
-    selectedUser.avatar = await saveImageFromUrl(photoUrl, index, true);
+    selectedUser.avatar = await saveImageFromUrl(
+      photoUrl,
+      admIndex,
+      itemIndex,
+      true,
+    );
     await selectedUser.save();
 
     await context.replyWithPhoto(nextAvatar.file_id, {

@@ -22,6 +22,7 @@ export function saveImage(
 
 export async function saveImageFromUrl(
   imageURL: string,
+  adminIndex: number,
   index: number,
   original: boolean,
 ): Promise<string> {
@@ -31,12 +32,19 @@ export async function saveImageFromUrl(
   const imageFileName =
     imageURL.slice((imageURL.lastIndexOf("/") ?? 0) + 1) ?? "";
   const fileExtension = imageFileName.split(".").pop();
-  const newFileName = `${original ? "ava_" : ""}${index}.${fileExtension}`;
+  const newFileName = `${original ? "ava_" : ""}${adminIndex}_${index}.${fileExtension}`;
   return saveImage(index, newFileName, buffer);
 }
 
-export function saveJSON(index: number, json: object): string {
-  const jsonPath = path.join(folderPath(index), `${index}.json`);
+export function saveJSON(
+  adminIndex: number,
+  itemIndex: number,
+  json: object,
+): string {
+  const jsonPath = path.join(
+    folderPath(itemIndex),
+    `${adminIndex}_${itemIndex}.json`,
+  );
   fs.writeFileSync(jsonPath, JSON.stringify(json));
   return jsonPath;
 }

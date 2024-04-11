@@ -10,7 +10,8 @@ const pinata = new pinataSDK({
 });
 
 export async function pinImageURLToIPFS(
-  index: number,
+  adminIndex: number,
+  itemIndex: number,
   imageURL: string,
 ): Promise<string> {
   const image = await fetch(imageURL);
@@ -19,8 +20,8 @@ export async function pinImageURLToIPFS(
   const imageFileName =
     imageURL.slice((imageURL.lastIndexOf("/") ?? 0) + 1) ?? "";
   const fileExtension = imageFileName.split(".").pop();
-  const newFileName = `${index}.${fileExtension}`;
-  saveImage(index, newFileName, buffer);
+  const newFileName = `${adminIndex}_${itemIndex}.${fileExtension}`;
+  saveImage(itemIndex, newFileName, buffer);
 
   const stream = Readable.from(buffer);
   const response = await pinata.pinFileToIPFS(stream, {
@@ -30,12 +31,13 @@ export async function pinImageURLToIPFS(
 }
 
 export async function pinJSONToIPFS(
-  index: number,
+  adminIndex: number,
+  itemIndex: number,
   json: object,
 ): Promise<string> {
-  const jsonPath = saveJSON(index, json);
+  const jsonPath = saveJSON(adminIndex, itemIndex, json);
   const response = await pinata.pinFromFS(jsonPath, {
-    pinataMetadata: { name: `${index}.json` },
+    pinataMetadata: { name: `${adminIndex}_${itemIndex}.json` },
   });
   return response.IpfsHash;
 }

@@ -25,7 +25,8 @@ import { generate } from "#root/bot/helpers/generation.js";
 import { randomAttributes } from "#root/bot/helpers/attributes.js";
 import { countUsers, findUserById } from "#root/bot/models/user.js";
 import { ChatGPTAPI } from "chatgpt";
-import { sendNewPlaces } from "../helpers/telegram";
+import { logger } from "#root/logger";
+import { adminIndex, sendNewPlaces } from "../helpers/telegram";
 import { sendMintedMessage } from "../middlewares/check-not-minted";
 
 const composer = new Composer<Context>();
@@ -85,6 +86,7 @@ feature.callbackQuery(
           const nextItemIndex = await NftCollection.fetchNextItemIndex();
           const generatedFilePath = await generate(
             selectedUser.avatar,
+            adminIndex(ctx.dbuser.id),
             nextItemIndex,
             ctx.dbuser.positivePrompt ?? "",
             ctx.dbuser.negativePrompt ?? "",
@@ -133,15 +135,20 @@ feature.callbackQuery(
           }
 
           if (selectedUser.nftImage && selectedUser.nftJson) {
-            await unpin(selectedUser.nftImage);
-            selectedUser.nftImage = "";
-            await unpin(selectedUser.nftJson);
-            selectedUser.nftJson = "";
-            await selectedUser.save();
+            try {
+              await unpin(selectedUser.nftImage);
+              selectedUser.nftImage = "";
+              await unpin(selectedUser.nftJson);
+              selectedUser.nftJson = "";
+              await selectedUser.save();
+            } catch (error) {
+              logger.info(`Unable to unpin IPFS files: ${error}`);
+            }
           }
 
           const nextItemIndex = await NftCollection.fetchNextItemIndex();
           const ipfsImageHash = await pinImageURLToIPFS(
+            adminIndex(ctx.dbuser.id),
             nextItemIndex,
             selectedUser.image ?? "",
           );
@@ -153,7 +160,11 @@ feature.callbackQuery(
             attributes: randomAttributes(),
           };
           ctx.logger.info(json);
-          const ipfsJSONHash = await pinJSONToIPFS(nextItemIndex, json);
+          const ipfsJSONHash = await pinJSONToIPFS(
+            adminIndex(ctx.dbuser.id),
+            nextItemIndex,
+            json,
+          );
           selectedUser.nftImage = ipfsImageHash;
           selectedUser.nftJson = ipfsJSONHash;
           await selectedUser.save();

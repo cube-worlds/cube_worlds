@@ -8,6 +8,13 @@ import { i18n } from "../i18n";
 import { toEmoji } from "./emoji";
 import { bigIntWithCustomSeparator } from "./numbers";
 
+export function adminIndex(userId: number): number {
+  if (!config.BOT_ADMINS.includes(userId)) {
+    throw new Error("Not admin");
+  }
+  return config.BOT_ADMINS.indexOf(userId);
+}
+
 export async function sendMessageToAdmins(api: Api<RawApi>, message: string) {
   // eslint-disable-next-line no-restricted-syntax
   for (const adminId of config.BOT_ADMINS) {

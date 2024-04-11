@@ -25,7 +25,7 @@ const toncenterBaseEndpoint: string = config.TESTNET
 
 export const tonClient = new TonClient({
   endpoint: `${toncenterBaseEndpoint}/api/v2/jsonRPC`,
-  apiKey: process.env.TONCENTER_API_KEY,
+  apiKey: config.TONCENTER_API_KEY,
 });
 
 export async function openWallet(mnemonic: string[]) {

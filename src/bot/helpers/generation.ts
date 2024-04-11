@@ -5,7 +5,8 @@ import { config } from "#root/config.js";
 
 export async function generate(
   filePath: string,
-  index: number,
+  adminIndex: number,
+  itemIndex: number,
   positive: string,
   negative: string,
   strength: number,
@@ -77,7 +78,7 @@ export async function generate(
 
   const artifact = responseJSON.artifacts[0];
   if (artifact.finishReason === "SUCCESS") {
-    const fp = `./data/${index}/${index}.png`;
+    const fp = `./data/${itemIndex}/${adminIndex}_${itemIndex}.png`;
     fs.writeFileSync(fp, Buffer.from(artifact.base64, "base64"));
     return fp;
   }
