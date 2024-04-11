@@ -14,6 +14,9 @@ const feature = composer.chatType("private");
 async function checkReferal(ctx: Context) {
   const payload = ctx.match;
   if (payload) {
+    if (ctx.dbuser.wallet) {
+      return;
+    }
     const giverId = ctx.dbuser.id;
     const receiverId = Number(payload);
     const receiver = await findUserById(receiverId);

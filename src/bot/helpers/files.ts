@@ -16,7 +16,7 @@ export function saveImage(
 ): string {
   const fp = folderPath(index);
   const filePath = path.join(fp, fileName);
-  fs.writeFile(filePath, content, (_error) => {});
+  fs.writeFileSync(filePath, content);
   return filePath;
 }
 
