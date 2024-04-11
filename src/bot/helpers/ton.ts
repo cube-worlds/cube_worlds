@@ -123,3 +123,20 @@ export function sleep(ms: number): Promise<void> {
     setTimeout(resolve, ms);
   });
 }
+
+// Add only EQ (bounceable) addresses
+const stopWalletList = new Set([
+  "EQA2JYPGPywx6Sn590nUd06B2HgOkFvJ-cCnTO6yTEdacbUG", // @wallet
+]);
+
+export function isUserAddressValid(a: Address): boolean {
+  const bounceableAddress = a.toString({ bounceable: true });
+  if (stopWalletList.has(bounceableAddress)) {
+    return false;
+  }
+  try {
+    return a.workChain === 0 || a.workChain === -1;
+  } catch {
+    return false;
+  }
+}

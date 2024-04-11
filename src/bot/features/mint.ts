@@ -8,6 +8,7 @@ import { voteScore } from "#root/bot/helpers/votes.js";
 import { Chat } from "grammy/types";
 import { sendPlaceInLine } from "../helpers/telegram";
 import { sendMintedMessage } from "../middlewares/check-not-minted";
+import { isUserAddressValid } from "../helpers/ton";
 
 const composer = new Composer<Context>();
 
@@ -128,14 +129,6 @@ async function mintAction(
   }
 }
 
-function isAddressValid(a: Address): boolean {
-  try {
-    return a.workChain === 0 || a.workChain === -1;
-  } catch {
-    return false;
-  }
-}
-
 async function saveDescription(ctx: Context, description: string) {
   ctx.dbuser.description = description;
   ctx.dbuser.state = UserState.WaitWallet;
@@ -185,7 +178,7 @@ feature.on("message:text", logHandle("message-handler")).filter(
   async (ctx) => {
     try {
       const address = Address.parse(ctx.message.text);
-      const valid = isAddressValid(address);
+      const valid = isUserAddressValid(address);
       if (!valid) {
         return ctx.reply(ctx.t("wallet.wait"), {
           link_preview_options: { is_disabled: true },
