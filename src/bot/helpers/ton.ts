@@ -124,14 +124,18 @@ export function sleep(ms: number): Promise<void> {
   });
 }
 
-// Add only EQ (bounceable) addresses
-const stopWalletList = new Set([
-  "EQA2JYPGPywx6Sn590nUd06B2HgOkFvJ-cCnTO6yTEdacbUG", // @wallet
+const stopList = new Set([
+  "EQA2JYPGPywx6Sn590nUd06B2HgOkFvJ-cCnTO6yTEdacbUG", // @wallet ?
+  "UQBX63RAdgShn34EAFMV73Cut7Z15lUZd1hnVva68SEl7pGn", // MEXC
+  "UQCFr3jo0DXpIBF82mVGFc3zcdRkSAtinhENPFMQ2FqzYv0E", // Huobi
+  "UQDD8dqOzaj4zUK6ziJOo_G2lx6qf1TEktTRkFJ7T1c_fKne", // Bybit
+  "UQBfAN7LfaUYgXZNw5Wc7GBgkEX2yhuJ5ka95J1JJwXXf9t5", // OKX
 ]);
 
 export function isUserAddressValid(a: Address): boolean {
   const bounceableAddress = a.toString({ bounceable: true });
-  if (stopWalletList.has(bounceableAddress)) {
+  const nonBounceableAddress = a.toString({ bounceable: false });
+  if (stopList.has(bounceableAddress) || stopList.has(nonBounceableAddress)) {
     return false;
   }
   try {
