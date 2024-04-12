@@ -140,8 +140,25 @@ export function countAllWallets(): Promise<number> {
   return UserModel.countDocuments({ wallet: { $exists: true } });
 }
 
-export function findTopWallets(limit: number) {
+export function countAllLine(): Promise<number> {
+  return UserModel.countDocuments({
+    state: UserState.Submited,
+    minted: false,
+  });
+}
+
+export function findWhales(limit: number) {
   return UserModel.find({ wallet: { $exists: true } })
+    .select({ _id: 0, wallet: 1, votes: 1, minted: 1 })
+    .limit(limit)
+    .sort({ votes: -1 });
+}
+
+export function findLine(limit: number) {
+  return UserModel.find({
+    state: UserState.Submited,
+    minted: false,
+  })
     .select({ _id: 0, wallet: 1, votes: 1, minted: 1 })
     .limit(limit)
     .sort({ votes: -1 });
@@ -151,14 +168,14 @@ export function countUsers(minted: boolean) {
   return UserModel.countDocuments({ minted, state: UserState.Submited });
 }
 
-export async function placeInLine(votes: bigint): Promise<number> {
+export async function placeInLine(votes: bigint): Promise<number | undefined> {
   const count = await UserModel.countDocuments({
     minted: false,
     state: UserState.Submited,
     votes: { $gte: votes },
   });
   if (count === 0) {
-    return 1;
+    return undefined;
   }
   return count;
 }

@@ -23,6 +23,7 @@ import {
   promptsFeature,
   strengthFeature,
   whalesFeature,
+  lineFeature,
 } from "#root/bot/features/index.js";
 import { errorHandler } from "#root/bot/handlers/index.js";
 import { i18n, isMultipleLocales } from "#root/bot/i18n.js";
@@ -79,6 +80,7 @@ export function createBot(token: string, options: Options) {
   protectedBot.use(topupFeature);
   protectedBot.use(adminFeature);
   protectedBot.use(whalesFeature);
+  protectedBot.use(lineFeature);
 
   if (isMultipleLocales) {
     protectedBot.use(languageFeature);

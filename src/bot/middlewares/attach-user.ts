@@ -26,6 +26,8 @@ export default async function attachUser(ctx: Context, next: NextFunction) {
   if (!ctx.dbuser.languageSelected) {
     const locale = await ctx.i18n.getLocale();
     const localeSupported = i18n.locales.includes(locale);
+    // TODO: send keyboard
+
     // if (!localeSupported) {
     //   await sendMessageToAdmins(
     //     ctx.api,

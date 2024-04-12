@@ -130,6 +130,7 @@ const stopList = new Set([
   "UQCFr3jo0DXpIBF82mVGFc3zcdRkSAtinhENPFMQ2FqzYv0E", // Huobi
   "UQDD8dqOzaj4zUK6ziJOo_G2lx6qf1TEktTRkFJ7T1c_fKne", // Bybit
   "UQBfAN7LfaUYgXZNw5Wc7GBgkEX2yhuJ5ka95J1JJwXXf9t5", // OKX
+  "UQCA1BI4QRZ8qYmskSRDzJmkucGodYRTZCf_b9hckjla6Yug", // Kucoin
 ]);
 
 export function isUserAddressValid(a: Address): boolean {

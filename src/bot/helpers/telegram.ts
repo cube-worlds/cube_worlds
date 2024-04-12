@@ -3,8 +3,8 @@ import { Api, RawApi } from "grammy";
 import { DocumentType } from "@typegoose/typegoose";
 import { TranslationVariables } from "@grammyjs/i18n";
 import { logger } from "#root/logger";
-import { User, countUsers, findQueue, placeInLine } from "../models/user";
-import { getRandomCoolEmoji, toEmoji } from "./emoji";
+import { User, findQueue, placeInLine } from "../models/user";
+import { getRandomCoolEmoji } from "./emoji";
 import { bigIntWithCustomSeparator } from "./numbers";
 import { i18n } from "../i18n";
 
@@ -37,8 +37,7 @@ export async function sendPlaceInLine(
   user: DocumentType<User>,
   sendAnyway = true,
 ): Promise<boolean> {
-  const place = await placeInLine(user.votes);
-  const totalPlaces = await countUsers(false);
+  const place = (await placeInLine(user.votes)) ?? 0;
   const lastSendedPlace = user.lastSendedPlace ?? Number.MAX_SAFE_INTEGER;
   const placeDecreased = place < lastSendedPlace;
   if (sendAnyway || placeDecreased) {
@@ -48,14 +47,9 @@ export async function sendPlaceInLine(
       i18n.t(user.language, "mint.share"),
     );
     const titleKey = `speedup.${user.minted ? "title_minted" : "title_not_minted"}`;
-    const titleVariables: TranslationVariables<string> = user.minted
-      ? {
-          points: bigIntWithCustomSeparator(user.votes),
-        }
-      : {
-          place: toEmoji(place),
-          total: toEmoji(totalPlaces),
-        };
+    const titleVariables: TranslationVariables<string> = {
+      points: bigIntWithCustomSeparator(user.votes),
+    };
     await api.sendMessage(
       user.id,
       `${i18n.t(user.language, titleKey, titleVariables)}
