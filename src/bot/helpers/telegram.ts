@@ -91,7 +91,9 @@ export async function sendNewNFTMessage(
   nftUrl: string,
 ) {
   try {
-    const chats = { ru: "@viz_blockchain", en: "@viz_blockchain" };
+    const chats = config.isProd
+      ? { ru: "@cube_worlds_chat_ru", en: "@cube_worlds_chat" }
+      : { ru: "@viz_blockchain", en: "@viz_blockchain" };
     // eslint-disable-next-line no-restricted-syntax
     for (const [lang, chat] of Object.entries(chats)) {
       const collection = "cubeworlds";
