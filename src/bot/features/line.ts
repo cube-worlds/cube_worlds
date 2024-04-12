@@ -16,7 +16,7 @@ const feature = composer.chatType("private");
 
 feature.command("line", logHandle("command-line"), async (ctx) => {
   const count = await countAllWallets();
-  const line = await findLine(50);
+  const line = await findLine(20);
   const body = line.map((v, index) => [
     String(index + 1),
     removeMiddle(v.wallet ?? "undefined"),

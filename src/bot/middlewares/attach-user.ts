@@ -2,6 +2,7 @@ import { NextFunction } from "grammy";
 import { findOrCreateUser } from "#root/bot/models/user.js";
 import { Context } from "#root/bot/context.js";
 import { i18n } from "../i18n";
+import { createChangeLanguageKeyboard } from "../keyboards/change-language";
 
 export default async function attachUser(ctx: Context, next: NextFunction) {
   if (!ctx.from) {
@@ -26,14 +27,15 @@ export default async function attachUser(ctx: Context, next: NextFunction) {
   if (!ctx.dbuser.languageSelected) {
     const locale = await ctx.i18n.getLocale();
     const localeSupported = i18n.locales.includes(locale);
-    // TODO: send keyboard
-
-    // if (!localeSupported) {
-    //   await sendMessageToAdmins(
-    //     ctx.api,
-    //     `🔠 Unsupported locale: ${locale} from @${ctx.from.username}`,
-    //   );
-    // }
+    if (!localeSupported) {
+      await ctx.reply(ctx.t("language.select"), {
+        reply_markup: createChangeLanguageKeyboard(ctx),
+      });
+      // await sendMessageToAdmins(
+      //   ctx.api,
+      //   `🔠 Unsupported locale: ${locale} from @${ctx.from.username}`,
+      // );
+    }
     ctx.dbuser.language = localeSupported ? locale : "en";
     ctx.dbuser.languageSelected = true;
     await ctx.dbuser.save();
