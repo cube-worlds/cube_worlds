@@ -26,7 +26,11 @@ import { randomAttributes } from "#root/bot/helpers/attributes.js";
 import { countUsers, findUserById } from "#root/bot/models/user.js";
 import { ChatGPTAPI } from "chatgpt";
 import { logger } from "#root/logger";
-import { adminIndex, sendNewPlaces } from "../helpers/telegram";
+import {
+  adminIndex,
+  sendNewNFTMessage,
+  sendNewPlaces,
+} from "../helpers/telegram";
 import { sendMintedMessage } from "../middlewares/check-not-minted";
 
 const composer = new Composer<Context>();
@@ -226,6 +230,12 @@ feature.callbackQuery(
               ctx.api,
               selectedUser.id,
               selectedUser.language,
+              selectedUser.nftUrl ?? "",
+            );
+            await sendNewNFTMessage(
+              ctx.api,
+              selectedUser.nftImage ?? "",
+              nextItemIndex,
               selectedUser.nftUrl ?? "",
             );
           })();

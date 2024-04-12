@@ -76,6 +76,9 @@ mint =
     
 queue = 
     .title = {$count} in queue
+    .new_nft = {$emoji1} Collection update alert! {$emoji2}
+        New NFT #{$number} in {$collectionLink}!
+    .new_nft_button = Open NFT
     .no_photo_after_submit = Access to your avatars is unavailable. Please resubmit your request with the /mint command
     .no_square_avatars = It appears that you don't currently have an avatar with square dimensions, please upload and resubmit your request with the /mint command
     .no_suitable_photo = Your avatars need to include at least one photo with people, preferably a portrait. Please add a suitable photo and resubmit your request with the /mint command

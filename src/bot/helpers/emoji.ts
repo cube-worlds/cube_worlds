@@ -15,3 +15,26 @@ export function toEmoji(number: number): string {
     .replaceAll("8", "8️⃣")
     .replaceAll("9", "9️⃣");
 }
+
+export function getRandomCoolEmoji(): string {
+  const coolEmojis: string[] = [
+    "🚀",
+    "😎",
+    "🔥",
+    "💥",
+    "🎉",
+    "🌟",
+    "👾",
+    "🌈",
+    "🤖",
+    "🚨",
+    "💎",
+    "🏄‍♂️",
+    "🌞",
+    "📸",
+    "🔮",
+    "🦄",
+  ];
+  const randomIndex: number = Math.floor(Math.random() * coolEmojis.length);
+  return coolEmojis[randomIndex];
+}

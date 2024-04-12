@@ -4,9 +4,9 @@ import { DocumentType } from "@typegoose/typegoose";
 import { TranslationVariables } from "@grammyjs/i18n";
 import { logger } from "#root/logger";
 import { User, countUsers, findQueue, placeInLine } from "../models/user";
-import { i18n } from "../i18n";
-import { toEmoji } from "./emoji";
+import { getRandomCoolEmoji, toEmoji } from "./emoji";
 import { bigIntWithCustomSeparator } from "./numbers";
+import { i18n } from "../i18n";
 
 export function adminIndex(userId: number): number {
   if (!config.BOT_ADMINS.includes(userId)) {
@@ -81,5 +81,43 @@ export async function sendNewPlaces(api: Api<RawApi>) {
   for (const user of users) {
     // eslint-disable-next-line no-await-in-loop
     await sendPlaceInLine(api, user, false);
+  }
+}
+
+export async function sendNewNFTMessage(
+  api: Api<RawApi>,
+  ipfsImageHash: string,
+  number: number,
+  nftUrl: string,
+) {
+  const chats = { ru: "@viz_blockchain", en: "@viz_blockchain" };
+  // eslint-disable-next-line no-restricted-syntax
+  for (const [lang, chat] of Object.entries(chats)) {
+    const collection = "cubeworlds";
+    const collectionLink = `<a href="https://getgems.io/${collection}?utm_campaign=${collection}&utm_source=inline&utm_medium=collection">Cube Worlds</a>`;
+    const emoji1 = getRandomCoolEmoji();
+    const emoji2 = getRandomCoolEmoji();
+    const caption = i18n.t(lang, "queue.new_nft", {
+      emoji1,
+      emoji2,
+      number,
+      collectionLink,
+    });
+    const linkTitle = i18n.t(lang, "queue.new_nft_button");
+    // eslint-disable-next-line no-await-in-loop
+    await api.sendPhoto(chat, `https://ipfs.io/ipfs/${ipfsImageHash}`, {
+      caption,
+      parse_mode: "HTML",
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: linkTitle,
+              url: `${nftUrl}?utm_campaign=${collection}&utm_source=inline&utm_medium=nft`,
+            },
+          ],
+        ],
+      },
+    });
   }
 }
