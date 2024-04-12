@@ -19,17 +19,17 @@ feature.command("line", logHandle("command-line"), async (ctx) => {
   const line = await findLine(20);
   const body = line.map((v, index) => [
     String(index + 1),
-    removeMiddle(v.wallet ?? "undefined"),
+    removeMiddle(v.name ?? "undefined", 6),
     bigIntWithCustomSeparator(v.votes),
   ]);
-  if (!line.some((v) => v.wallet === ctx.dbuser.wallet)) {
+  if (!line.some((v) => v.name === ctx.dbuser.name)) {
     const place = await placeInLine(ctx.dbuser.votes);
     if (place) {
       body.push(
         ["...", "...", "..."],
         [
           String(place),
-          removeMiddle(ctx.dbuser.wallet ?? "undefined"),
+          removeMiddle(ctx.dbuser.name ?? "undefined", 6),
           bigIntWithCustomSeparator(ctx.dbuser.votes),
         ],
       );
@@ -38,7 +38,7 @@ feature.command("line", logHandle("command-line"), async (ctx) => {
   const md = `${ctx.t("line.count", { count })}
 \`\`\`\n${getMarkdownTable({
     table: {
-      head: ["Number", "Wallet", "$CUBE"],
+      head: ["Number", "Username", "$CUBE"],
       body,
     },
   })}\n\`\`\``;

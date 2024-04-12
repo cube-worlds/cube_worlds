@@ -159,7 +159,7 @@ export function findLine(limit: number) {
     state: UserState.Submited,
     minted: false,
   })
-    .select({ _id: 0, wallet: 1, votes: 1, minted: 1 })
+    .select({ _id: 0, name: 1, votes: 1, minted: 1 })
     .limit(limit)
     .sort({ votes: -1 });
 }
