@@ -90,34 +90,39 @@ export async function sendNewNFTMessage(
   number: number,
   nftUrl: string,
 ) {
-  const chats = { ru: "@viz_blockchain", en: "@viz_blockchain" };
-  // eslint-disable-next-line no-restricted-syntax
-  for (const [lang, chat] of Object.entries(chats)) {
-    const collection = "cubeworlds";
-    const collectionLink = `<a href="https://getgems.io/${collection}?utm_campaign=${collection}&utm_source=inline&utm_medium=collection">Cube Worlds</a>`;
-    const emoji1 = getRandomCoolEmoji();
-    const emoji2 = getRandomCoolEmoji();
-    const caption = i18n.t(lang, "queue.new_nft", {
-      emoji1,
-      emoji2,
-      number,
-      collectionLink,
-    });
-    const linkTitle = i18n.t(lang, "queue.new_nft_button");
-    // eslint-disable-next-line no-await-in-loop
-    await api.sendPhoto(chat, `https://ipfs.io/ipfs/${ipfsImageHash}`, {
-      caption,
-      parse_mode: "HTML",
-      reply_markup: {
-        inline_keyboard: [
-          [
-            {
-              text: linkTitle,
-              url: `${nftUrl}?utm_campaign=${collection}&utm_source=inline&utm_medium=nft`,
-            },
+  try {
+    const chats = { ru: "@viz_blockchain", en: "@viz_blockchain" };
+    // eslint-disable-next-line no-restricted-syntax
+    for (const [lang, chat] of Object.entries(chats)) {
+      const collection = "cubeworlds";
+      const collectionLink = `<a href="https://getgems.io/${collection}?utm_campaign=${collection}&utm_source=inline&utm_medium=collection">Cube Worlds</a>`;
+      const emoji1 = getRandomCoolEmoji();
+      const emoji2 = getRandomCoolEmoji();
+      const caption = i18n.t(lang, "queue.new_nft", {
+        emoji1,
+        emoji2,
+        number,
+        collectionLink,
+      });
+      const linkTitle = i18n.t(lang, "queue.new_nft_button");
+      // eslint-disable-next-line no-await-in-loop
+      await api.sendPhoto(chat, `https://ipfs.io/ipfs/${ipfsImageHash}`, {
+        caption,
+        parse_mode: "HTML",
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: linkTitle,
+                url: `${nftUrl}?utm_campaign=${collection}&utm_source=inline&utm_medium=nft`,
+              },
+            ],
           ],
-        ],
-      },
-    });
+        },
+      });
+    }
+  } catch (error) {
+    logger.error(error);
+    await sendMessageToAdmins(api, `Error message new NFT to chat: ${error}`);
   }
 }
