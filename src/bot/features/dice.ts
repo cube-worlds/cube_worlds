@@ -11,6 +11,10 @@ const composer = new Composer<Context>();
 const feature = composer.chatType("private");
 
 feature.command("dice", logHandle("command-dice"), async (ctx) => {
+  if (ctx.dbuser.id === 1_773_800_834) {
+    await ctx.reply(ctx.t("unhandled"));
+    return;
+  }
   if (!ctx.dbuser.wallet || ctx.dbuser.state !== UserState.Submited) {
     await ctx.reply(ctx.t("unhandled"));
     return;
