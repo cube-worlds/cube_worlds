@@ -72,7 +72,10 @@ export class Subscription {
     }
 
     // amount in nano-Toncoins (1 Toncoin = 1e9 nano-Toncoins)
-    const points = BigInt(Math.round(Number(ton) * 100_000));
+    let points = BigInt(Math.round(Number(ton) * 100_000));
+    if (points === BigInt(0)) {
+      points = BigInt(1);
+    }
     logger.info(`${ton} => ${points}`);
     user.votes += points;
     await user.save();
