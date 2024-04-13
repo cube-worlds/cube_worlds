@@ -30,5 +30,5 @@ COPY . .
 
 USER node
 
-# EXPOSE 80
+EXPOSE 80
 CMD ["npm", "run", "start:force"]
