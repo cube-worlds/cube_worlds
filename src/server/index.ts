@@ -16,7 +16,10 @@ export const createServer = async (bot: Bot) => {
 
   server.get("/", () => ({ status: true }));
 
-  server.post(`/${bot.token}`, webhookCallback(bot, "fastify"));
+  server.post(
+    `/${bot.token}`,
+    webhookCallback(bot, "fastify", "throw", 30_000),
+  );
 
   return server;
 };
