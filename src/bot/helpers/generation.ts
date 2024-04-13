@@ -2,6 +2,7 @@ import fetch from "node-fetch";
 import FormData from "form-data";
 import fs from "node:fs";
 import { config } from "#root/config.js";
+import { logger } from "#root/logger";
 
 export async function generate(
   filePath: string,
@@ -74,13 +75,18 @@ export async function generate(
     }>;
   }
 
-  const responseJSON = (await response.json()) as GenerationResponse;
+  const json = await response.json();
+  const generationResponse = json as GenerationResponse;
 
-  const artifact = responseJSON.artifacts[0];
-  if (artifact.finishReason === "SUCCESS") {
-    const fp = `./data/${itemIndex}/${adminIndex}_${itemIndex}.png`;
-    fs.writeFileSync(fp, Buffer.from(artifact.base64, "base64"));
-    return fp;
+  const artifact = generationResponse.artifacts[0];
+  if (artifact.finishReason) {
+    if (artifact.finishReason === "SUCCESS") {
+      const fp = `./data/${itemIndex}/${adminIndex}_${itemIndex}.png`;
+      fs.writeFileSync(fp, Buffer.from(artifact.base64, "base64"));
+      return fp;
+    }
+    throw new Error(artifact.finishReason);
   }
-  throw artifact.finishReason;
+  logger.error(`Unknown generation error: ${json}`);
+  throw new Error(`Unknown generation error: ${json}`);
 }
