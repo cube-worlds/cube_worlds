@@ -14,7 +14,7 @@ import { PhotoSize } from "@grammyjs/types";
 import { changeImageData } from "#root/bot/callback-data/image-selection.js";
 import { SelectImageButton, photoKeyboard } from "#root/bot/keyboards/photo.js";
 import { NftCollection } from "#root/bot/models/nft-collection.js";
-import { openWallet, sleep, waitSeqno } from "#root/bot/helpers/ton.js";
+import { openWallet, waitSeqno } from "#root/bot/helpers/ton.js";
 import { NftItem, nftMintParameters } from "#root/bot/models/nft-item.js";
 import {
   pinImageURLToIPFS,
@@ -73,7 +73,7 @@ feature.callbackQuery(
             // `Write the beginning of the new RPG character's story named "${name}".
             `Write an inspiring text about a person named "${name}" who has decided to start a journey.
             You could also use this additional information "${info}" if it feels appropriate, translate into English.
-            Do NOT show text in original language and quotation marks.
+            Do NOT show text in original language. Do NOT show any quotation marks.
             Response MUST BE up to 500 characters maximum`,
           );
           selectedUser.nftDescription = result.text.slice(0, 700);
@@ -223,7 +223,6 @@ feature.callbackQuery(
             selectedUser.nftUrl ?? "",
           );
 
-          await sleep(60_000);
           await sendMintedMessage(
             ctx.api,
             selectedUser.id,
