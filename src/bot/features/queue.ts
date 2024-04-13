@@ -223,22 +223,19 @@ feature.callbackQuery(
             selectedUser.nftUrl ?? "",
           );
 
-          // eslint-disable-next-line @typescript-eslint/no-floating-promises
-          (async () => {
-            await sleep(60_000);
-            await sendMintedMessage(
-              ctx.api,
-              selectedUser.id,
-              selectedUser.language,
-              selectedUser.nftUrl ?? "",
-            );
-            await sendNewNFTMessage(
-              ctx.api,
-              selectedUser.nftImage ?? "",
-              nextItemIndex,
-              selectedUser.nftUrl ?? "",
-            );
-          })();
+          await sleep(60_000);
+          await sendMintedMessage(
+            ctx.api,
+            selectedUser.id,
+            selectedUser.language,
+            selectedUser.nftUrl ?? "",
+          );
+          await sendNewNFTMessage(
+            ctx.api,
+            selectedUser.nftImage ?? "",
+            nextItemIndex,
+            selectedUser.nftUrl ?? "",
+          );
           break;
         }
         default: {

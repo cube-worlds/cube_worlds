@@ -126,8 +126,8 @@ export async function setCommandsHandler(ctx: CommandContext<Context>) {
   // set private chat commands for owner
   // eslint-disable-next-line no-restricted-syntax
   for (const adminId of config.BOT_ADMINS) {
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    ctx.api.setMyCommands(
+    // eslint-disable-next-line no-await-in-loop
+    await ctx.api.setMyCommands(
       [
         ...getPrivateChatCommands(DEFAULT_LANGUAGE_CODE),
         ...getPrivateChatAdminCommands(DEFAULT_LANGUAGE_CODE),

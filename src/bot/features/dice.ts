@@ -31,20 +31,17 @@ feature.command("dice", logHandle("command-dice"), async (ctx) => {
       }),
     );
   }
-  // eslint-disable-next-line @typescript-eslint/no-floating-promises
-  (async () => {
-    const dice1 = ctx.replyWithDice("🎲");
-    const dice2 = ctx.replyWithDice("🎲");
-    const result = await Promise.all([dice1, dice2]);
-    const score = result[0].dice.value + result[1].dice.value;
-    ctx.dbuser.votes += BigInt(score);
-    ctx.dbuser.dicedAt = now;
-    await ctx.dbuser.save();
-    await sleep(3000);
-    await ctx.reply(ctx.t("dice.success", { score }));
-    await sleep(1000);
-    await sendPlaceInLine(ctx.api, ctx.dbuser, true);
-  })();
+  const dice1 = ctx.replyWithDice("🎲");
+  const dice2 = ctx.replyWithDice("🎲");
+  const result = await Promise.all([dice1, dice2]);
+  const score = result[0].dice.value + result[1].dice.value;
+  ctx.dbuser.votes += BigInt(score);
+  ctx.dbuser.dicedAt = now;
+  await ctx.dbuser.save();
+  await sleep(3000);
+  await ctx.reply(ctx.t("dice.success", { score }));
+  await sleep(1000);
+  await sendPlaceInLine(ctx.api, ctx.dbuser, true);
 });
 
 export { composer as diceFeature };

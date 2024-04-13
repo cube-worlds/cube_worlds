@@ -79,7 +79,7 @@ export async function generate(
   const generationResponse = json as GenerationResponse;
 
   const artifact = generationResponse.artifacts[0];
-  if (artifact.finishReason) {
+  if ("finishReason" in artifact) {
     if (artifact.finishReason === "SUCCESS") {
       const fp = `./data/${itemIndex}/${adminIndex}_${itemIndex}.png`;
       fs.writeFileSync(fp, Buffer.from(artifact.base64, "base64"));
