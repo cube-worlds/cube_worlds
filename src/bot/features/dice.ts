@@ -3,7 +3,7 @@ import type { Context } from "#root/bot/context.js";
 import { logHandle } from "#root/bot/helpers/logging.js";
 import { sleep } from "../helpers/ton";
 import { timeUnitsBetween } from "../helpers/time";
-import { sendPlaceInLine } from "../helpers/telegram";
+import { sendMessageToAdmins, sendPlaceInLine } from "../helpers/telegram";
 import { UserState } from "../models/user";
 
 const composer = new Composer<Context>();
@@ -42,6 +42,11 @@ feature.command("dice", logHandle("command-dice"), async (ctx) => {
   await ctx.reply(ctx.t("dice.success", { score }));
   await sleep(1000);
   await sendPlaceInLine(ctx.api, ctx.dbuser, true);
+
+  if (score === 12) {
+    const username = ctx.dbuser.name ?? "undefined";
+    await sendMessageToAdmins(ctx.api, `🎲 ${username} diced 12!`);
+  }
 });
 
 export { composer as diceFeature };
