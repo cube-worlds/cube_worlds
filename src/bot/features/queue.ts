@@ -58,7 +58,7 @@ feature.callbackQuery(
         return ctx.reply(ctx.t("wrong"));
       }
       const { select } = changeImageData.unpack(ctx.callbackQuery?.data ?? "");
-      await ctx.editMessageReplyMarkup({});
+      await ctx.editMessageReplyMarkup();
       switch (select) {
         case SelectImageButton.Description: {
           const api = new ChatGPTAPI({
