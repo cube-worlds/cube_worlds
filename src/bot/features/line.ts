@@ -1,7 +1,12 @@
 import { Composer } from "grammy";
 import type { Context } from "#root/bot/context.js";
 import { logHandle } from "#root/bot/helpers/logging.js";
-import { countAllLine, findLine, placeInLine } from "#root/bot/models/user.js";
+import {
+  UserState,
+  countAllLine,
+  findLine,
+  placeInLine,
+} from "#root/bot/models/user.js";
 import { getMarkdownTable } from "markdown-table-ts";
 import { bigIntWithCustomSeparator } from "../helpers/numbers";
 import { removeMiddle } from "../helpers/text";
@@ -18,7 +23,14 @@ feature.command("line", logHandle("command-line"), async (ctx) => {
     removeMiddle(v.name ?? "undefined", 6),
     bigIntWithCustomSeparator(v.votes),
   ]);
-  if (!line.some((v) => v.name === ctx.dbuser.name)) {
+  if (
+    !line.some(
+      (v) =>
+        v.name === ctx.dbuser.name &&
+        ctx.dbuser.state === UserState.Submited &&
+        !ctx.dbuser.minted,
+    )
+  ) {
     const place = await placeInLine(ctx.dbuser.votes);
     if (place) {
       body.push(
