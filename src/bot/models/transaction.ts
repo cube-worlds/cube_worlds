@@ -22,6 +22,9 @@ export class Transaction {
   @prop({ type: Number, required: true })
   coins!: number;
 
+  @prop({ type: Number })
+  ton?: number;
+
   @prop({ type: String, required: true })
   hash!: string;
 

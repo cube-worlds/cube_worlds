@@ -53,11 +53,14 @@ export class Subscription {
       );
     }
 
+    const ton = Number(fromNano(value));
+
     const trxModel = new TransactionModel();
     trxModel.utime = utime;
     trxModel.lt = lt;
     trxModel.address = senderAddress.toString();
     trxModel.coins = value;
+    trxModel.ton = ton;
     trxModel.hash = hash;
     trxModel.accepted = true;
     await trxModel.save();
@@ -65,7 +68,6 @@ export class Subscription {
       `Receive ${TonWeb.utils.fromNano(value)} TON from ${senderAddress.toString()}"`,
     );
 
-    const ton = fromNano(value);
     const user = await findUserByAddress(senderAddress);
     if (!user) {
       trxModel.accepted = false;
@@ -75,7 +77,7 @@ export class Subscription {
       return logger.error(message);
     }
 
-    const points = tonToPoints(Number(ton));
+    const points = tonToPoints(ton);
     logger.info(`${ton} => ${points}`);
     user.votes = await addPoints(user.id, points);
 
