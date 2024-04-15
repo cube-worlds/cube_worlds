@@ -35,6 +35,13 @@ export class User extends TimeStamps {
   @prop({ type: Date, required: true, default: new Date(+0) })
   dicedAt!: Date;
 
+  @prop({ type: Number, min: 1, max: 6 })
+  diceSeriesNumber?: number;
+
+  // how many times recurred
+  @prop({ type: Number })
+  diceSeries?: number;
+
   @prop({ type: String })
   name?: string;
 

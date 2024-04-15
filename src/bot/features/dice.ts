@@ -34,18 +34,39 @@ feature.command("dice", logHandle("command-dice"), async (ctx) => {
   const dice1 = ctx.replyWithDice("🎲");
   const dice2 = ctx.replyWithDice("🎲");
   const result = await Promise.all([dice1, dice2]);
-  const score = result[0].dice.value + result[1].dice.value;
+  const value1 = result[0].dice.value;
+  const value2 = result[1].dice.value;
+  const isRecurred = value1 === value2;
+  if (isRecurred) {
+    if (!ctx.dbuser.diceSeries) {
+      ctx.dbuser.diceSeries = 1;
+    }
+    if (ctx.dbuser.diceSeriesNumber === value1) {
+      ctx.dbuser.diceSeries = (ctx.dbuser.diceSeries ?? 0) + 1;
+    }
+    ctx.dbuser.diceSeriesNumber = value1;
+  } else {
+    ctx.dbuser.diceSeries = undefined;
+    ctx.dbuser.diceSeriesNumber = undefined;
+  }
+
+  const score = value1 + value2;
+
   ctx.dbuser.dicedAt = now;
   await ctx.dbuser.save();
   ctx.dbuser.votes = await addPoints(ctx.dbuser.id, BigInt(score));
+
   await sleep(3000);
   await ctx.reply(ctx.t("dice.success", { score }));
   await sleep(1000);
   await sendPlaceInLine(ctx.api, ctx.dbuser, true);
 
-  if (score === 12) {
+  if ((ctx.dbuser.diceSeries ?? 0) > 2) {
     const username = ctx.dbuser.name ?? "undefined";
-    await sendMessageToAdmins(ctx.api, `🎲 ${username} diced 12!`);
+    await sendMessageToAdmins(
+      ctx.api,
+      `🎲 Pair of ${ctx.dbuser.diceSeriesNumber} dices ${ctx.dbuser.diceSeries} times in a row by @${username}`,
+    );
   }
 });
 
