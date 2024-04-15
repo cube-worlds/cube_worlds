@@ -37,7 +37,7 @@ feature.command("dice", logHandle("command-dice"), async (ctx) => {
   const score = result[0].dice.value + result[1].dice.value;
   ctx.dbuser.dicedAt = now;
   await ctx.dbuser.save();
-  await addPoints(ctx.dbuser.id, BigInt(score));
+  ctx.dbuser.votes = await addPoints(ctx.dbuser.id, BigInt(score));
   await sleep(3000);
   await ctx.reply(ctx.t("dice.success", { score }));
   await sleep(1000);
