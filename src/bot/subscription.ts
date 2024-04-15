@@ -13,6 +13,7 @@ import {
 } from "#root/bot/models/transaction";
 import { AccountSubscription } from "#root/bot/helpers/account-subscription";
 import { sendMessageToAdmins, sendPlaceInLine } from "./helpers/telegram";
+import { tonToPoints } from "./helpers/ton";
 
 export class Subscription {
   bot: Bot<Context, Api<RawApi>>;
@@ -58,6 +59,7 @@ export class Subscription {
     trxModel.address = senderAddress.toString();
     trxModel.coins = value;
     trxModel.hash = hash;
+    trxModel.accepted = true;
     await trxModel.save();
     logger.info(
       `Receive ${TonWeb.utils.fromNano(value)} TON from ${senderAddress.toString()}"`,
@@ -66,16 +68,14 @@ export class Subscription {
     const ton = fromNano(value);
     const user = await findUserByAddress(senderAddress);
     if (!user) {
+      trxModel.accepted = false;
+      await trxModel.save();
       const message = `USER NOT FOUND FOR: ${ton} TON from ${senderAddress.toString()}`;
       await sendMessageToAdmins(this.bot.api, message);
       return logger.error(message);
     }
 
-    // amount in nano-Toncoins (1 Toncoin = 1e9 nano-Toncoins)
-    let points = BigInt(Math.round(Number(ton) * 100_000));
-    if (points === BigInt(0)) {
-      points = BigInt(1);
-    }
+    const points = tonToPoints(Number(ton));
     logger.info(`${ton} => ${points}`);
     user.votes += points;
     await user.save();

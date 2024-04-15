@@ -120,6 +120,12 @@ export async function findUserById(
   return UserModel.findOne({ id });
 }
 
+export async function findUserByName(
+  name: string,
+): Promise<DocumentType<User> | null> {
+  return UserModel.findOne({ name });
+}
+
 export function findQueue() {
   return UserModel.find({ minted: false, state: UserState.Submited })
     .sort({ votes: -1 })

@@ -145,3 +145,11 @@ export function isUserAddressValid(a: Address): boolean {
     return false;
   }
 }
+
+export function tonToPoints(ton: number): bigint {
+  let points = BigInt(Math.round(ton * 100_000));
+  if (points === BigInt(0)) {
+    points = BigInt(1);
+  }
+  return points;
+}

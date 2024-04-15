@@ -24,6 +24,9 @@ export class Transaction {
 
   @prop({ type: String, required: true })
   hash!: string;
+
+  @prop({ type: Boolean, required: false })
+  accepted?: boolean;
 }
 
 export const TransactionModel = getModelForClass(Transaction);
