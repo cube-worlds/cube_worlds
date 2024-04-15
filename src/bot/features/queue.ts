@@ -203,10 +203,11 @@ feature.callbackQuery(
 
           const seqno = await item.deploy(wallet, parameters);
 
+          await waitSeqno(seqno, wallet);
+
           selectedUser.minted = true;
           await selectedUser.save();
 
-          await waitSeqno(seqno, wallet);
           const nft = await NftCollection.getNftAddressByIndex(nextItemIndex);
 
           const nftUrl = `https://${config.TESTNET ? "testnet." : ""}getgems.io/collection/${config.COLLECTION_ADDRESS}/${nft.toString()}`;
@@ -242,8 +243,11 @@ feature.callbackQuery(
         }
       }
     } catch (error) {
-      ctx.logger.warn(error as Error);
-      await ctx.reply((error as Error).message);
+      ctx.logger.error(error);
+      const { message } = error as Error;
+      await (message
+        ? ctx.reply(`Error: ${message}`)
+        : ctx.reply(ctx.t("wrong")));
     }
     ctx.chatAction = null;
   },
