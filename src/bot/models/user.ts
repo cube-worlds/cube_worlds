@@ -6,6 +6,7 @@ import {
 } from "@typegoose/typegoose";
 import { TimeStamps } from "@typegoose/typegoose/lib/defaultClasses.js";
 import { Address } from "@ton/core";
+import { logger } from "#root/logger";
 
 export enum UserState {
   WaitNothing = "WaitNothing",
@@ -184,4 +185,23 @@ export async function placeInLine(votes: bigint): Promise<number | undefined> {
     return undefined;
   }
   return count;
+}
+
+export async function addPoints(userId: number, add: bigint) {
+  try {
+    const updatedUser = await UserModel.findOneAndUpdate(
+      { id: userId },
+      { $inc: { votes: add } },
+      { new: true },
+    );
+    if (!updatedUser) {
+      throw new Error("User for addPoints not found");
+    }
+    logger.info(`Add ${add} points to ${userId}. Now ${updatedUser.votes}`);
+    // TODO: save log in db
+    return updatedUser.votes;
+  } catch (error) {
+    logger.error(`!!! Can't add points ${add} to user ${userId}`);
+    throw error;
+  }
 }

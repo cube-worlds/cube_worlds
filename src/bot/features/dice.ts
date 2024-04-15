@@ -4,7 +4,7 @@ import { logHandle } from "#root/bot/helpers/logging.js";
 import { sleep } from "../helpers/ton";
 import { timeUnitsBetween } from "../helpers/time";
 import { sendMessageToAdmins, sendPlaceInLine } from "../helpers/telegram";
-import { UserState } from "../models/user";
+import { UserState, addPoints } from "../models/user";
 
 const composer = new Composer<Context>();
 
@@ -35,9 +35,9 @@ feature.command("dice", logHandle("command-dice"), async (ctx) => {
   const dice2 = ctx.replyWithDice("🎲");
   const result = await Promise.all([dice1, dice2]);
   const score = result[0].dice.value + result[1].dice.value;
-  ctx.dbuser.votes += BigInt(score);
   ctx.dbuser.dicedAt = now;
   await ctx.dbuser.save();
+  await addPoints(ctx.dbuser.id, BigInt(score));
   await sleep(3000);
   await ctx.reply(ctx.t("dice.success", { score }));
   await sleep(1000);

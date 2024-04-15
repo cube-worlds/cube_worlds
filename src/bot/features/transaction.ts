@@ -3,7 +3,7 @@ import type { Context } from "#root/bot/context.js";
 import { logHandle } from "#root/bot/helpers/logging.js";
 import { isAdmin } from "#root/bot/filters/is-admin.js";
 import { fromNano } from "@ton/core";
-import { findUserByName } from "../models/user";
+import { addPoints, findUserByName } from "../models/user";
 import { findTransaction } from "../models/transaction";
 import { tonToPoints } from "../helpers/ton";
 import { sendMessageToAdmins, sendPlaceInLine } from "../helpers/telegram";
@@ -27,8 +27,13 @@ feature.command(
           `Transaction with hash \`${hash}\` and lt \`${numberLt}\` not found`,
         );
       }
+
       if (trx.accepted) {
         return ctx.reply("Transaction is already accepted!");
+      }
+
+      if (!username) {
+        return ctx.reply("Username is empty!");
       }
 
       const user = await findUserByName(username.replace(/^@/, ""));
@@ -40,11 +45,10 @@ feature.command(
       trx.accepted = true;
       await trx.save();
 
-      // add to $CUBE to user balance
+      // add points to user balance
       const ton = fromNano(trx.coins);
       const points = tonToPoints(Number(ton));
-      user.votes += points;
-      await user.save();
+      user.votes = await addPoints(user.id, points);
 
       // send messages
       await sendPlaceInLine(ctx.api, user, true);

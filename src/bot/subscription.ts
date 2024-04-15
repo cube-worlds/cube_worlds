@@ -3,7 +3,7 @@ import { logger } from "#root/logger";
 import TonWeb from "tonweb";
 import { Address, fromNano } from "@ton/core";
 import { Bot, Api, RawApi } from "grammy";
-import { findUserByAddress } from "#root/bot/models/user";
+import { addPoints, findUserByAddress } from "#root/bot/models/user";
 import { i18n } from "#root/bot/i18n";
 import { Context } from "#root/bot/context";
 import {
@@ -77,8 +77,7 @@ export class Subscription {
 
     const points = tonToPoints(Number(ton));
     logger.info(`${ton} => ${points}`);
-    user.votes += points;
-    await user.save();
+    user.votes = await addPoints(user.id, points);
 
     await this.bot.api.sendMessage(
       user.id,

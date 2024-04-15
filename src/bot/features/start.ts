@@ -1,9 +1,8 @@
 import { Composer } from "grammy";
 import type { Context } from "#root/bot/context.js";
 import { logHandle } from "#root/bot/helpers/logging.js";
-import { findUserById } from "#root/bot/models/user.js";
+import { addPoints, findUserById } from "#root/bot/models/user.js";
 import { VoteModel, isUserAlreadyVoted } from "#root/bot/models/vote.js";
-import { logger } from "#root/logger";
 import { voteScore } from "../helpers/votes";
 import { sendPlaceInLine } from "../helpers/telegram";
 
@@ -32,18 +31,16 @@ async function checkReferal(ctx: Context) {
       await ctx.reply(ctx.t("vote.already"));
       return;
     }
+
     const add = await voteScore(ctx);
-    logger.info(
-      `Add referral ${add} points to ${receiver.name ?? receiver.id}`,
-    );
+
     const voteModel = new VoteModel();
     voteModel.giver = giverId;
     voteModel.receiver = receiverId;
     voteModel.quantity = add;
     await voteModel.save();
 
-    receiver.votes += BigInt(add);
-    await receiver.save();
+    await addPoints(receiver.id, BigInt(add));
 
     await ctx.reply(
       ctx.t("vote.success", { name: receiver.name ?? receiver.id }),
