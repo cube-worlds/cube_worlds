@@ -201,12 +201,12 @@ feature.callbackQuery(
           };
           ctx.logger.info(parameters);
 
+          selectedUser.minted = true;
+          await selectedUser.save();
+
           const seqno = await item.deploy(wallet, parameters);
 
           await waitSeqno(seqno, wallet);
-
-          selectedUser.minted = true;
-          await selectedUser.save();
 
           const nft = await NftCollection.getNftAddressByIndex(nextItemIndex);
 
