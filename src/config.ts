@@ -31,6 +31,8 @@ const createConfigFromEnvironment = (environment: NodeJS.ProcessEnv) => {
     MNEMONICS: z.string(),
     PINATA_API_KEY: z.string(),
     PINATA_API_SECRET: z.string(),
+    PINATA_GATEWAY: z.string(),
+    PINATA_GATEWAY_KEY: z.string(),
     TONCENTER_API_KEY: z.string(),
     TESTNET: z.boolean().default(true),
     STABILITY_API_KEY: z.string(),

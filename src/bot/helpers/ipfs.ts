@@ -45,3 +45,7 @@ export async function pinJSONToIPFS(
 export async function unpin(hash: string) {
   return pinata.unpin(hash);
 }
+
+export function linkToIPFSGateway(hash: string) {
+  return `${config.PINATA_GATEWAY}/ipfs/${hash}?pinataGatewayToken=${config.PINATA_GATEWAY_KEY}`;
+}

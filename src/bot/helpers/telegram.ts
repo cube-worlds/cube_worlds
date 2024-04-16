@@ -7,6 +7,7 @@ import { User, findQueue, placeInLine } from "../models/user";
 import { getRandomCoolEmoji } from "./emoji";
 import { bigIntWithCustomSeparator } from "./numbers";
 import { i18n } from "../i18n";
+import { linkToIPFSGateway } from "./ipfs";
 
 export function adminIndex(userId: number): number {
   if (!config.BOT_ADMINS.includes(userId)) {
@@ -102,7 +103,7 @@ export async function sendNewNFTMessage(
       });
       const linkTitle = i18n.t(lang, "queue.new_nft_button");
       // eslint-disable-next-line no-await-in-loop
-      await api.sendPhoto(chat, `https://ipfs.io/ipfs/${ipfsImageHash}`, {
+      await api.sendPhoto(chat, linkToIPFSGateway(ipfsImageHash), {
         caption,
         parse_mode: "HTML",
         reply_markup: {

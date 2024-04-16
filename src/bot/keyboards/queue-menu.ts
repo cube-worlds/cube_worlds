@@ -11,6 +11,7 @@ import { photoKeyboard } from "#root/bot/keyboards/photo.js";
 import { logger } from "#root/logger";
 import { i18n } from "../i18n";
 import { adminIndex } from "../helpers/telegram";
+import { linkToIPFSGateway } from "../helpers/ipfs";
 
 export function photoCaption(user: User) {
   return `@[${user.name}](tg://user?id=${user.id})
@@ -18,7 +19,7 @@ export function photoCaption(user: User) {
 Comment: \`${`${user.description?.slice(0, user.nftDescription ? 100 : 700) ?? ""}${user.nftDescription ? "..." : ""}`}\`
 
 Description: \`${user.nftDescription ?? ""}\`
-${user.nftImage ? `[Image](https://ipfs.io/ipfs/${user.nftImage}) | ` : ""} ${user.nftJson ? `[JSON](https://ipfs.io/ipfs/${user.nftJson})` : ""}
+${user.nftImage ? `[Image](${linkToIPFSGateway(user.nftImage)}) | ` : ""} ${user.nftJson ? `[JSON](${linkToIPFSGateway(user.nftJson)})` : ""}
 
 Minted: ${user.minted ? "✅" : "❌"} ${user.nftUrl ? `[NFT](${user.nftUrl})` : ""}
 `;
