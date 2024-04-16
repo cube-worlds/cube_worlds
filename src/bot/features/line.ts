@@ -19,16 +19,15 @@ feature.command("line", logHandle("command-line"), async (ctx) => {
   const count = await countAllLine();
   const line = await findLine(20);
   const body = line.map((v, index) => [
-    String(index + 1),
+    String(index + 1) + (v.diceWinner ? " (dice)" : ""),
     removeMiddle(v.name ?? "undefined", 6),
     bigIntWithCustomSeparator(v.votes),
   ]);
   if (
+    !ctx.dbuser.minted &&
     !line.some(
       (v) =>
-        v.name === ctx.dbuser.name &&
-        ctx.dbuser.state === UserState.Submited &&
-        !ctx.dbuser.minted,
+        v.name === ctx.dbuser.name && ctx.dbuser.state === UserState.Submited,
     )
   ) {
     const place = await placeInLine(ctx.dbuser.votes);

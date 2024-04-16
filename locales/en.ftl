@@ -56,6 +56,7 @@ speedup =
 dice = 
     .wait = ⌛️ Please wait another {$minutes} min {$seconds} sec
     .success = 🎉 Congratulations, it's {$score}! We look forward to seeing you again in 5 minutes.
+    .mint_winner = 🥳🥳🥳 Congrats, @{$username}, you are THE ONE! You rolled {$diceSeriesNumber}-{$diceSeriesNumber} in a row {$diceSeries} times! Check the /line
 
 description = 
     .wait = Please share some details about yourself. This information will be used to create more precise and personalized description for your NFT.

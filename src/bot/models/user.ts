@@ -63,6 +63,9 @@ export class User extends TimeStamps {
   @prop({ type: Boolean, required: true, default: false })
   minted!: boolean;
 
+  @prop({ type: Boolean })
+  diceWinner?: boolean;
+
   // for admin
 
   @prop({ type: Number })
@@ -136,7 +139,7 @@ export async function findUserByName(
 
 export function findQueue() {
   return UserModel.find({ minted: false, state: UserState.Submited })
-    .sort({ votes: -1 })
+    .sort({ diceWinner: -1, votes: -1 })
     .limit(10);
 }
 
@@ -173,9 +176,9 @@ export function findLine(limit: number) {
     state: UserState.Submited,
     minted: false,
   })
-    .select({ _id: 0, name: 1, votes: 1, minted: 1 })
+    .select({ _id: 0, name: 1, votes: 1, minted: 1, diceWinner: 1 })
     .limit(limit)
-    .sort({ votes: -1 });
+    .sort({ diceWinner: -1, votes: -1 });
 }
 
 export function countUsers(minted: boolean) {

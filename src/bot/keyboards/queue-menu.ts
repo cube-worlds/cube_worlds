@@ -92,10 +92,13 @@ export const queueMenu = new Menu("queue").dynamic(async (_, range) => {
   const users = await findQueue();
   for (const user of users) {
     range
-      .text(`(${user.votes}) ${user.name ?? user.wallet}`, async (ctx) => {
-        const context = ctx as unknown as Context;
-        await sendUserMetadata(context, user);
-      })
+      .text(
+        `(${user.diceWinner ? `🎲 ${user.votes}` : user.votes}) ${user.name ?? user.wallet}`,
+        async (ctx) => {
+          const context = ctx as unknown as Context;
+          await sendUserMetadata(context, user);
+        },
+      )
       .row();
   }
 });
