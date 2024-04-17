@@ -111,14 +111,16 @@ export function encodeOffChainContent(content: string) {
 }
 
 export async function waitSeqno(seqno: number, wallet: OpenedWallet) {
-  for (let attempt = 0; attempt < 20; attempt++) {
+  for (let attempt = 0; attempt < 50; attempt++) {
     await sleep(2000);
     const seqnoAfter = await wallet.contract.getSeqno();
     if (seqnoAfter === seqno + 1) {
       return;
     }
   }
-  throw new Error("Seqno wait failed");
+  throw new Error(
+    `Seqno wait failed. Check https://tonviewer.com/${config.COLLECTION_OWNER}`,
+  );
 }
 
 export function sleep(ms: number): Promise<void> {

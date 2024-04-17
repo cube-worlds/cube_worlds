@@ -214,6 +214,7 @@ feature.callbackQuery(
           selectedUser.nftUrl = nftUrl;
           await selectedUser.save();
 
+          // TODO: uncomment after change logic
           // await sendNewPlaces(ctx.api);
 
           // send to admin first
