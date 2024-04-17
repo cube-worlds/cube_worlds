@@ -20,6 +20,7 @@ import {
   pinImageURLToIPFS,
   pinJSONToIPFS,
   unpin,
+  warmIPFSHash,
 } from "#root/bot/helpers/ipfs.js";
 import { generate } from "#root/bot/helpers/generation.js";
 import { randomAttributes } from "#root/bot/helpers/attributes.js";
@@ -58,7 +59,11 @@ feature.callbackQuery(
         return ctx.reply(ctx.t("wrong"));
       }
       const { select } = changeImageData.unpack(ctx.callbackQuery?.data ?? "");
-      await ctx.editMessageReplyMarkup();
+      try {
+        await ctx.editMessageReplyMarkup();
+      } catch {
+        // do nothing
+      }
       switch (select) {
         case SelectImageButton.Description: {
           const api = new ChatGPTAPI({
@@ -173,6 +178,20 @@ feature.callbackQuery(
           selectedUser.nftJson = ipfsJSONHash;
           await selectedUser.save();
           await sendUserMetadata(ctx, selectedUser);
+          warmIPFSHash(ipfsImageHash)
+            .then((_) => {
+              logger.info("Warm image successfully");
+            })
+            .catch((error) => {
+              logger.error("Failed to warm image:", error);
+            });
+          warmIPFSHash(ipfsJSONHash)
+            .then((_) => {
+              logger.info("Warm json successfully");
+            })
+            .catch((error) => {
+              logger.error("Failed to warm json:", error);
+            });
           break;
         }
 
