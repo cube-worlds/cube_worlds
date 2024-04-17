@@ -25,10 +25,8 @@ feature.command("line", logHandle("command-line"), async (ctx) => {
   ]);
   if (
     !ctx.dbuser.minted &&
-    !line.some(
-      (v) =>
-        v.name === ctx.dbuser.name && ctx.dbuser.state === UserState.Submited,
-    )
+    ctx.dbuser.state === UserState.Submited &&
+    !line.some((v) => v.name === ctx.dbuser.name)
   ) {
     const place = await placeInLine(ctx.dbuser.votes);
     if (place) {
