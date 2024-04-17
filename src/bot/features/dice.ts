@@ -1,3 +1,4 @@
+import { config } from "#root/config.js";
 import { Composer } from "grammy";
 import type { Context } from "#root/bot/context.js";
 import { logHandle } from "#root/bot/helpers/logging.js";
@@ -15,7 +16,7 @@ feature.command("dice", logHandle("command-dice"), async (ctx) => {
     await ctx.reply(ctx.t("unhandled"));
     return;
   }
-  const waitMinutes = 5;
+  const waitMinutes = config.isProd ? 5 : 0;
   const waitDate = new Date(
     ctx.dbuser.dicedAt.getTime() + waitMinutes * 60 * 1000,
   );
@@ -43,42 +44,53 @@ feature.command("dice", logHandle("command-dice"), async (ctx) => {
     }
     if (ctx.dbuser.diceSeriesNumber === value1) {
       ctx.dbuser.diceSeries = (ctx.dbuser.diceSeries ?? 0) + 1;
+    } else {
+      ctx.dbuser.diceSeries = 1;
+      ctx.dbuser.diceSeriesNumber = value1;
     }
-    ctx.dbuser.diceSeriesNumber = value1;
   } else {
     ctx.dbuser.diceSeries = undefined;
     ctx.dbuser.diceSeriesNumber = undefined;
   }
 
-  const score = value1 + value2;
+  const diceSeries = ctx.dbuser.diceSeries ?? 0;
+  const diceSeriesNumber = ctx.dbuser.diceSeriesNumber ?? 0;
+  const username = ctx.dbuser.name ?? "undefined";
+
+  let score = value1 + value2;
+  if (diceSeries > 1) {
+    score *= diceSeries;
+  }
 
   ctx.dbuser.dicedAt = now;
   await ctx.dbuser.save();
-  ctx.dbuser.votes = await addPoints(ctx.dbuser.id, BigInt(score));
+  await addPoints(ctx.dbuser.id, BigInt(score));
 
-  const diceSeries = ctx.dbuser.diceSeries ?? 0;
-  const username = ctx.dbuser.name ?? "undefined";
-  if (diceSeries === 3) {
-    if (ctx.dbuser.minted) {
-      // DO something if already minted
-    } else {
-      ctx.dbuser.diceWinner = true;
-      await ctx.dbuser.save();
-      await ctx.reply(
-        ctx.t("dice.mint_winner", {
-          username,
-          diceSeriesNumber: ctx.dbuser.diceSeriesNumber ?? 0,
-          diceSeries: ctx.dbuser.diceSeries ?? 0,
-        }),
-      );
-    }
+  await sleep(3000);
+  if (!ctx.dbuser.minted && diceSeries === 3) {
+    ctx.dbuser.diceWinner = true;
+    await ctx.dbuser.save();
+    await ctx.reply(
+      ctx.t("dice.mint_winner", {
+        username,
+        diceSeriesNumber,
+        diceSeries,
+      }),
+    );
     await sendMessageToAdmins(
       ctx.api,
-      `🎲 Pair of ${ctx.dbuser.diceSeriesNumber} dices ${ctx.dbuser.diceSeries} times in a row by @${username}. Minted: ${ctx.dbuser.minted ? "✅" : "❌"}`,
+      `🎲 Pair of ${diceSeriesNumber} dices ${diceSeries} times in a row by @${username}!`,
     );
   } else {
-    await sleep(3000);
-    await ctx.reply(ctx.t("dice.success", { score }));
+    await (diceSeries > 1
+      ? ctx.reply(
+          ctx.t("dice.success_series", {
+            score,
+            diceSeries,
+            diceSeriesNumber,
+          }),
+        )
+      : ctx.reply(ctx.t("dice.success", { score })));
     await sleep(1000);
     await sendPlaceInLine(ctx.api, ctx.dbuser.id, true);
   }
