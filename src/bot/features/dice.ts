@@ -80,7 +80,7 @@ feature.command("dice", logHandle("command-dice"), async (ctx) => {
     await sleep(3000);
     await ctx.reply(ctx.t("dice.success", { score }));
     await sleep(1000);
-    await sendPlaceInLine(ctx.api, ctx.dbuser, true);
+    await sendPlaceInLine(ctx.api, ctx.dbuser.id, true);
   }
 });
 

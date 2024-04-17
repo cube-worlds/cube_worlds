@@ -51,7 +51,7 @@ feature.command(
       user.votes = await addPoints(user.id, points);
 
       // send messages
-      await sendPlaceInLine(ctx.api, user, true);
+      await sendPlaceInLine(ctx.api, user.id, true);
       await sendMessageToAdmins(
         ctx.api,
         `⚡️ FOUND TX OF @${user.name} FOR ${ton} TON. Minted: ${user.minted ? "✅" : "❌"}`,

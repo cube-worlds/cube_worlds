@@ -29,7 +29,7 @@ import { logger } from "#root/logger";
 import {
   adminIndex,
   sendNewNFTMessage,
-  sendNewPlaces,
+  // sendNewPlaces,
 } from "../helpers/telegram";
 import { sendMintedMessage } from "../middlewares/check-not-minted";
 
@@ -214,7 +214,7 @@ feature.callbackQuery(
           selectedUser.nftUrl = nftUrl;
           await selectedUser.save();
 
-          await sendNewPlaces(ctx.api);
+          // await sendNewPlaces(ctx.api);
 
           // send to admin first
           await sendMintedMessage(

@@ -45,7 +45,7 @@ async function checkReferal(ctx: Context) {
     await ctx.reply(
       ctx.t("vote.success", { name: receiver.name ?? receiver.id }),
     );
-    await sendPlaceInLine(ctx.api, receiver, true);
+    await sendPlaceInLine(ctx.api, receiver.id, true);
   }
 }
 

@@ -119,7 +119,7 @@ async function mintAction(
     }
 
     case UserState.Submited: {
-      await sendPlaceInLine(ctx.api, ctx.dbuser, true);
+      await sendPlaceInLine(ctx.api, ctx.dbuser.id, true);
       break;
     }
 
@@ -193,7 +193,7 @@ feature.on("message:text", logHandle("message-handler")).filter(
       ctx.dbuser.wallet = address.toString();
       ctx.dbuser.state = UserState.Submited;
       await ctx.dbuser.save();
-      await sendPlaceInLine(ctx.api, ctx.dbuser, true);
+      await sendPlaceInLine(ctx.api, ctx.dbuser.id, true);
     } catch (error) {
       try {
         await ctx.reply(ctx.t("wallet.wait"), {

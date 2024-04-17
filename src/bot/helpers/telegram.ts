@@ -1,9 +1,8 @@
 import { config } from "#root/config";
 import { Api, RawApi } from "grammy";
-import { DocumentType } from "@typegoose/typegoose";
 import { TranslationVariables } from "@grammyjs/i18n";
 import { logger } from "#root/logger";
-import { User, findQueue, placeInLine } from "../models/user";
+import { findQueue, findUserById, placeInLine } from "../models/user";
 import { getRandomCoolEmoji } from "./emoji";
 import { bigIntWithCustomSeparator } from "./numbers";
 import { i18n } from "../i18n";
@@ -35,9 +34,13 @@ export function shareTelegramLink(userId: number, text: string): string {
 
 export async function sendPlaceInLine(
   api: Api<RawApi>,
-  user: DocumentType<User>,
+  userId: number,
   sendAnyway = true,
 ): Promise<boolean> {
+  const user = await findUserById(userId);
+  if (!user) {
+    return false;
+  }
   const place = (await placeInLine(user.votes)) ?? 0;
   const lastSendedPlace = user.lastSendedPlace ?? Number.MAX_SAFE_INTEGER;
   const placeDecreased = place < lastSendedPlace;
@@ -75,7 +78,7 @@ export async function sendNewPlaces(api: Api<RawApi>) {
   // eslint-disable-next-line no-restricted-syntax
   for (const user of users) {
     // eslint-disable-next-line no-await-in-loop
-    await sendPlaceInLine(api, user, false);
+    await sendPlaceInLine(api, user.id, false);
   }
 }
 

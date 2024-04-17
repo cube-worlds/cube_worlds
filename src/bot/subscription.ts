@@ -86,7 +86,7 @@ export class Subscription {
       i18n.t(user.language, "donation", { ton }),
     );
 
-    await sendPlaceInLine(this.bot.api, user, true);
+    await sendPlaceInLine(this.bot.api, user.id, true);
     await sendMessageToAdmins(
       this.bot.api,
       `🚀 RECEIVED ${ton} TON FROM @${user.name}. Minted: ${user.minted ? "✅" : "❌"}`,
