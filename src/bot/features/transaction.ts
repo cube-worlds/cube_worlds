@@ -48,7 +48,7 @@ feature.command(
       // add points to user balance
       const ton = fromNano(trx.coins);
       const points = tonToPoints(Number(ton));
-      user.votes = await addPoints(user.id, points);
+      await addPoints(user.id, points);
 
       // send messages
       await sendPlaceInLine(ctx.api, user.id, true);

@@ -1,7 +1,12 @@
 /* eslint-disable no-restricted-syntax */
 import { Menu } from "@grammyjs/menu";
 import { Context } from "#root/bot/context.js";
-import { User, UserState, findQueue } from "#root/bot/models/user.js";
+import {
+  User,
+  UserState,
+  findQueue,
+  findUserById,
+} from "#root/bot/models/user.js";
 import { config } from "#root/config.js";
 import { getUserProfileFile } from "#root/bot/helpers/photo.js";
 import { saveImageFromUrl } from "#root/bot/helpers/files.js";
@@ -88,9 +93,14 @@ export async function sendUserMetadata(
   }
 }
 
-export const queueMenu = new Menu("queue").dynamic(async (_, range) => {
+export const queueMenu = new Menu("queue").dynamic(async (cntxt, range) => {
+  const adminUser = await findUserById((cntxt as Context).dbuser.id);
+  if (!adminUser) {
+    return [];
+  }
   const users = await findQueue();
-  for (const user of users) {
+  const usersWithAdmin = [...users, adminUser];
+  for (const user of usersWithAdmin) {
     range
       .text(
         `(${user.diceWinner ? `🎲 ${user.votes}` : user.votes}) ${user.name ?? user.wallet}`,

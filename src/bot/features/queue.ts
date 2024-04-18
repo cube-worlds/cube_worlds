@@ -197,12 +197,13 @@ feature.callbackQuery(
 
         case SelectImageButton.Done: {
           if (!selectedUser.nftDescription) {
-            await ctx.reply("Empty description");
-            return;
+            return ctx.reply("Empty description");
           }
           if (!selectedUser.nftJson || !selectedUser.nftImage) {
-            await ctx.reply("Empty NFT metadata");
-            return;
+            return ctx.reply("Empty NFT metadata");
+          }
+          if (selectedUser.minted) {
+            return ctx.reply("Already minted for this user!");
           }
           ctx.chatAction = "upload_document";
 
@@ -250,10 +251,12 @@ feature.callbackQuery(
             selectedUser.language,
             selectedUser.nftUrl ?? "",
           );
+
           await ctx.api.sendSticker(
             selectedUser.id,
             "CAACAgIAAxkBAAEq6zpmIPgeW-peX09nTeFVvHXneFJZaQACQxoAAtzjkEhebdhBXbkEnzQE",
           );
+
           await sendNewNFTMessage(
             ctx.api,
             selectedUser.nftImage ?? "",

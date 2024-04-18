@@ -79,7 +79,7 @@ export class Subscription {
 
     const points = tonToPoints(ton);
     logger.info(`${ton} => ${points}`);
-    user.votes = await addPoints(user.id, points);
+    await addPoints(user.id, points);
 
     await this.bot.api.sendMessage(
       user.id,

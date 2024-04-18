@@ -40,7 +40,7 @@ async function checkReferal(ctx: Context) {
     voteModel.quantity = add;
     await voteModel.save();
 
-    receiver.votes = await addPoints(receiver.id, BigInt(add));
+    await addPoints(receiver.id, BigInt(add));
 
     await ctx.reply(
       ctx.t("vote.success", { name: receiver.name ?? receiver.id }),
