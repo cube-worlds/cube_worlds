@@ -81,6 +81,9 @@ feature.command("dice", logHandle("command-dice"), async (ctx) => {
       ctx.api,
       `🎲 Pair of ${diceSeriesNumber} dices ${diceSeries} times in a row by @${username}!`,
     );
+    await ctx.replyWithSticker(
+      "CAACAgIAAxkBAAEq6zpmIPgeW-peX09nTeFVvHXneFJZaQACQxoAAtzjkEhebdhBXbkEnzQE",
+    );
   } else {
     await (diceSeries > 1
       ? ctx.reply(

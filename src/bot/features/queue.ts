@@ -250,6 +250,10 @@ feature.callbackQuery(
             selectedUser.language,
             selectedUser.nftUrl ?? "",
           );
+          await ctx.api.sendSticker(
+            selectedUser.id,
+            "CAACAgIAAxkBAAEq6zpmIPgeW-peX09nTeFVvHXneFJZaQACQxoAAtzjkEhebdhBXbkEnzQE",
+          );
           await sendNewNFTMessage(
             ctx.api,
             selectedUser.nftImage ?? "",
