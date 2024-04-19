@@ -63,6 +63,14 @@ function getPrivateChatAdminCommands(localeCode: string): BotCommand[] {
       description: "🦶 Steps for images",
     },
     {
+      command: "preset",
+      description: "🎛️ Preset for images",
+    },
+    {
+      command: "sampler",
+      description: "🎚️ Sampler for images",
+    },
+    {
       command: "setcommands",
       description: i18n.t(localeCode, "setcommands_command.description"),
     },

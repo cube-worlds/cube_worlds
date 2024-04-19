@@ -2,6 +2,7 @@ import { Composer } from "grammy";
 import type { Context } from "#root/bot/context.js";
 import { logHandle } from "#root/bot/helpers/logging.js";
 import { isAdmin } from "#root/bot/filters/is-admin.js";
+import { ClipGuidancePreset, SDSampler } from "#root/bot/helpers/generation";
 
 const composer = new Composer<Context>();
 
@@ -64,7 +65,7 @@ feature.command("scale", logHandle("command-scale"), async (ctx) => {
 });
 
 feature.command("steps", logHandle("command-steps"), async (ctx) => {
-  const oldSteps = ctx.dbuser.strength ?? 30;
+  const oldSteps = ctx.dbuser.steps ?? 30;
   const newSteps = Number.parseInt(ctx.match.trim(), 10);
   if (newSteps && !Number.isNaN(newSteps)) {
     if (newSteps < 10 || newSteps > 50) {
@@ -76,6 +77,44 @@ feature.command("steps", logHandle("command-steps"), async (ctx) => {
   }
   return ctx.reply(
     `Current steps: <code>/steps ${oldSteps}</code>. Can be in range [ 10 .. 50 ]`,
+  );
+});
+
+feature.command("preset", logHandle("command-preset"), async (ctx) => {
+  const oldPreset = ctx.dbuser.preset ?? ClipGuidancePreset.NONE;
+  const newPreset: ClipGuidancePreset =
+    ClipGuidancePreset[ctx.match.trim() as keyof typeof ClipGuidancePreset];
+  if (newPreset) {
+    ctx.dbuser.preset = newPreset;
+    await ctx.dbuser.save();
+    return ctx.reply(`New preset: <code>/preset ${newPreset}</code>`);
+  }
+  const presets = Object.keys(ClipGuidancePreset)
+    .filter(Boolean)
+    .map((v) => `<code>${v}</code>`);
+  return ctx.reply(
+    `Current preset: <code>/preset ${oldPreset}</code>
+
+Can be ${presets.join(", ")}`,
+  );
+});
+
+feature.command("sampler", logHandle("command-sampler"), async (ctx) => {
+  const oldSampler = ctx.dbuser.sampler ?? SDSampler.K_DPMPP_2S_ANCESTRAL;
+  const newSampler: SDSampler =
+    SDSampler[ctx.match.trim() as keyof typeof SDSampler];
+  if (newSampler) {
+    ctx.dbuser.sampler = newSampler;
+    await ctx.dbuser.save();
+    return ctx.reply(`New sampler: <code>/sampler ${newSampler}</code>`);
+  }
+  const samplers = Object.keys(SDSampler)
+    .filter(Boolean)
+    .map((v) => `<code>${v}</code>`);
+  return ctx.reply(
+    `Current sampler: <code>/sampler ${oldSampler}</code>
+
+Can be ${samplers.join(", ")}`,
   );
 });
 

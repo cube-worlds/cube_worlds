@@ -7,6 +7,7 @@ import {
 import { TimeStamps } from "@typegoose/typegoose/lib/defaultClasses.js";
 import { Address } from "@ton/core";
 import { logger } from "#root/logger";
+import { ClipGuidancePreset, SDSampler } from "../helpers/generation";
 
 export enum UserState {
   WaitNothing = "WaitNothing",
@@ -100,6 +101,12 @@ export class User extends TimeStamps {
 
   @prop({ type: Number })
   steps?: number;
+
+  @prop({ type: String })
+  preset?: ClipGuidancePreset;
+
+  @prop({ type: String })
+  sampler?: SDSampler;
 }
 
 const UserModel = getModelForClass(User);

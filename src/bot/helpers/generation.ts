@@ -5,13 +5,27 @@ import { config } from "#root/config.js";
 import { logger } from "#root/logger";
 
 export enum ClipGuidancePreset {
+  NONE = "NONE",
   FAST_BLUE = "FAST_BLUE",
   FAST_GREEN = "FAST_GREEN",
-  NONE = "NONE",
   SIMPLE = "SIMPLE",
   SLOW = "SLOW",
   SLOWER = "SLOWER",
   SLOWEST = "SLOWEST",
+}
+
+export enum SDSampler {
+  K_DPMPP_2S_ANCESTRAL = "K_DPMPP_2S_ANCESTRAL",
+  DDIM = "DDIM",
+  DDPM = "DDPM",
+  K_DPMPP_2M = "K_DPMPP_2M",
+  K_DPMPP_SDE = "K_DPMPP_SDE",
+  K_DPM_2 = "K_DPM_2",
+  K_DPM_2_ANCESTRAL = "K_DPM_2_ANCESTRAL",
+  K_EULER = "K_EULER",
+  K_EULER_ANCESTRAL = "K_EULER_ANCESTRAL",
+  K_HEUN = "K_HEUN",
+  K_LMS = "K_LMS",
 }
 
 export async function generate(
@@ -24,6 +38,7 @@ export async function generate(
   scale: number,
   steps: number,
   preset: ClipGuidancePreset,
+  sampler: SDSampler,
 ): Promise<string> {
   const engineId = "stable-diffusion-v1-6"; // "stable-diffusion-xl-1024-v1-0",
   const apiHost = "https://api.stability.ai";
@@ -65,7 +80,7 @@ export async function generate(
 
   // DDIM, DDPM, K_DPMPP_2M, K_DPMPP_2S_ANCESTRAL, K_DPMPP_SDE, K_DPM_2
   // K_DPM_2_ANCESTRAL, K_EULER, K_EULER_ANCESTRAL, K_HEUN, K_LMS
-  formData.append("sampler", "K_DPMPP_2S_ANCESTRAL");
+  formData.append("sampler", sampler);
 
   // DO NOT CHANGE
   formData.append("samples", 1);

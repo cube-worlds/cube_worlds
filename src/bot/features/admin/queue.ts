@@ -22,7 +22,11 @@ import {
   unpin,
   warmIPFSHash,
 } from "#root/bot/helpers/ipfs.js";
-import { ClipGuidancePreset, generate } from "#root/bot/helpers/generation.js";
+import {
+  ClipGuidancePreset,
+  SDSampler,
+  generate,
+} from "#root/bot/helpers/generation.js";
 import { randomAttributes } from "#root/bot/helpers/attributes.js";
 import { countUsers, findUserById } from "#root/bot/models/user.js";
 import { ChatGPTAPI } from "chatgpt";
@@ -103,6 +107,7 @@ feature.callbackQuery(
             ctx.dbuser.scale ?? 7,
             ctx.dbuser.steps ?? 30,
             ClipGuidancePreset.NONE,
+            SDSampler.K_DPMPP_2S_ANCESTRAL,
           );
           const inputFile = new InputFile(generatedFilePath);
           // const newMedia = InputMediaBuilder.photo(inputFile);
