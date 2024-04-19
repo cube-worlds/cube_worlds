@@ -106,8 +106,8 @@ feature.callbackQuery(
             ctx.dbuser.strength ?? 0.35,
             ctx.dbuser.scale ?? 7,
             ctx.dbuser.steps ?? 30,
-            ClipGuidancePreset.NONE,
-            SDSampler.K_DPMPP_2S_ANCESTRAL,
+            ctx.dbuser.preset ?? ClipGuidancePreset.NONE,
+            ctx.dbuser.sampler ?? SDSampler.K_DPMPP_2S_ANCESTRAL,
           );
           const inputFile = new InputFile(generatedFilePath);
           // const newMedia = InputMediaBuilder.photo(inputFile);
