@@ -4,6 +4,16 @@ import fs from "node:fs";
 import { config } from "#root/config.js";
 import { logger } from "#root/logger";
 
+export enum ClipGuidancePreset {
+  FAST_BLUE = "FAST_BLUE",
+  FAST_GREEN = "FAST_GREEN",
+  NONE = "NONE",
+  SIMPLE = "SIMPLE",
+  SLOW = "SLOW",
+  SLOWER = "SLOWER",
+  SLOWEST = "SLOWEST",
+}
+
 export async function generate(
   filePath: string,
   adminIndex: number,
@@ -11,6 +21,9 @@ export async function generate(
   positive: string,
   negative: string,
   strength: number,
+  scale: number,
+  steps: number,
+  preset: ClipGuidancePreset,
 ): Promise<string> {
   const engineId = "stable-diffusion-v1-6"; // "stable-diffusion-xl-1024-v1-0",
   const apiHost = "https://api.stability.ai";
@@ -38,13 +51,14 @@ export async function generate(
 
   // How strictly the diffusion process adheres to the prompt text
   // (higher values keep your image closer to your prompt)
-  formData.append("cfg_scale", 7); // [ 0 .. 35 ]
+  // [ 0 .. 35 ]
+  formData.append("cfg_scale", scale); // default: 7
 
   // [FAST_BLUE, FAST_GREEN, NONE, SIMPLE, SLOW, SLOWER, SLOWEST]
-  formData.append("clip_guidance_preset", "NONE");
+  formData.append("clip_guidance_preset", preset); // default: NONE
 
   // [ 10 .. 50 ]
-  formData.append("steps", 30);
+  formData.append("steps", steps); // default: 30
 
   // 0 - random
   formData.append("seed", "0");

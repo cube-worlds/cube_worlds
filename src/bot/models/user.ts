@@ -94,6 +94,12 @@ export class User extends TimeStamps {
 
   @prop({ type: Number })
   strength?: number;
+
+  @prop({ type: Number })
+  scale?: number;
+
+  @prop({ type: Number })
+  steps?: number;
 }
 
 const UserModel = getModelForClass(User);

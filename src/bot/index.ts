@@ -20,8 +20,7 @@ import {
   queueFeature,
   collectionFeature,
   topupFeature,
-  promptsFeature,
-  strengthFeature,
+  parametersFeature,
   whalesFeature,
   lineFeature,
   transactionFeature,
@@ -75,8 +74,7 @@ export function createBot(token: string, options: Options) {
   protectedBot.use(mintFeature);
   protectedBot.use(diceFeature);
   protectedBot.use(queueFeature);
-  protectedBot.use(promptsFeature);
-  protectedBot.use(strengthFeature);
+  protectedBot.use(parametersFeature);
   protectedBot.use(collectionFeature);
   protectedBot.use(topupFeature);
   protectedBot.use(adminFeature);

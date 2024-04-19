@@ -22,7 +22,7 @@ import {
   unpin,
   warmIPFSHash,
 } from "#root/bot/helpers/ipfs.js";
-import { generate } from "#root/bot/helpers/generation.js";
+import { ClipGuidancePreset, generate } from "#root/bot/helpers/generation.js";
 import { randomAttributes } from "#root/bot/helpers/attributes.js";
 import { countUsers, findUserById } from "#root/bot/models/user.js";
 import { ChatGPTAPI } from "chatgpt";
@@ -31,8 +31,8 @@ import {
   adminIndex,
   sendNewNFTMessage,
   // sendNewPlaces,
-} from "../helpers/telegram";
-import { sendMintedMessage } from "../middlewares/check-not-minted";
+} from "../../helpers/telegram";
+import { sendMintedMessage } from "../../middlewares/check-not-minted";
 
 const composer = new Composer<Context>();
 
@@ -100,6 +100,9 @@ feature.callbackQuery(
             ctx.dbuser.positivePrompt ?? "",
             ctx.dbuser.negativePrompt ?? "",
             ctx.dbuser.strength ?? 0.35,
+            ctx.dbuser.scale ?? 7,
+            ctx.dbuser.steps ?? 30,
+            ClipGuidancePreset.NONE,
           );
           const inputFile = new InputFile(generatedFilePath);
           // const newMedia = InputMediaBuilder.photo(inputFile);

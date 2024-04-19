@@ -55,6 +55,14 @@ function getPrivateChatAdminCommands(localeCode: string): BotCommand[] {
       description: "💪 Strength for images",
     },
     {
+      command: "scale",
+      description: "⚖️ Scale for images",
+    },
+    {
+      command: "steps",
+      description: "🦶 Steps for images",
+    },
+    {
       command: "setcommands",
       description: i18n.t(localeCode, "setcommands_command.description"),
     },

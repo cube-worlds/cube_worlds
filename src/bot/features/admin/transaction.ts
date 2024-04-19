@@ -3,10 +3,10 @@ import type { Context } from "#root/bot/context.js";
 import { logHandle } from "#root/bot/helpers/logging.js";
 import { isAdmin } from "#root/bot/filters/is-admin.js";
 import { fromNano } from "@ton/core";
-import { addPoints, findUserByName } from "../models/user";
-import { findTransaction } from "../models/transaction";
-import { tonToPoints } from "../helpers/ton";
-import { sendMessageToAdmins, sendPlaceInLine } from "../helpers/telegram";
+import { addPoints, findUserByName } from "../../models/user";
+import { findTransaction } from "../../models/transaction";
+import { tonToPoints } from "../../helpers/ton";
+import { sendMessageToAdmins, sendPlaceInLine } from "../../helpers/telegram";
 
 const composer = new Composer<Context>();
 
