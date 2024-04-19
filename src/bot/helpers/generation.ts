@@ -18,14 +18,16 @@ export async function generate(
 
   if (!apiKey) throw new Error("Missing Stability API key.");
 
-  // NOTE: This example is using a NodeJS FormData library.
-  // Browsers should use their native FormData class.
-  // React Native apps should also use their native FormData class.
   const formData = new FormData();
   formData.append("init_image", fs.readFileSync(filePath));
   formData.append("init_image_mode", "IMAGE_STRENGTH");
-  formData.append("image_strength", strength);
 
+  // Close to 1 will yield images very similar to the init_image
+  // while values close to 0 will yield images wildly different
+  formData.append("image_strength", strength); // default: 0.35
+
+  // 3d-model analog-film anime cinematic comic-book digital-art enhance fantasy-art isometric
+  // line-art low-poly modeling-compound neon-punk origami photographic pixel-art tile-texture
   formData.append("style_preset", "pixel-art");
 
   formData.append("text_prompts[0][text]", positive);
@@ -34,17 +36,21 @@ export async function generate(
   formData.append("text_prompts[1][text]", negative);
   formData.append("text_prompts[1][weight]", "-1");
 
-  // [1 - 30] when 1 - mostly ignore the prompt, 30 - strictly follow
-  formData.append("cfg_scale", 7);
+  // How strictly the diffusion process adheres to the prompt text
+  // (higher values keep your image closer to your prompt)
+  formData.append("cfg_scale", 7); // [ 0 .. 35 ]
 
+  // [FAST_BLUE, FAST_GREEN, NONE, SIMPLE, SLOW, SLOWER, SLOWEST]
+  formData.append("clip_guidance_preset", "NONE");
+
+  // [ 10 .. 50 ]
   formData.append("steps", 30);
 
   // 0 - random
   formData.append("seed", "0");
 
-  // DDIM, DDPM, K_DPMPP_2M, K_DPMPP_2S_ANCESTRAL,
-  // K_DPMPP_SDE, K_DPM_2, K_DPM_2_ANCESTRAL, K_EULER,
-  // K_EULER_ANCESTRAL, K_HEUN, K_LMS.
+  // DDIM, DDPM, K_DPMPP_2M, K_DPMPP_2S_ANCESTRAL, K_DPMPP_SDE, K_DPM_2
+  // K_DPM_2_ANCESTRAL, K_EULER, K_EULER_ANCESTRAL, K_HEUN, K_LMS
   formData.append("sampler", "K_DPMPP_2S_ANCESTRAL");
 
   // DO NOT CHANGE
