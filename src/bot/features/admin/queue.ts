@@ -186,20 +186,8 @@ feature.callbackQuery(
           selectedUser.nftJson = ipfsJSONHash;
           await selectedUser.save();
           await sendUserMetadata(ctx, selectedUser);
-          warmIPFSHash(ipfsImageHash)
-            .then((_) => {
-              logger.info("Warm image successfully");
-            })
-            .catch((error) => {
-              logger.error("Failed to warm image:", error);
-            });
-          warmIPFSHash(ipfsJSONHash)
-            .then((_) => {
-              logger.info("Warm json successfully");
-            })
-            .catch((error) => {
-              logger.error("Failed to warm json:", error);
-            });
+          warmIPFSHash(ipfsImageHash);
+          warmIPFSHash(ipfsJSONHash);
           break;
         }
 

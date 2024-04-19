@@ -3,6 +3,7 @@ import pinataSDK from "@pinata/sdk";
 import { Readable } from "node:stream";
 import { saveImage, saveJSON } from "#root/bot/helpers/files";
 import fetch from "node-fetch";
+import { logger } from "#root/logger";
 
 // eslint-disable-next-line new-cap
 const pinata = new pinataSDK({
@@ -56,7 +57,7 @@ async function fetchFileFromIPFS(
   gateway: string,
 ): Promise<Buffer> {
   const response = await fetch(`${gateway}${cid}`, {
-    signal: AbortSignal.timeout(5000),
+    signal: AbortSignal.timeout(60_000),
   });
   if (!response.ok) {
     throw new Error(`HTTP error! Status: ${response.status}`);
@@ -65,7 +66,7 @@ async function fetchFileFromIPFS(
   return Buffer.from(fileData);
 }
 
-export async function warmIPFSHash(hash: string) {
+export function warmIPFSHash(hash: string) {
   // https://ipfs.github.io/public-gateway-checker/
   const gateways = [
     "https://ipfs.io/ipfs/",
@@ -73,15 +74,13 @@ export async function warmIPFSHash(hash: string) {
     "https://ipfs.eth.aragon.network/ipfs/",
     "https://gateway.pinata.cloud/ipfs/",
     "https://ipfs.eth.aragon.network/ipfs/",
-    "https://ipfs.runfission.com/ipfs/",
   ];
   // eslint-disable-next-line no-restricted-syntax
   for (const gateway of gateways) {
-    try {
-      // eslint-disable-next-line no-await-in-loop
-      await fetchFileFromIPFS(hash, gateway);
-    } catch {
-      // do nothing, it's ok
-    }
+    fetchFileFromIPFS(hash, gateway)
+      .then((_) => logger.debug(`Gateway ${gateway} warmed`))
+      .catch((error) =>
+        logger.debug(`Gateway ${gateway} NOT warmed: ${error}`),
+      );
   }
 }
