@@ -43,6 +43,10 @@ function getPrivateChatAdminCommands(localeCode: string): BotCommand[] {
       description: "🔥 Show queue",
     },
     {
+      command: "description",
+      description: "🏞️ Custom description",
+    },
+    {
       command: "positive",
       description: "👍 Positive prompt",
     },

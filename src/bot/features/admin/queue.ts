@@ -77,12 +77,13 @@ feature.callbackQuery(
             },
           });
           const name = selectedUser.name ?? "";
-          const info = selectedUser.description ?? "";
+          const info =
+            ctx.dbuser.customDescription ?? selectedUser.description ?? "";
           const result = await api.sendMessage(
-            // `Write the beginning of the new RPG character's story named "${name}".
             `Write an inspiring text about a person named "${name}" who has decided to start a journey.
-            You could also use this additional information "${info}" if it feels appropriate, translate into English.
-            Do NOT show text in original language. Do NOT show any quotation marks.
+            You could also use this additional information "${info}" if it feels appropriate and translate into English if not.
+            Result should NOT contains terms in original language. TEXT MUST BE ONLY IN ENGLISH. 
+            NOT use any quotation marks.
             Response MUST BE up to 500 characters maximum`,
           );
           selectedUser.nftDescription = result.text.slice(0, 700);
@@ -230,6 +231,9 @@ feature.callbackQuery(
           selectedUser.nftUrl = nftUrl;
           await selectedUser.save();
 
+          ctx.dbuser.customDescription = undefined;
+          await ctx.dbuser.save();
+
           // TODO: uncomment after change logic
           // await sendNewPlaces(ctx.api);
 
@@ -259,6 +263,7 @@ feature.callbackQuery(
             nextItemIndex,
             selectedUser.nftUrl ?? "",
           );
+
           break;
         }
         default: {

@@ -8,10 +8,30 @@ const composer = new Composer<Context>();
 
 const feature = composer.chatType("private").filter(isAdmin);
 
-feature.command("positive", logHandle("command-propmpts"), async (ctx) => {
+feature.command(
+  "description",
+  logHandle("command-description"),
+  async (ctx) => {
+    const oldCustomDescription = ctx.dbuser.customDescription;
+    const newCustomDescription = ctx.match.trim();
+    if (newCustomDescription) {
+      ctx.dbuser.customDescription = newCustomDescription;
+      await ctx.dbuser.save();
+      await ctx.reply(
+        `<code>/description ${ctx.dbuser.customDescription}</code>`,
+      );
+      return;
+    }
+    await ctx.reply(
+      `<code>/description</code> ${oldCustomDescription ?? "about selected person"}`,
+    );
+  },
+);
+
+feature.command("positive", logHandle("command-positive"), async (ctx) => {
   const oldPositivePrompt = ctx.dbuser.positivePrompt;
-  const newPositivePrompt = ctx.match;
-  if (newPositivePrompt.trim()) {
+  const newPositivePrompt = ctx.match.trim();
+  if (newPositivePrompt) {
     ctx.dbuser.positivePrompt = newPositivePrompt;
     await ctx.dbuser.save();
     await ctx.reply(`<code>/positive ${ctx.dbuser.positivePrompt}</code>`);
@@ -20,10 +40,10 @@ feature.command("positive", logHandle("command-propmpts"), async (ctx) => {
   await ctx.reply(`<code>/positive ${oldPositivePrompt}</code>`);
 });
 
-feature.command("negative", logHandle("command-propmpts"), async (ctx) => {
+feature.command("negative", logHandle("command-negative"), async (ctx) => {
   const oldNegativePrompt = ctx.dbuser.negativePrompt;
-  const newNegativePrompt = ctx.match;
-  if (newNegativePrompt.trim()) {
+  const newNegativePrompt = ctx.match.trim();
+  if (newNegativePrompt) {
     ctx.dbuser.negativePrompt = newNegativePrompt;
     await ctx.dbuser.save();
     await ctx.reply(`<code>/negative ${ctx.dbuser.negativePrompt}</code>`);
@@ -95,7 +115,7 @@ feature.command("preset", logHandle("command-preset"), async (ctx) => {
   return ctx.reply(
     `Current preset: <code>/preset ${oldPreset}</code>
 
-Can be ${presets.join(", ")}`,
+Can be: ${presets.join(", ")}`,
   );
 });
 
@@ -114,7 +134,7 @@ feature.command("sampler", logHandle("command-sampler"), async (ctx) => {
   return ctx.reply(
     `Current sampler: <code>/sampler ${oldSampler}</code>
 
-Can be ${samplers.join(", ")}`,
+Can be: ${samplers.join(", ")}`,
   );
 });
 

@@ -46,8 +46,13 @@ export class User extends TimeStamps {
   @prop({ type: String })
   name?: string;
 
+  // user provided description
   @prop({ type: String })
   description?: string;
+
+  // result that will be in NFT
+  @prop({ type: String })
+  nftDescription?: string;
 
   @prop({ type: String })
   image?: string;
@@ -76,9 +81,6 @@ export class User extends TimeStamps {
   avatarNumber?: number;
 
   @prop({ type: String })
-  nftDescription?: string;
-
-  @prop({ type: String })
   nftImage?: string;
 
   @prop({ type: String })
@@ -86,6 +88,10 @@ export class User extends TimeStamps {
 
   @prop({ type: String })
   nftUrl?: string;
+
+  // to spoof user provided description
+  @prop({ type: String })
+  customDescription?: string;
 
   @prop({ type: String })
   positivePrompt?: string;
