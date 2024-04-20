@@ -1,3 +1,5 @@
+import { ReactionTypeEmoji } from "@grammyjs/types";
+
 export function toEmoji(number: number): string {
   if (number === 10) {
     return "🔟";
@@ -16,25 +18,30 @@ export function toEmoji(number: number): string {
     .replaceAll("9", "9️⃣");
 }
 
-export function getRandomCoolEmoji(): string {
-  const coolEmojis: string[] = [
-    "🚀",
-    "😎",
-    "🔥",
-    "💥",
-    "🎉",
-    "🌟",
-    "👾",
-    "🌈",
-    "🤖",
-    "🚨",
-    "💎",
-    "🏄‍♂️",
-    "🌞",
-    "📸",
-    "🔮",
-    "🦄",
-  ];
+const coolEmojis: ReactionTypeEmoji["emoji"][] = [
+  "👍",
+  "❤",
+  "🔥",
+  "🥰",
+  "👏",
+  "😎",
+  "🎉",
+  "🤩",
+  "🦄",
+  "👾",
+  "😍",
+  "🐳",
+  "❤‍🔥",
+  "🌚",
+  "⚡",
+  "🏆",
+  "😎",
+  "🤗",
+  "🆒",
+  "🕊",
+];
+
+export function getRandomCoolEmoji(): ReactionTypeEmoji {
   const randomIndex: number = Math.floor(Math.random() * coolEmojis.length);
-  return coolEmojis[randomIndex];
+  return { type: "emoji", emoji: coolEmojis[randomIndex] };
 }

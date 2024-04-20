@@ -96,8 +96,8 @@ export async function sendNewNFTMessage(
     for (const [lang, chat] of Object.entries(chats)) {
       const collection = "cubeworlds";
       const collectionLink = `<a href="https://getgems.io/${collection}?utm_campaign=${collection}&utm_source=inline&utm_medium=collection">Cube Worlds</a>`;
-      const emoji1 = getRandomCoolEmoji();
-      const emoji2 = getRandomCoolEmoji();
+      const emoji1 = getRandomCoolEmoji().emoji;
+      const emoji2 = getRandomCoolEmoji().emoji;
       const caption = i18n.t(lang, "queue.new_nft", {
         emoji1,
         emoji2,
@@ -106,20 +106,28 @@ export async function sendNewNFTMessage(
       });
       const linkTitle = i18n.t(lang, "queue.new_nft_button");
       // eslint-disable-next-line no-await-in-loop
-      await api.sendPhoto(chat, linkToIPFSGateway(ipfsImageHash), {
-        caption,
-        parse_mode: "HTML",
-        reply_markup: {
-          inline_keyboard: [
-            [
-              {
-                text: linkTitle,
-                url: `${nftUrl}?utm_campaign=${collection}&utm_source=inline&utm_medium=nft`,
-              },
+      const result = await api.sendPhoto(
+        chat,
+        linkToIPFSGateway(ipfsImageHash),
+        {
+          caption,
+          parse_mode: "HTML",
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: linkTitle,
+                  url: `${nftUrl}?utm_campaign=${collection}&utm_source=inline&utm_medium=nft`,
+                },
+              ],
             ],
-          ],
+          },
         },
-      });
+      );
+      // eslint-disable-next-line no-await-in-loop
+      await api.setMessageReaction(result.chat.id, result.message_id, [
+        getRandomCoolEmoji(),
+      ]);
     }
   } catch (error) {
     logger.error(error);
