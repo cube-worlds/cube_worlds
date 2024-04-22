@@ -82,7 +82,7 @@ export async function sendNewPlaces(api: Api<RawApi>) {
   }
 }
 
-export async function sendNewNFTMessage(
+export async function sendToGroupsNewNFT(
   api: Api<RawApi>,
   ipfsImageHash: string,
   number: number,

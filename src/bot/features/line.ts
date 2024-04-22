@@ -17,7 +17,7 @@ const feature = composer.chatType("private");
 
 feature.command("line", logHandle("command-line"), async (ctx) => {
   const count = await countAllLine();
-  const line = await findLine(20);
+  const line = await findLine(10);
   const body = line.map((v, index) => [
     String(index + 1) + (v.diceWinner ? " (dice)" : ""),
     removeMiddle(v.name ?? "undefined", 6),

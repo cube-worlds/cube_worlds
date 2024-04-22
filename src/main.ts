@@ -40,7 +40,7 @@ try {
       allowed_updates: config.BOT_ALLOWED_UPDATES,
       onStart: ({ username }) =>
         logger.info({
-          msg: "bot running...",
+          msg: "Bot running...",
           username,
         }),
     });

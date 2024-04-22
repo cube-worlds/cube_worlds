@@ -33,7 +33,7 @@ import { ChatGPTAPI } from "chatgpt";
 import { logger } from "#root/logger";
 import {
   adminIndex,
-  sendNewNFTMessage,
+  sendToGroupsNewNFT,
   // sendNewPlaces,
 } from "../../helpers/telegram";
 import { sendMintedMessage } from "../../middlewares/check-not-minted";
@@ -204,6 +204,9 @@ feature.callbackQuery(
           }
           ctx.chatAction = "upload_document";
 
+          ctx.dbuser.customDescription = undefined;
+          await ctx.dbuser.save();
+
           const nextItemIndex = await NftCollection.fetchNextItemIndex();
 
           const wallet = await openWallet(config.MNEMONICS.split(" "));
@@ -231,9 +234,6 @@ feature.callbackQuery(
           selectedUser.nftUrl = nftUrl;
           await selectedUser.save();
 
-          ctx.dbuser.customDescription = undefined;
-          await ctx.dbuser.save();
-
           // TODO: uncomment after change logic
           // await sendNewPlaces(ctx.api);
 
@@ -245,6 +245,7 @@ feature.callbackQuery(
             selectedUser.nftUrl ?? "",
           );
 
+          // TODO: change to message with NFT-image
           await sendMintedMessage(
             ctx.api,
             selectedUser.id,
@@ -257,7 +258,7 @@ feature.callbackQuery(
             "CAACAgIAAxkBAAEq6zpmIPgeW-peX09nTeFVvHXneFJZaQACQxoAAtzjkEhebdhBXbkEnzQE",
           );
 
-          await sendNewNFTMessage(
+          await sendToGroupsNewNFT(
             ctx.api,
             selectedUser.nftImage ?? "",
             nextItemIndex,
