@@ -1,7 +1,12 @@
+import { VoteModel, isUserAlreadyVoted } from "#root/bot/models/vote.js";
 import { Composer } from "grammy";
 import type { Context } from "#root/bot/context.js";
 import { logHandle } from "#root/bot/helpers/logging.js";
-import { UserState, findUserByAddress } from "#root/bot/models/user.js";
+import {
+  UserState,
+  addPoints,
+  findUserByAddress,
+} from "#root/bot/models/user.js";
 import { getUserProfilePhoto } from "#root/bot/helpers/photo.js";
 import { Address } from "@ton/core";
 import { voteScore } from "#root/bot/helpers/votes.js";
@@ -48,6 +53,23 @@ async function isUserSubscribed(
   return validStatuses.includes(subscriber.status);
 }
 
+async function sendReferralBonus(ctx: Context) {
+  const giverId = ctx.dbuser.id;
+  const receiverId = ctx.dbuser.referalId;
+  if (!receiverId || (await isUserAlreadyVoted(giverId))) {
+    return;
+  }
+  const add = await voteScore(ctx);
+  const voteModel = new VoteModel();
+  voteModel.giver = giverId;
+  voteModel.receiver = receiverId;
+  voteModel.quantity = add;
+  await voteModel.save();
+
+  await addPoints(receiverId, BigInt(add));
+  await sendPlaceInLine(ctx.api, receiverId, true);
+}
+
 async function mintAction(
   ctx: Context,
   removeSubscriptionCheckMessage: boolean = false,
@@ -70,6 +92,7 @@ async function mintAction(
     if (removeSubscriptionCheckMessage) {
       await ctx.deleteMessage();
     }
+    await sendReferralBonus(ctx);
   } else {
     return ctx.reply(ctx.t("mint.subscribe_required", { channel }), {
       reply_markup: {

@@ -33,6 +33,9 @@ export class User extends TimeStamps {
   @prop({ type: BigInt, required: false, default: 0 })
   votes!: bigint;
 
+  @prop({ type: Number })
+  referalId?: number;
+
   @prop({ type: Date, required: true, default: new Date(+0) })
   dicedAt!: Date;
 

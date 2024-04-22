@@ -34,7 +34,6 @@ vote =
     .no_receiver = No receiver exists
     .self_vote = You can't vote for yourself
     .already = You already voted
-    .success = You have successfully voted for @{$name}!
 
 whales = 
     .count = Total {$points} $CUBE on {$count} wallets

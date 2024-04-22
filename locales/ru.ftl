@@ -34,7 +34,6 @@ vote =
     .no_receiver = Получатель не найден
     .self_vote = Вы не можете проголосовать за себя
     .already = Вы уже голосовали!
-    .success = Вы успешно проголосовали за @{$name}!
 
 whales = 
     .count = Всего {$points} $CUBE на {$count} кошельках
