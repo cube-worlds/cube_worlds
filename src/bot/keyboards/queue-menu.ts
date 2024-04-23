@@ -106,6 +106,17 @@ export const queueMenu = new Menu("queue").dynamic(async (cntxt, range) => {
         `(${user.diceWinner ? `🎲 ${user.votes}` : user.votes}) ${user.name ?? user.wallet}`,
         async (ctx) => {
           const context = ctx as unknown as Context;
+          const author = await ctx.api.getChatMember(user.id, user.id);
+
+          if (author.user.username !== user.name) {
+            const oldUsername = user.name;
+            user.name = author.user.username;
+            await user.save();
+            return ctx.reply(
+              `Username changed from @${oldUsername} to @${user.name}`,
+            );
+          }
+
           await sendUserMetadata(context, user);
         },
       )
