@@ -219,6 +219,18 @@ export async function placeInLine(votes: bigint): Promise<number | undefined> {
   return count;
 }
 
+export async function placeInWhales(
+  votes: bigint,
+): Promise<number | undefined> {
+  const count = await UserModel.countDocuments({
+    votes: { $gte: votes },
+  });
+  if (count === 0) {
+    return undefined;
+  }
+  return count;
+}
+
 export async function addPoints(userId: number, add: bigint) {
   try {
     const updatedUser = await UserModel.findOneAndUpdate(

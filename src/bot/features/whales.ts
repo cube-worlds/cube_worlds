@@ -5,7 +5,7 @@ import {
   countAllBalances,
   countAllWallets,
   findWhales,
-  placeInLine,
+  placeInWhales,
 } from "#root/bot/models/user.js";
 import { getMarkdownTable } from "markdown-table-ts";
 import { bigIntWithCustomSeparator } from "../helpers/numbers";
@@ -25,7 +25,7 @@ feature.command("whales", logHandle("command-line"), async (ctx) => {
     bigIntWithCustomSeparator(v.votes),
   ]);
   if (!whales.some((v) => v.wallet === ctx.dbuser.wallet)) {
-    const place = await placeInLine(ctx.dbuser.votes);
+    const place = await placeInWhales(ctx.dbuser.votes);
     body.push(
       ["...", "...", "..."],
       [
