@@ -82,11 +82,49 @@ export async function sendNewPlaces(api: Api<RawApi>) {
   }
 }
 
+export async function sendPreviewNFT(
+  api: Api<RawApi>,
+  chat: string | number,
+  lang: string,
+  ipfsImageHash: string,
+  nftUrl: string,
+  nftNumber: number,
+  diceWinner: boolean,
+) {
+  const collection = "cubeworlds";
+  const collectionLink = `<a href="https://getgems.io/${collection}?utm_campaign=${collection}&utm_source=inline&utm_medium=collection">Cube Worlds</a>`;
+  const emoji1 = diceWinner ? "🎲" : getRandomCoolEmoji().emoji;
+  const emoji2 = diceWinner ? "🎲" : getRandomCoolEmoji().emoji;
+  const caption = i18n.t(lang, "queue.new_nft", {
+    emoji1,
+    emoji2,
+    number: nftNumber,
+    collectionLink,
+  });
+  const linkTitle = i18n.t(lang, "queue.new_nft_button");
+  // eslint-disable-next-line no-await-in-loop
+  return api.sendPhoto(chat, linkToIPFSGateway(ipfsImageHash), {
+    caption,
+    parse_mode: "HTML",
+    reply_markup: {
+      inline_keyboard: [
+        [
+          {
+            text: linkTitle,
+            url: `${nftUrl}?utm_campaign=${collection}&utm_source=inline&utm_medium=nft`,
+          },
+        ],
+      ],
+    },
+  });
+}
+
 export async function sendToGroupsNewNFT(
   api: Api<RawApi>,
   ipfsImageHash: string,
-  number: number,
+  nftNumber: number,
   nftUrl: string,
+  diceWinner: boolean,
 ) {
   try {
     const chats = config.isProd
@@ -94,35 +132,15 @@ export async function sendToGroupsNewNFT(
       : { ru: "@viz_blockchain", en: "@viz_blockchain" };
     // eslint-disable-next-line no-restricted-syntax
     for (const [lang, chat] of Object.entries(chats)) {
-      const collection = "cubeworlds";
-      const collectionLink = `<a href="https://getgems.io/${collection}?utm_campaign=${collection}&utm_source=inline&utm_medium=collection">Cube Worlds</a>`;
-      const emoji1 = getRandomCoolEmoji().emoji;
-      const emoji2 = getRandomCoolEmoji().emoji;
-      const caption = i18n.t(lang, "queue.new_nft", {
-        emoji1,
-        emoji2,
-        number,
-        collectionLink,
-      });
-      const linkTitle = i18n.t(lang, "queue.new_nft_button");
       // eslint-disable-next-line no-await-in-loop
-      const result = await api.sendPhoto(
+      const result = await sendPreviewNFT(
+        api,
         chat,
-        linkToIPFSGateway(ipfsImageHash),
-        {
-          caption,
-          parse_mode: "HTML",
-          reply_markup: {
-            inline_keyboard: [
-              [
-                {
-                  text: linkTitle,
-                  url: `${nftUrl}?utm_campaign=${collection}&utm_source=inline&utm_medium=nft`,
-                },
-              ],
-            ],
-          },
-        },
+        lang,
+        ipfsImageHash,
+        nftUrl,
+        nftNumber,
+        diceWinner,
       );
       // eslint-disable-next-line no-await-in-loop
       await api.setMessageReaction(result.chat.id, result.message_id, [

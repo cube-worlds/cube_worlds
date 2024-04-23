@@ -32,10 +32,10 @@ import { ChatGPTAPI } from "chatgpt";
 import { logger } from "#root/logger";
 import {
   adminIndex,
+  sendPreviewNFT,
   sendToGroupsNewNFT,
   // sendNewPlaces,
 } from "../../helpers/telegram";
-import { sendMintedMessage } from "../../middlewares/check-not-minted";
 
 const composer = new Composer<Context>();
 
@@ -230,20 +230,25 @@ feature.callbackQuery(
               // TODO: uncomment after change logic
               // await sendNewPlaces(ctx.api);
 
-              // send to admin first
-              await sendMintedMessage(
-                ctx.api,
-                ctx.dbuser.id,
-                selectedUser.language,
-                selectedUser.nftUrl ?? "",
-              );
-
-              // TODO: change to message with NFT-image
-              await sendMintedMessage(
+              await sendPreviewNFT(
                 ctx.api,
                 selectedUser.id,
                 selectedUser.language,
+                selectedUser.nftImage ?? "",
                 selectedUser.nftUrl ?? "",
+                nextItemIndex,
+                selectedUser.diceWinner ?? false,
+              );
+
+              // send to admin
+              await sendPreviewNFT(
+                ctx.api,
+                ctx.dbuser.id,
+                selectedUser.language,
+                selectedUser.nftImage ?? "",
+                selectedUser.nftUrl ?? "",
+                nextItemIndex,
+                selectedUser.diceWinner ?? false,
               );
 
               await ctx.api.sendSticker(
@@ -256,6 +261,7 @@ feature.callbackQuery(
                 selectedUser.nftImage ?? "",
                 nextItemIndex,
                 selectedUser.nftUrl ?? "",
+                selectedUser.diceWinner ?? false,
               );
             })
             .catch(async (error) => {

@@ -14,7 +14,7 @@ export async function sendMintedMessage(
   const inviteLink = inviteTelegramUrl(userId);
   await api.sendMessage(
     userId,
-    `${i18n.t(userLocale, "queue.success", {
+    `${i18n.t(userLocale, "queue.minted", {
       nftUrl,
     })}
 
