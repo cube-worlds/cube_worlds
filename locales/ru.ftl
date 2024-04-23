@@ -1,3 +1,8 @@
+bot = 
+    .description = Получи NFT своего персонажа в игре Cube Worlds
+    .short_description = Новости: @cube_worlds_ru | Чат: @cube_worlds_chat_ru
+    Коллекция: https://getgems.io/cubeworlds
+
 start_command = 
     .description = 🚀 Стартовать бота
 language_command = 

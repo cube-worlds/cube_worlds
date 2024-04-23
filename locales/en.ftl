@@ -1,3 +1,8 @@
+bot = 
+    .description = Acquire your NFT character for the Cube Worlds game
+    .short_description = News: @cube_worlds | Chat: @cube_worlds_chat
+    Collection: https://getgems.io/cubeworlds
+    
 start_command = 
     .description = 🚀 Start the bot
 language_command = 

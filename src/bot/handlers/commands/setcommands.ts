@@ -132,8 +132,6 @@ export async function setCommandsHandler(ctx: CommandContext<Context>) {
 
   if (isMultipleLocales) {
     const requests = i18n.locales.map((code) =>
-      // TODO: set https://core.telegram.org/bots/api#setmydescription
-      // and https://core.telegram.org/bots/api#setmyshortdescription
       ctx.api.setMyCommands(getGroupChatCommands(code), {
         language_code: code,
         scope: {
@@ -141,8 +139,28 @@ export async function setCommandsHandler(ctx: CommandContext<Context>) {
         },
       }),
     );
+    // const nameRequests = i18n.locales.map((code) =>
+    //   ctx.api.setMyName("$CUBE Worlds", { language_code: code }),
+    // );
 
-    await Promise.all(requests);
+    // when the chat is empty
+    const descriptionRequests = i18n.locales.map((code) =>
+      ctx.api.setMyDescription(i18n.t(code, "bot.description"), {
+        language_code: code,
+      }),
+    );
+
+    // bot's profile page and in share links
+    const shortDescriptionRequests = i18n.locales.map((code) =>
+      ctx.api.setMyShortDescription(i18n.t(code, "bot.short_description"), {
+        language_code: code,
+      }),
+    );
+    await Promise.all([
+      ...requests,
+      ...descriptionRequests,
+      ...shortDescriptionRequests,
+    ]);
   }
 
   // set private chat commands for owner
