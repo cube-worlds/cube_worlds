@@ -89,6 +89,8 @@ queue =
     .title = {$count} in queue
     .new_nft = {$emoji1} Collection update alert! {$emoji2}
         New NFT <strong>#{$number}</strong> in {$collectionLink}!
+    .new_nft_dice = {$emoji1} Dice victory! {$emoji2}
+        Congratulations to the winner on receiving a new NFT <strong>#{$number}</strong> in {$collectionLink}!
     .new_nft_button = Open NFT
     .no_photo_after_submit = Access to your avatars is unavailable. Please resubmit your request with the /mint command
     .no_square_avatars = It appears that you don't currently have an avatar with square dimensions, please upload and resubmit your request with the /mint command

@@ -89,6 +89,8 @@ queue =
     .title = {$count} в очереди
     .new_nft = {$emoji1} Пополнение коллекции! {$emoji2}
         Новый NFT <strong>№{$number}</strong> в {$collectionLink}!
+    .new_nft_dice = {$emoji1} Победа в кубиках! {$emoji2}
+        Поздравляем победителя с получением нового NFT <strong>№{$number}</strong> в {$collectionLink}!
     .new_nft_button = Открыть NFT
     .no_photo_after_submit = Доступ к вашим аватаркам недоступен. Пожалуйста, повторно отправьте ваш запрос с помощью команды /mint
     .no_square_avatars = Похоже, у вас в данный момент нет аватара с квадратными размерами. Пожалуйста, загрузите его и повторно отправьте ваш запрос с помощью команды /mint

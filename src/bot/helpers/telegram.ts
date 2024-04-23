@@ -95,12 +95,16 @@ export async function sendPreviewNFT(
   const collectionLink = `<a href="https://getgems.io/${collection}?utm_campaign=${collection}&utm_source=inline&utm_medium=collection">Cube Worlds</a>`;
   const emoji1 = diceWinner ? "🎲" : getRandomCoolEmoji().emoji;
   const emoji2 = diceWinner ? "🎲" : getRandomCoolEmoji().emoji;
-  const caption = i18n.t(lang, "queue.new_nft", {
-    emoji1,
-    emoji2,
-    number: nftNumber,
-    collectionLink,
-  });
+  const caption = i18n.t(
+    lang,
+    `queue.${diceWinner ? `new_nft_dice` : `new_nft`}`,
+    {
+      emoji1,
+      emoji2,
+      number: nftNumber,
+      collectionLink,
+    },
+  );
   const linkTitle = i18n.t(lang, "queue.new_nft_button");
   // eslint-disable-next-line no-await-in-loop
   return api.sendPhoto(chat, linkToIPFSGateway(ipfsImageHash), {
