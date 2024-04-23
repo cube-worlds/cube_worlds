@@ -50,7 +50,7 @@
     "tonweb": "^0.0.66",
     "tsx": "4.7.2",
     "znv": "0.4.0",
-    "zod": "3.23.3"
+    "zod": "3.23.4"
   },
   "devDependencies": {
     "@types/node": "20.12.7",
