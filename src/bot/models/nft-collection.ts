@@ -7,12 +7,9 @@ import {
   StateInit,
   SendMode,
 } from "@ton/core";
-import {
-  encodeOffChainContent,
-  OpenedWallet,
-  tonClient,
-} from "#root/bot/helpers/ton.js";
+import { encodeOffChainContent, tonClient } from "#root/bot/helpers/ton.js";
 import { config } from "#root/config.js";
+import { OpenedWallet } from "../helpers/wallet";
 
 export type collectionData = {
   ownerAddress: Address;

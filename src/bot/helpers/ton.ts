@@ -1,23 +1,18 @@
 /* eslint-disable no-plusplus */
 /* eslint-disable no-use-before-define */
 /* eslint-disable no-await-in-loop */
-import { KeyPair, mnemonicToPrivateKey } from "@ton/crypto";
+import { mnemonicToPrivateKey } from "@ton/crypto";
 import {
   Address,
   beginCell,
   Cell,
   internal,
-  OpenedContract,
   SendMode,
   TonClient,
   WalletContractV4,
 } from "@ton/ton";
 import { config } from "#root/config.js";
-
-export type OpenedWallet = {
-  contract: OpenedContract<WalletContractV4>;
-  keyPair: KeyPair;
-};
+import { OpenedWallet } from "./wallet";
 
 const toncenterBaseEndpoint: string = config.TESTNET
   ? "https://testnet.toncenter.com"
@@ -28,7 +23,7 @@ export const tonClient = new TonClient({
   apiKey: config.TONCENTER_API_KEY,
 });
 
-export async function openWallet(mnemonic: string[]) {
+export async function openWallet(mnemonic: string[]): Promise<OpenedWallet> {
   const keyPair = await mnemonicToPrivateKey(mnemonic);
 
   const wallet = WalletContractV4.create({
@@ -110,8 +105,12 @@ export function encodeOffChainContent(content: string) {
   return makeSnakeCell(data);
 }
 
-export async function waitSeqno(seqno: number, wallet: OpenedWallet) {
-  for (let attempt = 0; attempt < 15; attempt++) {
+export async function waitSeqno(
+  seqno: number,
+  wallet: OpenedWallet,
+  maxAttempts = 100,
+) {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
     await sleep(2000);
     const seqnoAfter = await wallet.contract.getSeqno();
     if (seqnoAfter > seqno) {

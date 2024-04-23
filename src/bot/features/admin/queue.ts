@@ -14,8 +14,7 @@ import { PhotoSize } from "@grammyjs/types";
 import { changeImageData } from "#root/bot/callback-data/image-selection.js";
 import { SelectImageButton, photoKeyboard } from "#root/bot/keyboards/photo.js";
 import { NftCollection } from "#root/bot/models/nft-collection.js";
-import { openWallet, waitSeqno } from "#root/bot/helpers/ton.js";
-import { NftItem, nftMintParameters } from "#root/bot/models/nft-item.js";
+import { NFTMintParameters, NftItem } from "#root/bot/models/nft-item.js";
 import {
   pinImageURLToIPFS,
   pinJSONToIPFS,
@@ -194,25 +193,25 @@ feature.callbackQuery(
 
         case SelectImageButton.Done: {
           if (!selectedUser.nftDescription) {
-            return ctx.reply("Empty description");
+            return ctx.reply("🚫 Empty description");
           }
           if (!selectedUser.nftJson || !selectedUser.nftImage) {
-            return ctx.reply("Empty NFT metadata");
+            return ctx.reply("🚫 Empty NFT metadata");
           }
           if (selectedUser.minted) {
-            return ctx.reply("Already minted for this user!");
+            return ctx.reply("🚫 Already minted for this user!");
           }
           ctx.chatAction = "upload_document";
 
           ctx.dbuser.customDescription = undefined;
           await ctx.dbuser.save();
 
-          const nextItemIndex = await NftCollection.fetchNextItemIndex();
+          selectedUser.minted = true;
+          await selectedUser.save();
 
-          const wallet = await openWallet(config.MNEMONICS.split(" "));
-          const item = new NftItem();
+          const nextItemIndex = await NftCollection.fetchNextItemIndex();
           const userAddress = Address.parse(selectedUser.wallet ?? "");
-          const parameters: nftMintParameters = {
+          const parameters: NFTMintParameters = {
             queryId: 0,
             itemOwnerAddress: userAddress,
             itemIndex: nextItemIndex,
@@ -221,50 +220,50 @@ feature.callbackQuery(
           };
           ctx.logger.info(parameters);
 
-          selectedUser.minted = true;
-          await selectedUser.save();
+          const nft = new NftItem();
+          nft
+            .deployNFT(parameters)
+            .then(async (nftUrl) => {
+              selectedUser.nftUrl = nftUrl;
+              await selectedUser.save();
 
-          const seqno = await item.deploy(wallet, parameters);
+              // TODO: uncomment after change logic
+              // await sendNewPlaces(ctx.api);
 
-          await waitSeqno(seqno, wallet);
+              // send to admin first
+              await sendMintedMessage(
+                ctx.api,
+                ctx.dbuser.id,
+                selectedUser.language,
+                selectedUser.nftUrl ?? "",
+              );
 
-          const nft = await NftCollection.getNftAddressByIndex(nextItemIndex);
+              // TODO: change to message with NFT-image
+              await sendMintedMessage(
+                ctx.api,
+                selectedUser.id,
+                selectedUser.language,
+                selectedUser.nftUrl ?? "",
+              );
 
-          const nftUrl = `https://${config.TESTNET ? "testnet." : ""}getgems.io/collection/${config.COLLECTION_ADDRESS}/${nft.toString()}`;
-          selectedUser.nftUrl = nftUrl;
-          await selectedUser.save();
+              await ctx.api.sendSticker(
+                selectedUser.id,
+                "CAACAgIAAxkBAAEq6zpmIPgeW-peX09nTeFVvHXneFJZaQACQxoAAtzjkEhebdhBXbkEnzQE",
+              );
 
-          // TODO: uncomment after change logic
-          // await sendNewPlaces(ctx.api);
+              await sendToGroupsNewNFT(
+                ctx.api,
+                selectedUser.nftImage ?? "",
+                nextItemIndex,
+                selectedUser.nftUrl ?? "",
+              );
+            })
+            .catch(async (error) => {
+              logger.error(error);
+              await ctx.reply(`😡 Mint NFT error: ${error}`);
+            });
 
-          // send to admin first
-          await sendMintedMessage(
-            ctx.api,
-            ctx.dbuser.id,
-            selectedUser.language,
-            selectedUser.nftUrl ?? "",
-          );
-
-          // TODO: change to message with NFT-image
-          await sendMintedMessage(
-            ctx.api,
-            selectedUser.id,
-            selectedUser.language,
-            selectedUser.nftUrl ?? "",
-          );
-
-          await ctx.api.sendSticker(
-            selectedUser.id,
-            "CAACAgIAAxkBAAEq6zpmIPgeW-peX09nTeFVvHXneFJZaQACQxoAAtzjkEhebdhBXbkEnzQE",
-          );
-
-          await sendToGroupsNewNFT(
-            ctx.api,
-            selectedUser.nftImage ?? "",
-            nextItemIndex,
-            selectedUser.nftUrl ?? "",
-          );
-
+          await ctx.reply("💥 Mint NFT started!");
           break;
         }
         default: {

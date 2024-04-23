@@ -6,10 +6,12 @@ import {
   SendMode,
   toNano,
 } from "@ton/core";
-import { OpenedWallet } from "#root/bot/helpers/ton.js";
+import { OpenedWallet } from "#root/bot/helpers/wallet.js";
 import { config } from "#root/config.js";
+import { openWallet, waitSeqno } from "../helpers/ton";
+import { NftCollection } from "./nft-collection";
 
-export type nftMintParameters = {
+export type NFTMintParameters = {
   queryId: number;
   itemOwnerAddress: Address;
   itemIndex: number;
@@ -18,9 +20,20 @@ export type nftMintParameters = {
 };
 
 export class NftItem {
-  public async deploy(
+  public async deployNFT(parameters: NFTMintParameters): Promise<string> {
+    const wallet = await openWallet(config.MNEMONICS!.split(" "));
+    const seqno = await this.deploy(wallet, parameters);
+
+    await waitSeqno(seqno, wallet);
+
+    const nft = await NftCollection.getNftAddressByIndex(parameters.itemIndex);
+    const nftUrl = `https://${config.TESTNET ? "testnet." : ""}getgems.io/collection/${config.COLLECTION_ADDRESS}/${nft.toString()}`;
+    return nftUrl;
+  }
+
+  async deploy(
     wallet: OpenedWallet,
-    parameters: nftMintParameters,
+    parameters: NFTMintParameters,
   ): Promise<number> {
     const collectionAddress = Address.parse(config.COLLECTION_ADDRESS);
     const seqno = await wallet.contract.getSeqno();
@@ -40,7 +53,7 @@ export class NftItem {
   }
 
   // eslint-disable-next-line class-methods-use-this
-  public createMintBody(parameters: nftMintParameters): Cell {
+  public createMintBody(parameters: NFTMintParameters): Cell {
     const body = beginCell();
     body.storeUint(1, 32);
     body.storeUint(parameters.queryId || 0, 64);
