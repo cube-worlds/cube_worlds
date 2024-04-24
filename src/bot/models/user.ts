@@ -72,6 +72,9 @@ export class User extends TimeStamps {
   @prop({ type: Boolean, required: true, default: false })
   minted!: boolean;
 
+  @prop({ type: Date })
+  mintedAt?: Date;
+
   @prop({ type: Boolean })
   diceWinner?: boolean;
 
@@ -163,6 +166,12 @@ export function findQueue() {
   return UserModel.find({ minted: false, state: UserState.Submited })
     .sort({ diceWinner: -1, votes: -1 })
     .limit(10);
+}
+
+export function findMintedWithDate() {
+  return UserModel.find({ minted: true, mintedAt: { $exists: true } }).sort({
+    mintedAt: -1,
+  });
 }
 
 export async function countAllBalances(): Promise<number> {

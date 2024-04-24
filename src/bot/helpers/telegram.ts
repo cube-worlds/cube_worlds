@@ -1,8 +1,13 @@
 import { config } from "#root/config";
-import { Api, RawApi } from "grammy";
+import { Api, InputMediaBuilder, RawApi } from "grammy";
 import { TranslationVariables } from "@grammyjs/i18n";
 import { logger } from "#root/logger";
-import { findQueue, findUserById, placeInLine } from "../models/user";
+import {
+  findMintedWithDate,
+  findQueue,
+  findUserById,
+  placeInLine,
+} from "../models/user";
 import { getRandomCoolEmoji } from "./emoji";
 import { bigIntWithCustomSeparator } from "./numbers";
 import { i18n } from "../i18n";
@@ -74,6 +79,7 @@ ${i18n.t(user.language, "speedup.variants", {
 }
 
 export async function sendNewPlaces(api: Api<RawApi>) {
+  // TODO: update logic to get only who not active too long and update this property
   const users = await findQueue();
   // eslint-disable-next-line no-restricted-syntax
   for (const user of users) {
@@ -123,6 +129,10 @@ export async function sendPreviewNFT(
   });
 }
 
+const chats = config.isProd
+  ? { ru: "@cube_worlds_chat_ru", en: "@cube_worlds_chat" }
+  : { ru: "@viz_blockchain", en: "@viz_blockchain" };
+
 export async function sendToGroupsNewNFT(
   api: Api<RawApi>,
   ipfsImageHash: string,
@@ -131,9 +141,6 @@ export async function sendToGroupsNewNFT(
   diceWinner: boolean,
 ) {
   try {
-    const chats = config.isProd
-      ? { ru: "@cube_worlds_chat_ru", en: "@cube_worlds_chat" }
-      : { ru: "@viz_blockchain", en: "@viz_blockchain" };
     // eslint-disable-next-line no-restricted-syntax
     for (const [lang, chat] of Object.entries(chats)) {
       // eslint-disable-next-line no-await-in-loop
@@ -154,5 +161,24 @@ export async function sendToGroupsNewNFT(
   } catch (error) {
     logger.error(error);
     await sendMessageToAdmins(api, `Error message new NFT to chat: ${error}`);
+  }
+}
+
+export async function sendPostToChannels(api: Api<RawApi>) {
+  const allMinted = await findMintedWithDate();
+  const imagesCount = 9;
+  if (allMinted.length >= imagesCount && allMinted.length % imagesCount === 0) {
+    const shortList = allMinted.slice(0, imagesCount);
+    const images = shortList.reverse().map((u) =>
+      InputMediaBuilder.photo(linkToIPFSGateway(u.nftImage ?? ""), {
+        caption: `[${u.name ?? ""}](${u.nftUrl ?? ""})`,
+        parse_mode: "MarkdownV2",
+      }),
+    );
+    // eslint-disable-next-line no-restricted-syntax
+    for (const [_lang, chat] of Object.entries(chats)) {
+      // eslint-disable-next-line no-await-in-loop
+      await api.sendMediaGroup(chat, images);
+    }
   }
 }

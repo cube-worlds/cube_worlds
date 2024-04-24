@@ -32,6 +32,7 @@ import { ChatGPTAPI } from "chatgpt";
 import { logger } from "#root/logger";
 import {
   adminIndex,
+  sendPostToChannels,
   sendPreviewNFT,
   sendToGroupsNewNFT,
   // sendNewPlaces,
@@ -207,6 +208,7 @@ feature.callbackQuery(
           await ctx.dbuser.save();
 
           selectedUser.minted = true;
+          selectedUser.mintedAt = new Date();
           await selectedUser.save();
 
           const nextItemIndex = await NftCollection.fetchNextItemIndex();
@@ -263,6 +265,8 @@ feature.callbackQuery(
                 selectedUser.nftUrl ?? "",
                 selectedUser.diceWinner ?? false,
               );
+
+              await sendPostToChannels(ctx.api);
             })
             .catch(async (error) => {
               logger.error(error);
