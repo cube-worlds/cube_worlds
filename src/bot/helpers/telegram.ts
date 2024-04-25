@@ -129,10 +129,6 @@ export async function sendPreviewNFT(
   });
 }
 
-const chats = config.isProd
-  ? { ru: "@cube_worlds_chat_ru", en: "@cube_worlds_chat" }
-  : { ru: "@viz_blockchain", en: "@viz_blockchain" };
-
 export async function sendToGroupsNewNFT(
   api: Api<RawApi>,
   ipfsImageHash: string,
@@ -141,6 +137,9 @@ export async function sendToGroupsNewNFT(
   diceWinner: boolean,
 ) {
   try {
+    const chats = config.isProd
+      ? { ru: "@cube_worlds_chat_ru", en: "@cube_worlds_chat" }
+      : { ru: "@viz_blockchain", en: "@viz_blockchain" };
     // eslint-disable-next-line no-restricted-syntax
     for (const [lang, chat] of Object.entries(chats)) {
       // eslint-disable-next-line no-await-in-loop
@@ -165,6 +164,9 @@ export async function sendToGroupsNewNFT(
 }
 
 export async function sendPostToChannels(api: Api<RawApi>) {
+  const channels = config.isProd
+    ? { ru: "@cube_worlds_ru", en: "@cube_worlds" }
+    : { ru: "@viz_blockchain", en: "@viz_blockchain" };
   const allMinted = await findMintedWithDate();
   const imagesCount = 9;
   if (allMinted.length >= imagesCount && allMinted.length % imagesCount === 0) {
@@ -172,13 +174,13 @@ export async function sendPostToChannels(api: Api<RawApi>) {
     const images = shortList.reverse().map((u) =>
       InputMediaBuilder.photo(linkToIPFSGateway(u.nftImage ?? ""), {
         caption: `[${u.name ?? ""}](${u.nftUrl ?? ""})`,
-        parse_mode: "MarkdownV2",
+        parse_mode: "Markdown",
       }),
     );
     // eslint-disable-next-line no-restricted-syntax
-    for (const [_lang, chat] of Object.entries(chats)) {
+    for (const [_lang, channel] of Object.entries(channels)) {
       // eslint-disable-next-line no-await-in-loop
-      await api.sendMediaGroup(chat, images);
+      await api.sendMediaGroup(channel, images);
     }
   }
 }

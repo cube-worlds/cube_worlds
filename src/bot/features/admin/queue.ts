@@ -30,6 +30,7 @@ import { randomAttributes } from "#root/bot/helpers/attributes.js";
 import { countUsers, findUserById } from "#root/bot/models/user.js";
 import { ChatGPTAPI } from "chatgpt";
 import { logger } from "#root/logger";
+import { sleep } from "#root/bot/helpers/ton";
 import {
   adminIndex,
   sendPostToChannels,
@@ -257,6 +258,8 @@ feature.callbackQuery(
                 selectedUser.id,
                 "CAACAgIAAxkBAAEq6zpmIPgeW-peX09nTeFVvHXneFJZaQACQxoAAtzjkEhebdhBXbkEnzQE",
               );
+
+              await sleep(60_000);
 
               await sendToGroupsNewNFT(
                 ctx.api,
