@@ -2,6 +2,7 @@ import { config } from "#root/config.js";
 import { Composer } from "grammy";
 import type { Context } from "#root/bot/context.js";
 import { logHandle } from "#root/bot/helpers/logging.js";
+import { logger } from "#root/logger";
 import { sleep } from "../helpers/ton";
 import { timeUnitsBetween } from "../helpers/time";
 import { sendMessageToAdmins, sendPlaceInLine } from "../helpers/telegram";
@@ -16,7 +17,7 @@ feature.command("dice", logHandle("command-dice"), async (ctx) => {
     await ctx.reply(ctx.t("unhandled"));
     return;
   }
-  const waitMinutes = config.isProd ? 5 : 0;
+  const waitMinutes = config.isProd ? 5 : 1;
   const waitDate = new Date(
     ctx.dbuser.dicedAt.getTime() + waitMinutes * 60 * 1000,
   );
@@ -66,37 +67,40 @@ feature.command("dice", logHandle("command-dice"), async (ctx) => {
   await ctx.dbuser.save();
   await addPoints(ctx.dbuser.id, BigInt(score));
 
-  await sleep(3000);
-  if (!ctx.dbuser.minted && diceSeries === 3) {
-    ctx.dbuser.diceWinner = true;
-    await ctx.dbuser.save();
-    await ctx.reply(
-      ctx.t("dice.mint_winner", {
-        username,
-        diceSeriesNumber,
-        diceSeries,
-      }),
-    );
-    await sendMessageToAdmins(
-      ctx.api,
-      `🎲 Pair of ${diceSeriesNumber} dices ${diceSeries} times in a row by @${username}!`,
-    );
-    await ctx.replyWithSticker(
-      "CAACAgIAAxkBAAEq6zpmIPgeW-peX09nTeFVvHXneFJZaQACQxoAAtzjkEhebdhBXbkEnzQE",
-    );
-  } else {
-    await (diceSeries > 1
-      ? ctx.reply(
-          ctx.t("dice.success_series", {
-            score,
-            diceSeries,
+  sleep(3000)
+    .then(async (_) => {
+      if (!ctx.dbuser.minted && diceSeries === 3) {
+        ctx.dbuser.diceWinner = true;
+        await ctx.dbuser.save();
+        await ctx.reply(
+          ctx.t("dice.mint_winner", {
+            username,
             diceSeriesNumber,
+            diceSeries,
           }),
-        )
-      : ctx.reply(ctx.t("dice.success", { score })));
-    await sleep(1000);
-    await sendPlaceInLine(ctx.api, ctx.dbuser.id, true);
-  }
+        );
+        await sendMessageToAdmins(
+          ctx.api,
+          `🎲 Pair of ${diceSeriesNumber} dices ${diceSeries} times in a row by @${username}!`,
+        );
+        await ctx.replyWithSticker(
+          "CAACAgIAAxkBAAEq6zpmIPgeW-peX09nTeFVvHXneFJZaQACQxoAAtzjkEhebdhBXbkEnzQE",
+        );
+      } else {
+        await (diceSeries > 1
+          ? ctx.reply(
+              ctx.t("dice.success_series", {
+                score,
+                diceSeries,
+                diceSeriesNumber,
+              }),
+            )
+          : ctx.reply(ctx.t("dice.success", { score })));
+        await sleep(1000);
+        await sendPlaceInLine(ctx.api, ctx.dbuser.id, true);
+      }
+    })
+    .catch((error) => logger.error(error));
 });
 
 export { composer as diceFeature };
