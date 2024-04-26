@@ -108,7 +108,7 @@ export function encodeOffChainContent(content: string) {
 export async function waitSeqno(
   seqno: number,
   wallet: OpenedWallet,
-  maxAttempts = 100,
+  maxAttempts = 30,
 ) {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     await sleep(2000);
@@ -129,7 +129,7 @@ export function sleep(ms: number): Promise<void> {
 }
 
 const stopList = new Set([
-  "EQA2JYPGPywx6Sn590nUd06B2HgOkFvJ-cCnTO6yTEdacbUG", // @wallet ?
+  "EQA2JYPGPywx6Sn590nUd06B2HgOkFvJ-cCnTO6yTEdacbUG", // @wallet
   "UQBX63RAdgShn34EAFMV73Cut7Z15lUZd1hnVva68SEl7pGn", // MEXC
   "UQCFr3jo0DXpIBF82mVGFc3zcdRkSAtinhENPFMQ2FqzYv0E", // Huobi
   "UQDD8dqOzaj4zUK6ziJOo_G2lx6qf1TEktTRkFJ7T1c_fKne", // Bybit

@@ -205,6 +205,7 @@ feature.callbackQuery(
           }
           ctx.chatAction = "upload_document";
 
+          // reset custom description for admin
           ctx.dbuser.customDescription = undefined;
           await ctx.dbuser.save();
 

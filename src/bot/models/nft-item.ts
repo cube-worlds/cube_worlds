@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 import {
   Address,
   beginCell,
@@ -8,6 +9,7 @@ import {
 } from "@ton/core";
 import { OpenedWallet } from "#root/bot/helpers/wallet.js";
 import { config } from "#root/config.js";
+import { logger } from "#root/logger";
 import { openWallet, waitSeqno } from "../helpers/ton";
 import { NftCollection } from "./nft-collection";
 
@@ -21,22 +23,36 @@ export type NFTMintParameters = {
 
 export class NftItem {
   public async deployNFT(parameters: NFTMintParameters): Promise<string> {
-    const wallet = await openWallet(config.MNEMONICS!.split(" "));
-    const seqno = await this.deploy(wallet, parameters);
-
-    await waitSeqno(seqno, wallet);
+    const wallet = await openWallet(config.MNEMONICS.split(" "));
+    const seqno = await wallet.contract.getSeqno();
+    const maxAttempts = 5;
+    let attemptsCount = 0;
+    while (attemptsCount < maxAttempts) {
+      await this.deploy(wallet, seqno, parameters);
+      try {
+        await waitSeqno(seqno, wallet);
+        break; // If waitSeqno succeeds, break out of the loop
+      } catch (error) {
+        attemptsCount += 1;
+        logger.error(`Attempt ${attemptsCount} failed: ${error}`);
+      }
+    }
+    if (attemptsCount === maxAttempts) {
+      throw new Error(`NFT not minted with ${attemptsCount} attempts.`);
+    }
 
     const nft = await NftCollection.getNftAddressByIndex(parameters.itemIndex);
     const nftUrl = `https://${config.TESTNET ? "testnet." : ""}getgems.io/collection/${config.COLLECTION_ADDRESS}/${nft.toString()}`;
     return nftUrl;
   }
 
-  async deploy(
+  private async deploy(
     wallet: OpenedWallet,
+    seqno: number,
     parameters: NFTMintParameters,
-  ): Promise<number> {
+  ) {
+    logger.info(`Deploy NFT with seqno ${seqno} was started.`);
     const collectionAddress = Address.parse(config.COLLECTION_ADDRESS);
-    const seqno = await wallet.contract.getSeqno();
     await wallet.contract.sendTransfer({
       seqno,
       secretKey: wallet.keyPair.secretKey,
@@ -49,11 +65,10 @@ export class NftItem {
       ],
       sendMode: SendMode.IGNORE_ERRORS + SendMode.PAY_GAS_SEPARATELY,
     });
-    return seqno;
   }
 
   // eslint-disable-next-line class-methods-use-this
-  public createMintBody(parameters: NFTMintParameters): Cell {
+  private createMintBody(parameters: NFTMintParameters): Cell {
     const body = beginCell();
     body.storeUint(1, 32);
     body.storeUint(parameters.queryId || 0, 64);

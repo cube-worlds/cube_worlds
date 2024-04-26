@@ -57,7 +57,7 @@ async function fetchFileFromIPFS(
   gateway: string,
 ): Promise<Buffer> {
   const response = await fetch(`${gateway}${cid}`, {
-    signal: AbortSignal.timeout(60_000),
+    signal: AbortSignal.timeout(120_000),
   });
   if (!response.ok) {
     throw new Error(`HTTP error! Status: ${response.status}`);

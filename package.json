@@ -15,7 +15,7 @@
     "start": "tsc && tsx ./src/main.ts",
     "start:force": "tsx ./src/main.ts",
     "prepare": "npx husky install",
-    "update": "npx npm-check-updates -u"
+    "update": "npx npm-check-updates -u && npm install"
   },
   "author": "deptyped <deptyped@gmail.com>",
   "license": "MIT",
@@ -45,12 +45,12 @@
     "mongoose": "~8.3.2",
     "node-fetch": "^3.3.2",
     "node-graceful-shutdown": "1.1.5",
-    "pino": "8.20.0",
+    "pino": "9.0.0",
     "pino-pretty": "11.0.0",
     "tonweb": "^0.0.66",
-    "tsx": "4.7.2",
+    "tsx": "4.7.3",
     "znv": "0.4.0",
-    "zod": "3.23.3"
+    "zod": "3.23.4"
   },
   "devDependencies": {
     "@types/node": "20.12.7",
