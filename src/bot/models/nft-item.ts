@@ -10,7 +10,7 @@ import {
 import { OpenedWallet } from "#root/bot/helpers/wallet.js";
 import { config } from "#root/config.js";
 import { logger } from "#root/logger";
-import { openWallet, waitSeqno } from "../helpers/ton";
+import { openWallet, sleep, waitSeqno } from "../helpers/ton";
 import { NftCollection } from "./nft-collection";
 
 export type NFTMintParameters = {
@@ -28,13 +28,14 @@ export class NftItem {
     const maxAttempts = 5;
     let attemptsCount = 0;
     while (attemptsCount < maxAttempts) {
-      await this.deploy(wallet, seqno, parameters);
       try {
+        await this.deploy(wallet, seqno, parameters);
         await waitSeqno(seqno, wallet);
         break; // If waitSeqno succeeds, break out of the loop
       } catch (error) {
         attemptsCount += 1;
         logger.error(`Attempt ${attemptsCount} failed: ${error}`);
+        await sleep(5000);
       }
     }
     if (attemptsCount === maxAttempts) {
