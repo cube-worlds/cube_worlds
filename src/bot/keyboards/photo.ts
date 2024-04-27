@@ -5,7 +5,7 @@ export enum SelectImageButton {
   Description = "description",
   Avatar = "avatar",
   Upload = "upload",
-  Done = "done",
+  Mint = "mint",
 }
 
 export const photoKeyboard = [
@@ -41,7 +41,7 @@ export const photoKeyboard = [
     {
       text: "✅ Mint",
       callback_data: changeImageData.pack({
-        select: SelectImageButton.Done,
+        select: SelectImageButton.Mint,
       }),
     },
   ],

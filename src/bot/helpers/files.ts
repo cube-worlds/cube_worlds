@@ -1,8 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
-export function folderPath(index: number): string {
-  const fp = `./data/${index}/`;
+export function folderPath(username: string): string {
+  const fp = `./data/${username}/`;
   if (!fs.existsSync(fp)) {
     fs.mkdirSync(fp, { recursive: true });
   }
@@ -10,11 +10,11 @@ export function folderPath(index: number): string {
 }
 
 export function saveImage(
-  index: number,
+  username: string,
   fileName: string,
   content: Buffer,
 ): string {
-  const fp = folderPath(index);
+  const fp = folderPath(username);
   const filePath = path.join(fp, fileName);
   fs.writeFileSync(filePath, content);
   return filePath;
@@ -23,7 +23,7 @@ export function saveImage(
 export async function saveImageFromUrl(
   imageURL: string,
   adminIndex: number,
-  index: number,
+  username: string,
   original: boolean,
 ): Promise<string> {
   const image = await fetch(imageURL);
@@ -32,18 +32,18 @@ export async function saveImageFromUrl(
   const imageFileName =
     imageURL.slice((imageURL.lastIndexOf("/") ?? 0) + 1) ?? "";
   const fileExtension = imageFileName.split(".").pop();
-  const newFileName = `${original ? "ava_" : ""}${adminIndex}_${index}.${fileExtension}`;
-  return saveImage(index, newFileName, buffer);
+  const newFileName = `${original ? "ava_" : ""}${username}_${adminIndex}.${fileExtension}`;
+  return saveImage(username, newFileName, buffer);
 }
 
 export function saveJSON(
   adminIndex: number,
-  itemIndex: number,
+  username: string,
   json: object,
 ): string {
   const jsonPath = path.join(
-    folderPath(itemIndex),
-    `${adminIndex}_${itemIndex}.json`,
+    folderPath(username),
+    `${username}_${adminIndex}.json`,
   );
   fs.writeFileSync(jsonPath, JSON.stringify(json));
   return jsonPath;

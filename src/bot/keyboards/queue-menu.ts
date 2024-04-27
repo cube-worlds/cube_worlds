@@ -10,7 +10,6 @@ import {
 import { config } from "#root/config.js";
 import { getUserProfileFile } from "#root/bot/helpers/photo.js";
 import { saveImageFromUrl } from "#root/bot/helpers/files.js";
-import { NftCollection } from "#root/bot/models/nft-collection.js";
 import { DocumentType } from "@typegoose/typegoose";
 import { photoKeyboard } from "#root/bot/keyboards/photo.js";
 import { logger } from "#root/logger";
@@ -50,15 +49,16 @@ export async function sendUserMetadata(
     if (!nextAvatar) {
       return context.reply(context.t("wrong"));
     }
-    const itemIndex = await NftCollection.fetchNextItemIndex();
     const photoUrl = `https://api.telegram.org/file/bot${config.BOT_TOKEN}/${nextAvatar.file_path}`;
 
     const admIndex = adminIndex(context.dbuser.id);
+    const username = selectedUser.name;
+    if (!username) return context.reply("Empty username");
     // eslint-disable-next-line no-param-reassign
     selectedUser.avatar = await saveImageFromUrl(
       photoUrl,
       admIndex,
-      itemIndex,
+      username,
       true,
     );
     await selectedUser.save();

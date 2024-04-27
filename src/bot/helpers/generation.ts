@@ -31,7 +31,7 @@ export enum SDSampler {
 export async function generate(
   filePath: string,
   adminIndex: number,
-  itemIndex: number,
+  username: string,
   positive: string,
   negative: string,
   strength: number,
@@ -116,7 +116,7 @@ export async function generate(
   const artifact = generationResponse.artifacts[0];
   if ("finishReason" in artifact) {
     if (artifact.finishReason === "SUCCESS") {
-      const fp = `./data/${itemIndex}/${adminIndex}_${itemIndex}.png`;
+      const fp = `./data/${username}/${username}_${adminIndex}.png`;
       fs.writeFileSync(fp, Buffer.from(artifact.base64, "base64"));
       return fp;
     }

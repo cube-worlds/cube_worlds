@@ -84,7 +84,7 @@ feature.callbackQuery(
             `Write an inspiring text about a person named "${name}" who has decided to start a journey.
             You could also use this additional information "${info}" if it feels appropriate and translate into English if not.
             Result should NOT contains terms in original language. TEXT MUST BE ONLY IN ENGLISH. 
-            NOT use any quotation marks.
+            Remove any links. NOT use any quotation marks.
             Response MUST BE up to 500 characters maximum`,
           );
           selectedUser.nftDescription = result.text.slice(0, 700);
@@ -98,11 +98,12 @@ feature.callbackQuery(
             return ctx.reply(ctx.t("wrong"));
           }
           ctx.chatAction = "upload_document";
-          const nextItemIndex = await NftCollection.fetchNextItemIndex();
+          const username = selectedUser.name;
+          if (!username) return ctx.reply("Empty username");
           const generatedFilePath = await generate(
             selectedUser.avatar,
             adminIndex(ctx.dbuser.id),
-            nextItemIndex,
+            username,
             ctx.dbuser.positivePrompt ?? "",
             ctx.dbuser.negativePrompt ?? "",
             ctx.dbuser.strength ?? 0.35,
@@ -120,9 +121,8 @@ feature.callbackQuery(
               inline_keyboard: photoKeyboard,
             },
           });
-          ctx.logger.error(newMessage);
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const fileId = (newMessage as any).photo
+          ctx.logger.info(newMessage);
+          const fileId = newMessage.photo
             .filter((p: PhotoSize) => p.width === p.height)
             .sort(
               (a: PhotoSize, b: PhotoSize) =>
@@ -165,10 +165,11 @@ feature.callbackQuery(
             }
           }
 
-          const nextItemIndex = await NftCollection.fetchNextItemIndex();
+          const username = selectedUser.name;
+          if (!username) return ctx.reply("Empty username");
           const ipfsImageHash = await pinImageURLToIPFS(
             adminIndex(ctx.dbuser.id),
-            nextItemIndex,
+            username,
             selectedUser.image ?? "",
           );
           ctx.logger.info(ipfsImageHash);
@@ -181,7 +182,7 @@ feature.callbackQuery(
           ctx.logger.info(json);
           const ipfsJSONHash = await pinJSONToIPFS(
             adminIndex(ctx.dbuser.id),
-            nextItemIndex,
+            username,
             json,
           );
           selectedUser.nftImage = ipfsImageHash;
@@ -193,7 +194,7 @@ feature.callbackQuery(
           break;
         }
 
-        case SelectImageButton.Done: {
+        case SelectImageButton.Mint: {
           if (!selectedUser.nftDescription) {
             return ctx.reply("🚫 Empty description");
           }
