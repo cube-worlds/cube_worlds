@@ -213,7 +213,8 @@ feature.callbackQuery(
           selectedUser.mintedAt = new Date();
           await selectedUser.save();
 
-          const nextItemIndex = await NftCollection.fetchNextItemIndex();
+          const nextItemIndex =
+            await NftCollection.fetchNextItemIndexWithRetry();
           const userAddress = Address.parse(selectedUser.wallet ?? "");
           const parameters: NFTMintParameters = {
             queryId: 0,

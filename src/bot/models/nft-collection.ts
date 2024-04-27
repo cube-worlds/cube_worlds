@@ -7,8 +7,13 @@ import {
   StateInit,
   SendMode,
 } from "@ton/core";
-import { encodeOffChainContent, tonClient } from "#root/bot/helpers/ton.js";
+import {
+  encodeOffChainContent,
+  sleep,
+  tonClient,
+} from "#root/bot/helpers/ton.js";
 import { config } from "#root/config.js";
+import { logger } from "#root/logger";
 import { OpenedWallet } from "../helpers/wallet";
 
 export type collectionData = {
@@ -27,7 +32,27 @@ export class NftCollection {
     this.data = data;
   }
 
-  static async fetchNextItemIndex(): Promise<number> {
+  static async fetchNextItemIndexWithRetry(): Promise<number> {
+    const maxRetryCount = 10;
+    let attempts = 0;
+    while (attempts < maxRetryCount) {
+      try {
+        // eslint-disable-next-line no-await-in-loop
+        const nextItemIndex = await NftCollection.fetchNextItemIndex();
+        return nextItemIndex;
+      } catch (error) {
+        logger.error(`Fetch collection item index failed: ${error}`);
+        attempts += 1;
+        if (attempts < maxRetryCount) {
+          // eslint-disable-next-line no-await-in-loop
+          await sleep(2000);
+        }
+      }
+    }
+    throw new Error("Exceeded collection item index retries");
+  }
+
+  private static async fetchNextItemIndex(): Promise<number> {
     const nftCollectionAddress = Address.parse(config.COLLECTION_ADDRESS);
 
     const { stack } = await tonClient.runMethod(

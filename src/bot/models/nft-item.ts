@@ -25,7 +25,7 @@ export class NftItem {
   public async deployNFT(parameters: NFTMintParameters): Promise<string> {
     const wallet = await openWallet(config.MNEMONICS.split(" "));
     const seqno = await wallet.contract.getSeqno();
-    const maxAttempts = 5;
+    const maxAttempts = 10;
     let attemptsCount = 0;
     while (attemptsCount < maxAttempts) {
       try {
