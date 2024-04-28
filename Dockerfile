@@ -17,6 +17,7 @@ COPY . .
 # Type check app
 RUN npm run typecheck
 
+
 FROM base AS runner
 
 # Files required by npm install
@@ -27,6 +28,8 @@ RUN npm ci --omit=dev
 
 # Bundle app source
 COPY . .
+
+RUN npm --prefix src/web ci --omit=dev
 
 USER node
 
