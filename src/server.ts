@@ -2,6 +2,8 @@ import fastify from "fastify";
 import { webhookCallback } from "grammy";
 import type { Bot } from "#root/bot/index.js";
 import { logger } from "#root/logger.js";
+import path from "node:path";
+import fastifyStatic from "@fastify/static";
 
 export const createServer = async (bot: Bot) => {
   const server = fastify({
@@ -14,7 +16,16 @@ export const createServer = async (bot: Bot) => {
     await response.status(500).send({ error: "Oops! Something went wrong." });
   });
 
-  server.get("/", () => ({ status: true }));
+  await server.register(fastifyStatic, {
+    root: path.join(path.join(import.meta.dirname, "web"), "dist"),
+    prefix: "/",
+  });
+
+  server.setNotFoundHandler(async (_request, reply) => {
+    await reply.sendFile("index.html");
+  });
+
+  // server.get("/", () => ({ status: true }));
 
   server.post(
     `/${bot.token}`,

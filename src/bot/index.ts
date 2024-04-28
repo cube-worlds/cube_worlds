@@ -24,6 +24,7 @@ import {
   whalesFeature,
   lineFeature,
   transactionFeature,
+  webappFeature,
 } from "#root/bot/features/index.js";
 import { errorHandler } from "#root/bot/handlers/index.js";
 import { i18n, isMultipleLocales } from "#root/bot/i18n.js";
@@ -80,6 +81,7 @@ export function createBot(token: string, options: Options) {
   protectedBot.use(adminFeature);
   protectedBot.use(whalesFeature);
   protectedBot.use(lineFeature);
+  protectedBot.use(webappFeature);
   protectedBot.use(transactionFeature);
 
   if (isMultipleLocales) {

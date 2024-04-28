@@ -3,7 +3,7 @@ import { onShutdown } from "node-graceful-shutdown";
 import { createBot } from "#root/bot/index.js";
 import { config } from "#root/config.js";
 import { logger } from "#root/logger.js";
-import { createServer } from "#root/server/index.js";
+import { createServer } from "#root/server.js";
 import mongoose from "mongoose";
 import { Subscription } from "#root/bot/subscription";
 
@@ -36,6 +36,10 @@ try {
       allowed_updates: config.BOT_ALLOWED_UPDATES,
     });
   } else if (config.BOT_MODE === "polling") {
+    await server.listen({
+      host: config.BOT_SERVER_HOST,
+      port: config.BOT_SERVER_PORT,
+    });
     await bot.start({
       allowed_updates: config.BOT_ALLOWED_UPDATES,
       onStart: ({ username }) =>
