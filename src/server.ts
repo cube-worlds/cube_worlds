@@ -19,6 +19,7 @@ export const createServer = async (bot: Bot) => {
 
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
+  logger.info(`Dir ${__dirname}`);
   await server.register(fastifyStatic, {
     root: path.join(path.join(__dirname, "web"), "dist"),
     prefix: "/",
