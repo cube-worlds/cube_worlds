@@ -14,6 +14,8 @@ RUN npm ci
 # Bundle app source
 COPY . .
 
+RUN npm --prefix src/web ci
+
 # Type check app
 RUN npm run typecheck
 
