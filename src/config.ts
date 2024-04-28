@@ -26,6 +26,7 @@ const createConfigFromEnvironment = (environment: NodeJS.ProcessEnv) => {
       .default([]),
     MONGO: z.string(),
     BOT_ADMINS: z.array(z.number()).default([]),
+    WEB_APP_URL: z.string().url(),
     COLLECTION_ADDRESS: z.string(),
     COLLECTION_OWNER: z.string(),
     MNEMONICS: z.string(),

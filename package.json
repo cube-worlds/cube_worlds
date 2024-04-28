@@ -21,6 +21,7 @@
   "license": "MIT",
   "private": true,
   "dependencies": {
+    "@fastify/static": "^7.0.3",
     "@grammyjs/auto-chat-action": "0.1.1",
     "@grammyjs/auto-retry": "^2.0.1",
     "@grammyjs/hydrate": "1.4.1",

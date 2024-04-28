@@ -3,7 +3,7 @@ import { onShutdown } from "node-graceful-shutdown";
 import { createBot } from "#root/bot/index.js";
 import { config } from "#root/config.js";
 import { logger } from "#root/logger.js";
-import { createServer } from "#root/server/index.js";
+import { createServer } from "#root/server.js";
 import mongoose from "mongoose";
 import { Subscription } from "#root/bot/subscription";
 
