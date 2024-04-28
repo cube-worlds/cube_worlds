@@ -17,5 +17,5 @@
     }
   },
   "include": ["src/**/*"],
-  "exclude": ["src/web/src/**/*"]
+  "exclude": ["src/web/**/*"]
 }
