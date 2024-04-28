@@ -36,6 +36,10 @@ try {
       allowed_updates: config.BOT_ALLOWED_UPDATES,
     });
   } else if (config.BOT_MODE === "polling") {
+    await server.listen({
+      host: config.BOT_SERVER_HOST,
+      port: config.BOT_SERVER_PORT,
+    });
     await bot.start({
       allowed_updates: config.BOT_ALLOWED_UPDATES,
       onStart: ({ username }) =>
