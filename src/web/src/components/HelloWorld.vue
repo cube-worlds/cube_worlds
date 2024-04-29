@@ -9,8 +9,8 @@ const count = ref(0)
 const { notificationOccurred } = useWebAppHapticFeedback()
 
 function increment() {
-    notificationOccurred('success')
-    count.value++
+  notificationOccurred('success')
+  count.value++
 }
 </script>
 
