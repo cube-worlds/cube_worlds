@@ -33,6 +33,24 @@ feature.command("dice", logHandle("command-dice"), async (ctx) => {
       }),
     );
   }
+
+  const lastDicedTime = ctx.dbuser.dicedAt.getTime();
+  const suspicionTime = waitMinutes * 3;
+  const compareDateForCaptcha = new Date(
+    lastDicedTime + suspicionTime * 60 * 1000,
+  );
+  if (compareDateForCaptcha > now) {
+    if (!ctx.dbuser.suspicionDices) {
+      ctx.dbuser.suspicionDices = 0;
+    }
+    ctx.dbuser.suspicionDices += 1;
+    logger.info(
+      `${ctx.dbuser.id} has ${ctx.dbuser.suspicionDices} suspicion dices`,
+    );
+  } else {
+    ctx.dbuser.suspicionDices = 0;
+  }
+
   const dice1 = ctx.replyWithDice("🎲");
   const dice2 = ctx.replyWithDice("🎲");
   const result = await Promise.all([dice1, dice2]);

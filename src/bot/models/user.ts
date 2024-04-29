@@ -46,6 +46,10 @@ export class User extends TimeStamps {
   @prop({ type: Number })
   diceSeries?: number;
 
+  // for captcha purposes
+  @prop({ type: Number })
+  suspicionDices?: number;
+
   @prop({ type: String })
   name?: string;
 
