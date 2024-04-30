@@ -3,12 +3,8 @@ import "./style.css";
 import { createWebHistory, createRouter } from "vue-router";
 import HelloWorld from "./components/HelloWorld.vue";
 import App from "./App.vue";
-import Captcha from "./components/Captcha.vue";
 
-const routes = [
-  { path: "/", component: HelloWorld },
-  { path: "/captcha", component: Captcha },
-];
+const routes = [{ path: "/", component: HelloWorld }];
 
 const router = createRouter({
   history: createWebHistory(),

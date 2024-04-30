@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>DOOM Captcha - Captchas don't have to be boring</title>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  </head>
+  <body>
+    <style>
+      html,
+      body {
+        height: 100%;
+      }
+      .wrapper {
+        width: 80%;
+        height: 100%;
+        margin: 0 auto;
+        background: #ccc;
+      }
+      .h_iframe {
+        position: relative;
+      }
+      .h_iframe .ratio {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+      .h_iframe iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+    <script
+      src="script.js?version=17"
+      countdown="on"
+      label="Solve captcha:"
+    ></script>
+  </body>
+</html>

@@ -1,5 +1,5 @@
 import { config } from "#root/config.js";
-import { Composer } from "grammy";
+import { Composer, InlineKeyboard } from "grammy";
 import type { Context } from "#root/bot/context.js";
 import { logHandle } from "#root/bot/helpers/logging.js";
 import { logger } from "#root/logger";
@@ -34,21 +34,31 @@ feature.command("dice", logHandle("command-dice"), async (ctx) => {
     );
   }
 
+  if (!ctx.dbuser.suspicionDices) {
+    ctx.dbuser.suspicionDices = 0;
+  }
   const lastDicedTime = ctx.dbuser.dicedAt.getTime();
   const suspicionTime = waitMinutes * 3;
   const compareDateForCaptcha = new Date(
     lastDicedTime + suspicionTime * 60 * 1000,
   );
   if (compareDateForCaptcha > now) {
-    if (!ctx.dbuser.suspicionDices) {
-      ctx.dbuser.suspicionDices = 0;
-    }
     ctx.dbuser.suspicionDices += 1;
     logger.info(
       `${ctx.dbuser.id} has ${ctx.dbuser.suspicionDices} suspicion dices`,
     );
-  } else {
-    ctx.dbuser.suspicionDices = 0;
+  }
+  //  else {
+  //   ctx.dbuser.suspicionDices = 0;
+  // }
+  if (ctx.dbuser.suspicionDices >= 105) {
+    await ctx.dbuser.save();
+    return ctx.reply("Are you a bot?", {
+      reply_markup: new InlineKeyboard().webApp(
+        "Solve the captcha",
+        `${config.WEB_APP_URL}/captcha/?user_id=${ctx.dbuser.id}&enemies=${ctx.dbuser.suspicionDices - 100}`,
+      ),
+    });
   }
 
   const dice1 = ctx.replyWithDice("🎲");
