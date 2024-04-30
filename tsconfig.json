@@ -16,6 +16,5 @@
       "#root/*": ["./src/*"]
     }
   },
-  "include": ["src/**/*"],
-  "exclude": ["src/web/**/*"]
+  "include": ["src/**/*"]
 }
