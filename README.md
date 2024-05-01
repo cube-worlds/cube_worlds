@@ -1,5 +1,7 @@
 # 💎 [Cube Worlds Bot](https://t.me/cube_worlds_bot) 💎
 
+<img src="https://github.com/chiliec/free_nft_bot/actions/workflows/main.yml/badge.svg?branch=main" />
+
 <a target="_blank" href="https://dorahacks.io/buidl/10796"><img src="https://cdn.dorahacks.io/images/buidl-embed/light-simple.png" height="33" width="84" /></a>
 
 Cube Worlds game inside Telegram bot.
