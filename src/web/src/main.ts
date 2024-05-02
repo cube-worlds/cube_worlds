@@ -1,14 +1,23 @@
 import { createApp } from "vue";
-import "./style.css";
 import { createWebHistory, createRouter } from "vue-router";
+import ElementPlus from "element-plus";
+import "element-plus/dist/index.css";
+import ruLocale from "element-plus/es/locale/lang/ru";
 import HelloWorld from "./components/HelloWorld.vue";
+import FAQComponent from "./components/FAQ.vue";
 import App from "./App.vue";
 
-const routes = [{ path: "/", component: HelloWorld }];
+const routes = [
+  { path: "/", component: HelloWorld },
+  { path: "/faq", component: FAQComponent },
+];
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
 });
 
-createApp(App).use(router).mount("#app");
+createApp(App)
+  .use(router)
+  .use(ElementPlus, { size: "default", zIndex: 3000, locale: ruLocale })
+  .mount("#app");

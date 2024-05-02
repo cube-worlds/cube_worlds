@@ -1,20 +1,26 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { MainButton, useWebAppHapticFeedback } from 'vue-tg'
+import { ref } from "vue";
+import {
+  useWebAppHapticFeedback,
+  ClosingConfirmation,
+  ExpandedViewport,
+} from "vue-tg";
 
-defineProps<{ msg: string }>()
+defineProps<{ msg: string }>();
 
-const count = ref(0)
+const count = ref(0);
 
-const { notificationOccurred } = useWebAppHapticFeedback()
+const { notificationOccurred } = useWebAppHapticFeedback();
 
 function increment() {
-  notificationOccurred('success')
-  count.value++
+  notificationOccurred("success");
+  count.value++;
 }
 </script>
 
 <template>
+  <ClosingConfirmation />
+  <ExpandedViewport />
   <h1>{{ msg }}</h1>
 
   <div class="card">
@@ -23,7 +29,10 @@ function increment() {
       Edit
       <code>components/HelloWorld.vue</code> to test HMR
     </p>
-    <MainButton :text="`Count is ${count}`" @click="increment" />
+    <!-- <MainButton :progress="true" :text="`Count is ${count}`" @click="increment" />
+    <SettingsButton @click="increment" /> -->
+
+    <a href="/faq">FAQ</a>
   </div>
 
   <p>
