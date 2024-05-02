@@ -82,8 +82,8 @@ feature.callbackQuery(
             ctx.dbuser.customDescription ?? selectedUser.description ?? "";
           const result = await api.sendMessage(
             `Write an inspiring text about a person named "${name}" who has decided to start a journey.
-            You could also use this additional information "${info}" if it feels appropriate and translate into English if not.
-            Result should NOT contains terms in original language. TEXT MUST BE ONLY IN ENGLISH. 
+            You could also use additional information: "${info}", if it feels appropriate, and translate into English if not.
+            Result should NOT contains terms in original language and "embarking" word. TEXT MUST BE ONLY IN ENGLISH. 
             Remove any links. NOT use any quotation marks.
             Response MUST BE up to 500 characters maximum`,
           );
