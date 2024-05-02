@@ -1,4 +1,5 @@
 <template>
+  <BackButton @click="handleBackButton" />
   <h1>FAQ</h1>
   <el-input v-model="filterText" placeholder="Filter keyword" />
 
@@ -15,6 +16,15 @@
 <script lang="ts" setup>
 import { ref, watch } from "vue";
 import { ElTree } from "element-plus";
+import { BackButton, useWebAppBackButton } from "vue-tg";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
+
+function handleBackButton() {
+    useWebAppBackButton().hideBackButton();
+    router.back();
+}
 
 interface Tree {
     [key: string]: any;

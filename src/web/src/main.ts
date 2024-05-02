@@ -8,8 +8,8 @@ import FAQComponent from "./components/FAQ.vue";
 import App from "./App.vue";
 
 const routes = [
-  { path: "/", component: HelloWorld },
-  { path: "/faq", component: FAQComponent },
+  { path: "/", name: "MainPage", component: HelloWorld },
+  { path: "/faq", name: "FAQPage", component: FAQComponent },
 ];
 
 const router = createRouter({

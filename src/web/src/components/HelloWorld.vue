@@ -1,10 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import {
-  useWebAppHapticFeedback,
-  ClosingConfirmation,
-  ExpandedViewport,
-} from "vue-tg";
+import { useWebAppHapticFeedback, ClosingConfirmation, ExpandedViewport } from "vue-tg";
 
 defineProps<{ msg: string }>();
 
@@ -32,7 +28,7 @@ function increment() {
     <!-- <MainButton :progress="true" :text="`Count is ${count}`" @click="increment" />
     <SettingsButton @click="increment" /> -->
 
-    <a href="/faq">FAQ</a>
+    <RouterLink to="/faq">Go to FAQ</RouterLink>
   </div>
 
   <p>
