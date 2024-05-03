@@ -63,6 +63,9 @@ dice =
     .success_series = 🎉 Congratulations! You've rolled double {$diceSeriesNumber} for the {$diceSeries}-th time in a row, earning you {$score} $CUBE! We're excited to welcome you back in 5 minutes!
     .mint_winner = 🥳🥳🥳 Congrats, @{$username}, you are THE ONE! You rolled {$diceSeriesNumber}-{$diceSeriesNumber} in a row {$diceSeries} times! Check the /line
     .captcha_solved = You successfully solved captcha and can roll the /dice again
+    .wish_luck = Good luck with the roll of those two dice!
+    .captcha_title = Still human there?
+    .captcha_button = Play Doom to prove it!
 
 description = 
     .wait = Please share some details about yourself. This information will be used to create more precise and personalized description for your NFT.

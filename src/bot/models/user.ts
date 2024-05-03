@@ -50,6 +50,10 @@ export class User extends TimeStamps {
   @prop({ type: Number })
   suspicionDices?: number;
 
+  // for dice callback query
+  @prop({ type: String })
+  diceKey?: string;
+
   @prop({ type: String })
   name?: string;
 

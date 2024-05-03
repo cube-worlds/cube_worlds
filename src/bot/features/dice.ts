@@ -7,6 +7,7 @@ import { sleep } from "../helpers/ton";
 import { timeUnitsBetween } from "../helpers/time";
 import { sendMessageToAdmins, sendPlaceInLine } from "../helpers/telegram";
 import { UserState, addPoints } from "../models/user";
+import { generateRandomString } from "../helpers/text";
 
 const composer = new Composer<Context>();
 
@@ -53,82 +54,109 @@ feature.command("dice", logHandle("command-dice"), async (ctx) => {
   // }
   if (ctx.dbuser.suspicionDices >= 105) {
     await ctx.dbuser.save();
-    return ctx.reply("Are you a bot?", {
+    return ctx.reply(ctx.t("dice.captcha_title"), {
       reply_markup: new InlineKeyboard().webApp(
-        "Solve the captcha",
+        ctx.t("dice.captcha_button"),
         `${config.WEB_APP_URL}/captcha/?user_id=${ctx.dbuser.id}&enemies=${ctx.dbuser.suspicionDices - 100}`,
       ),
     });
   }
 
-  const dice1 = ctx.replyWithDice("🎲");
-  const dice2 = ctx.replyWithDice("🎲");
-  const result = await Promise.all([dice1, dice2]);
-  const value1 = result[0].dice.value;
-  const value2 = result[1].dice.value;
-  const isRecurred = value1 === value2;
-  if (isRecurred) {
-    if (!ctx.dbuser.diceSeries) {
-      ctx.dbuser.diceSeries = 1;
-    }
-    if (ctx.dbuser.diceSeriesNumber === value1) {
-      ctx.dbuser.diceSeries = (ctx.dbuser.diceSeries ?? 0) + 1;
-    } else {
-      ctx.dbuser.diceSeries = 1;
-      ctx.dbuser.diceSeriesNumber = value1;
-    }
-  } else {
-    ctx.dbuser.diceSeries = undefined;
-    ctx.dbuser.diceSeriesNumber = undefined;
-  }
-
-  const diceSeries = ctx.dbuser.diceSeries ?? 0;
-  const diceSeriesNumber = ctx.dbuser.diceSeriesNumber ?? 0;
-  const username = ctx.dbuser.name ?? "undefined";
-
-  let score = value1 + value2;
-  if (diceSeries > 1) {
-    score *= diceSeries;
-  }
-
-  ctx.dbuser.dicedAt = now;
+  ctx.dbuser.diceKey = generateRandomString(10);
   await ctx.dbuser.save();
-  await addPoints(ctx.dbuser.id, BigInt(score));
-
-  sleep(3000)
-    .then(async (_) => {
-      if (!ctx.dbuser.minted && diceSeries === 3) {
-        ctx.dbuser.diceWinner = true;
-        await ctx.dbuser.save();
-        await ctx.reply(
-          ctx.t("dice.mint_winner", {
-            username,
-            diceSeriesNumber,
-            diceSeries,
-          }),
-        );
-        await sendMessageToAdmins(
-          ctx.api,
-          `🎲 Pair of ${diceSeriesNumber} dices ${diceSeries} times in a row by @${username}!`,
-        );
-        await ctx.replyWithSticker(
-          "CAACAgIAAxkBAAEq6zpmIPgeW-peX09nTeFVvHXneFJZaQACQxoAAtzjkEhebdhBXbkEnzQE",
-        );
-      } else {
-        await (diceSeries > 1
-          ? ctx.reply(
-              ctx.t("dice.success_series", {
-                score,
-                diceSeries,
-                diceSeriesNumber,
-              }),
-            )
-          : ctx.reply(ctx.t("dice.success", { score })));
-        await sleep(1000);
-        await sendPlaceInLine(ctx.api, ctx.dbuser.id, true);
-      }
-    })
-    .catch((error) => logger.error(error));
+  await ctx.reply(ctx.t("dice.wish_luck"), {
+    reply_markup: new InlineKeyboard().add({
+      text: "🎲🎲",
+      callback_data: `dice_${ctx.dbuser.diceKey}`,
+    }),
+  });
 });
+
+feature.callbackQuery(
+  /^dice_/,
+  logHandle("dice-callback-query"),
+  async (ctx: Context) => {
+    const userDiceData = `dice_${ctx.dbuser.diceKey}`;
+    const data = ctx.callbackQuery?.data ?? "";
+    try {
+      await ctx.deleteMessage();
+    } catch {
+      // do nothing
+    }
+    if (!(userDiceData === data)) {
+      return;
+    }
+    ctx.dbuser.diceKey = undefined;
+    await ctx.dbuser.save();
+    const dice1 = ctx.replyWithDice("🎲");
+    const dice2 = ctx.replyWithDice("🎲");
+    const result = await Promise.all([dice1, dice2]);
+    const value1 = result[0].dice.value;
+    const value2 = result[1].dice.value;
+    const isRecurred = value1 === value2;
+    if (isRecurred) {
+      if (!ctx.dbuser.diceSeries) {
+        ctx.dbuser.diceSeries = 1;
+      }
+      if (ctx.dbuser.diceSeriesNumber === value1) {
+        ctx.dbuser.diceSeries = (ctx.dbuser.diceSeries ?? 0) + 1;
+      } else {
+        ctx.dbuser.diceSeries = 1;
+        ctx.dbuser.diceSeriesNumber = value1;
+      }
+    } else {
+      ctx.dbuser.diceSeries = undefined;
+      ctx.dbuser.diceSeriesNumber = undefined;
+    }
+
+    const diceSeries = ctx.dbuser.diceSeries ?? 0;
+    const diceSeriesNumber = ctx.dbuser.diceSeriesNumber ?? 0;
+    const username = ctx.dbuser.name ?? "undefined";
+
+    let score = value1 + value2;
+    if (diceSeries > 1) {
+      score *= diceSeries;
+    }
+
+    ctx.dbuser.dicedAt = new Date();
+    await ctx.dbuser.save();
+    await addPoints(ctx.dbuser.id, BigInt(score));
+
+    sleep(3000)
+      .then(async (_) => {
+        if (!ctx.dbuser.minted && diceSeries === 3) {
+          ctx.dbuser.diceWinner = true;
+          await ctx.dbuser.save();
+          await ctx.reply(
+            ctx.t("dice.mint_winner", {
+              username,
+              diceSeriesNumber,
+              diceSeries,
+            }),
+          );
+          await sendMessageToAdmins(
+            ctx.api,
+            `🎲 Pair of ${diceSeriesNumber} dices ${diceSeries} times in a row by @${username}!`,
+          );
+          await ctx.replyWithSticker(
+            "CAACAgIAAxkBAAEq6zpmIPgeW-peX09nTeFVvHXneFJZaQACQxoAAtzjkEhebdhBXbkEnzQE",
+          );
+        } else {
+          await (diceSeries > 1
+            ? ctx.reply(
+                ctx.t("dice.success_series", {
+                  score,
+                  diceSeries,
+                  diceSeriesNumber,
+                }),
+              )
+            : ctx.reply(ctx.t("dice.success", { score })));
+          await sleep(1000);
+          await sendPlaceInLine(ctx.api, ctx.dbuser.id, true);
+        }
+      })
+      .catch((error) => logger.error(error));
+  },
+);
 
 export { composer as diceFeature };
