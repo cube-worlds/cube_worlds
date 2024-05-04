@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { useWebAppHapticFeedback, ClosingConfirmation, ExpandedViewport } from "vue-tg";
+import { useWebAppHapticFeedback } from "vue-tg";
 
 defineProps<{ msg: string }>();
 
@@ -15,8 +15,6 @@ function increment() {
 </script>
 
 <template>
-  <ClosingConfirmation />
-  <ExpandedViewport />
   <h1>{{ msg }}</h1>
 
   <div class="card">

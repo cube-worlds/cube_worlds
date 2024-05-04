@@ -5,6 +5,7 @@ import "element-plus/dist/index.css";
 import ruLocale from "element-plus/es/locale/lang/ru";
 import HelloWorld from "./components/HelloWorld.vue";
 import FAQComponent from "./components/FAQ.vue";
+import "./style.css";
 import App from "./App.vue";
 
 const routes = [
