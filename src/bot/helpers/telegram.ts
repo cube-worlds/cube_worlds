@@ -13,6 +13,39 @@ import { bigIntWithCustomSeparator } from "./numbers";
 import { i18n } from "../i18n";
 import { linkToIPFSGateway } from "./ipfs";
 
+interface Languages {
+  ru: string;
+  en: string;
+}
+
+function getCubeChats(): Languages {
+  return config.isProd
+    ? { ru: "@cube_worlds_chat_ru", en: "@cube_worlds_chat" }
+    : { ru: "@viz_cx", en: "@viz_cx" };
+}
+
+function getCubeChannels(): Languages {
+  return config.isProd
+    ? { ru: "@cube_worlds_ru", en: "@cube_worlds" }
+    : { ru: "@viz_blockchain", en: "@viz_blockchain" };
+}
+
+export function getCubeChat(lang: string): string {
+  const chats = getCubeChats();
+  if (lang === "ru") {
+    return chats.ru;
+  }
+  return chats.en;
+}
+
+export function getCubeChannel(lang: string): string {
+  const channels = getCubeChannels();
+  if (lang === "ru") {
+    return channels.ru;
+  }
+  return channels.en;
+}
+
 export function adminIndex(userId: number): number {
   if (!config.BOT_ADMINS.includes(userId)) {
     throw new Error("Not admin");
@@ -137,9 +170,7 @@ export async function sendToGroupsNewNFT(
   diceWinner: boolean,
 ) {
   try {
-    const chats = config.isProd
-      ? { ru: "@cube_worlds_chat_ru", en: "@cube_worlds_chat" }
-      : { ru: "@viz_blockchain", en: "@viz_blockchain" };
+    const chats = getCubeChats();
     // eslint-disable-next-line no-restricted-syntax
     for (const [lang, chat] of Object.entries(chats)) {
       // eslint-disable-next-line no-await-in-loop
@@ -164,9 +195,7 @@ export async function sendToGroupsNewNFT(
 }
 
 export async function sendPostToChannels(api: Api<RawApi>) {
-  const channels = config.isProd
-    ? { ru: "@cube_worlds_ru", en: "@cube_worlds" }
-    : { ru: "@viz_blockchain", en: "@viz_blockchain" };
+  const channels = getCubeChannels();
   const allMinted = await findMintedWithDate();
   const imagesCount = 9;
   if (allMinted.length >= imagesCount && allMinted.length % imagesCount === 0) {

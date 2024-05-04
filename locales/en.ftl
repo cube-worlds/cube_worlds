@@ -86,7 +86,7 @@ mint =
     .no_username = Make sure that you set username to your telegram profile
     .no_photo = Make sure you set avatar to your Telegram profile. If so, make sure everyone can see your photos:
         <strong>Settings -> Privacy & Security -> Who can see my photos -> Everybody</strong>
-    .subscribe_required = Subscribe 💎 {$channel} 💎 to continue
+    .subscribe_required = Subscribe to channel {$channel} and join the group {$chat} to continue
     .share = Mint your NFT character for absolutely free!
     
 queue = 

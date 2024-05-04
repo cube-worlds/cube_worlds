@@ -11,7 +11,12 @@ import { getUserProfilePhoto } from "#root/bot/helpers/photo.js";
 import { Address } from "@ton/core";
 import { voteScore } from "#root/bot/helpers/votes.js";
 import { Chat } from "grammy/types";
-import { sendPlaceInLine } from "../helpers/telegram";
+import { logger } from "#root/logger";
+import {
+  getCubeChannel,
+  getCubeChat,
+  sendPlaceInLine,
+} from "../helpers/telegram";
 import { sendMintedMessage } from "../middlewares/check-not-minted";
 import { isUserAddressValid } from "../helpers/ton";
 
@@ -48,9 +53,14 @@ async function isUserSubscribed(
   ctx: Context,
   channel: string,
 ): Promise<boolean> {
-  const subscriber = await ctx.api.getChatMember(channel, ctx.dbuser.id);
-  const validStatuses = ["creator", "administrator", "member"];
-  return validStatuses.includes(subscriber.status);
+  try {
+    const subscriber = await ctx.api.getChatMember(channel, ctx.dbuser.id);
+    const validStatuses = ["creator", "administrator", "member"];
+    return validStatuses.includes(subscriber.status);
+  } catch (error) {
+    logger.error(`Check subscription error: ${error}`);
+    return true;
+  }
 }
 
 async function sendReferralBonus(ctx: Context) {
@@ -83,18 +93,19 @@ async function mintAction(
     );
   }
 
-  let channel = "@cube_worlds";
-  if (ctx.dbuser.language === "ru") {
-    channel = "@cube_worlds_ru";
-  }
-  const isSubscribed = await isUserSubscribed(ctx, channel);
-  if (isSubscribed) {
+  const chat = getCubeChat(ctx.dbuser.language);
+  const isChatSubscribed = await isUserSubscribed(ctx, chat);
+  const channel = getCubeChannel(ctx.dbuser.language);
+  const isChannelSubscribed = await isUserSubscribed(ctx, channel);
+  logger.error(`Channel ${isChannelSubscribed}`);
+  logger.error(`Chat ${isChatSubscribed}`);
+  if (isChannelSubscribed && isChatSubscribed) {
     if (removeSubscriptionCheckMessage) {
       await ctx.deleteMessage();
     }
     await sendReferralBonus(ctx);
   } else {
-    return ctx.reply(ctx.t("mint.subscribe_required", { channel }), {
+    return ctx.reply(ctx.t("mint.subscribe_required", { channel, chat }), {
       reply_markup: {
         inline_keyboard: [
           [
