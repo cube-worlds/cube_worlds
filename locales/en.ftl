@@ -31,14 +31,13 @@ start = 🎮 Get ready for "<a href="https://teleg.notion.site/Immersive-Text-Ba
 
     🌟 Explore pixelated wonders, collect cube NFT heroes, and embark on thrilling quests.
     
-    💎 Join now to /mint your free NFT character and prepare for the launch!
+    💎 /mint your NFT character and get ready for the launch!
     
     🔥 Are you ready to become a Hero of the Cube Worlds?
 
 vote = 
     .no_receiver = No receiver exists
     .self_vote = You can't vote for yourself
-    .already = You already voted
 
 whales = 
     .count = Total {$points} $CUBE on {$count} wallets
@@ -51,7 +50,7 @@ donation = 😍 Thank you for your donation! {$ton} TON has been accepted succes
 speedup = 
     .title_minted = 💎 You have {$points} $CUBE. To get even more, you can:
     .title_not_minted = 💎 You have {$points} $CUBE. To get more and move up in the /line for NFT, you can:
-    .variants = 💰 Donate Toncoin from <strong>your wallet</strong> to address <code>{$collectionOwner}</code>
+    .variants = 💰 Donate Toncoin from <strong>your wallet</strong> to <code>cubeworlds.ton</code> address <code>{$collectionOwner}</code>
 
     👨‍👨‍👦‍👦 <a href="{$shareLink}">Invite friends</a> using link <code>{$inviteLink}</code>
 
