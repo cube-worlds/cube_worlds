@@ -86,7 +86,7 @@ feature.callbackQuery(
     if (!(userDiceData === data)) {
       return;
     }
-    ctx.dbuser.diceKey = undefined;
+    ctx.dbuser.diceKey = generateRandomString(10);
     await ctx.dbuser.save();
     const dice1 = ctx.replyWithDice("🎲");
     const dice2 = ctx.replyWithDice("🎲");
