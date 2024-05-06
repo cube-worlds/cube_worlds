@@ -86,11 +86,7 @@ export async function sendUserMetadata(
       const message = `❌ ${i18n.t(selectedUser.language, "queue.no_square_avatars")}`;
       await context.api.sendMessage(selectedUser.id, message);
       await context.api.sendMessage(adminUser.id, message);
-    }
-    if (
-      errorMessage ===
-      "Call to 'getFile' failed! (400: Bad Request: wrong file_id or the file is temporarily unavailable)"
-    ) {
+    } else if (errorMessage.startsWith("Call to 'getFile' failed!")) {
       const nextAvatarNumber =
         context.dbuser.selectedUser === selectedUser.id
           ? (context.dbuser.avatarNumber ?? -1) + 1
@@ -101,9 +97,10 @@ export async function sendUserMetadata(
       return context.reply(
         context.t("Avatar is unavailable, trying to change it to another"),
       );
+    } else {
+      logger.error(error);
+      return context.reply(context.t("wrong"));
     }
-    logger.error(error);
-    return context.reply(context.t("wrong"));
   }
 }
 
