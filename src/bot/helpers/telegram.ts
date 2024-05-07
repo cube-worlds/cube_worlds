@@ -209,7 +209,9 @@ export async function sendPostToChannels(api: Api<RawApi>) {
     // eslint-disable-next-line no-restricted-syntax
     for (const [_lang, channel] of Object.entries(channels)) {
       // eslint-disable-next-line no-await-in-loop
-      await api.sendMediaGroup(channel, images);
+      await api.sendMediaGroup(channel, images, {
+        disable_notification: true,
+      });
     }
   }
 }
