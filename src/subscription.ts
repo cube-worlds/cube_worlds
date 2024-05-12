@@ -12,8 +12,11 @@ import {
   getLastestTransaction,
 } from "#root/bot/models/transaction";
 import { AccountSubscription } from "#root/bot/helpers/account-subscription";
-import { sendMessageToAdmins, sendPlaceInLine } from "./helpers/telegram";
-import { tonToPoints } from "./helpers/ton";
+import { tonToPoints } from "#root/bot/helpers/ton";
+import {
+  sendMessageToAdmins,
+  sendPlaceInLine,
+} from "#root/bot/helpers/telegram";
 
 export class Subscription {
   bot: Bot<Context, Api<RawApi>>;
