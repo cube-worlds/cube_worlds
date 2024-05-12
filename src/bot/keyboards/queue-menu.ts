@@ -93,10 +93,7 @@ export async function sendUserMetadata(
           : 0;
       context.dbuser.avatarNumber = nextAvatarNumber;
       await context.dbuser.save();
-      logger.error(error);
-      return context.reply(
-        context.t("Avatar is unavailable, trying to change it to another"),
-      );
+      return context.reply("Avatar is unavailable, trying to change it");
     } else {
       logger.error(error);
       return context.reply(context.t("wrong"));
