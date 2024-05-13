@@ -1,29 +1,16 @@
-# 💎 [Cube Worlds Bot](https://t.me/cube_worlds_bot) 💎
+# [🕋 Cube Worlds Bot 🎲](https://t.me/cube_worlds_bot)
 
 <img src="https://github.com/chiliec/free_nft_bot/actions/workflows/main.yml/badge.svg?branch=main" />
 
 <a target="_blank" href="https://dorahacks.io/buidl/10796"><img src="https://cdn.dorahacks.io/images/buidl-embed/light-simple.png" height="33" width="84" /></a>
 
-Cube Worlds game inside Telegram bot.
-
-## Features
-
-- Scalable structure
-- Config loading and validation
-- Internationalization, language changing
-- Graceful shutdown
-- Logger (powered by [pino](https://github.com/pinojs/pino))
-- Fast and low overhead server (powered by [fastify](https://github.com/fastify/fastify))
+Cube Worlds Game Project source code.
 
 ## Usage
 
-Follow these steps to set up and run your bot using this template:
+Follow these steps to set up and run bot locally:
 
-1. **Create a New Repository**
-
-   Start by creating a new repository using this template. You can do this by clicking [here](https://github.com/bot-base/telegram-bot-template/generate).
-
-2. **Environment Variables Setup**
+1. **Environment Variables Setup**
 
    Create an environment variables file by copying the provided example file:
 
@@ -31,47 +18,21 @@ Follow these steps to set up and run your bot using this template:
    cp .env.example .env
    ```
 
-   Open the newly created `.env` file and set the `BOT_TOKEN` environment variable.
+   Open the newly created `.env` file and set the environment variables.
 
-3. **Launching the Bot**
-
-   You can run your bot in both development and production modes.
-
-   **Development Mode:**
+2. **Launching the Bot**
 
    Install the required dependencies:
 
    ```bash
    npm install
+   npm --prefix src/web install
    ```
 
    Start the bot in watch mode (auto-reload when code changes):
 
    ```bash
    npm run dev
-   ```
-
-   **Production Mode:**
-
-   Install only production dependencies (no development dependencies):
-
-   ```bash
-   npm install --only=prod
-   ```
-
-   Set the `NODE_ENV` environment variable to "production" in your `.env` file. Also, make sure to update `BOT_WEBHOOK` with the actual URL where your bot will receive updates.
-
-   ```dotenv
-   NODE_ENV=production
-   BOT_WEBHOOK=<your_webhook_url>
-   ```
-
-   Start the bot in production mode:
-
-   ```bash
-   npm start
-   # or
-   npm run start:force # if you want to skip type checking
    ```
 
 ### List of Available Commands

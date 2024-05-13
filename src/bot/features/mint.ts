@@ -10,7 +10,7 @@ import {
 import { getUserProfilePhoto } from "#root/bot/helpers/photo.js";
 import { Address } from "@ton/core";
 import { voteScore } from "#root/bot/helpers/votes.js";
-import { Chat } from "grammy/types";
+import { ChatFullInfo } from "grammy/types";
 import { logger } from "#root/logger";
 import {
   getCubeChannel,
@@ -26,7 +26,7 @@ const feature = composer.chatType("private");
 
 async function getBio(ctx: Context) {
   const chat = await ctx.getChat();
-  const { bio } = chat as Chat.PrivateGetChat;
+  const { bio } = chat as ChatFullInfo.PrivateChat;
   return bio?.trim();
 }
 
