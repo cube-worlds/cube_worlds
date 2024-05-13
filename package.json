@@ -46,7 +46,7 @@
     "mongoose": "~8.3.4",
     "node-fetch": "^3.3.2",
     "node-graceful-shutdown": "1.1.5",
-    "pino": "9.0.0",
+    "pino": "9.1.0",
     "pino-pretty": "11.0.0",
     "tonweb": "^0.0.66",
     "tsx": "4.10.1",
