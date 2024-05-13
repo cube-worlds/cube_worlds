@@ -41,7 +41,7 @@ export class Subscription {
       return;
     }
 
-    const { value, source } = tx.in_msg; // amount in nano-Toncoins (1 Toncoin = 1e9 nano-Toncoins)
+    const { value, source, message } = tx.in_msg; // amount in nano-Toncoins (1 Toncoin = 1e9 nano-Toncoins)
     const { lt, hash } = tx.transaction_id;
     const { utime } = tx;
     const senderAddress = Address.parse(source);
@@ -75,9 +75,9 @@ export class Subscription {
     if (!user) {
       trxModel.accepted = false;
       await trxModel.save();
-      const message = `USER NOT FOUND FOR: ${ton} TON from ${senderAddress.toString()}`;
-      await sendMessageToAdmins(this.bot.api, message);
-      return logger.error(message);
+      const notFoundMessage = `❗️ USER NOT FOUND FOR: ${ton} TON from ${senderAddress.toString()}`;
+      await sendMessageToAdmins(this.bot.api, notFoundMessage);
+      return logger.error(notFoundMessage);
     }
 
     const points = tonToPoints(ton);
@@ -92,7 +92,7 @@ export class Subscription {
     await sendPlaceInLine(this.bot.api, user.id, true);
     await sendMessageToAdmins(
       this.bot.api,
-      `🚀 RECEIVED ${ton} TON FROM @${user.name}. Minted: ${user.minted ? "✅" : "❌"}`,
+      `🚀 RECEIVED ${ton} TON FROM @${user.name}${message ? ` with message "${message}"` : ""}. Minted: ${user.minted ? "✅" : "❌"}`,
     );
   };
 
