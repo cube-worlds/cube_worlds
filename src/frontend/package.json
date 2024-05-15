@@ -10,19 +10,19 @@
   },
   "dependencies": {
     "@vitejs/plugin-vue": "^5.0.4",
-    "element-plus": "^2.7.2",
+    "element-plus": "^2.7.3",
     "vite": "^5.2.11",
-    "vue": "^3.4.26",
+    "vue": "^3.4.27",
     "vue-router": "^4.3.2",
-    "unplugin-auto-import": "^0.17.5",
+    "unplugin-auto-import": "^0.17.6",
     "unplugin-vue-components": "^0.27.0"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.24.5",
     "@types/telegram-web-app": "^7.2.1",
-    "eslint-plugin-vue": "^9.25.0",
+    "eslint-plugin-vue": "^9.26.0",
     "typescript": "^5.4.5",
     "vue-tg": "^0.6.1",
-    "vue-tsc": "^2.0.16"
+    "vue-tsc": "^2.0.18"
   }
 }
