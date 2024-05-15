@@ -19,6 +19,6 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - run: npm ci
-      - run: npm --prefix src/web ci
+      - run: npm --prefix src/frontend ci
       - run: npm run lint
       - run: npm run typecheck
