@@ -14,8 +14,8 @@ RUN npm ci
 # Bundle app source
 COPY . .
 
-# Build web
-RUN npm --prefix src/web ci
+# Build frontend
+RUN npm --prefix src/frontend ci
 
 # Type check app
 RUN npm run typecheck
@@ -32,9 +32,9 @@ RUN npm ci --omit=dev
 # Bundle app source
 COPY . .
 
-# Build web
-RUN npm --prefix src/web ci
-RUN npm --prefix src/web run build
+# Build frontend
+RUN npm --prefix src/frontend ci
+RUN npm --prefix src/frontend run build
 
 USER node
 

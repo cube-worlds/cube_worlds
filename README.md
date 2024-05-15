@@ -26,7 +26,7 @@ Follow these steps to set up and run bot locally:
 
    ```bash
    npm install
-   npm --prefix src/web install
+   npm --prefix src/frontend install
    ```
 
    Start the bot in watch mode (auto-reload when code changes):
