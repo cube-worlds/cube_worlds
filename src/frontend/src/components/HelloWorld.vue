@@ -15,23 +15,17 @@ function increment() {
 </script>
 
 <template>
-  <h1>Hello Cube Worlds!</h1>
+  <h1>Welcome to Cube Worlds!</h1>
 
   <div class="card">
-    <button type="button" @click="increment">Count is {{ count }}</button>
+    <!-- <button type="button" @click="increment">Count is {{ count }}</button>
     <p>
       Edit
       <code>components/HelloWorld.vue</code> to test HMR
-    </p>
+    </p> -->
     <!-- <MainButton :progress="true" :text="`Count is ${count}`" @click="increment" />
     <SettingsButton @click="increment" /> -->
 
     <RouterLink to="/faq">Go to FAQ</RouterLink>
   </div>
-
-  <p>
-    Install
-    <a href="https://github.com/vuejs/language-tools" target="_blank">Volar</a>
-    in your IDE for a better DX
-  </p>
 </template>

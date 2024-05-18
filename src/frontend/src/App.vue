@@ -1,7 +1,7 @@
 <template>
-  <Header class="header" />
+  <!-- <Header class="header" /> -->
   <RouterView />
-  <Footer class="footer" />
+  <!-- <Footer class="footer" /> -->
   <ClosingConfirmation />
   <ExpandedViewport />
 </template>
