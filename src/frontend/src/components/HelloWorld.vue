@@ -26,6 +26,6 @@ function increment() {
     <!-- <MainButton :progress="true" :text="`Count is ${count}`" @click="increment" />
     <SettingsButton @click="increment" /> -->
 
-    <RouterLink to="/faq">Go to FAQ</RouterLink>
+    <!-- <RouterLink to="/faq">Go to FAQ</RouterLink> -->
   </div>
 </template>
