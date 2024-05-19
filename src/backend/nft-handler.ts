@@ -1,8 +1,33 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable unicorn/numeric-separators-style */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { getCNFTByIndex } from "#root/bot/models/cnft";
+import {
+  CNFTImageType,
+  cnftHexColor,
+  getCNFTByIndex,
+} from "#root/bot/models/cnft";
+import { logger } from "#root/logger";
 import { FastifyInstance } from "fastify";
+import sharp from "sharp";
+
+function nftImage(type: CNFTImageType) {
+  if (type === CNFTImageType.Dice) {
+    return "dice";
+  }
+  if (type === CNFTImageType.Whale) {
+    return "whale";
+  }
+  if (type === CNFTImageType.Rich) {
+    return "donat_2";
+  }
+  if (type === CNFTImageType.Wealthy) {
+    return "donat_1";
+  }
+  if (type === CNFTImageType.Social) {
+    return "referral";
+  }
+  return "user";
+}
 
 const nftHandler = (
   fastify: FastifyInstance,
@@ -22,9 +47,9 @@ const nftHandler = (
       name: `Cube Worlds Citizen #${index}`,
       description:
         "Thank you for your participation in the Cube Worlds Project!",
-      image: `https://cubeworlds.club/api/nft/${nft.image.toLowerCase()}_${nft.color.toLowerCase()}.png`,
+      image: `https://cubeworlds.club/api/nft/${nft.type.toLowerCase()}-${nft.color}.webp`,
       attributes: [
-        { trait_type: "Type", value: nft.image },
+        { trait_type: "Type", value: nft.type },
         { trait_type: "Color", value: nft.color },
       ],
       buttons: [
@@ -37,12 +62,25 @@ const nftHandler = (
     return json;
   });
 
-  fastify.get("/:image-:color.png", (request: any, _reply: any) => {
+  fastify.get("/:image-:color.webp", async (request: any, reply: any) => {
     const { image, color } = request.params;
     if (!image || !color) {
       return { error: "No correct image/color provided!" };
     }
-    return { image, color };
+    const capitalizedImage = image.charAt(0).toUpperCase() + image.slice(1);
+    const typedImage = capitalizedImage as keyof typeof CNFTImageType;
+    const type = CNFTImageType[typedImage];
+    const imageName = nftImage(type);
+    logger.info(capitalizedImage, typedImage, type, imageName);
+    const data = await sharp(`./src/backend/nft/${imageName}.png`)
+      .flatten({ background: cnftHexColor(Number(color)) })
+      .webp({ nearLossless: true, quality: 100 })
+      .toBuffer();
+
+    reply.header("Content-Type", "image/webp");
+    reply.header("Content-Length", data.length);
+    reply.type("image/webp");
+    reply.send(data);
   });
 
   done();

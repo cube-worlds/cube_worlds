@@ -7,14 +7,30 @@ import {
 } from "@typegoose/typegoose";
 
 export enum CNFTImageType {
-  Whale = "Whale",
   Dice = "Dice",
+  Whale = "Whale",
+  Rich = "Rich",
+  Wealthy = "Wealthy",
+  Social = "Social",
   Common = "Common",
 }
 
-export enum CNFTBackgroundColor {
-  Black = "Black",
-  Red = "Red",
+const colors = [
+  "#000000",
+  "#000099",
+  "#00FF33",
+  "#FF00FF",
+  "#FF0099",
+  "#FF6600",
+  "#99FF00",
+  "#FF3300",
+  "#9933FF",
+  "#3300FF",
+  "#00CCFF",
+];
+
+export function cnftHexColor(colorNumber: number): string {
+  return colors[colorNumber % colors.length];
 }
 
 @modelOptions({ schemaOptions: { timestamps: false } })
@@ -43,10 +59,10 @@ export class CNFT {
   // image specific
 
   @prop({ type: String, required: true })
-  image!: CNFTImageType;
+  type!: CNFTImageType;
 
-  @prop({ type: String, required: true })
-  color!: CNFTBackgroundColor;
+  @prop({ type: Number, required: true })
+  color!: number;
 }
 
 const CNFTModel = getModelForClass(CNFT);
@@ -57,6 +73,10 @@ export async function getCNFTByIndex(index: number) {
 
 export async function getLastestCNFT() {
   return CNFTModel.findOne().sort({ index: -1 });
+}
+
+export async function getLastestCNFTWithType(type: CNFTImageType) {
+  return CNFTModel.findOne({ image: type }).sort({ index: -1 });
 }
 
 export async function addCNFT(
@@ -79,8 +99,24 @@ export async function addCNFT(
   const latestCNFT = await getLastestCNFT();
   const latestIndex = latestCNFT?.index ?? -1;
   const index = latestIndex + 1;
-  const image: CNFTImageType = CNFTImageType.Common; // TODO: calculations
-  const color: CNFTBackgroundColor = CNFTBackgroundColor.Red; // TODO: calculations
+
+  let type: CNFTImageType = CNFTImageType.Common;
+  if (diceWinner) {
+    type = CNFTImageType.Dice;
+  } else if (votes > BigInt(1_000_000)) {
+    type = CNFTImageType.Whale;
+  } else if (votes > BigInt(500_000)) {
+    type = CNFTImageType.Wealthy;
+  } else if (votes > BigInt(100_000)) {
+    type = CNFTImageType.Wealthy;
+  } else if (referrals > 0) {
+    type = CNFTImageType.Social;
+  }
+
+  const cnftWithType = await getLastestCNFTWithType(type);
+  const latestColor = cnftWithType?.color ?? -1;
+  const currentColor = latestColor + 1;
+  const color = currentColor % colors.length;
   return CNFTModel.create({
     index,
     userId,
@@ -89,7 +125,7 @@ export async function addCNFT(
     referrals,
     minted,
     diceWinner,
-    image,
+    type,
     color,
   });
 }

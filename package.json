@@ -48,6 +48,7 @@
     "node-graceful-shutdown": "1.1.5",
     "pino": "9.1.0",
     "pino-pretty": "11.0.0",
+    "sharp": "^0.33.4",
     "tonweb": "^0.0.66",
     "tsx": "4.10.4",
     "znv": "0.4.0",
