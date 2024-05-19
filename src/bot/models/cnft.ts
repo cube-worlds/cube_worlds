@@ -76,7 +76,7 @@ export async function getLastestCNFT() {
 }
 
 export async function getLastestCNFTWithType(type: CNFTImageType) {
-  return CNFTModel.findOne({ image: type }).sort({ index: -1 });
+  return CNFTModel.findOne({ type }).sort({ index: -1 });
 }
 
 export async function addCNFT(
