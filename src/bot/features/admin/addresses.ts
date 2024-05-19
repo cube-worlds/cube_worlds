@@ -25,7 +25,9 @@ feature.command(
       const address = Address.parse(u.wallet!);
       const referrals = await referralsCount(u.id);
       try {
+        const userId = u.id;
         const result = await addCNFT(
+          userId,
           address,
           u.votes,
           referrals,

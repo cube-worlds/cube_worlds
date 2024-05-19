@@ -7,20 +7,23 @@ import {
 } from "@typegoose/typegoose";
 
 export enum CNFTImageType {
-  Whale = "whale",
-  Dice = "dice",
-  Common = "common",
+  Whale = "Whale",
+  Dice = "Dice",
+  Common = "Common",
 }
 
 export enum CNFTBackgroundColor {
-  Black = 0,
-  Red,
+  Black = "Black",
+  Red = "Red",
 }
 
 @modelOptions({ schemaOptions: { timestamps: false } })
 export class CNFT {
   @prop({ type: Number, required: true, index: true, unique: true })
   index!: number;
+
+  @prop({ type: Number, required: true, index: true, unique: true })
+  userId!: number;
 
   @prop({ type: String, required: true })
   wallet!: string; // in raw format
@@ -42,42 +45,52 @@ export class CNFT {
   @prop({ type: String, required: true })
   image!: CNFTImageType;
 
-  @prop({ type: Number, required: true })
-  colorNumber!: CNFTBackgroundColor;
+  @prop({ type: String, required: true })
+  color!: CNFTBackgroundColor;
 }
 
 const CNFTModel = getModelForClass(CNFT);
+
+export async function getCNFTByIndex(index: number) {
+  return CNFTModel.findOne({ index });
+}
 
 export async function getLastestCNFT() {
   return CNFTModel.findOne().sort({ index: -1 });
 }
 
 export async function addCNFT(
+  userId: number,
   address: Address,
   votes: bigint,
   referrals: number,
   minted: boolean,
   diceWinner: boolean,
 ): Promise<DocumentType<CNFT>> {
-  const rawWallet = address.toRawString();
-  const existsCNFT = await CNFTModel.findOne({ wallet: rawWallet });
+  const existsUserCNFT = await CNFTModel.findOne({ userId });
+  if (existsUserCNFT) {
+    throw new Error(`(${existsUserCNFT.index}) User ${userId} already exists`);
+  }
+  const wallet = address.toRawString();
+  const existsCNFT = await CNFTModel.findOne({ wallet });
   if (existsCNFT) {
-    throw new Error(`(${existsCNFT.index}) Wallet ${rawWallet} already exists`);
+    throw new Error(`(${existsCNFT.index}) Wallet ${wallet} already exists`);
   }
   const latestCNFT = await getLastestCNFT();
   const latestIndex = latestCNFT?.index ?? -1;
-  const currentIndex = latestIndex + 1;
+  const index = latestIndex + 1;
   const image: CNFTImageType = CNFTImageType.Common; // TODO: calculations
-  const colorNumber: CNFTBackgroundColor = CNFTBackgroundColor.Red; // TODO: calculations
+  const color: CNFTBackgroundColor = CNFTBackgroundColor.Red; // TODO: calculations
   return CNFTModel.create({
-    index: currentIndex,
-    wallet: rawWallet,
+    index,
+    userId,
+    wallet,
     votes,
     referrals,
     minted,
     diceWinner,
     image,
-    colorNumber,
+    color,
   });
 }
 

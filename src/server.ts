@@ -5,7 +5,7 @@ import { logger } from "#root/logger.js";
 import path from "node:path";
 import fastifyStatic from "@fastify/static";
 import { fileURLToPath } from "node:url";
-import cnft from "./backend/cnft";
+import nftHandler from "./backend/nft-handler";
 import checkCaptcha from "./backend/captcha";
 
 export const createServer = async (bot: Bot) => {
@@ -19,7 +19,7 @@ export const createServer = async (bot: Bot) => {
     await response.status(500).send({ error: "Oops! Something went wrong." });
   });
 
-  await server.register(cnft, { prefix: "/api/v1/cnft" });
+  await server.register(nftHandler, { prefix: "/api/nft" });
 
   await server.register(checkCaptcha, { bot });
 
