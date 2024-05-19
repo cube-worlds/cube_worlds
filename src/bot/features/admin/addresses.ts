@@ -15,35 +15,40 @@ const composer = new Composer<Context>();
 
 const feature = composer.chatType("private").filter(isAdmin);
 
+async function addAddressesToDatabase(ctx: Context) {
+  const users = await findWhales(Number.MAX_SAFE_INTEGER);
+  for (const u of users) {
+    const address = Address.parse(u.wallet!);
+    const referrals = await referralsCount(u.id);
+    try {
+      const userId = u.id;
+      const result = await addCNFT(
+        userId,
+        address,
+        u.votes,
+        referrals,
+        u.minted ?? false,
+        u.diceWinner ?? false,
+      );
+      logger.info(`(${result.index}) Wallet ${result.wallet} was added`);
+    } catch (error) {
+      logger.error((error as Error).message);
+    }
+  }
+  const cNFTs = await getAllCNFTs();
+  const wallets = cNFTs.map((c) => c.wallet).join("\n");
+  const data = Buffer.from(wallets);
+  const filename = `${new Date().toISOString().split("T")[0]}.txt`;
+  await ctx.replyWithDocument(new InputFile(data, filename));
+}
+
 feature.command(
   "addresses",
   logHandle("command-addresses"),
   chatAction("upload_document"),
   async (ctx) => {
-    const users = await findWhales(Number.MAX_SAFE_INTEGER);
-    for (const u of users) {
-      const address = Address.parse(u.wallet!);
-      const referrals = await referralsCount(u.id);
-      try {
-        const userId = u.id;
-        const result = await addCNFT(
-          userId,
-          address,
-          u.votes,
-          referrals,
-          u.minted ?? false,
-          u.diceWinner ?? false,
-        );
-        logger.info(`(${result.index}) Wallet ${result.wallet} was added`);
-      } catch (error) {
-        logger.error((error as Error).message);
-      }
-    }
-    const cNFTs = await getAllCNFTs();
-    const wallets = cNFTs.map((c) => c.wallet).join("\n");
-    const data = Buffer.from(wallets);
-    const filename = `${new Date().toISOString().split("T")[0]}.txt`;
-    await ctx.replyWithDocument(new InputFile(data, filename));
+    addAddressesToDatabase(ctx).catch((error) => ctx.reply(error.message));
+    await ctx.reply("Parsing  started!");
   },
 );
 
