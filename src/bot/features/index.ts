@@ -13,3 +13,4 @@ export * from "./admin/collection.js";
 export * from "./admin/topup.js";
 export * from "./admin/parameters.js";
 export * from "./admin/transaction.js";
+export * from "./admin/addresses.js";

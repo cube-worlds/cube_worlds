@@ -25,6 +25,7 @@ import {
   lineFeature,
   transactionFeature,
   webappFeature,
+  addressesFeature,
 } from "#root/bot/features/index.js";
 import { errorHandler } from "#root/bot/handlers/index.js";
 import { i18n, isMultipleLocales } from "#root/bot/i18n.js";
@@ -83,6 +84,7 @@ export function createBot(token: string, options: Options) {
   protectedBot.use(lineFeature);
   protectedBot.use(webappFeature);
   protectedBot.use(transactionFeature);
+  protectedBot.use(addressesFeature);
 
   if (isMultipleLocales) {
     protectedBot.use(languageFeature);
