@@ -91,7 +91,7 @@ export async function addCNFT(
   if (existsUserCNFT) {
     throw new Error(`(${existsUserCNFT.index}) User ${userId} already exists`);
   }
-  const wallet = address.toRawString();
+  const wallet = address.toString({ bounceable: false });
   const existsCNFT = await CNFTModel.findOne({ wallet });
   if (existsCNFT) {
     throw new Error(`(${existsCNFT.index}) Wallet ${wallet} already exists`);
@@ -106,7 +106,7 @@ export async function addCNFT(
   } else if (votes > BigInt(1_000_000)) {
     type = CNFTImageType.Whale;
   } else if (votes > BigInt(500_000)) {
-    type = CNFTImageType.Wealthy;
+    type = CNFTImageType.Rich;
   } else if (votes > BigInt(100_000)) {
     type = CNFTImageType.Wealthy;
   } else if (referrals > 0) {

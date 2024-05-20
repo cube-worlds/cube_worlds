@@ -6,7 +6,7 @@ import type { Context } from "#root/bot/context.js";
 import { logHandle } from "#root/bot/helpers/logging.js";
 import { chatAction } from "@grammyjs/auto-chat-action";
 import { isAdmin } from "#root/bot/filters/is-admin.js";
-import { findWhales } from "#root/bot/models/user";
+import { findAllByCreated } from "#root/bot/models/user";
 import { addCNFT, getAllCNFTs } from "#root/bot/models/cnft";
 import { referralsCount } from "#root/bot/models/vote";
 import { logger } from "#root/logger";
@@ -16,7 +16,7 @@ const composer = new Composer<Context>();
 const feature = composer.chatType("private").filter(isAdmin);
 
 async function addAddressesToDatabase(ctx: Context) {
-  const users = await findWhales(Number.MAX_SAFE_INTEGER);
+  const users = await findAllByCreated();
   for (const u of users) {
     const address = Address.parse(u.wallet!);
     const referrals = await referralsCount(u.id);
