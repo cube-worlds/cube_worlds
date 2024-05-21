@@ -144,7 +144,9 @@ feature.callbackQuery(
               : 0;
           ctx.dbuser.avatarNumber = nextAvatarNumber;
           await ctx.dbuser.save();
-          await sendUserMetadata(ctx, selectedUser);
+          sendUserMetadata(ctx, selectedUser).catch((error) =>
+            ctx.reply((error as Error).message),
+          );
           break;
         }
 
@@ -197,9 +199,12 @@ feature.callbackQuery(
           selectedUser.nftImage = ipfsImageHash;
           selectedUser.nftJson = ipfsJSONHash;
           await selectedUser.save();
-          await sendUserMetadata(ctx, selectedUser);
-          warmIPFSHash(ipfsImageHash);
-          warmIPFSHash(ipfsJSONHash);
+          sendUserMetadata(ctx, selectedUser)
+            .then((_) => {
+              warmIPFSHash(ipfsImageHash);
+              warmIPFSHash(ipfsJSONHash);
+            })
+            .catch((error) => ctx.reply((error as Error).message));
           break;
         }
 
