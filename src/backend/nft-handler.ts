@@ -17,16 +17,16 @@ function nftImage(type: CNFTImageType) {
   if (type === CNFTImageType.Whale) {
     return "whale";
   }
-  if (type === CNFTImageType.Rich) {
-    return "donat_2";
+  if (type === CNFTImageType.Diamond) {
+    return "diamond";
   }
-  if (type === CNFTImageType.Wealthy) {
-    return "donat_1";
+  if (type === CNFTImageType.Coin) {
+    return "coin";
   }
-  if (type === CNFTImageType.Social) {
-    return "referral";
+  if (type === CNFTImageType.Knight) {
+    return "knight";
   }
-  return "user";
+  return "common";
 }
 
 const nftHandler = (

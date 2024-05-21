@@ -9,9 +9,9 @@ import {
 export enum CNFTImageType {
   Dice = "Dice",
   Whale = "Whale",
-  Rich = "Rich",
-  Wealthy = "Wealthy",
-  Social = "Social",
+  Diamond = "Diamond",
+  Coin = "Coin",
+  Knight = "Knight",
   Common = "Common",
 }
 
@@ -106,11 +106,11 @@ export async function addCNFT(
   } else if (votes > BigInt(1_000_000)) {
     type = CNFTImageType.Whale;
   } else if (votes > BigInt(500_000)) {
-    type = CNFTImageType.Rich;
+    type = CNFTImageType.Diamond;
   } else if (votes > BigInt(100_000)) {
-    type = CNFTImageType.Wealthy;
+    type = CNFTImageType.Coin;
   } else if (referrals > 0) {
-    type = CNFTImageType.Social;
+    type = CNFTImageType.Knight;
   }
 
   const cnftWithType = await getLastestCNFTWithType(type);
