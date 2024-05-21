@@ -97,10 +97,10 @@ feature.callbackQuery(
           if (!selectedUser.avatar) {
             return ctx.reply(ctx.t("wrong"));
           }
-          ctx.chatAction = "upload_document";
           const username = selectedUser.name;
           if (!username) return ctx.reply("Empty username");
-          const generatedFilePath = await generate(
+          ctx.chatAction = "upload_document";
+          generate(
             selectedUser.avatar,
             adminIndex(ctx.dbuser.id),
             username,
@@ -111,26 +111,29 @@ feature.callbackQuery(
             ctx.dbuser.steps ?? 30,
             ctx.dbuser.preset ?? ClipGuidancePreset.NONE,
             ctx.dbuser.sampler ?? SDSampler.K_DPMPP_2S_ANCESTRAL,
-          );
-          const inputFile = new InputFile(generatedFilePath);
-          // const newMedia = InputMediaBuilder.photo(inputFile);
-          const newMessage = await ctx.replyWithPhoto(inputFile, {
-            caption: photoCaption(selectedUser),
-            parse_mode: "Markdown",
-            reply_markup: {
-              inline_keyboard: photoKeyboard,
-            },
-          });
-          ctx.logger.info(newMessage);
-          const fileId = newMessage.photo
-            .filter((p: PhotoSize) => p.width === p.height)
-            .sort(
-              (a: PhotoSize, b: PhotoSize) =>
-                (b.file_size ?? b.width) - (a.file_size ?? a.width),
-            )[0].file_id;
-          const file = await ctx.api.getFile(fileId);
-          selectedUser.image = `https://api.telegram.org/file/bot${config.BOT_TOKEN}/${file.file_path}`;
-          await selectedUser.save();
+          )
+            .then(async (generatedFilePath) => {
+              const inputFile = new InputFile(generatedFilePath);
+              // const newMedia = InputMediaBuilder.photo(inputFile);
+              const newMessage = await ctx.replyWithPhoto(inputFile, {
+                caption: photoCaption(selectedUser),
+                parse_mode: "Markdown",
+                reply_markup: {
+                  inline_keyboard: photoKeyboard,
+                },
+              });
+              ctx.logger.info(newMessage);
+              const fileId = newMessage.photo
+                .filter((p: PhotoSize) => p.width === p.height)
+                .sort(
+                  (a: PhotoSize, b: PhotoSize) =>
+                    (b.file_size ?? b.width) - (a.file_size ?? a.width),
+                )[0].file_id;
+              const file = await ctx.api.getFile(fileId);
+              selectedUser.image = `https://api.telegram.org/file/bot${config.BOT_TOKEN}/${file.file_path}`;
+              await selectedUser.save();
+            })
+            .catch((error) => ctx.reply((error as Error).message));
           break;
         }
 
