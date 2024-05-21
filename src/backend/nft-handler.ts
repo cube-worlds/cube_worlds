@@ -38,8 +38,7 @@ const nftHandler = (
     return {
       name: "Cube Worlds Citizens",
       description: "Cube Worlds Project Citizens",
-      // image:
-      //   "https://s.getgems.io/nft/b/c/65f3621c70544b47c13ba80d/edit/images/765634.png",
+      image: "https://cubeworlds.club/static/avatar.png",
       // external_url: null,
       // external_link: null,
       social_links: [
