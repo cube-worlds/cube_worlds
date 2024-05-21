@@ -34,6 +34,24 @@ const nftHandler = (
   _options: any,
   done: () => void,
 ) => {
+  fastify.get("/collection.json", (request: any, _reply: any) => {
+    return {
+      name: "Cube Worlds Citizens",
+      description: "Cube Worlds Project Citizens",
+      // image:
+      //   "https://s.getgems.io/nft/b/c/65f3621c70544b47c13ba80d/edit/images/765634.png",
+      // external_url: null,
+      // external_link: null,
+      social_links: [
+        "https://t.me/cube_worlds_bot",
+        "https://twitter.com/cube_worlds",
+      ],
+      marketplace: "getgems.io",
+      // cover_image:
+      //   "https://s.getgems.io/nft/b/c/65f3621c70544b47c13ba80d/edit/images/765657.png",
+    };
+  });
+
   fastify.get("/:index.json", async (request: any, _reply: any) => {
     const { index } = request.params;
     if (!index) {
