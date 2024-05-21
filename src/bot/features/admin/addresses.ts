@@ -10,6 +10,7 @@ import { findAllByCreated } from "#root/bot/models/user";
 import { addCNFT, getAllCNFTs } from "#root/bot/models/cnft";
 import { referralsCount } from "#root/bot/models/vote";
 import { logger } from "#root/logger";
+import fs from "node:fs";
 
 const composer = new Composer<Context>();
 
@@ -39,6 +40,8 @@ async function addAddressesToDatabase(ctx: Context) {
   const wallets = cNFTs.map((c) => c.wallet).join("\n");
   const data = Buffer.from(wallets);
   const filename = `${new Date().toISOString().split("T")[0]}.txt`;
+  const fp = `./data/${filename}`;
+  fs.writeFileSync(fp, data);
   await ctx.replyWithDocument(new InputFile(data, filename));
 }
 
