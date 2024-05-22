@@ -46,8 +46,7 @@ const nftHandler = (
         "https://twitter.com/cube_worlds",
       ],
       marketplace: "getgems.io",
-      // cover_image:
-      //   "https://s.getgems.io/nft/b/c/65f3621c70544b47c13ba80d/edit/images/765657.png",
+      cover_image: "https://cubeworlds.club/static/background.png",
     };
   });
 
