@@ -66,7 +66,7 @@ const nftHandler = (
       image: `https://cubeworlds.club/api/nft/${nft.type.toLowerCase()}-${nft.color}.webp`,
       attributes: [
         { trait_type: "Type", value: nft.type },
-        { trait_type: "Color", value: cnftHexColor(nft.color) },
+        { trait_type: "Color", value: nft.color },
       ],
       buttons: [
         {
