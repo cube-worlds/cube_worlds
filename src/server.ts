@@ -46,7 +46,10 @@ export const createServer = async (bot: Bot) => {
 
   server.post(
     `/${bot.token}`,
-    webhookCallback(bot, "fastify", "throw", 15_000),
+    webhookCallback(bot, "fastify", {
+      onTimeout: "throw",
+      timeoutMilliseconds: 10_000,
+    }),
   );
 
   return server;
