@@ -183,12 +183,6 @@ feature.callbackQuery(
             description: selectedUser.nftDescription,
             image: `ipfs://${ipfsImageHash}`,
             attributes: randomAttributes(),
-            // buttons: [
-            //   {
-            //     label: "Go to Cube Worlds",
-            //     uri: "https://t.me/cube_worlds_bot",
-            //   },
-            // ],
           };
           ctx.logger.info(json);
           const ipfsJSONHash = await pinJSONToIPFS(
