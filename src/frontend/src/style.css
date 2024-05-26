@@ -17,13 +17,12 @@
 body {
     margin: 0;
     display: flex;
-    min-width: 320px;
     min-height: 100vh;
     touch-action: none !important;
 }
 
 #app {
-    max-width: 1280px;
+    max-width: 576px;
     margin: 0 auto;
     padding: 2rem;
     text-align: center;
