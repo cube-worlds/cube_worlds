@@ -34,11 +34,6 @@ export const createServer = async (bot: Bot) => {
     prefix: "/captcha/",
     decorateReply: false,
   });
-  await server.register(fastifyStatic, {
-    root: path.join(path.join(__dirname, "frontend"), "static"),
-    prefix: "/static/",
-    decorateReply: false,
-  });
 
   server.setNotFoundHandler(async (_request, reply) => {
     await reply.sendFile("index.html");

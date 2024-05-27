@@ -1,6 +1,8 @@
 <template>
+  <button id="ton-connection" />
   <!-- <Header class="header" /> -->
   <RouterView />
+  Wallets: {{ walletsList }}
   <!-- <Footer class="footer" /> -->
   <ClosingConfirmation />
   <ExpandedViewport />
@@ -9,6 +11,19 @@
 <script lang="ts" setup>
 import { ClosingConfirmation, ExpandedViewport } from "vue-tg";
 import { ref } from "vue";
+import { TonConnectUI, THEME } from "@tonconnect/ui";
+
+const tonConnectUI = new TonConnectUI({
+  manifestUrl: "https://cubeworlds.club/tonconnect-manifest.json",
+  buttonRootId: "ton-connection",
+});
+tonConnectUI.uiOptions = {
+  language: "ru",
+  uiPreferences: {
+    theme: THEME.DARK,
+  },
+};
+const walletsList = await tonConnectUI.getWallets();
 
 const scrollableEl = ref<HTMLDivElement | null>(null);
 let ts: number | undefined;
