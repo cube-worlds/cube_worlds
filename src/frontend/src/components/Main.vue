@@ -2,7 +2,7 @@
 import { ref } from "vue";
 import { useWebAppHapticFeedback } from "vue-tg";
 
-defineProps<{ msg: string }>();
+defineProps<{ msg?: string }>();
 
 const count = ref(0);
 
