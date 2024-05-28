@@ -28,7 +28,7 @@
     "@grammyjs/i18n": "1.0.2",
     "@grammyjs/menu": "^1.2.1",
     "@grammyjs/parse-mode": "1.10.0",
-    "@grammyjs/types": "3.7.0",
+    "@grammyjs/types": "3.8.0",
     "@pinata/sdk": "^2.1.0",
     "@ton/core": "^0.56.3",
     "@ton/crypto": "^3.2.0",
