@@ -1,8 +1,7 @@
 <template>
-  <button id="ton-connection" />
+  <div class="" id="ton-connect"></div>
   <!-- <Header class="header" /> -->
   <RouterView />
-  Wallets: {{ walletsList }}
   <!-- <Footer class="footer" /> -->
   <ClosingConfirmation />
   <ExpandedViewport />
@@ -10,20 +9,40 @@
 
 <script lang="ts" setup>
 import { ClosingConfirmation, ExpandedViewport } from "vue-tg";
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { TonConnectUI, THEME } from "@tonconnect/ui";
 
-const tonConnectUI = new TonConnectUI({
-  manifestUrl: "https://cubeworlds.club/tonconnect-manifest.json",
-  buttonRootId: "ton-connection",
+onMounted(async () => {
+  console.log("onMounted");
+  const tonConnectUI = new TonConnectUI({
+    manifestUrl: "https://cubeworlds.club/tonconnect-manifest.json",
+    buttonRootId: "ton-connect",
+    language: "ru",
+    uiPreferences: {
+      theme: THEME.DARK,
+    },
+    actionsConfiguration: {
+      returnStrategy: "back",
+      twaReturnUrl: "https://t.me/cube_worlds_bot/free",
+    },
+  });
+  tonConnectUI.setConnectRequestParameters({
+    state: "ready",
+    value: {
+      tonProof: "<your-proof-payload>",
+    },
+  });
+  tonConnectUI.onStatusChange((wallet) => {
+    console.info("Wallet: " + wallet);
+    if (
+      wallet &&
+      wallet.connectItems?.tonProof &&
+      "proof" in wallet.connectItems.tonProof
+    ) {
+      console.info("Proof: " + wallet.connectItems.tonProof.proof);
+    }
+  });
 });
-tonConnectUI.uiOptions = {
-  language: "ru",
-  uiPreferences: {
-    theme: THEME.DARK,
-  },
-};
-const walletsList = await tonConnectUI.getWallets();
 
 const scrollableEl = ref<HTMLDivElement | null>(null);
 let ts: number | undefined;
