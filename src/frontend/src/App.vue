@@ -1,5 +1,7 @@
 <template>
-  <div class="" id="ton-connect"></div>
+  <el-row justify="end">
+    <el-col :span="10"> <div id="ton-connect"></div></el-col>
+  </el-row>
   <!-- <Header class="header" /> -->
   <RouterView />
   <!-- <Footer class="footer" /> -->
@@ -17,31 +19,31 @@ onMounted(async () => {
   const tonConnectUI = new TonConnectUI({
     manifestUrl: "https://cubeworlds.club/tonconnect-manifest.json",
     buttonRootId: "ton-connect",
-    language: "ru",
-    uiPreferences: {
-      theme: THEME.DARK,
-    },
+    // language: "ru",
+    // uiPreferences: {
+    //   theme: THEME.DARK,
+    // },
     actionsConfiguration: {
       returnStrategy: "back",
       twaReturnUrl: "https://t.me/cube_worlds_bot/free",
     },
   });
-  tonConnectUI.setConnectRequestParameters({
-    state: "ready",
-    value: {
-      tonProof: "<your-proof-payload>",
-    },
-  });
-  tonConnectUI.onStatusChange((wallet) => {
-    console.info("Wallet: " + wallet);
-    if (
-      wallet &&
-      wallet.connectItems?.tonProof &&
-      "proof" in wallet.connectItems.tonProof
-    ) {
-      console.info("Proof: " + wallet.connectItems.tonProof.proof);
-    }
-  });
+  // tonConnectUI.setConnectRequestParameters({
+  //   state: "ready",
+  //   value: {
+  //     tonProof: "<your-proof-payload>",
+  //   },
+  // });
+  // tonConnectUI.onStatusChange((wallet) => {
+  //   console.info("Wallet: " + wallet);
+  //   if (
+  //     wallet &&
+  //     wallet.connectItems?.tonProof &&
+  //     "proof" in wallet.connectItems.tonProof
+  //   ) {
+  //     console.info("Proof: " + wallet.connectItems.tonProof.proof);
+  //   }
+  // });
 });
 
 const scrollableEl = ref<HTMLDivElement | null>(null);
@@ -65,6 +67,15 @@ document.documentElement.addEventListener("touchmove", onTouchMove, { passive: f
 </script>
 
 <style>
+.el-col {
+  border-radius: 4px;
+}
+
+.grid-content {
+  border-radius: 4px;
+  min-height: 36px;
+}
+
 .header {
   position: fixed;
   top: 0;

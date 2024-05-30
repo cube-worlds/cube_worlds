@@ -7,10 +7,12 @@ import MainComponent from "./components/Main.vue";
 import FAQComponent from "./components/FAQ.vue";
 import "./style.css";
 import App from "./App.vue";
+import FreeComponent from "./components/MiniApp/Free.vue";
 
 const routes = [
   { path: "/", name: "MainPage", component: MainComponent },
   { path: "/faq", name: "FAQPage", component: FAQComponent },
+  { path: "/miniapp/free_cnft", mame: "FreePage", component: FreeComponent },
 ];
 
 const router = createRouter({
