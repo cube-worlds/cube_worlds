@@ -2,11 +2,14 @@
 /* eslint-disable unicorn/numeric-separators-style */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
+  CNFT,
   CNFTImageType,
   cnftHexColor,
   getCNFTByIndex,
+  getCNFTByWallet,
 } from "#root/bot/models/cnft";
 import { logger } from "#root/logger";
+import { DocumentType } from "@typegoose/typegoose";
 import { FastifyInstance } from "fastify";
 import sharp from "sharp";
 
@@ -27,6 +30,24 @@ function nftImage(type: CNFTImageType) {
     return "knight";
   }
   return "common";
+}
+
+function toJSON(nft: DocumentType<CNFT>) {
+  return {
+    name: `Cube Worlds Citizen #${nft.index}`,
+    description: "Thank you for your participation in the Cube Worlds Project!",
+    image: `https://cubeworlds.club/api/nft/${nft.type.toLowerCase()}-${nft.color}.webp`,
+    attributes: [
+      { trait_type: "Type", value: nft.type },
+      { trait_type: "Color", value: nft.color },
+    ],
+    buttons: [
+      {
+        label: "Explore Cube Worlds",
+        uri: "https://t.me/cube_worlds_bot",
+      },
+    ],
+  };
 }
 
 const nftHandler = (
@@ -50,6 +71,18 @@ const nftHandler = (
     };
   });
 
+  fastify.get("/:address", async (request: any, _reply: any) => {
+    const { address } = request.params;
+    if (!address) {
+      return { error: "No address provided" };
+    }
+    const nft = await getCNFTByWallet(address);
+    if (!nft) {
+      return { error: "NFT doesn't exists" };
+    }
+    return toJSON(nft);
+  });
+
   fastify.get("/:index.json", async (request: any, _reply: any) => {
     const { index } = request.params;
     if (!index) {
@@ -59,23 +92,7 @@ const nftHandler = (
     if (!nft) {
       return { error: "NFT doesn't exists" };
     }
-    const json = {
-      name: `Cube Worlds Citizen #${index}`,
-      description:
-        "Thank you for your participation in the Cube Worlds Project!",
-      image: `https://cubeworlds.club/api/nft/${nft.type.toLowerCase()}-${nft.color}.webp`,
-      attributes: [
-        { trait_type: "Type", value: nft.type },
-        { trait_type: "Color", value: nft.color },
-      ],
-      buttons: [
-        {
-          label: "Explore Cube Worlds",
-          uri: "https://t.me/cube_worlds_bot",
-        },
-      ],
-    };
-    return json;
+    return toJSON(nft);
   });
 
   fastify.get("/:image-:color.webp", async (request: any, reply: any) => {

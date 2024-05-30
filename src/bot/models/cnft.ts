@@ -42,7 +42,7 @@ export class CNFT {
   userId!: number;
 
   @prop({ type: String, required: true })
-  wallet!: string; // in raw format
+  wallet!: string; // in non-bounceble format (UQ)
 
   @prop({ type: BigInt, required: true })
   votes!: bigint;
@@ -66,6 +66,11 @@ export class CNFT {
 }
 
 const CNFTModel = getModelForClass(CNFT);
+
+export async function getCNFTByWallet(address: string) {
+  const wallet = Address.parse(address);
+  return CNFTModel.findOne({ wallet: wallet.toString({ bounceable: false }) });
+}
 
 export async function getCNFTByIndex(index: number) {
   return CNFTModel.findOne({ index });
