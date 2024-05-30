@@ -1,4 +1,5 @@
 import { createApp } from "vue";
+import { createPinia } from "pinia";
 import { createWebHistory, createRouter } from "vue-router";
 import ElementPlus from "element-plus";
 import "element-plus/dist/index.css";
@@ -7,12 +8,12 @@ import MainComponent from "./components/Main.vue";
 import FAQComponent from "./components/FAQ.vue";
 import "./style.css";
 import App from "./App.vue";
-import FreeComponent from "./components/MiniApp/Free.vue";
+import CNFTComponent from "./components/MiniApp/CNFT.vue";
 
 const routes = [
   { path: "/", name: "MainPage", component: MainComponent },
   { path: "/faq", name: "FAQPage", component: FAQComponent },
-  { path: "/miniapp/free_cnft", mame: "FreePage", component: FreeComponent },
+  { path: "/miniapp/cnft", mame: "CNFTPage", component: CNFTComponent },
 ];
 
 const router = createRouter({
@@ -20,7 +21,10 @@ const router = createRouter({
   routes,
 });
 
+const pinia = createPinia();
+
 createApp(App)
+  .use(pinia)
   .use(router)
   .use(ElementPlus, { size: "default", zIndex: 3000, locale: ruLocale })
   .mount("#app");

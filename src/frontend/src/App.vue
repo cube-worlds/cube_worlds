@@ -1,7 +1,7 @@
 <template>
-  <el-row justify="end">
+  <!-- <el-row justify="end">
     <el-col :span="10"> <div id="ton-connect"></div></el-col>
-  </el-row>
+  </el-row> -->
   <!-- <Header class="header" /> -->
   <RouterView />
   <!-- <Footer class="footer" /> -->
@@ -11,40 +11,47 @@
 
 <script lang="ts" setup>
 import { ClosingConfirmation, ExpandedViewport } from "vue-tg";
-import { ref, onMounted } from "vue";
-import { TonConnectUI, THEME } from "@tonconnect/ui";
+import { ref } from "vue";
 
-onMounted(async () => {
-  console.log("onMounted");
-  const tonConnectUI = new TonConnectUI({
-    manifestUrl: "https://cubeworlds.club/tonconnect-manifest.json",
-    buttonRootId: "ton-connect",
-    // language: "ru",
-    // uiPreferences: {
-    //   theme: THEME.DARK,
-    // },
-    actionsConfiguration: {
-      returnStrategy: "back",
-      twaReturnUrl: "https://t.me/cube_worlds_bot/free",
-    },
-  });
-  // tonConnectUI.setConnectRequestParameters({
-  //   state: "ready",
-  //   value: {
-  //     tonProof: "<your-proof-payload>",
-  //   },
-  // });
-  // tonConnectUI.onStatusChange((wallet) => {
-  //   console.info("Wallet: " + wallet);
-  //   if (
-  //     wallet &&
-  //     wallet.connectItems?.tonProof &&
-  //     "proof" in wallet.connectItems.tonProof
-  //   ) {
-  //     console.info("Proof: " + wallet.connectItems.tonProof.proof);
-  //   }
-  // });
-});
+// const userStorage = useUserStore();
+
+// onMounted(async () => {
+//   console.log("onMounted");
+//   const tonConnectUI = new TonConnectUI({
+//     manifestUrl: "https://cubeworlds.club/tonconnect-manifest.json",
+//     buttonRootId: "ton-connect",
+//     // language: "ru",
+//     // uiPreferences: {
+//     //   theme: THEME.DARK,
+//     // },
+//     actionsConfiguration: {
+//       returnStrategy: "back",
+//       twaReturnUrl: "https://t.me/cube_worlds_bot/cnft",
+//     },
+//   });
+
+// tonConnectUI.setConnectRequestParameters({ state: "loading" });
+// if (userStorage.wallet) {
+//   tonConnectUI.setConnectRequestParameters({
+//     state: "ready",
+//     value: userStorage.wallet,
+//   });
+// } else {
+//   tonConnectUI.setConnectRequestParameters(null);
+// }
+
+// tonConnectUI.onStatusChange((wallet) => {
+//   console.info("Wallet updated: " + wallet);
+//   userStorage.setWallet(wallet);
+//   if (
+//     wallet &&
+//     wallet.connectItems?.tonProof &&
+//     "proof" in wallet.connectItems.tonProof
+//   ) {
+//     console.info("Proof: " + wallet.connectItems.tonProof.proof);
+//   }
+// });
+// });
 
 const scrollableEl = ref<HTMLDivElement | null>(null);
 let ts: number | undefined;
