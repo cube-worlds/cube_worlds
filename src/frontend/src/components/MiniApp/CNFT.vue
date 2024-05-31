@@ -29,7 +29,7 @@
 import { ref, watch, onMounted } from "vue";
 import { MainButton, useWebAppHapticFeedback, useWebApp } from "vue-tg";
 import { useUserStore } from "../../stores/user";
-import { Address } from "@ton/core";
+import { Address, Cell, beginCell } from "@ton/core";
 import { TonConnectUI } from "@tonconnect/ui";
 
 const { notificationOccurred } = useWebAppHapticFeedback();
@@ -37,8 +37,8 @@ const { notificationOccurred } = useWebAppHapticFeedback();
 const miniapp = useWebApp();
 const userStorage = useUserStore();
 
-let metadata = ref(null as any);
-let cnft = ref(null as any);
+let metadata = ref();
+let cnft = ref();
 
 let tonConnectUI: TonConnectUI;
 
@@ -61,29 +61,43 @@ onMounted(async () => {
   });
 });
 
+// TL-B schema: claim#013a3ca6 query_id:uint64 item_index:uint256 proof:^Cell = InternalMsgBody;
 async function claim() {
+  const cnft_index = BigInt(cnft.value.item.index);
+  const cnft_proof = cnft.value.proof_cell;
+  const query_id = 0;
+  const proofCell = Cell.fromBase64(cnft_proof);
+
+  const body = beginCell()
+    .storeUint(0x013a3ca6, 32)
+    .storeUint(query_id, 64)
+    .storeUint(cnft_index, 256)
+    .storeRef(proofCell)
+    .endCell();
+
   const transaction = {
-    validUntil: Math.floor(Date.now() / 1000) + 60, // 60 sec
+    validUntil: Math.floor(Date.now() / 1000) + 120,
     messages: [
       {
-        address: "EQBBJBB3HagsujBqVfqeDUPJ0kXjgTPLWPFFffuNXNiJL0aA",
-        amount: "20000000",
-        // stateInit: "base64bocblahblahblah==" // just for instance. Replace with your transaction initState or remove
+        address: "EQAaSqEwAh00YOCc9ZwtqfNcXeehbl97yKQKCZPRGwCov51V",
+        amount: "85000000",
+        payload: body.toBoc().toString("base64"),
       },
     ],
   };
+
   try {
     const result = await tonConnectUI.sendTransaction(transaction);
     console.info("Transaction was sent successfully, BOC: ", result.boc);
     notificationOccurred("success");
   } catch (e) {
-    console.error(e);
+    console.error("Transaction Error:", e);
     notificationOccurred("error");
   }
 }
 
 async function parseCNFT(wallet: string) {
-  const baseUrl = "http://localhost:8081"; //https://cubeworlds.club/cnfts";
+  const baseUrl = "https://cubeworlds.club/cnfts"; // "http://localhost:8081";
   const url = `${baseUrl}/v1/address/${wallet}`;
   try {
     const response = await fetch(url);
@@ -99,7 +113,7 @@ async function parseCNFT(wallet: string) {
 }
 
 async function parseMetadata(wallet: string) {
-  const baseUrl = `http://localhost:80`; // `https://cubeworlds.club`;
+  const baseUrl = `https://cubeworlds.club`; // `http://localhost:80`;
   const url = `${baseUrl}/api/nft/${wallet}`;
   try {
     const response = await fetch(url);
