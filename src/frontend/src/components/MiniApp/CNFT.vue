@@ -5,12 +5,11 @@
     </el-col>
   </el-row>
   <div>
-    Start param: {{ miniapp.initDataUnsafe.start_param }}
     <h1>Claim your own cNFT!</h1>
     <div v-if="userStorage.wallet">
       <div v-if="metadata">
         <h3>{{ metadata?.name }}</h3>
-        <img width="100%" :src="metadata?.image" />
+        <img width="50%" :src="metadata?.image" />
         <p>{{ metadata?.description }}</p>
 
         <div v-if="miniapp.isReady.value">
