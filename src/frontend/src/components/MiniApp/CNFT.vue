@@ -7,14 +7,14 @@
     <div v-if="userStorage.wallet">
       <div v-if="metadata">
         <h3>{{ metadata?.name }}</h3>
-        <img width="320" :src="metadata?.image" />
+        <img width="100%" :src="metadata?.image" />
         <p>{{ metadata?.description }}</p>
 
         <div v-if="miniapp.isReady.value">
-          <MainButton @click="claim" />
+          <MainButton :text="cnftExists ? 'Show' : 'Claim'" @click="tapButton" />
         </div>
         <div v-else>
-          <button @click="claim">Claim</button>
+          <button @click="tapButton">{{ cnftExists ? "Show" : "Claim" }}</button>
         </div>
       </div>
     </div>
@@ -23,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from "vue";
+import { ref, watch, onBeforeMount } from "vue";
 import { MainButton, useWebAppHapticFeedback, useWebApp } from "vue-tg";
 import { useUserStore } from "../../stores/user";
 import { Address, Cell, beginCell } from "@ton/core";
@@ -44,7 +44,13 @@ let cnft = ref();
 let cnftExists = ref();
 let tonConnectUI: TonConnectUI;
 
-onMounted(async () => {
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+onBeforeMount(async () => {
   tonConnectUI = new TonConnectUI({
     manifestUrl: "https://cubeworlds.club/tonconnect-manifest.json",
     buttonRootId: "ton-connect",
@@ -62,6 +68,25 @@ onMounted(async () => {
     userStorage.setWallet(wallet ?? undefined);
   });
 });
+
+async function tapButton() {
+  if (cnftExists.value) {
+    let hexAddress = userStorage.wallet?.account.address;
+    if (!hexAddress) {
+      console.error("No hex address");
+      return;
+    }
+    let adress = Address.parseRaw(hexAddress);
+    window.open(
+      `https://getgems.io/collection/${collectionAddress}/${adress.toString({
+        urlSafe: true,
+      })}`,
+      "_blank"
+    );
+  } else {
+    await claim();
+  }
+}
 
 // TL-B schema: claim#013a3ca6 query_id:uint64 item_index:uint256 proof:^Cell = InternalMsgBody;
 async function claim() {
@@ -82,7 +107,7 @@ async function claim() {
     messages: [
       {
         address: collectionAddress,
-        amount: "85000000",
+        amount: "55000000",
         payload: body.toBoc().toString("base64"),
       },
     ],
@@ -91,12 +116,27 @@ async function claim() {
   try {
     const result = await tonConnectUI.sendTransaction(transaction);
     console.info("Transaction was sent successfully, BOC: ", result.boc);
-    // show spinner
-    // timer to check boc and reload page
+    runMintCheck();
     notificationOccurred("success");
   } catch (e) {
     console.error("Transaction Error:", e);
     notificationOccurred("error");
+  }
+}
+
+async function runMintCheck() {
+  loadingInstance.visible.value = true;
+  if (!cnft.value.item.index) {
+    return;
+  }
+  while (true) {
+    const nftExists = await isNftExists(cnft.value.item.index);
+    if (nftExists) {
+      cnftExists.value = true;
+      loadingInstance.visible.value = false;
+      return;
+    }
+    await sleep(3000);
   }
 }
 
@@ -140,9 +180,11 @@ async function isNftExists(nftIndex: number) {
       throw new Error(`Error: ${response.status} ${response.statusText}`);
     }
     const data = await response.json();
+    console.log(data);
     const hexAddress = data.decoded.address;
     const accountUrl = `https://tonapi.io/v2/blockchain/accounts/${hexAddress}`;
     const responseAccount = await fetch(accountUrl);
+    console.log(responseAccount.status);
     return responseAccount.status == 200;
   } catch (error) {
     console.error("There was a problem with the fetch operation:", error);
@@ -150,36 +192,33 @@ async function isNftExists(nftIndex: number) {
   }
 }
 
+async function parseNftData(hexAddress: string) {
+  const address = Address.parseRaw(hexAddress);
+  const wallet = address.toString({ bounceable: false });
+  metadata.value = await parseMetadata(wallet);
+  cnft.value = await parseCNFT(wallet);
+  if (cnft.value.item.index) {
+    cnftExists.value = await isNftExists(cnft.value.item.index);
+  } else {
+    cnftExists.value = false;
+  }
+}
+
 watch(
   () => userStorage.wallet,
   async () => {
     if (!userStorage.wallet) {
+      console.error("Empty wallet");
       return;
     }
     const hexAddress = userStorage.wallet?.account.address;
-    console.log(hexAddress);
     if (!hexAddress) {
+      console.error("No hex address");
       return;
     }
     loadingInstance.visible.value = true;
-    const address = Address.parseRaw(hexAddress);
-    const wallet = address.toString({ bounceable: false });
-    metadata.value = await parseMetadata(wallet);
-    cnft.value = await parseCNFT(wallet);
-    if (cnft.value.item.index) {
-      cnftExists.value = await isNftExists(cnft.value.item.index);
-    } else {
-      cnftExists.value = false;
-    }
-    loadingInstance.close();
+    await parseNftData(hexAddress);
+    loadingInstance.visible.value = false;
   }
 );
 </script>
-
-<style>
-.loading {
-  background: transparent url("https://cubeworlds.club/spinner.gif") center no-repeat;
-  height: 400px;
-  width: 400px;
-}
-</style>
