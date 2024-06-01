@@ -2,7 +2,7 @@
   <el-row justify="end">
     <el-col :span="10"> <div id="ton-connect"></div></el-col>
   </el-row>
-  <div :class="isLoading ? 'loading' : ''">
+  <div>
     <h1>Claim your own cNFT!</h1>
     <div v-if="userStorage.wallet">
       <div v-if="metadata">
@@ -10,14 +10,11 @@
         <img width="320" :src="metadata?.image" />
         <p>{{ metadata?.description }}</p>
 
-        <div v-if="isLoading">Loading...</div>
+        <div v-if="miniapp.isReady.value">
+          <MainButton @click="claim" />
+        </div>
         <div v-else>
-          <div v-if="miniapp.isReady.value">
-            <MainButton @click="claim" />
-          </div>
-          <div v-else>
-            <button @click="claim">Claim</button>
-          </div>
+          <button @click="claim">Claim</button>
         </div>
       </div>
     </div>
@@ -31,6 +28,9 @@ import { MainButton, useWebAppHapticFeedback, useWebApp } from "vue-tg";
 import { useUserStore } from "../../stores/user";
 import { Address, Cell, beginCell } from "@ton/core";
 import { TonConnectUI } from "@tonconnect/ui";
+import { ElLoading } from "element-plus";
+
+const loadingInstance = ElLoading.service({ fullscreen: true, visible: false });
 
 const { notificationOccurred } = useWebAppHapticFeedback();
 
@@ -41,9 +41,7 @@ const userStorage = useUserStore();
 
 let metadata = ref();
 let cnft = ref();
-let cftExists = ref(false);
-let isLoading = ref(true);
-
+let cnftExists = ref();
 let tonConnectUI: TonConnectUI;
 
 onMounted(async () => {
@@ -163,14 +161,17 @@ watch(
     if (!hexAddress) {
       return;
     }
+    loadingInstance.visible.value = true;
     const address = Address.parseRaw(hexAddress);
     const wallet = address.toString({ bounceable: false });
     metadata.value = await parseMetadata(wallet);
     cnft.value = await parseCNFT(wallet);
     if (cnft.value.item.index) {
-      cftExists.value = await isNftExists(cnft.value.item.index);
+      cnftExists.value = await isNftExists(cnft.value.item.index);
+    } else {
+      cnftExists.value = false;
     }
-    isLoading.value = false;
+    loadingInstance.close();
   }
 );
 </script>
