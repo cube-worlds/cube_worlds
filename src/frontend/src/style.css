@@ -14,18 +14,18 @@
     -webkit-text-size-adjust: 100%;
 }
 
+html,
 body {
-    margin: 0;
-    display: flex;
-    min-height: 100vh;
-    touch-action: none !important;
+    position: fixed;
+    overflow: hidden;
+    padding: 0;
 }
 
-#app {
-    max-width: 576px;
-    margin: 0 auto;
-    padding: 2rem;
-    text-align: center;
+body > #app {
+    width: 100vw;
+    height: 100vh;
+    overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
 }
 
 h1 {
