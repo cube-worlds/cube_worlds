@@ -2,7 +2,7 @@
   <el-row justify="end">
     <el-col :span="10"> <div id="ton-connect"></div></el-col>
   </el-row>
-  <div :class="isLoading ? 'loading' ? ''">
+  <div :class="isLoading ? 'loading' : ''">
     <h1>Claim your own cNFT!</h1>
     <div v-if="userStorage.wallet">
       <div v-if="metadata">
