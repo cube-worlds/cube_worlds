@@ -45,6 +45,7 @@ const userStorage = useUserStore();
 let metadata = ref();
 let cnft = ref();
 let cnftExists = ref();
+let cnftAddress: Address | undefined = undefined;
 let tonConnectUI: TonConnectUI;
 
 function sleep(ms: number): Promise<void> {
@@ -74,14 +75,12 @@ onMounted(async () => {
 
 async function tapButton() {
   if (cnftExists.value) {
-    let hexAddress = userStorage.wallet?.account.address;
-    if (!hexAddress) {
-      console.error("No hex address");
+    if (!cnftAddress) {
+      console.error("Empty cNFT address");
       return;
     }
-    let adress = Address.parseRaw(hexAddress);
     window.open(
-      `https://getgems.io/collection/${collectionAddress}/${adress.toString({
+      `https://getgems.io/collection/${collectionAddress}/${cnftAddress.toString({
         urlSafe: true,
       })}`,
       "_blank"
@@ -185,7 +184,10 @@ async function isNftExists(nftIndex: number) {
     const data = await response.json();
     console.log(data);
     const hexAddress = data.decoded.address;
-    const accountUrl = `https://tonapi.io/v2/blockchain/accounts/${hexAddress}`;
+    cnftAddress = Address.parseRaw(hexAddress);
+    const accountUrl = `https://tonapi.io/v2/blockchain/accounts/${cnftAddress.toString({
+      urlSafe: true,
+    })}`;
     const responseAccount = await fetch(accountUrl);
     console.log(responseAccount.status);
     return responseAccount.status == 200;
@@ -207,7 +209,7 @@ async function parseNftData(hexAddress: string) {
   }
   const isBackFromWallet = miniapp.initDataUnsafe.start_param === "from_wallet";
   if (isBackFromWallet) {
-    await runMintCheck();
+    runMintCheck().catch(console.error);
   }
 }
 
