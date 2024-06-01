@@ -108,7 +108,7 @@ async function claim() {
     messages: [
       {
         address: collectionAddress,
-        amount: "55000000",
+        amount: "85000000",
         payload: body.toBoc().toString("base64"),
       },
     ],
