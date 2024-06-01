@@ -9,7 +9,7 @@
     <div v-if="userStorage.wallet">
       <div v-if="metadata">
         <h3>{{ metadata?.name }}</h3>
-        <img width="50%" :src="metadata?.image" />
+        <img width="75%" :src="metadata?.image" />
         <p>{{ metadata?.description }}</p>
 
         <div v-if="miniapp.isReady.value">
