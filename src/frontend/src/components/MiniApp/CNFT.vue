@@ -1,8 +1,11 @@
 <template>
   <el-row justify="end">
-    <el-col :span="10"> <div id="ton-connect"></div></el-col>
+    <el-col :span="10">
+      <div id="ton-connect"></div>
+    </el-col>
   </el-row>
   <div>
+    Start param: {{ miniapp.initDataUnsafe.start_param }}
     <h1>Claim your own cNFT!</h1>
     <div v-if="userStorage.wallet">
       <div v-if="metadata">
@@ -23,7 +26,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onBeforeMount } from "vue";
+import { ref, watch, onMounted } from "vue";
 import { MainButton, useWebAppHapticFeedback, useWebApp } from "vue-tg";
 import { useUserStore } from "../../stores/user";
 import { Address, Cell, beginCell } from "@ton/core";
@@ -50,7 +53,7 @@ function sleep(ms: number): Promise<void> {
   });
 }
 
-onBeforeMount(async () => {
+onMounted(async () => {
   tonConnectUI = new TonConnectUI({
     manifestUrl: "https://cubeworlds.club/tonconnect-manifest.json",
     buttonRootId: "ton-connect",
@@ -67,12 +70,6 @@ onBeforeMount(async () => {
     console.info("Wallet updated: " + wallet);
     userStorage.setWallet(wallet ?? undefined);
   });
-
-  const isBackFromWallet = miniapp.initDataUnsafe.start_param === "from_wallet";
-  console.log(miniapp.initDataUnsafe.start_param, isBackFromWallet);
-  if (isBackFromWallet) {
-    runMintCheck().catch(console.error);
-  }
 });
 
 async function tapButton() {
@@ -207,6 +204,10 @@ async function parseNftData(hexAddress: string) {
     cnftExists.value = await isNftExists(cnft.value.item.index);
   } else {
     cnftExists.value = false;
+  }
+  const isBackFromWallet = miniapp.initDataUnsafe.start_param === "from_wallet";
+  if (isBackFromWallet) {
+    await runMintCheck();
   }
 }
 
