@@ -60,13 +60,19 @@ onBeforeMount(async () => {
     // },
     actionsConfiguration: {
       returnStrategy: "back",
-      twaReturnUrl: "https://t.me/cube_worlds_bot/cnft",
+      twaReturnUrl: "https://t.me/cube_worlds_bot/cnft?startapp=from_wallet",
     },
   });
   tonConnectUI.onStatusChange((wallet) => {
     console.info("Wallet updated: " + wallet);
     userStorage.setWallet(wallet ?? undefined);
   });
+
+  const isBackFromWallet = miniapp.initDataUnsafe.start_param === "from_wallet";
+  console.log(miniapp.initDataUnsafe.start_param, isBackFromWallet);
+  if (isBackFromWallet) {
+    runMintCheck().catch(console.error);
+  }
 });
 
 async function tapButton() {
