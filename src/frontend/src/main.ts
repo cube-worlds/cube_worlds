@@ -11,9 +11,10 @@ import App from "./App.vue";
 import CNFTComponent from "./components/MiniApp/CNFT.vue";
 
 const routes = [
+  // RESERVED: /cnfts /api
   { path: "/", name: "MainPage", component: MainComponent },
   { path: "/faq", name: "FAQPage", component: FAQComponent },
-  { path: "/miniapp/cnft", mame: "CNFTPage", component: CNFTComponent },
+  { path: "/cnft", mame: "CNFTPage", component: CNFTComponent },
 ];
 
 const router = createRouter({
