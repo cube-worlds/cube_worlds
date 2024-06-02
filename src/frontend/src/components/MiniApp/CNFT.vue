@@ -19,6 +19,7 @@
           <button @click="tapButton">{{ cnftExists ? "Show" : "Claim" }}</button>
         </div>
       </div>
+      <div v-else>You are not eligible to claim this cNFT.</div>
     </div>
     <div v-else>Connect your wallet to check the availability of your cNFT.</div>
   </div>
@@ -30,7 +31,7 @@ import { MainButton, useWebAppHapticFeedback, useWebApp } from "vue-tg";
 import { useUserStore } from "../../stores/user";
 import { Address, Cell, beginCell } from "@ton/core";
 import { TonConnectUI } from "@tonconnect/ui";
-import { ElLoading } from "element-plus";
+import { ElLoading, ElMessage } from "element-plus";
 
 const loadingInstance = ElLoading.service({ fullscreen: true, visible: false });
 
@@ -117,10 +118,10 @@ async function claim() {
   try {
     const result = await tonConnectUI.sendTransaction(transaction);
     console.info("Transaction was sent successfully, BOC: ", result.boc);
-    runMintCheck();
+    runMintCheck().catch(showError);
     notificationOccurred("success");
   } catch (e) {
-    console.error("Transaction Error:", e);
+    showError(e);
     notificationOccurred("error");
   }
 }
@@ -141,6 +142,17 @@ async function runMintCheck() {
   }
 }
 
+async function showError(error: unknown) {
+  loadingInstance.visible.value = false;
+  const message = (error as Error)?.message ?? error;
+  ElMessage({
+    showClose: true,
+    message: message,
+    type: "error",
+  });
+  console.error("There was a problem: ", message);
+}
+
 async function parseCNFT(wallet: string) {
   const baseUrl = "https://cubeworlds.club/cnfts"; // "http://localhost:8081";
   const url = `${baseUrl}/v1/address/${wallet}`;
@@ -153,7 +165,7 @@ async function parseCNFT(wallet: string) {
     console.log("CNFT fetched successfully:", data);
     return data;
   } catch (error) {
-    console.error("There was a problem with the fetch operation:", error);
+    showError(error);
   }
 }
 
@@ -169,7 +181,7 @@ async function parseMetadata(wallet: string) {
     console.log("Metadata fetched successfully:", data);
     return data;
   } catch (error) {
-    console.error("There was a problem with the fetch operation:", error);
+    showError(error);
   }
 }
 
@@ -191,7 +203,7 @@ async function isNftExists(nftIndex: number) {
     console.log(responseAccount.status);
     return responseAccount.status == 200;
   } catch (error) {
-    console.error("There was a problem with the fetch operation:", error);
+    showError(error);
     return false;
   }
 }
@@ -199,16 +211,16 @@ async function isNftExists(nftIndex: number) {
 async function parseNftData(hexAddress: string) {
   const address = Address.parseRaw(hexAddress);
   const wallet = address.toString({ bounceable: false });
-  metadata.value = await parseMetadata(wallet);
-  cnft.value = await parseCNFT(wallet);
+  metadata.value = await parseMetadata(wallet).catch(showError);
+  cnft.value = await parseCNFT(wallet).catch(showError);
   if (cnft.value.item.index) {
-    cnftExists.value = await isNftExists(cnft.value.item.index);
+    cnftExists.value = await isNftExists(cnft.value.item.index).catch(showError);
   } else {
     cnftExists.value = false;
   }
   const isBackFromWallet = miniapp.initDataUnsafe.start_param === "from_wallet";
   if (isBackFromWallet) {
-    runMintCheck().catch(console.error);
+    runMintCheck().catch(showError);
   }
 }
 
@@ -225,7 +237,7 @@ watch(
       return;
     }
     loadingInstance.visible.value = true;
-    await parseNftData(hexAddress);
+    await parseNftData(hexAddress).catch(showError);
     loadingInstance.visible.value = false;
   }
 );
