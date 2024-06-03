@@ -203,7 +203,7 @@ async function isNftExists(nftIndex: number) {
     console.log(responseAccount.status);
     return responseAccount.status == 200;
   } catch (error) {
-    showError(error);
+    console.log(error);
     return false;
   }
 }

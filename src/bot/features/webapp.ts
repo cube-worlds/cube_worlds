@@ -11,7 +11,7 @@ feature.command("webapp", logHandle("command-webapp"), (ctx) => {
   return ctx.reply("Test webapp", {
     reply_markup: new InlineKeyboard()
       .webApp("Open Web App", config.WEB_APP_URL)
-      .webApp("Claim cNFT", `${config.WEB_APP_URL}/miniapp/cnft`),
+      .webApp("Claim cNFT", `${config.WEB_APP_URL}/cnft`),
   });
 });
 
