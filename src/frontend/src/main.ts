@@ -8,7 +8,7 @@ import MainComponent from "./components/Main.vue";
 import "./style.css";
 import App from "./App.vue";
 import CNFTComponent from "./components/CNFT.vue";
-import FAQComponent from "./components/Faq.vue";
+import FAQComponent from "./components/FAQ.vue";
 
 const routes = [
   // RESERVED: /cnfts /api

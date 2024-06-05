@@ -11,7 +11,6 @@ declare module 'vue' {
     CNFT: typeof import('./src/components/CNFT.vue')['default']
     ElCol: typeof import('element-plus/es')['ElCol']
     ElRow: typeof import('element-plus/es')['ElRow']
-    Faq: typeof import('./src/components/Faq.vue')['default']
     FAQ: typeof import('./src/components/FAQ.vue')['default']
     Footer: typeof import('./src/components/Footer.vue')['default']
     Header: typeof import('./src/components/Header.vue')['default']
