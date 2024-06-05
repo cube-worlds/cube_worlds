@@ -11,66 +11,8 @@
 
 <script lang="ts" setup>
 import { ClosingConfirmation, ExpandedViewport } from "vue-tg";
-import { ref } from "vue";
 
 // const userStorage = useUserStore();
-
-// onMounted(async () => {
-//   console.log("onMounted");
-//   const tonConnectUI = new TonConnectUI({
-//     manifestUrl: "https://cubeworlds.club/tonconnect-manifest.json",
-//     buttonRootId: "ton-connect",
-//     // language: "ru",
-//     // uiPreferences: {
-//     //   theme: THEME.DARK,
-//     // },
-//     actionsConfiguration: {
-//       returnStrategy: "back",
-//       twaReturnUrl: "https://t.me/cube_worlds_bot/cnft",
-//     },
-//   });
-
-// tonConnectUI.setConnectRequestParameters({ state: "loading" });
-// if (userStorage.wallet) {
-//   tonConnectUI.setConnectRequestParameters({
-//     state: "ready",
-//     value: userStorage.wallet,
-//   });
-// } else {
-//   tonConnectUI.setConnectRequestParameters(null);
-// }
-
-// tonConnectUI.onStatusChange((wallet) => {
-//   console.info("Wallet updated: " + wallet);
-//   userStorage.setWallet(wallet);
-//   if (
-//     wallet &&
-//     wallet.connectItems?.tonProof &&
-//     "proof" in wallet.connectItems.tonProof
-//   ) {
-//     console.info("Proof: " + wallet.connectItems.tonProof.proof);
-//   }
-// });
-// });
-
-// const scrollableEl = ref<HTMLDivElement | null>(null);
-// let ts: number | undefined;
-// const onTouchStart = (e: TouchEvent) => {
-//   ts = e.touches[0].clientY;
-// };
-// const onTouchMove = (e: TouchEvent) => {
-//   if (scrollableEl && scrollableEl.value && ts) {
-//     const scroll = scrollableEl.value.scrollTop;
-//     const te = e.changedTouches[0].clientY;
-//     if (scroll <= 0 && ts < te) {
-//       e.preventDefault();
-//     }
-//   } else {
-//     e.preventDefault();
-//   }
-// };
-// document.documentElement.addEventListener("touchstart", onTouchStart, { passive: false });
-// document.documentElement.addEventListener("touchmove", onTouchMove, { passive: false });
 </script>
 
 <style>
