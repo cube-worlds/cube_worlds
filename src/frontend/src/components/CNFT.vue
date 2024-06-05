@@ -28,7 +28,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from "vue";
 import { MainButton, useWebAppHapticFeedback, useWebApp } from "vue-tg";
-import { useUserStore } from "../../stores/user";
+import { useUserStore } from "../stores/user.js";
 import { Address, Cell, beginCell } from "@ton/core";
 import { TonConnectUI } from "@tonconnect/ui";
 import { ElLoading, ElMessage } from "element-plus";

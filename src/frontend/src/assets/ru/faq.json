@@ -1,0 +1,17 @@
+[
+  {
+    "question": "What is Vue 3?",
+    "answer": "Vue 3 is the latest version of the Vue framework.",
+    "open": false
+  },
+  {
+    "question": "How to create a component in Vue 3?",
+    "answer": "You can create a component in Vue 3 using the <script setup> syntax or the standard component definition.",
+    "open": false
+  },
+  {
+    "question": "What is a prop in Vue 3?",
+    "answer": "A prop is a custom attribute for passing information from parent to child components.",
+    "open": false
+  }
+]

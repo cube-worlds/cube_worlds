@@ -5,10 +5,10 @@ import ElementPlus from "element-plus";
 import "element-plus/dist/index.css";
 import ruLocale from "element-plus/es/locale/lang/ru";
 import MainComponent from "./components/Main.vue";
-import FAQComponent from "./components/FAQ.vue";
 import "./style.css";
 import App from "./App.vue";
-import CNFTComponent from "./components/MiniApp/CNFT.vue";
+import CNFTComponent from "./components/CNFT.vue";
+import FAQComponent from "./components/Faq.vue";
 
 const routes = [
   // RESERVED: /cnfts /api
