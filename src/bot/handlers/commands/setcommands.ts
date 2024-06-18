@@ -1,4 +1,4 @@
-import { BotCommand } from "@grammyjs/types";
+import { BotCommand, LanguageCode } from "@grammyjs/types";
 import { CommandContext } from "grammy";
 import { i18n, isMultipleLocales } from "#root/bot/i18n.js";
 import { config } from "#root/config.js";
@@ -112,7 +112,7 @@ export async function setCommandsHandler(ctx: CommandContext<Context>) {
             : []),
         ],
         {
-          language_code: code,
+          language_code: code as LanguageCode,
           scope: {
             type: "all_private_chats",
           },
@@ -133,7 +133,7 @@ export async function setCommandsHandler(ctx: CommandContext<Context>) {
   if (isMultipleLocales) {
     const requests = i18n.locales.map((code) =>
       ctx.api.setMyCommands(getGroupChatCommands(code), {
-        language_code: code,
+        language_code: code as LanguageCode,
         scope: {
           type: "all_group_chats",
         },
@@ -146,14 +146,14 @@ export async function setCommandsHandler(ctx: CommandContext<Context>) {
     // when the chat is empty
     const descriptionRequests = i18n.locales.map((code) =>
       ctx.api.setMyDescription(i18n.t(code, "bot.description"), {
-        language_code: code,
+        language_code: code as LanguageCode,
       }),
     );
 
     // bot's profile page and in share links
     const shortDescriptionRequests = i18n.locales.map((code) =>
       ctx.api.setMyShortDescription(i18n.t(code, "bot.short_description"), {
-        language_code: code,
+        language_code: code as LanguageCode,
       }),
     );
     await Promise.all([
