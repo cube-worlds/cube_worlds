@@ -21,7 +21,8 @@ try {
   });
 
   const subscription = new Subscription(bot);
-  await subscription.startProcessTransactions();
+  // eslint-disable-next-line no-void
+  void subscription.startProcessTransactions();
 
   if (config.BOT_MODE === "webhook") {
     // to prevent receiving updates before the bot is ready

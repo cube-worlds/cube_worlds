@@ -1,8 +1,9 @@
 {
   "ignorePatterns": [
     "build/src/*",
-    "src/frontend/dist/*",
-    "src/frontend/*.d.ts"
+    "src/frontend/*"
+    // "src/frontend/dist/*",
+    // "src/frontend/*.d.ts"
   ],
   "env": {
     "es2021": true,
@@ -53,7 +54,8 @@
       "error",
       {
         "replacements": {
-          "ctx": false
+          "ctx": false,
+          "err": false
         }
       }
     ]

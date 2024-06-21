@@ -1,17 +1,18 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { useWebAppHapticFeedback } from "vue-tg";
+import { useWebApp } from "vue-tg";
+import { useAuth } from "../composables/use-auth";
+import { onMounted } from "vue";
 
 defineProps<{ msg?: string }>();
 
-const count = ref(0);
-
-const { notificationOccurred } = useWebAppHapticFeedback();
-
-function increment() {
-  notificationOccurred("success");
-  count.value++;
-}
+onMounted(async () => {
+  const webAppUser = useWebApp().initDataUnsafe.user;
+  if (webAppUser) {
+    const { user, error, login } = useAuth(useWebApp().initData, webAppUser.id);
+    await login();
+    console.log(user.value, error.value);
+  }
+});
 </script>
 
 <template>
