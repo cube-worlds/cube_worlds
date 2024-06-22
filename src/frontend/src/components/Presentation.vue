@@ -189,20 +189,7 @@ onUnmounted(() => {
 });
 </script>
 
-<style>
-@import url("https://fonts.googleapis.com/css2?family=VT323&display=swap");
-
-body,
-html {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  font-family: "VT323", monospace;
-  background-color: #1a1a2e;
-  color: #e94560;
-  overflow: hidden;
-}
-
+<style scoped>
 .slide {
   width: 100%;
   height: 100%;
