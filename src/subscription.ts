@@ -71,17 +71,21 @@ export class Subscription {
       `Receive ${TonWeb.utils.fromNano(value)} TON from ${senderAddress.toString()}"`,
     );
 
+    const points = tonToPoints(ton);
+    logger.info(`Received ${ton} TON => ${points} points`);
+
     const user = await findUserByAddress(senderAddress);
     if (!user) {
       trxModel.accepted = false;
       await trxModel.save();
-      const notFoundMessage = `❗️ USER NOT FOUND FOR: ${ton} TON from ${senderAddress.toString()}`;
-      await sendMessageToAdmins(this.bot.api, notFoundMessage);
-      return logger.error(notFoundMessage);
+      const notFoundMessage = `❗️ USER NOT FOUND FOR: ${ton} TON from ${senderAddress.toString({ bounceable: false })}`;
+      if (points > 1) {
+        await sendMessageToAdmins(this.bot.api, notFoundMessage);
+      }
+      logger.error(notFoundMessage);
+      return;
     }
 
-    const points = tonToPoints(ton);
-    logger.info(`${ton} => ${points}`);
     await addPoints(user.id, points);
 
     await this.bot.api.sendMessage(
