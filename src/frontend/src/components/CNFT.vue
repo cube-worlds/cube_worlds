@@ -173,6 +173,7 @@ async function parseCNFT(wallet: string) {
     const message = (error as Error)?.message;
     if (message.includes("400 Bad Request")) {
       eligible.value = false;
+      throw error;
     } else {
       showError(error);
     }
