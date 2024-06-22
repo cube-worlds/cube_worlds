@@ -7,7 +7,7 @@
   <div>
     <h1>Claim your own cNFT!</h1>
     <div v-if="userStorage.wallet">
-      <div v-if="metadata && eligible.value">
+      <div v-if="metadata && eligible">
         <h3>{{ metadata?.name }}</h3>
         <img width="75%" :src="metadata?.image" />
         <p>{{ metadata?.description }}</p>
@@ -19,9 +19,12 @@
           <button @click="tapButton">{{ cnftExists ? "Show" : "Claim" }}</button>
         </div>
       </div>
-      <div v-else>You are not eligible to claim this cNFT.</div>
+      <div v-else>
+        Unfortunately, you are currently not eligible to claim cNFT. Please try again
+        later.
+      </div>
     </div>
-    <div v-else>Connect your wallet to check the availability of your cNFT.</div>
+    <div v-else>Please connect your wallet to check the availability of your cNFT.</div>
   </div>
 </template>
 
