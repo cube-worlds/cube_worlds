@@ -7,7 +7,7 @@
   <div>
     <h1>Claim your own cNFT!</h1>
     <div v-if="userStorage.wallet">
-      <div v-if="metadata">
+      <div v-if="metadata && eligible.value">
         <h3>{{ metadata?.name }}</h3>
         <img width="75%" :src="metadata?.image" />
         <p>{{ metadata?.description }}</p>
@@ -26,7 +26,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from "vue";
+import { ref, watch, onMounted, Ref } from "vue";
 import { MainButton, useWebAppHapticFeedback, useWebApp } from "vue-tg";
 import { useUserStore } from "../stores/user.js";
 import { Address, Cell, beginCell } from "@ton/core";
@@ -45,6 +45,7 @@ const userStorage = useUserStore();
 let metadata = ref();
 let cnft = ref();
 let cnftExists = ref();
+let eligible: Ref<Boolean> = ref(true);
 let cnftAddress: Address | undefined = undefined;
 let tonConnectUI: TonConnectUI;
 
@@ -162,10 +163,16 @@ async function parseCNFT(wallet: string) {
       throw new Error(`Error: ${response.status} ${response.statusText}`);
     }
     const data = await response.json();
+    eligible.value = true;
     console.log("CNFT fetched successfully:", data);
     return data;
   } catch (error) {
-    showError(error);
+    const message = (error as Error)?.message;
+    if (message.includes("400 Bad Request")) {
+      eligible.value = false;
+    } else {
+      showError(error);
+    }
   }
 }
 
