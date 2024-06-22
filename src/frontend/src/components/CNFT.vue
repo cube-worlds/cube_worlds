@@ -160,24 +160,13 @@ async function showError(error: unknown) {
 async function parseCNFT(wallet: string) {
   const baseUrl = "https://cubeworlds.club/cnfts"; // "http://localhost:8081";
   const url = `${baseUrl}/v1/address/${wallet}`;
-  try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Error: ${response.status} ${response.statusText}`);
-    }
-    const data = await response.json();
-    eligible.value = true;
-    console.log("CNFT fetched successfully:", data);
-    return data;
-  } catch (error) {
-    const message = (error as Error)?.message;
-    if (message.includes("400 Bad Request")) {
-      eligible.value = false;
-      throw error;
-    } else {
-      showError(error);
-    }
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Error: ${response.status} ${response.statusText}`);
   }
+  const data = await response.json();
+  console.log("CNFT fetched successfully:", data);
+  return data;
 }
 
 async function parseMetadata(wallet: string) {
@@ -223,8 +212,19 @@ async function parseNftData(hexAddress: string) {
   const address = Address.parseRaw(hexAddress);
   const wallet = address.toString({ bounceable: false });
   try {
-    metadata.value = await parseMetadata(wallet);
     cnft.value = await parseCNFT(wallet);
+    eligible.value = true;
+  } catch (error) {
+    const message = (error as Error)?.message;
+    if (message.includes("400 Bad Request")) {
+      eligible.value = false;
+    } else {
+      showError(error);
+    }
+    return;
+  }
+  try {
+    metadata.value = await parseMetadata(wallet);
     if (cnft.value.item.index) {
       cnftExists.value = await isNftExists(cnft.value.item.index);
     } else {

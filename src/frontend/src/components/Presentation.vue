@@ -2,8 +2,7 @@
   <div id="presentation" @keyup.passive.="nextSlide">
     <div class="slide active">
       <h1>Cube Worlds</h1>
-      <div class="cube-word">CUBE</div>
-      <div class="cube-word">WORLDS</div>
+      <div class="cube-word">CUBE WORLDS</div>
       <p>
         An innovative text-based RPG game integrated with Telegram bot and TON blockchain
       </p>
@@ -12,8 +11,7 @@
 
     <div class="slide">
       <h2>Game Overview</h2>
-      <div class="cube-word">BOT</div>
-      <div class="cube-word">RPG</div>
+      <div class="cube-word">CUBE WORLDS</div>
       <ul>
         <li>Open-world experience with impactful player decisions</li>
         <li>Interact via @cube_worlds_bot on Telegram</li>
