@@ -155,13 +155,39 @@ const handleKeydown = (event) => {
   }
 };
 
+let touchStartX = 0;
+let touchEndX = 0;
+
+function handleTouchStart(event) {
+  touchStartX = event.changedTouches[0].screenX;
+}
+
+function handleTouchEnd(event) {
+  touchEndX = event.changedTouches[0].screenX;
+  handleSwipe();
+}
+
+function handleSwipe() {
+  if (touchStartX - touchEndX > 50) {
+    nextSlide();
+  }
+  if (touchEndX - touchStartX > 50) {
+    prevSlide();
+  }
+}
+
 onMounted(() => {
   slides.value = document.querySelectorAll(".slide");
   document.addEventListener("keydown", handleKeydown);
+
+  document.addEventListener("touchstart", handleTouchStart, false);
+  document.addEventListener("touchend", handleTouchEnd, false);
 });
 
 onUnmounted(() => {
   document.removeEventListener("keydown", handleKeydown);
+  document.removeEventListener("touchstart", handleTouchStart);
+  document.removeEventListener("touchend", handleTouchEnd);
 });
 </script>
 
@@ -200,13 +226,6 @@ h1,
 h2 {
   color: #16c79a;
   text-shadow: 2px 2px #0f3460;
-}
-
-h1 {
-  font-size: 4em;
-}
-h2 {
-  font-size: 3em;
 }
 
 p,
