@@ -270,3 +270,24 @@ export async function addPoints(userId: number, add: bigint) {
     throw error;
   }
 }
+
+export async function userStats() {
+  const all = await UserModel.countDocuments();
+  const minted = await countUsers(true);
+  const notMinted = await countUsers(false);
+  const now = Date.now();
+  const dayMs = 24 * 60 * 60 * 1000;
+  const monthAgo = new Date(now - 30 * dayMs);
+  const weekAgo = new Date(now - 7 * dayMs);
+  const dayAgo = new Date(now - 1 * dayMs);
+  const month = await UserModel.countDocuments({
+    updatedAt: { $gte: monthAgo },
+  });
+  const week = await UserModel.countDocuments({
+    updatedAt: { $gte: weekAgo },
+  });
+  const day = await UserModel.countDocuments({
+    updatedAt: { $gte: dayAgo },
+  });
+  return { all, minted, notMinted, month, week, day };
+}

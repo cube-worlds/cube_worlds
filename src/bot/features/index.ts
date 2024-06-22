@@ -4,6 +4,7 @@ export * from "./unhandled.js";
 export * from "./reset.js";
 export * from "./mint.js";
 export * from "./start.js";
+export * from "./stats.js";
 export * from "./dice.js";
 export * from "./whales.js";
 export * from "./line.js";
