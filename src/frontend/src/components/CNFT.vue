@@ -118,7 +118,7 @@ async function claim() {
   try {
     const result = await tonConnectUI.sendTransaction(transaction);
     console.info("Transaction was sent successfully, BOC: ", result.boc);
-    runMintCheck().catch(showError);
+    await runMintCheck();
     notificationOccurred("success");
   } catch (e) {
     showError(e);
@@ -211,16 +211,20 @@ async function isNftExists(nftIndex: number) {
 async function parseNftData(hexAddress: string) {
   const address = Address.parseRaw(hexAddress);
   const wallet = address.toString({ bounceable: false });
-  metadata.value = await parseMetadata(wallet).catch(showError);
-  cnft.value = await parseCNFT(wallet).catch(showError);
-  if (cnft.value.item.index) {
-    cnftExists.value = await isNftExists(cnft.value.item.index).catch(showError);
-  } else {
-    cnftExists.value = false;
-  }
-  const isBackFromWallet = miniapp.initDataUnsafe.start_param === "from_wallet";
-  if (isBackFromWallet) {
-    runMintCheck().catch(showError);
+  try {
+    metadata.value = await parseMetadata(wallet);
+    cnft.value = await parseCNFT(wallet);
+    if (cnft.value.item.index) {
+      cnftExists.value = await isNftExists(cnft.value.item.index);
+    } else {
+      cnftExists.value = false;
+    }
+    const isBackFromWallet = miniapp.initDataUnsafe.start_param === "from_wallet";
+    if (isBackFromWallet) {
+      await runMintCheck();
+    }
+  } catch (error) {
+    await showError(error);
   }
 }
 
@@ -237,8 +241,12 @@ watch(
       return;
     }
     loadingInstance.visible.value = true;
-    await parseNftData(hexAddress).catch(showError);
-    loadingInstance.visible.value = false;
+    try {
+      await parseNftData(hexAddress);
+      loadingInstance.visible.value = false;
+    } catch (error) {
+      await showError(error);
+    }
   }
 );
 </script>
