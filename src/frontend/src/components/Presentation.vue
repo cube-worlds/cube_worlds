@@ -113,7 +113,7 @@
     </div>
 
     <div class="slide">
-      <h2>Join Cube Worlds Today!</h2>
+      <h2>Conclusions</h2>
       <p>Experience the future of gaming:</p>
       <ul>
         <li>Text-based RPG meets blockchain innovation</li>
