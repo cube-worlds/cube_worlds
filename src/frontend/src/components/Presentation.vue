@@ -192,7 +192,7 @@ onUnmounted(() => {
 <style scoped>
 .slide {
   width: 100%;
-  height: 100%;
+  height: 100vh;
   display: none;
   flex-direction: column;
   justify-content: center;
