@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { useWebApp, useWebAppHapticFeedback } from "vue-tg";
+import { useWebApp, useWebAppHapticFeedback, MainButton, useWebAppPopup } from "vue-tg";
 import { useAuth } from "../composables/use-auth";
-import { onMounted } from "vue";
+import { onMounted, ref } from "vue";
 
 defineProps<{ msg?: string }>();
 
@@ -16,15 +16,52 @@ onMounted(async () => {
 
 const { impactOccurred } = useWebAppHapticFeedback();
 
-function tap() {
+const count = ref(0);
+
+function tap(value: number) {
   const impacts = ["light", "medium", "heavy", "rigid", "soft"];
-  const randomImpact = impacts[Math.floor(Math.random() * impacts.length)] as
-    | "light"
-    | "medium"
-    | "heavy"
-    | "rigid"
-    | "soft";
+  const random = Math.floor(Math.random() * impacts.length);
+  const randomImpact = impacts[random] as "light" | "medium" | "heavy" | "rigid" | "soft";
+  count.value += value * random;
   impactOccurred(randomImpact);
+}
+
+const popup = useWebAppPopup();
+
+function showAlert() {
+  popup.showPopup(
+    {
+      title: "It's a joke!",
+      message: "NO, NO, NO! NO ANY F**KING CLICKERS WILL BE HERE AT ALL!",
+      buttons: [
+        {
+          id: "share",
+          type: "default",
+          text: "Share",
+        },
+        {
+          id: "close",
+          type: "default",
+          text: "Close",
+        },
+      ],
+    },
+    (buttonId: string) => {
+      switch (buttonId) {
+        case "share":
+          const text = "New awesome clicker";
+          const url = "https://t.me/cube_worlds_bot/clicker"; // TODO: ADD referal ?
+          const shareLink =
+            "https://t.me/share/url?url=" +
+            encodeURIComponent(url) +
+            "&text=" +
+            encodeURIComponent(text);
+          return open(shareLink);
+        case "close":
+          return;
+      }
+    }
+  );
 }
 </script>
 
@@ -33,24 +70,17 @@ function tap() {
 
   <div class="card">
     <div class="cube-container">
-      <div class="cube" @click="tap">
-        <div class="front">CUBE</div>
-        <div class="back">WORLDS</div>
-        <div class="right">PROJECT</div>
-        <div class="left">RPG GAME</div>
-        <div class="top">TELEGRAM</div>
-        <div class="bottom">TON</div>
+      <div class="cube">
+        <div class="front" @click="tap(1)">CUBE</div>
+        <div class="back" @click="tap(2)">WORLDS</div>
+        <div class="right" @click="tap(1)">PROJECT</div>
+        <div class="left" @click="tap(10)">RPG GAME</div>
+        <div class="top" @click="tap(4)">TELEGRAM</div>
+        <div class="bottom" @click="tap(3)">TON</div>
       </div>
     </div>
-    <!-- <button type="button" @click="increment">Count is {{ count }}</button>
-    <p>
-      Edit
-      <code>components/HelloWorld.vue</code> to test HMR
-    </p> -->
-    <!-- <MainButton :progress="true" :text="`Count is ${count}`" @click="increment" />
-    <SettingsButton @click="increment" /> -->
 
-    <!-- <RouterLink to="/faq">Go to FAQ</RouterLink> -->
+    <MainButton :text="`Balance: ${count} $CUBE`" @click="showAlert" />
   </div>
 </template>
 
@@ -63,6 +93,10 @@ function tap() {
 }
 .cube-container {
   margin: 4rem 0;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 .cube {
   width: 200px;
@@ -76,7 +110,7 @@ function tap() {
   width: 200px;
   height: 200px;
   background: rgba(197, 197, 197, 0.1);
-  border: 2px solid rgb(48, 182, 162);
+  border: 2px solid var(--tg-theme-link-color, #646cff);
   display: flex;
   justify-content: center;
   align-items: center;
