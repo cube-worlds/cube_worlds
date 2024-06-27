@@ -1,7 +1,37 @@
+<template>
+  <h1>Cube Worlds Project</h1>
+
+  <div class="card">
+    <div class="cube-container">
+      <div class="cube">
+        <div class="front" @click="(event) => tap(1, event)">CUBE</div>
+        <div class="back" @click="(event) => tap(2, event)">WORLDS</div>
+        <div class="right" @click="(event) => tap(1, event)">PROJECT</div>
+        <div class="left" @click="(event) => tap(5, event)">RPG GAME</div>
+        <div class="top" @click="(event) => tap(4, event)">TELEGRAM</div>
+        <div class="bottom" @click="(event) => tap(3, event)">TON</div>
+      </div>
+
+      <transition-group name="float-message" tag="div" class="message-container">
+        <div
+          v-for="message in messages"
+          :key="message.id"
+          class="message"
+          :style="{ left: `${message.x}px`, top: `${message.y}px` }"
+        >
+          +{{ message.value }}
+        </div>
+      </transition-group>
+    </div>
+
+    <MainButton :text="`Balance: ${count} $CUBE`" @click="showAlert" />
+  </div>
+</template>
+
 <script setup lang="ts">
 import { useWebApp, useWebAppHapticFeedback, MainButton, useWebAppPopup } from "vue-tg";
 import { useAuth } from "../composables/use-auth";
-import { onMounted, ref } from "vue";
+import { Ref, onMounted, ref } from "vue";
 
 defineProps<{ msg?: string }>();
 
@@ -17,14 +47,39 @@ onMounted(async () => {
 const { impactOccurred } = useWebAppHapticFeedback();
 
 const count = ref(0);
+const messages: Ref<
+  {
+    id: number;
+    x: number;
+    y: number;
+    value: number;
+  }[]
+> = ref([]);
 
-function tap(value: number) {
+const tap = (value: number, event: MouseEvent) => {
   const impacts = ["light", "medium", "heavy", "rigid", "soft"];
   const random = Math.floor(Math.random() * impacts.length);
   const randomImpact = impacts[random] as "light" | "medium" | "heavy" | "rigid" | "soft";
-  count.value += value * random;
   impactOccurred(randomImpact);
-}
+  const add = value * (random === 0 ? 1 : random);
+  count.value += add;
+
+  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+  const message = {
+    id: Date.now(),
+    x: event.clientX - rect.left,
+    y: event.clientY - rect.top,
+    value: add,
+  };
+  messages.value.push(message);
+
+  setTimeout(() => {
+    const index = messages.value.findIndex((m) => m.id === message.id);
+    if (index !== -1) {
+      messages.value.splice(index, 1);
+    }
+  }, 1000);
+};
 
 const popup = useWebAppPopup();
 
@@ -65,25 +120,6 @@ function showAlert() {
 }
 </script>
 
-<template>
-  <h1>Cube Worlds Project</h1>
-
-  <div class="card">
-    <div class="cube-container">
-      <div class="cube">
-        <div class="front" @click="tap(1)">CUBE</div>
-        <div class="back" @click="tap(2)">WORLDS</div>
-        <div class="right" @click="tap(1)">PROJECT</div>
-        <div class="left" @click="tap(10)">RPG GAME</div>
-        <div class="top" @click="tap(4)">TELEGRAM</div>
-        <div class="bottom" @click="tap(3)">TON</div>
-      </div>
-    </div>
-
-    <MainButton :text="`Balance: ${count} $CUBE`" @click="showAlert" />
-  </div>
-</template>
-
 <style scoped>
 .card {
   display: flex;
@@ -97,18 +133,27 @@ function showAlert() {
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
-}
-.cube {
+
+  cursor: pointer;
+  position: relative;
+  font-size: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   width: 200px;
   height: 200px;
+}
+.cube {
+  width: 100%;
+  height: 100%;
   position: relative;
   transform-style: preserve-3d;
   animation: rotate 20s infinite linear;
 }
 .cube div {
   position: absolute;
-  width: 200px;
-  height: 200px;
+  width: 100%;
+  height: 100%;
   background: rgba(197, 197, 197, 0.1);
   border: 2px solid var(--tg-theme-link-color, #646cff);
   display: flex;
@@ -145,5 +190,45 @@ function showAlert() {
   100% {
     transform: rotateX(360deg) rotateY(360deg) rotateZ(360deg);
   }
+}
+
+.message-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.message {
+  position: absolute;
+  font-size: 24px;
+  color: white;
+  pointer-events: none;
+  animation: float-up 1s ease-out;
+}
+
+@keyframes float-up {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+}
+
+.float-message-enter-active,
+.float-message-leave-active {
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.float-message-enter-from,
+.float-message-leave-to {
+  opacity: 0;
+  transform: translateY(20px);
 }
 </style>
