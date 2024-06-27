@@ -202,7 +202,7 @@ export async function sendPostToChannels(api: Api<RawApi>) {
     const shortList = allMinted.slice(0, imagesCount);
     const images = shortList.reverse().map((u) =>
       InputMediaBuilder.photo(linkToIPFSGateway(u.nftImage ?? ""), {
-        caption: `@cube_worlds_bot | [${u.name ?? ""}](${u.nftUrl ?? ""})`,
+        caption: `@cube\\_worlds\\_bot | [${u.name ?? ""}](${u.nftUrl ?? ""})`,
         parse_mode: "Markdown",
       }),
     );
