@@ -38,6 +38,8 @@ const createConfigFromEnvironment = (environment: NodeJS.ProcessEnv) => {
     TESTNET: z.boolean().default(true),
     STABILITY_API_KEY: z.string(),
     OPENAI_API_KEY: z.string(),
+    TELEMETREE_API_KEY: z.string(),
+    TELEMETREE_PROJECT_ID: z.string(),
   });
 
   if (config.BOT_MODE === "webhook") {
