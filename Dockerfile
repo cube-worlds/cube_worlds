@@ -1,4 +1,4 @@
-FROM node:lts-slim AS base
+FROM node:22.4.0-bookworm-slim AS base
 
 # Create app directory
 WORKDIR /usr/src
