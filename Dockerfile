@@ -1,24 +1,8 @@
-FROM node:22.4.0-bookworm-slim AS base
+FROM node:bookworm-slim AS base
 
 # Create app directory
 WORKDIR /usr/src
 
-FROM base AS builder
-
-# Files required by npm install
-COPY package*.json ./
-
-# Install app dependencies
-RUN npm ci
-
-# Bundle app source
-COPY . .
-
-# Build frontend
-RUN npm --prefix src/frontend ci
-
-# Type check app
-RUN npm run typecheck
 
 
 FROM base AS runner
