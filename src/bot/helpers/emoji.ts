@@ -22,23 +22,18 @@ const coolEmojis: ReactionTypeEmoji["emoji"][] = [
   "👍",
   "❤",
   "🔥",
-  "🥰",
   "👏",
   "😎",
   "🎉",
   "🤩",
   "🦄",
-  "👾",
   "😍",
   "🐳",
   "❤‍🔥",
-  "🌚",
   "⚡",
   "🏆",
   "😎",
   "🤗",
-  "🆒",
-  "🕊",
 ];
 
 export function getRandomCoolEmoji(): ReactionTypeEmoji {
