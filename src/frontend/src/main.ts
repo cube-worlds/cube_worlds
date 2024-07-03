@@ -10,6 +10,7 @@ import App from "./App.vue";
 import CNFTComponent from "./components/CNFT.vue";
 import FAQComponent from "./components/FAQ.vue";
 import PresentationComponent from "./components/Presentation.vue";
+import { fluent } from "./fluent";
 
 const routes = [
   // RESERVED: /cnfts /api
@@ -27,6 +28,7 @@ const router = createRouter({
 const pinia = createPinia();
 
 createApp(App)
+  .use(fluent)
   .use(pinia)
   .use(router)
   .use(ElementPlus, { size: "default", zIndex: 3000, locale: ruLocale })

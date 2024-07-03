@@ -10,11 +10,13 @@
   },
   "dependencies": {
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
+    "@fluent/bundle": "^0.18.0",
     "@ton/core": "^0.56.3",
     "@tonconnect/ui": "^2.0.5",
     "@vitejs/plugin-vue": "^5.0.5",
     "axios": "^1.7.2",
     "element-plus": "^2.7.6",
+    "fluent-vue": "^3.6.0",
     "pinia": "^2.1.7",
     "rollup-plugin-polyfill-node": "^0.13.0",
     "unplugin-auto-import": "^0.17.6",

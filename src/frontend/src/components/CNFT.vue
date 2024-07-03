@@ -5,7 +5,7 @@
     </el-col>
   </el-row>
   <div>
-    <h1>Claim your own cNFT!</h1>
+    <h1>{{ $t("cnft-header") }}</h1>
     <div v-if="userStorage.wallet">
       <div v-if="metadata && eligible">
         <h3>{{ metadata?.name }}</h3>
@@ -13,28 +13,35 @@
         <p>{{ metadata?.description }}</p>
 
         <div v-if="miniapp.isReady.value">
-          <MainButton :text="cnftExists ? 'Show' : 'Claim'" @click="tapButton" />
+          <MainButton
+            :text="$t(cnftExists ? 'cnft-button_show' : 'cnft-button_claim')"
+            @click="tapButton"
+          />
         </div>
         <div v-else>
-          <button @click="tapButton">{{ cnftExists ? "Show" : "Claim" }}</button>
+          <button @click="tapButton">
+            {{ $t(cnftExists ? "cnft-button_show" : "cnft-button_claim") }}
+          </button>
         </div>
       </div>
       <div v-else>
-        Unfortunately, you are currently not eligible to claim cNFT. Please try again
-        later.
+        {{ $t("cnft-not-eligible") }}
       </div>
     </div>
-    <div v-else>Please connect your wallet to check the availability of your cNFT.</div>
+    <div v-else>{{ $t("cnft-connect") }}</div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, Ref } from "vue";
+import { ref, watch, onMounted, Ref, inject } from "vue";
 import { MainButton, useWebAppHapticFeedback, useWebApp } from "vue-tg";
 import { useUserStore } from "../stores/user.js";
 import { Address, Cell, beginCell } from "@ton/core";
 import { TonConnectUI } from "@tonconnect/ui";
 import { ElLoading, ElMessage } from "element-plus";
+import { useAuth } from "../composables/use-auth.js";
+import { useFluent } from "fluent-vue";
+import { enBundle, ruBundle } from "../fluent.js";
 
 const loadingInstance = ElLoading.service({ fullscreen: true, visible: false });
 
@@ -44,6 +51,7 @@ const collectionAddress = "EQAaSqEwAh00YOCc9ZwtqfNcXeehbl97yKQKCZPRGwCov51V";
 
 const miniapp = useWebApp();
 const userStorage = useUserStore();
+const fluent = useFluent();
 
 let metadata = ref();
 let cnft = ref();
@@ -59,6 +67,14 @@ function sleep(ms: number): Promise<void> {
 }
 
 onMounted(async () => {
+  const webAppUser = useWebApp().initDataUnsafe.user;
+  if (webAppUser) {
+    const { user, error, login } = useAuth(useWebApp().initData, webAppUser.id);
+    await login();
+    console.log(user.value, error.value);
+    const lang = user.value.language;
+    fluent.bundles.value = [lang === "ru" ? ruBundle : enBundle];
+  }
   tonConnectUI = new TonConnectUI({
     manifestUrl: "https://cubeworlds.club/tonconnect-manifest.json",
     buttonRootId: "ton-connect",

@@ -104,3 +104,11 @@ queue =
 
 cnft = 
     .claim = Claim cNFT
+
+## Web
+
+cnft-header = Claim your own cNFT!
+cnft-show_button = Show
+cnft-claim_button = Claim
+cnft-not-eligible = Unfortunately, you are currently not eligible to claim cNFT. Please try again later.
+cnft-connect = Please connect your wallet to check the availability of your cNFT.
