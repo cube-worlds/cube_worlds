@@ -108,7 +108,7 @@ cnft =
 ## Web
 
 cnft-header = Заклеймите свой cNFT!
-cnft-show_button = Смотреть
-cnft-claim_button = Заклеймить
+cnft-show-button = Смотреть
+cnft-claim-button = Заклеймить
 cnft-not-eligible = К сожалению, в настоящее время вы не имеете права на получение cNFT. Пожалуйста, попробуйте позже.
 cnft-connect = Пожалуйста, подключите свой кошелек, чтобы проверить доступность вашего cNFT.

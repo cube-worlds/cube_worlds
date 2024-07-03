@@ -12,15 +12,15 @@
         <img width="75%" :src="metadata?.image" />
         <p>{{ metadata?.description }}</p>
 
-        <div v-if="miniapp.isReady.value">
+        <div v-if="miniapp.isReady">
           <MainButton
-            :text="$t(cnftExists ? 'cnft-button_show' : 'cnft-button_claim')"
+            :text="$t(cnftExists ? 'cnft-show-button' : 'cnft-claim-button')"
             @click="tapButton"
           />
         </div>
         <div v-else>
           <button @click="tapButton">
-            {{ $t(cnftExists ? "cnft-button_show" : "cnft-button_claim") }}
+            {{ $t(cnftExists ? "cnft-show-button" : "cnft-claim-button") }}
           </button>
         </div>
       </div>

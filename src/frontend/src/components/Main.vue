@@ -32,8 +32,10 @@
 import { useWebApp, useWebAppHapticFeedback, MainButton, useWebAppPopup } from "vue-tg";
 import { useAuth } from "../composables/use-auth";
 import { Ref, onMounted, ref } from "vue";
+import { useFluent } from "fluent-vue";
+import { enBundle, ruBundle } from "../fluent.js";
 
-defineProps<{ msg?: string }>();
+const fluent = useFluent();
 
 onMounted(async () => {
   const webAppUser = useWebApp().initDataUnsafe.user;
@@ -41,6 +43,8 @@ onMounted(async () => {
     const { user, error, login } = useAuth(useWebApp().initData, webAppUser.id);
     await login();
     console.log(user.value, error.value);
+    const lang = user.value.language;
+    fluent.bundles.value = [lang === "ru" ? ruBundle : enBundle];
   }
 });
 
