@@ -4,14 +4,13 @@
       <div id="ton-connect"></div>
     </el-col>
   </el-row>
-  <div>
+  <div class="cnft-container">
     <h1>{{ $t("cnft-header") }}</h1>
     <div v-if="userStorage.wallet">
-      <div v-if="metadata && eligible">
+      <div v-if="metadata && eligible" class="cnft-content">
         <h3>{{ metadata?.name }}</h3>
         <img width="75%" :src="metadata?.image" />
-        <p>{{ metadata?.description }}</p>
-
+        <p class="cnft-description">{{ metadata?.description }}</p>
         <div v-if="miniapp.isReady">
           <MainButton
             :text="$t(cnftExists ? 'cnft-show-button' : 'cnft-claim-button')"
@@ -32,8 +31,28 @@
   </div>
 </template>
 
+<style scoped>
+.cnft-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.cnft-content {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.cnft-description {
+  text-align: center;
+  margin: 20px 0;
+}
+</style>
+
 <script setup lang="ts">
-import { ref, watch, onMounted, Ref, inject } from "vue";
+import { ref, watch, onMounted, Ref } from "vue";
 import { MainButton, useWebAppHapticFeedback, useWebApp } from "vue-tg";
 import { useUserStore } from "../stores/user.js";
 import { Address, Cell, beginCell } from "@ton/core";
