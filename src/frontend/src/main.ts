@@ -11,10 +11,12 @@ import CNFTComponent from "./components/CNFT.vue";
 import FAQComponent from "./components/FAQ.vue";
 import PresentationComponent from "./components/Presentation.vue";
 import { fluent } from "./fluent";
+import ClickerComponent from "./components/Clicker.vue";
 
 const routes = [
   // RESERVED: /cnfts /api
   { path: "/", name: "MainPage", component: MainComponent },
+  { path: "/clicker", name: "ClickerPage", component: ClickerComponent },
   { path: "/faq", name: "FAQPage", component: FAQComponent },
   { path: "/cnft", mame: "CNFTPage", component: CNFTComponent },
   { path: "/presentation", mame: "PresentationPage", component: PresentationComponent },
