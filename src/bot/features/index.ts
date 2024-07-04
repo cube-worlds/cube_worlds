@@ -9,6 +9,7 @@ export * from "./dice.js";
 export * from "./whales.js";
 export * from "./line.js";
 export * from "./webapp.js";
+export * from "./play.js";
 export * from "./admin/queue.js";
 export * from "./admin/collection.js";
 export * from "./admin/topup.js";

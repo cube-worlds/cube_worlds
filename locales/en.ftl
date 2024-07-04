@@ -17,6 +17,8 @@ dice_command =
     .description = 🎲 Roll the dice
 whales_command =
     .description = 🐳 Whales
+play_command = 
+    .description = 🎮 Play
 
 reset = The state has been reset. Please press /mint
 language = 
@@ -104,6 +106,11 @@ queue =
 
 cnft = 
     .claim = Claim cNFT
+
+play =
+    .clicker = Clicker
+    .minted = The game is still in development. It is a complex and long process. But if you can't wait, you can try our Clicker
+    .not_minted = To participate in the game, you will need an NFT, which is issued on a first-come, first-served basis. To get in line, use the command /mint
 
 ## Web
 
