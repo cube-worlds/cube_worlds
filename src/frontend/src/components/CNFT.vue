@@ -1,49 +1,125 @@
 <template>
-  <div id="ton-connect"></div>
-  <h1>{{ $t("cnft-header") }}</h1>
-  <div v-if="userStorage.wallet">
-    <div v-if="metadata && eligible" class="cnft-content">
-      <h3>{{ metadata?.name }}</h3>
-      <img width="75%" :src="metadata?.image" />
-      <p class="cnft-description">{{ metadata?.description }}</p>
-      <div v-if="miniapp.isReady">
-        <MainButton
-          :text="$t(cnftExists ? 'cnft-show-button' : 'cnft-claim-button')"
-          @click="tapButton"
-        />
+  <div class="cnft-container">
+    <div id="ton-connect"></div>
+    <h1>{{ $t("cnft-header") }}</h1>
+
+    <template v-if="userStorage.wallet">
+      <div v-if="metadata && eligible" class="cnft-content">
+        <h2 class="nft-name">{{ metadata?.name }}</h2>
+        <div class="image-container">
+          <img :src="metadata?.image" alt="NFT Image" />
+        </div>
+        <p class="cnft-description">{{ metadata?.description }}</p>
+        <div class="action-button">
+          <MainButton
+            v-if="miniapp.isReady"
+            :text="$t(cnftExists ? 'cnft-show-button' : 'cnft-claim-button')"
+            @click="tapButton"
+          />
+          <button v-else @click="tapButton">
+            {{ $t(cnftExists ? "cnft-show-button" : "cnft-claim-button") }}
+          </button>
+        </div>
       </div>
-      <div v-else>
-        <button @click="tapButton">
-          {{ $t(cnftExists ? "cnft-show-button" : "cnft-claim-button") }}
-        </button>
+      <div v-else class="not-eligible">
+        {{ $t("cnft-not-eligible") }}
       </div>
+    </template>
+    <div v-else class="connect-prompt">
+      {{ $t("cnft-connect") }}
     </div>
-    <div v-else>
-      {{ $t("cnft-not-eligible") }}
-    </div>
-  </div>
-  <div v-else>
-    {{ $t("cnft-connect") }}
   </div>
 </template>
 
 <style scoped>
+.cnft-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-family: "Arial", sans-serif;
+}
+
 #ton-connect {
   margin-top: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
+
 .cnft-content {
-  border: 1px solid var(--tg-theme-link-color, #646cff);
+  background-color: var(--tg-theme-bg-color, #fff);
+  border: 2px solid var(--tg-theme-button-color, #007bff);
+  border-radius: 12px;
+  padding: 2rem;
+  margin-top: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.cnft-content:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.nft-name {
+  font-size: 2rem;
+  color: var(--tg-theme-text-color, #333);
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.image-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.image-container img {
+  max-width: 100%;
+  height: auto;
   border-radius: 8px;
-  padding: 20px;
-  margin-top: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .cnft-description {
+  font-size: 1.1rem;
+  color: var(--tg-theme-hint-color, #666);
   text-align: center;
-  margin: 20px 0;
+  margin: 1.5rem 0;
+  line-height: 1.6;
+}
+
+.action-button {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.action-button button {
+  background-color: var(--tg-theme-button-color, #007bff);
+  color: var(--tg-theme-button-text-color, #fff);
+  border: none;
+  padding: 0.8rem 1.5rem;
+  font-size: 1.1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.action-button button:hover {
+  background-color: var(--tg-theme-button-color, #0056b3);
+}
+
+.not-eligible,
+.connect-prompt {
+  font-size: 1.2rem;
+  color: var(--tg-theme-text-color, #333);
+  text-align: center;
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background-color: var(--tg-theme-secondary-bg-color, #f8f9fa);
+  border-radius: 8px;
 }
 </style>
 
