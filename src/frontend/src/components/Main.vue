@@ -7,6 +7,15 @@
 .welcome-message {
   color: #fff;
   font-size: 1.5rem;
-  animation: fadeIn 0.5s;
+  animation: fadeIn 2.5s;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 </style>
