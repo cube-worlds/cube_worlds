@@ -11,7 +11,7 @@ const feature = composer.chatType("private");
 async function checkReferal(ctx: Context) {
   const payload = ctx.match;
   if (payload) {
-    if (ctx.dbuser.wallet) {
+    if (ctx.dbuser.wallet || ctx.dbuser.referalId) {
       return;
     }
     const receiverId = Number(payload);
@@ -33,6 +33,10 @@ feature.command("start", logHandle("command-start"), async (ctx) => {
     reply_markup: {
       inline_keyboard: [
         [
+          {
+            text: ctx.t("play.clicker"),
+            url: `https://t.me/${config.BOT_NAME}/clicker`,
+          },
           {
             text: ctx.t("cnft.claim"),
             web_app: { url: `${config.WEB_APP_URL}/cnft` },

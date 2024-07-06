@@ -8,20 +8,21 @@ const composer = new Composer<Context>();
 const feature = composer.chatType("private");
 
 feature.command("play", logHandle("command-play"), async (ctx) => {
+  // TODO!
   await (ctx.dbuser.minted
-    ? ctx.reply(ctx.t("play.minted"), {
+    ? ctx.reply(ctx.t("play.not_minted"))
+    : ctx.reply(ctx.t("play.minted"), {
         reply_markup: {
           inline_keyboard: [
             [
               {
                 text: ctx.t("play.clicker"),
-                web_app: { url: `${config.WEB_APP_URL}/clicker` },
+                url: `https://t.me/${config.BOT_NAME}/clicker`,
               },
             ],
           ],
         },
-      })
-    : ctx.reply(ctx.t("play.not_minted")));
+      }));
 });
 
 export { composer as playFeature };

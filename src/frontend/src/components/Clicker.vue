@@ -1,5 +1,5 @@
 <template>
-  <h1>Cube Worlds Project</h1>
+  <h1>Cube Worlds Clicker</h1>
 
   <div class="card">
     <div class="cube-container">
@@ -34,17 +34,40 @@ import { useAuth } from "../composables/use-auth";
 import { Ref, onMounted, ref } from "vue";
 import { useFluent } from "fluent-vue";
 import { enBundle, ruBundle } from "../fluent.js";
+import { useUserStore } from "../stores/userStore.js";
 
 const fluent = useFluent();
+const { $t } = useFluent();
+const userStore = useUserStore()
+
+function getUserIdFromRefString(refString: string): number | undefined {
+  const match = refString.match(/ref_(\d+)/);
+  if (match && match[1]) {
+    return parseInt(match[1], 10);
+  }
+  return undefined;
+}
 
 onMounted(async () => {
-  const webAppUser = useWebApp().initDataUnsafe.user;
+  const initData = useWebApp().initDataUnsafe;
+  const webAppUser = initData.user;
   if (webAppUser) {
-    const { user, error, login } = useAuth(useWebApp().initData, webAppUser.id);
+    let referId = undefined;
+    const start_param = initData.start_param;
+    if (start_param) {
+      referId = getUserIdFromRefString(start_param);
+      console.log("start_param:", start_param);
+    }
+    const { user, error, login } = useAuth(useWebApp().initData, webAppUser.id, referId);
     await login();
-    console.log(user.value, error.value);
+    console.log(user.value ? user.value : error.value);
+
     const lang = user.value.language;
     fluent.bundles.value = [lang === "ru" ? ruBundle : enBundle];
+
+    if (user.value) {
+      userStore.setUser(user.value);
+    }
   }
 });
 
@@ -93,8 +116,8 @@ function showAlert() {
   }
   popup.showPopup(
     {
-      title: "It's a joke!",
-      message: "NO, NO, NO! NO ANY F**KING CLICKERS WILL BE HERE AT ALL!",
+      title: $t("clicker-no-title"),
+      message: $t("clicker-no"),
       buttons: [
         {
           id: "share",
@@ -111,8 +134,14 @@ function showAlert() {
     (buttonId: string) => {
       switch (buttonId) {
         case "share":
-          const text = "New awesome clicker";
-          const url = "https://t.me/cube_worlds_bot/clicker"; // TODO: ADD referal ?
+          const text = $t("clicker-share-text");
+          const user = userStore.user;
+          console.log(user);
+          let startParam = "";
+          if (user?.id) {
+            startParam = `?startapp=ref_${user.id}`;
+          }
+          const url = `https://t.me/cube_worlds_bot/clicker${startParam}`;
           const shareLink =
             "https://t.me/share/url?url=" +
             encodeURIComponent(url) +

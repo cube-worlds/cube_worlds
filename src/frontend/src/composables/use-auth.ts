@@ -1,8 +1,7 @@
 import { ref } from "vue";
 import { authenticateUser } from "../services/auth-service";
-import { unknown } from "zod";
 
-export const useAuth = (initData: string, userId: number) => {
+export const useAuth = (initData: string, userId: number, referId: number | undefined) => {
   const user = ref();
   const error = ref();
 
@@ -14,7 +13,7 @@ export const useAuth = (initData: string, userId: number) => {
         user.value = userModel;
         return;
       }
-      const userModel = await authenticateUser(initData, userId);
+      const userModel = await authenticateUser(initData, userId, referId);
       user.value = userModel;
       sessionStorage.setItem("user", JSON.stringify(userModel));
     } catch (error_) {

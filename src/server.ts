@@ -5,7 +5,7 @@ import { logger } from "#root/logger.js";
 import path from "node:path";
 import fastifyStatic from "@fastify/static";
 import { fileURLToPath } from "node:url";
-import userHandler from "./backend/auth-handler";
+import { authHandler } from "./backend/auth-handler";
 import nftHandler from "./backend/nft-handler";
 import checkCaptcha from "./backend/captcha";
 import analyticsHandler from "./backend/analytics";
@@ -21,7 +21,7 @@ export const createServer = async (bot: Bot) => {
     await response.status(500).send({ error: "Oops! Something went wrong." });
   });
 
-  await server.register(userHandler, { prefix: "/api/auth" });
+  await server.register(authHandler, { prefix: "/api/auth" });
 
   await server.register(analyticsHandler, { prefix: "/api/analytics" });
 

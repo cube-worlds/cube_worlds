@@ -54,7 +54,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, Ref } from "vue";
 import { MainButton, useWebAppHapticFeedback, useWebApp } from "vue-tg";
-import { useUserStore } from "../stores/user.js";
+import { useUserStore } from "../stores/userStore.js";
 import { Address, Cell, beginCell } from "@ton/core";
 import { TonConnectUI } from "@tonconnect/ui";
 import { ElLoading, ElMessage } from "element-plus";
@@ -86,9 +86,10 @@ function sleep(ms: number): Promise<void> {
 }
 
 onMounted(async () => {
+  const referId = undefined; // TODO?
   const webAppUser = useWebApp().initDataUnsafe.user;
   if (webAppUser) {
-    const { user, error, login } = useAuth(useWebApp().initData, webAppUser.id);
+    const { user, error, login } = useAuth(useWebApp().initData, webAppUser.id, referId);
     await login();
     console.log(user.value, error.value);
     const lang = user.value.language;

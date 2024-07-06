@@ -119,3 +119,7 @@ cnft-show-button = Show
 cnft-claim-button = Claim
 cnft-not-eligible = Unfortunately, you are currently not eligible to claim cNFT. Please try again later.
 cnft-connect = Please connect your wallet to check the availability of your cNFT.
+
+clicker-share-text = New awesome clicker
+clicker-no-title = It's a joke!
+clicker-no = NO, NO, NO! NO ANY F**KING CLICKERS WILL BE HERE AT ALL!
