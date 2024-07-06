@@ -8,10 +8,8 @@ const composer = new Composer<Context>();
 const feature = composer.chatType("private");
 
 feature.command("play", logHandle("command-play"), async (ctx) => {
-  // TODO!
   await (ctx.dbuser.minted
-    ? ctx.reply(ctx.t("play.not_minted"))
-    : ctx.reply(ctx.t("play.minted"), {
+    ? ctx.reply(ctx.t("play.minted"), {
         reply_markup: {
           inline_keyboard: [
             [
@@ -22,7 +20,8 @@ feature.command("play", logHandle("command-play"), async (ctx) => {
             ],
           ],
         },
-      }));
+      })
+    : ctx.reply(ctx.t("play.not_minted")));
 });
 
 export { composer as playFeature };
