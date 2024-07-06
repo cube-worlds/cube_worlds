@@ -1,45 +1,41 @@
 <template>
-  <el-row justify="end">
-    <el-col :span="10">
-      <div id="ton-connect"></div>
-    </el-col>
-  </el-row>
-  <div class="cnft-container">
-    <h1>{{ $t("cnft-header") }}</h1>
-    <div v-if="userStorage.wallet">
-      <div v-if="metadata && eligible" class="cnft-content">
-        <h3>{{ metadata?.name }}</h3>
-        <img width="75%" :src="metadata?.image" />
-        <p class="cnft-description">{{ metadata?.description }}</p>
-        <div v-if="miniapp.isReady">
-          <MainButton
-            :text="$t(cnftExists ? 'cnft-show-button' : 'cnft-claim-button')"
-            @click="tapButton"
-          />
-        </div>
-        <div v-else>
-          <button @click="tapButton">
-            {{ $t(cnftExists ? "cnft-show-button" : "cnft-claim-button") }}
-          </button>
-        </div>
+  <div id="ton-connect"></div>
+  <h1>{{ $t("cnft-header") }}</h1>
+  <div v-if="userStorage.wallet">
+    <div v-if="metadata && eligible" class="cnft-content">
+      <h3>{{ metadata?.name }}</h3>
+      <img width="75%" :src="metadata?.image" />
+      <p class="cnft-description">{{ metadata?.description }}</p>
+      <div v-if="miniapp.isReady">
+        <MainButton
+          :text="$t(cnftExists ? 'cnft-show-button' : 'cnft-claim-button')"
+          @click="tapButton"
+        />
       </div>
       <div v-else>
-        {{ $t("cnft-not-eligible") }}
+        <button @click="tapButton">
+          {{ $t(cnftExists ? "cnft-show-button" : "cnft-claim-button") }}
+        </button>
       </div>
     </div>
-    <div v-else>{{ $t("cnft-connect") }}</div>
+    <div v-else>
+      {{ $t("cnft-not-eligible") }}
+    </div>
+  </div>
+  <div v-else>
+    {{ $t("cnft-connect") }}
   </div>
 </template>
 
 <style scoped>
-.cnft-container {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 20px;
+#ton-connect {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-
 .cnft-content {
-  border: 1px solid #ccc;
+  border: 1px solid var(--tg-theme-link-color, #646cff);
   border-radius: 8px;
   padding: 20px;
   margin-top: 20px;

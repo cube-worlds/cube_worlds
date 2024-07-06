@@ -46,6 +46,14 @@ export default {
 </script>
 
 <style scoped>
+.content-wrapper {
+  text-align: center;
+  z-index: 10;
+  width: 80%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
 .cosmos {
   position: relative;
   width: 100%;
@@ -76,22 +84,6 @@ export default {
     opacity: 1;
     transform: scale(1.5);
   }
-}
-
-.content-wrapper {
-  text-align: center;
-  z-index: 10;
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.game-title {
-  font-size: 4rem;
-  color: #fff;
-  margin-bottom: 1rem;
-  animation: pulse 2s infinite;
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 }
 
 .solar-system {
