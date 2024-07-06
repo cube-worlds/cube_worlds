@@ -37,6 +37,8 @@ feature.command("start", logHandle("command-start"), async (ctx) => {
             text: ctx.t("play.clicker"),
             url: `https://t.me/${config.BOT_NAME}/clicker`,
           },
+        ],
+        [
           {
             text: ctx.t("cnft.claim"),
             web_app: { url: `${config.WEB_APP_URL}/cnft` },
