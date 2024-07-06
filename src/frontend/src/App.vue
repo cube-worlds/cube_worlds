@@ -1,11 +1,9 @@
 <template>
   <div class="cosmos">
     <div v-for="(star, index) in stars" :key="index" class="star" :style="star"></div>
-
     <div class="content-wrapper">
       <RouterView />
     </div>
-
     <div class="solar-system">
       <div class="sun">
         <div class="sun-core"></div>
@@ -20,15 +18,18 @@
 
 <script>
 import { ref, onMounted } from "vue";
-import { useRouter } from "vue-router";
 import { ClosingConfirmation, ExpandedViewport } from "vue-tg";
 import Footer from "./components/nested/Footer.vue";
 
 export default {
   name: "CubeWorldsMainPage",
+  components: {
+    Footer,
+    ClosingConfirmation,
+    ExpandedViewport,
+  },
   setup() {
     const stars = ref([]);
-    const router = useRouter();
 
     onMounted(() => {
       stars.value = Array.from({ length: 200 }, () => ({
@@ -49,16 +50,16 @@ export default {
   position: relative;
   width: 100%;
   height: 100vh;
-  background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
+  padding: 2rem 0;
 }
 
 .star {
-  position: absolute;
+  position: fixed;
   width: 2px;
   height: 2px;
   background-color: #fff;
@@ -80,6 +81,9 @@ export default {
 .content-wrapper {
   text-align: center;
   z-index: 10;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .game-title {
@@ -91,12 +95,13 @@ export default {
 }
 
 .solar-system {
-  position: absolute;
-  inset: 0;
+  position: fixed;
+  bottom: 70%;
+  left: 30%;
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 15%;
   transition: transform 0.5s ease;
 }
 

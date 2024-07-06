@@ -13,47 +13,43 @@
 
 <script>
 export default {
-    name: "Accordion",
-    props: {
-        items: {
-            type: Array,
-            required: true,
-        },
+  name: "Accordion",
+  props: {
+    items: {
+      type: Array,
+      required: true,
     },
-    methods: {
-        toggle(index) {
-            this.items[index].open = !this.items[index].open;
-        },
+  },
+  methods: {
+    toggle(index) {
+      this.items[index].open = !this.items[index].open;
     },
+  },
 };
 </script>
 
 <style scoped>
 .accordion {
-    border: 1px solid #333;
-    border-radius: 4px;
-    background-color: #222;
 }
 
 .accordion-item {
-    border-bottom: 1px solid #333;
 }
 
 .accordion-header {
-    padding: 1rem;
-    cursor: pointer;
-    background-color: #333;
-    color: #fff;
-    font-family: Psychic-Force, sans-serif;
+  padding: 1rem;
+  cursor: pointer;
+  /* background-color: #333; */
+  color: #fff;
+  font-family: Psychic-Force, sans-serif;
 }
 
 .accordion-header:hover {
-    background-color: #444;
+  /* background-color: #444; */
 }
 
 .accordion-content {
-    padding: 1rem;
-    background-color: #222;
-    color: #ddd;
+  padding: 1rem;
+  /* background-color: #222; */
+  color: #ddd;
 }
 </style>
