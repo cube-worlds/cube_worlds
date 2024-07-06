@@ -189,7 +189,7 @@ const restoreZoom = () => {
   font-weight: bold;
   font-family: Psychic-Force, sans-serif;
   text-shadow: 2px 2px 0 #000;
-  backface-visibility: hidden;
+  backface-visibility: visible;
   image-rendering: pixelated;
 }
 
