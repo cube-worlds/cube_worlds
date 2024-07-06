@@ -7,7 +7,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    Accordion: typeof import('./src/components/Accordion.vue')['default']
+    Accordion: typeof import('./src/components/nested/Accordion.vue')['default']
     Clicker: typeof import('./src/components/Clicker.vue')['default']
     CNFT: typeof import('./src/components/CNFT.vue')['default']
     ElCol: typeof import('element-plus/es')['ElCol']

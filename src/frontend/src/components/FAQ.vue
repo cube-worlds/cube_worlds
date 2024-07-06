@@ -5,7 +5,7 @@
 </template>
 
 <script>
-import Accordion from "./Accordion.vue";
+import Accordion from "./nested/Accordion.vue";
 import faq from "../assets/ru/faq.json";
 
 export default {

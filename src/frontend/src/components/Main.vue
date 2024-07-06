@@ -16,68 +16,21 @@
 
     <div class="cosmic-footer">
       <div class="footer-links">
-        <!-- <router-link to="/faq" class="footer-link">FAQ</router-link> -->
+        <router-link to="/faq" class="footer-link">FAQ</router-link>
         <router-link to="/clicker" class="footer-link">Clicker Game</router-link>
         <router-link to="/cnft" class="footer-link">Claim cNFT</router-link>
-        <!-- <router-link to="/presentation" class="footer-link">Presentation</router-link> -->
+        <router-link to="/presentation" class="footer-link">Presentation</router-link>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import { ref, onMounted, defineComponent } from "vue";
-
-const Planet = defineComponent({
-  props: ["name", "color", "size", "angle", "distance", "ringColor"],
-  template: `
-          <div class="orbit" :style="orbitStyle">
-            <div class="planet" :style="planetStyle" @click="$emit('click')">
-              <div class="planet-surface" :style="surfaceStyle"></div>
-              <div v-if="ringColor" class="planet-ring" :style="ringStyle"></div>
-              <span class="planet-name">{{ name }}</span>
-            </div>
-          </div>
-        `,
-  computed: {
-    orbitStyle() {
-      return {
-        width: `${this.distance * 2}px`,
-        height: `${this.distance * 2}px`,
-        animation: `orbit ${30 + this.distance / 10}s linear infinite`,
-      };
-    },
-    planetStyle() {
-      return {
-        width: `${this.size}px`,
-        height: `${this.size}px`,
-        transform: `rotate(${this.angle}deg) translate(${this.distance}px) rotate(-${this.angle}deg)`,
-      };
-    },
-    surfaceStyle() {
-      return {
-        backgroundColor: this.color,
-        boxShadow: `inset ${this.size / 5}px ${-this.size / 10}px ${
-          this.size / 3
-        }px rgba(0,0,0,0.5)`,
-      };
-    },
-    ringStyle() {
-      return {
-        borderColor: this.ringColor,
-        width: `${this.size * 1.4}px`,
-        height: `${this.size * 0.3}px`,
-        marginTop: `${this.size * 0.35}px`,
-      };
-    },
-  },
-});
+import { ref, onMounted } from "vue";
 
 export default {
   name: "CubeWorldsMainPage",
-  components: { Planet },
   setup() {
-    const selectedPlanet = ref(null);
     const stars = ref([]);
 
     onMounted(() => {
@@ -89,7 +42,7 @@ export default {
       }));
     });
 
-    return { selectedPlanet, stars };
+    return { stars };
   },
 };
 </script>
