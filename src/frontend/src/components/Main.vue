@@ -4,9 +4,7 @@
 
     <div class="content-wrapper">
       <h1 class="game-title">Cube Worlds</h1>
-      <div v-if="selectedPlanet" class="welcome-message">
-        Welcome to {{ selectedPlanet }}!
-      </div>
+      <div class="welcome-message">Choose your destiny!</div>
     </div>
 
     <div class="solar-system">
@@ -14,19 +12,13 @@
         <div class="sun-core"></div>
         <div class="sun-rays"></div>
       </div>
-      <Planet
-        v-for="planet in planets"
-        :key="planet.name"
-        v-bind="planet"
-        @click="selectPlanet(planet.name)"
-      />
     </div>
 
     <div class="cosmic-footer">
       <div class="footer-links">
         <!-- <router-link to="/faq" class="footer-link">FAQ</router-link> -->
-        <router-link to="/cnft" class="footer-link">Claim cNFT</router-link>
         <router-link to="/clicker" class="footer-link">Clicker Game</router-link>
+        <router-link to="/cnft" class="footer-link">Claim cNFT</router-link>
         <!-- <router-link to="/presentation" class="footer-link">Presentation</router-link> -->
       </div>
     </div>
@@ -39,14 +31,14 @@ import { ref, onMounted, defineComponent } from "vue";
 const Planet = defineComponent({
   props: ["name", "color", "size", "angle", "distance", "ringColor"],
   template: `
-        <div class="orbit" :style="orbitStyle">
-          <div class="planet" :style="planetStyle" @click="$emit('click')">
-            <div class="planet-surface" :style="surfaceStyle"></div>
-            <div v-if="ringColor" class="planet-ring" :style="ringStyle"></div>
-            <span class="planet-name">{{ name }}</span>
+          <div class="orbit" :style="orbitStyle">
+            <div class="planet" :style="planetStyle" @click="$emit('click')">
+              <div class="planet-surface" :style="surfaceStyle"></div>
+              <div v-if="ringColor" class="planet-ring" :style="ringStyle"></div>
+              <span class="planet-name">{{ name }}</span>
+            </div>
           </div>
-        </div>
-      `,
+        `,
   computed: {
     orbitStyle() {
       return {
@@ -88,33 +80,6 @@ export default {
     const selectedPlanet = ref(null);
     const stars = ref([]);
 
-    const planets = [
-      { name: "FAQ", color: "#FFB3BA", size: 40, angle: 0, distance: 150 },
-      { name: "Stardust", color: "#BAFFC9", size: 50, angle: 60, distance: 220 },
-      {
-        name: "Asteroids",
-        color: "#BAE1FF",
-        size: 45,
-        angle: 120,
-        distance: 290,
-        ringColor: "#C8A2C8",
-      },
-      { name: "Clicker", color: "#FFFFBA", size: 55, angle: 180, distance: 370 },
-      {
-        name: "Explorers",
-        color: "#FFD9BA",
-        size: 60,
-        angle: 240,
-        distance: 450,
-        ringColor: "#FFB347",
-      },
-      { name: "Tales", color: "#E8BAFF", size: 50, angle: 300, distance: 520 },
-    ];
-
-    const selectPlanet = (name) => {
-      selectedPlanet.value = name;
-    };
-
     onMounted(() => {
       stars.value = Array.from({ length: 200 }, () => ({
         top: `${Math.random() * 100}%`,
@@ -124,7 +89,7 @@ export default {
       }));
     });
 
-    return { selectedPlanet, stars, planets, selectPlanet };
+    return { selectedPlanet, stars };
   },
 };
 </script>
@@ -139,6 +104,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-direction: column;
 }
 
 .star {
@@ -186,6 +152,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-bottom: 15%;
 }
 
 .sun {
@@ -217,59 +184,13 @@ export default {
   animation: rotate 20s linear infinite;
 }
 
-.orbit {
-  position: absolute;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 50%;
-}
-
-.planet {
-  position: absolute;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: transform 0.3s;
-}
-
-.planet:hover {
-  transform: scale(1.1);
-}
-
-.planet-surface {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-}
-
-.planet-ring {
-  position: absolute;
-  border-style: solid;
-  border-width: 4px 0 0 0;
-  border-radius: 50%;
-}
-
-.planet-name {
-  position: absolute;
-  color: #fff;
-  font-size: 0.8rem;
-  font-weight: bold;
-  text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
-}
-
 .cosmic-footer {
   position: absolute;
-  bottom: 1rem;
+  top: 1rem;
   right: 1rem;
   display: flex;
   align-items: center;
   color: #fff;
-}
-
-.star-icon {
-  margin-left: 0.5rem;
-  animation: spin 10s linear infinite;
 }
 
 .footer-links {
