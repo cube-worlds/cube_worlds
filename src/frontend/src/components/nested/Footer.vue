@@ -17,6 +17,7 @@
   display: flex;
   align-items: center;
   color: #fff;
+  z-index: 100;
 }
 
 .footer-links {

@@ -3,7 +3,7 @@
     <div id="ton-connect"></div>
     <h1>{{ $t("cnft-header") }}</h1>
 
-    <template v-if="userStorage.wallet">
+    <div v-if="userStorage.wallet">
       <div v-if="metadata && eligible" class="cnft-content">
         <h2 class="nft-name">{{ metadata?.name }}</h2>
         <div class="image-container">
@@ -24,104 +24,12 @@
       <div v-else class="not-eligible">
         {{ $t("cnft-not-eligible") }}
       </div>
-    </template>
+    </div>
     <div v-else class="connect-prompt">
       {{ $t("cnft-connect") }}
     </div>
   </div>
 </template>
-
-<style scoped>
-.cnft-container {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 2rem;
-  font-family: "Arial", sans-serif;
-}
-
-#ton-connect {
-  margin-top: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.cnft-content {
-  background-color: var(--tg-theme-bg-color, #fff);
-  border: 2px solid var(--tg-theme-button-color, #007bff);
-  border-radius: 12px;
-  padding: 2rem;
-  margin-top: 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-}
-
-.cnft-content:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-}
-
-.nft-name {
-  font-size: 2rem;
-  color: var(--tg-theme-text-color, #333);
-  text-align: center;
-  margin-bottom: 1.5rem;
-}
-
-.image-container {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  margin-bottom: 1.5rem;
-}
-
-.image-container img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.cnft-description {
-  font-size: 1.1rem;
-  color: var(--tg-theme-hint-color, #666);
-  text-align: center;
-  margin: 1.5rem 0;
-  line-height: 1.6;
-}
-
-.action-button {
-  display: flex;
-  justify-content: center;
-  margin-top: 2rem;
-}
-
-.action-button button {
-  background-color: var(--tg-theme-button-color, #007bff);
-  color: var(--tg-theme-button-text-color, #fff);
-  border: none;
-  padding: 0.8rem 1.5rem;
-  font-size: 1.1rem;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.action-button button:hover {
-  background-color: var(--tg-theme-button-color, #0056b3);
-}
-
-.not-eligible,
-.connect-prompt {
-  font-size: 1.2rem;
-  color: var(--tg-theme-text-color, #333);
-  text-align: center;
-  margin-top: 2rem;
-  padding: 1.5rem;
-  background-color: var(--tg-theme-secondary-bg-color, #f8f9fa);
-  border-radius: 8px;
-}
-</style>
 
 <script setup lang="ts">
 import { ref, watch, onMounted, Ref } from "vue";
@@ -150,6 +58,15 @@ let cnftExists = ref();
 let eligible: Ref<Boolean> = ref(true);
 let cnftAddress: Address | undefined = undefined;
 let tonConnectUI: TonConnectUI;
+
+// for test
+// metadata.value = {
+//   name: "Cool NFT",
+//   image: "https://cubeworlds.club/api/nft/diamond-10.webp",
+//   description: "This is a cool NFT description.",
+// };
+// eligible.value = true;
+// cnftExists.value = false;
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => {
@@ -369,3 +286,101 @@ watch(
   }
 );
 </script>
+
+<style scoped>
+.cnft-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.cnft-content {
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 15px;
+  padding: 30px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(5px);
+}
+
+.nft-name {
+  font-size: 1.8em;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.image-container {
+  width: 100%;
+  height: 0;
+  padding-bottom: 100%;
+  position: relative;
+  overflow: hidden;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.image-container img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.image-container:hover img {
+  transform: scale(1.05);
+}
+
+.cnft-description {
+  margin-top: 20px;
+  font-size: 1em;
+  line-height: 1.6;
+}
+
+.action-button {
+  margin-top: 30px;
+  text-align: center;
+}
+
+.action-button button {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  font-size: 1em;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.action-button button:hover {
+  background-color: #2980b9;
+}
+
+.not-eligible,
+.connect-prompt {
+  text-align: center;
+  font-size: 1.2em;
+  color: #e74c3c;
+  margin-top: 30px;
+}
+
+#ton-connect {
+  margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+  .cnft-container {
+    padding: 10px;
+  }
+
+  h1 {
+    font-size: 2em;
+  }
+
+  .nft-name {
+    font-size: 1.5em;
+  }
+}
+</style>

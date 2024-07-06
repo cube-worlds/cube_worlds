@@ -47,11 +47,13 @@ export default {
 
 <style scoped>
 .content-wrapper {
-  text-align: center;
+  position: relative;
   z-index: 10;
-  width: 80%;
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  padding: 2rem;
+  box-sizing: border-box;
 }
 
 .cosmos {
