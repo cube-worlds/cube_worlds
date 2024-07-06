@@ -1,5 +1,5 @@
 <template>
-  <h1>Cube Worlds Clicker</h1>
+  <h1>{{ $t("clicker-title") }}</h1>
 
   <div class="card">
     <div class="cube-container">
@@ -31,24 +31,22 @@
 <script setup lang="ts">
 import { useWebApp, useWebAppHapticFeedback, MainButton, useWebAppPopup } from "vue-tg";
 import { useAuth } from "../composables/use-auth";
-import { Ref, onMounted, ref } from "vue";
+import { Ref, onMounted, onUnmounted, ref } from "vue";
 import { useFluent } from "fluent-vue";
 import { enBundle, ruBundle } from "../fluent.js";
 import { useUserStore } from "../stores/userStore.js";
 
 const fluent = useFluent();
 const { $t } = useFluent();
-const userStore = useUserStore()
+const userStore = useUserStore();
 
 function getUserIdFromRefString(refString: string): number | undefined {
   const match = refString.match(/ref_(\d+)/);
-  if (match && match[1]) {
-    return parseInt(match[1], 10);
-  }
-  return undefined;
+  return match && match[1] ? parseInt(match[1], 10) : undefined;
 }
 
 onMounted(async () => {
+  disableZoom();
   const initData = useWebApp().initDataUnsafe;
   const webAppUser = initData.user;
   if (webAppUser) {
@@ -71,24 +69,22 @@ onMounted(async () => {
   }
 });
 
+onUnmounted(() => {
+  restoreZoom();
+});
+
 const { impactOccurred } = useWebAppHapticFeedback();
 
 const count = ref(0);
-const messages: Ref<
-  {
-    id: number;
-    x: number;
-    y: number;
-    value: number;
-  }[]
-> = ref([]);
+const messages: Ref<{ id: number; x: number; y: number; value: number }[]> = ref([]);
 
 const tap = (value: number, event: MouseEvent) => {
-  const impacts = ["light", "medium", "heavy", "rigid", "soft"];
-  const random = Math.floor(Math.random() * impacts.length);
-  const randomImpact = impacts[random] as "light" | "medium" | "heavy" | "rigid" | "soft";
+  const impacts = ["light", "medium", "heavy", "rigid", "soft"] as const;
+  const randomImpact = impacts[Math.floor(Math.random() * impacts.length)];
   impactOccurred(randomImpact);
-  const add = value * (random === 0 ? 1 : random);
+
+  const multiplier = randomImpact === "light" ? 1 : impacts.indexOf(randomImpact) + 1;
+  const add = value * multiplier;
   count.value += add;
 
   const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
@@ -101,59 +97,53 @@ const tap = (value: number, event: MouseEvent) => {
   messages.value.push(message);
 
   setTimeout(() => {
-    const index = messages.value.findIndex((m) => m.id === message.id);
-    if (index !== -1) {
-      messages.value.splice(index, 1);
-    }
+    messages.value = messages.value.filter((m) => m.id !== message.id);
   }, 1000);
 };
 
 const popup = useWebAppPopup();
 
 function showAlert() {
-  if (count.value < 30) {
-    return;
-  }
+  if (count.value < 30) return;
+
   popup.showPopup(
     {
       title: $t("clicker-no-title"),
       message: $t("clicker-no"),
       buttons: [
-        {
-          id: "share",
-          type: "default",
-          text: "Share",
-        },
-        {
-          id: "close",
-          type: "default",
-          text: "Close",
-        },
+        { id: "share", type: "default", text: "Share" },
+        { id: "close", type: "default", text: "Close" },
       ],
     },
     (buttonId: string) => {
-      switch (buttonId) {
-        case "share":
-          const text = $t("clicker-share-text");
-          const user = userStore.user;
-          console.log(user);
-          let startParam = "";
-          if (user?.id) {
-            startParam = `?startapp=ref_${user.id}`;
-          }
-          const url = `https://t.me/cube_worlds_bot/clicker${startParam}`;
-          const shareLink =
-            "https://t.me/share/url?url=" +
-            encodeURIComponent(url) +
-            "&text=" +
-            encodeURIComponent(text);
-          return open(shareLink);
-        case "close":
-          return;
+      if (buttonId === "share") {
+        const text = $t("clicker-share-text");
+        const user = userStore.user;
+        const startParam = user?.id ? `?startapp=ref_${user.id}` : "";
+        const url = `https://t.me/cube_worlds_bot/clicker${startParam}`;
+        const shareLink = `https://t.me/share/url?url=${encodeURIComponent(
+          url
+        )}&text=${encodeURIComponent(text)}`;
+        window.open(shareLink);
       }
     }
   );
 }
+
+const disableZoom = () => {
+  const meta = document.createElement("meta");
+  meta.name = "viewport";
+  meta.content =
+    "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no";
+  document.head.appendChild(meta);
+};
+
+const restoreZoom = () => {
+  const meta = document.querySelector('meta[name="viewport"]');
+  if (meta) {
+    document.head.removeChild(meta);
+  }
+};
 </script>
 
 <style scoped>
@@ -199,8 +189,10 @@ function showAlert() {
   font-weight: bold;
   font-family: Psychic-Force, sans-serif;
   text-shadow: 2px 2px 0 #000;
+  backface-visibility: hidden;
   image-rendering: pixelated;
 }
+
 .front {
   transform: rotateY(0deg) translateZ(100px);
 }
@@ -219,6 +211,7 @@ function showAlert() {
 .bottom {
   transform: rotateX(-90deg) translateZ(100px);
 }
+
 @keyframes rotate {
   0% {
     transform: rotateX(0) rotateY(0) rotateZ(0);
@@ -241,7 +234,7 @@ function showAlert() {
 .message {
   position: absolute;
   font-size: 24px;
-  color: white;
+  color: var(--tg-theme-text-color);
   pointer-events: none;
   animation: float-up 1s ease-out;
 }
