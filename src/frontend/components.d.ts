@@ -13,7 +13,7 @@ declare module 'vue' {
     ElCol: typeof import('element-plus/es')['ElCol']
     ElRow: typeof import('element-plus/es')['ElRow']
     FAQ: typeof import('./src/components/FAQ.vue')['default']
-    Footer: typeof import('./src/components/Footer.vue')['default']
+    Footer: typeof import('./src/components/nested/Footer.vue')['default']
     Header: typeof import('./src/components/Header.vue')['default']
     Main: typeof import('./src/components/Main.vue')['default']
     Presentation: typeof import('./src/components/Presentation.vue')['default']
