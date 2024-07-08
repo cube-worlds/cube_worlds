@@ -10,8 +10,6 @@ declare module 'vue' {
     Accordion: typeof import('./src/components/nested/Accordion.vue')['default']
     Clicker: typeof import('./src/components/Clicker.vue')['default']
     CNFT: typeof import('./src/components/CNFT.vue')['default']
-    ElCol: typeof import('element-plus/es')['ElCol']
-    ElRow: typeof import('element-plus/es')['ElRow']
     FAQ: typeof import('./src/components/FAQ.vue')['default']
     Footer: typeof import('./src/components/nested/Footer.vue')['default']
     Header: typeof import('./src/components/Header.vue')['default']

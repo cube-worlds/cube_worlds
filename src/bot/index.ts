@@ -36,6 +36,7 @@ import { config } from "#root/config.js";
 import { logger } from "#root/logger.js";
 import attachUser from "#root/bot/middlewares/attach-user.js";
 import slapReaction from "./middlewares/reaction";
+import { userFeature } from "./features/admin/user";
 
 type Options = {
   sessionStorage?: StorageAdapter<SessionData>;
@@ -89,6 +90,7 @@ export function createBot(token: string, options: Options) {
   protectedBot.use(transactionFeature);
   protectedBot.use(addressesFeature);
   protectedBot.use(playFeature);
+  protectedBot.use(userFeature);
 
   if (isMultipleLocales) {
     protectedBot.use(languageFeature);
