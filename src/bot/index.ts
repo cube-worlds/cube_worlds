@@ -28,6 +28,7 @@ import {
   addressesFeature,
   statsFeature,
   playFeature,
+  balancesFeature,
 } from "#root/bot/features/index.js";
 import { errorHandler } from "#root/bot/handlers/index.js";
 import { i18n, isMultipleLocales } from "#root/bot/i18n.js";
@@ -91,6 +92,7 @@ export function createBot(token: string, options: Options) {
   protectedBot.use(addressesFeature);
   protectedBot.use(playFeature);
   protectedBot.use(userFeature);
+  protectedBot.use(balancesFeature);
 
   if (isMultipleLocales) {
     protectedBot.use(languageFeature);

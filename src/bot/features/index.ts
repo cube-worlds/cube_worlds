@@ -16,3 +16,4 @@ export * from "./admin/topup.js";
 export * from "./admin/parameters.js";
 export * from "./admin/transaction.js";
 export * from "./admin/addresses.js";
+export * from "./admin/balances.js";
