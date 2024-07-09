@@ -51,6 +51,10 @@ function getPrivateChatAdminCommands(localeCode: string): BotCommand[] {
       description: "🏞️ Custom description",
     },
     {
+      command: "user",
+      description: "🙍🏻‍♂️ Info about user",
+    },
+    {
       command: "positive",
       description: "👍 Positive prompt",
     },
