@@ -12,25 +12,25 @@
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
     "@fluent/bundle": "^0.18.0",
     "@ton/core": "^0.56.3",
-    "@tonconnect/ui": "^2.0.5",
-    "@vitejs/plugin-vue": "^5.0.5",
-    "axios": "^1.7.2",
-    "element-plus": "^2.7.6",
+    "@tonconnect/ui": "^2.0.8",
+    "@vitejs/plugin-vue": "^5.1.2",
+    "axios": "^1.7.3",
+    "element-plus": "^2.8.0",
     "fluent-vue": "^3.6.0",
-    "pinia": "^2.1.7",
+    "pinia": "^2.2.1",
     "rollup-plugin-polyfill-node": "^0.13.0",
-    "unplugin-auto-import": "^0.17.6",
-    "unplugin-vue-components": "^0.27.2",
-    "vite": "^5.3.2",
-    "vue": "^3.4.31",
-    "vue-router": "^4.4.0"
+    "unplugin-auto-import": "^0.18.2",
+    "unplugin-vue-components": "^0.27.3",
+    "vite": "^5.4.0",
+    "vue": "^3.4.37",
+    "vue-router": "^4.4.3"
   },
   "devDependencies": {
-    "@babel/eslint-parser": "^7.24.7",
-    "@types/telegram-web-app": "^7.2.1",
+    "@babel/eslint-parser": "^7.25.1",
+    "@types/telegram-web-app": "^7.8.0",
     "eslint-plugin-vue": "^9.27.0",
-    "typescript": "^5.5.3",
-    "vue-tg": "^0.6.1",
-    "vue-tsc": "^2.0.24"
+    "typescript": "^5.5.4",
+    "vue-tg": "^0.8.0",
+    "vue-tsc": "^2.0.29"
   }
 }
