@@ -3,7 +3,7 @@ import {
   prop,
   getModelForClass,
   DocumentType,
-} from "@typegoose/typegoose";
+} from "@typegoose/typegoose"
 
 @modelOptions({
   schemaOptions: { timestamps: false },
@@ -11,38 +11,38 @@ import {
 })
 export class Transaction {
   @prop({ type: Number, required: true, index: true })
-  utime!: number;
+  utime!: number
 
   @prop({ type: Number, required: true })
-  lt!: number;
+  lt!: number
 
   @prop({ type: String, required: true })
-  address!: string;
+  address!: string
 
   @prop({ type: Number, required: true })
-  coins!: number;
+  coins!: number
 
   @prop({ type: Number })
-  ton?: number;
+  ton?: number
 
   @prop({ type: String, required: true })
-  hash!: string;
+  hash!: string
 
   @prop({ type: Boolean, required: false })
-  accepted?: boolean;
+  accepted?: boolean
 }
 
-export const TransactionModel = getModelForClass(Transaction);
+export const TransactionModel = getModelForClass(Transaction)
 
 export async function getLastestTransaction() {
-  return TransactionModel.findOne().sort({ utime: -1 });
+  return TransactionModel.findOne().sort({ utime: -1 })
 }
 
 export async function findTransaction(
   lt: number,
   hash: string,
 ): Promise<DocumentType<Transaction> | null> {
-  return TransactionModel.findOne({ lt, hash });
+  return TransactionModel.findOne({ lt, hash })
 }
 
 /**

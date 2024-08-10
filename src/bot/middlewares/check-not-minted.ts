@@ -1,8 +1,8 @@
-import { Api, Middleware, RawApi } from "grammy";
-import { config } from "#root/config";
-import { Context } from "../context";
-import { i18n } from "../i18n";
-import { inviteTelegramUrl, shareTelegramLink } from "../helpers/telegram";
+import { Api, Middleware, RawApi } from "grammy"
+import { config } from "#root/config"
+import { Context } from "../context"
+import { i18n } from "../i18n"
+import { inviteTelegramUrl, shareTelegramLink } from "../helpers/telegram"
 
 export async function sendMintedMessage(
   api: Api<RawApi>,
@@ -10,8 +10,8 @@ export async function sendMintedMessage(
   userLocale: string,
   nftUrl: string,
 ) {
-  const shareLink = shareTelegramLink(userId, i18n.t(userLocale, "mint.share"));
-  const inviteLink = inviteTelegramUrl(userId);
+  const shareLink = shareTelegramLink(userId, i18n.t(userLocale, "mint.share"))
+  const inviteLink = inviteTelegramUrl(userId)
   await api.sendMessage(
     userId,
     `${i18n.t(userLocale, "queue.minted", {
@@ -26,7 +26,7 @@ ${i18n.t(userLocale, "speedup.variants", {
     {
       link_preview_options: { is_disabled: true },
     },
-  );
+  )
 }
 
 export function checkNotMinted(): Middleware<Context> {
@@ -37,8 +37,8 @@ export function checkNotMinted(): Middleware<Context> {
         ctx.dbuser.id,
         ctx.dbuser.language,
         ctx.dbuser.nftUrl ?? "",
-      );
+      )
     }
-    return next();
-  };
+    return next()
+  }
 }

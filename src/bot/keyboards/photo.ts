@@ -1,4 +1,4 @@
-import { changeImageData } from "#root/bot/callback-data/image-selection.js";
+import { changeImageData } from "#root/bot/callback-data/image-selection.js"
 
 export enum SelectImageButton {
   Refresh = "refresh",
@@ -45,4 +45,4 @@ export const photoKeyboard = [
       }),
     },
   ],
-];
+]

@@ -1,13 +1,13 @@
 // min and max included
 function randomIntFromInterval(min: number, max: number) {
-  return Math.floor(Math.random() * (max - min + 1) + min);
+  return Math.floor(Math.random() * (max - min + 1) + min)
 }
 
 function randomValue(): number {
-  return randomIntFromInterval(1, 10);
+  return randomIntFromInterval(1, 10)
 }
 
-type TraitType = { trait_type: string; value: number };
+type TraitType = { trait_type: string; value: number }
 
 export function randomAttributes(): TraitType[] {
   const attributes = [
@@ -132,10 +132,10 @@ export function randomAttributes(): TraitType[] {
     "Artistry",
     "Faith",
     "Bellicosity",
-  ];
+  ]
   return attributes
-    .map((attribute) => {
-      return { trait_type: attribute, value: randomValue() };
+    .map(attribute => {
+      return { trait_type: attribute, value: randomValue() }
     })
-    .sort((trait1, trait2) => -(trait1.value - trait2.value));
+    .sort((trait1, trait2) => -(trait1.value - trait2.value))
 }

@@ -1,35 +1,35 @@
-import { config } from "#root/config.js";
-import pinataSDK from "@pinata/sdk";
-import { Readable } from "node:stream";
-import { saveImage, saveJSON } from "#root/bot/helpers/files";
-import fetch from "node-fetch";
-import { logger } from "#root/logger";
+import { config } from "#root/config.js"
+import pinataSDK from "@pinata/sdk"
+import { Readable } from "node:stream"
+import { saveImage, saveJSON } from "#root/bot/helpers/files"
+import fetch from "node-fetch"
+import { logger } from "#root/logger"
 
 // eslint-disable-next-line new-cap
 const pinata = new pinataSDK({
   pinataApiKey: config.PINATA_API_KEY,
   pinataSecretApiKey: config.PINATA_API_SECRET,
-});
+})
 
 export async function pinImageURLToIPFS(
   adminIndex: number,
   username: string,
   imageURL: string,
 ): Promise<string> {
-  const image = await fetch(imageURL);
-  const arrayBuffer = await image.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
+  const image = await fetch(imageURL)
+  const arrayBuffer = await image.arrayBuffer()
+  const buffer = Buffer.from(arrayBuffer)
   const imageFileName =
-    imageURL.slice((imageURL.lastIndexOf("/") ?? 0) + 1) ?? "";
-  const fileExtension = imageFileName.split(".").pop();
-  const newFileName = `${username}_${adminIndex}.${fileExtension}`;
-  saveImage(username, newFileName, buffer);
+    imageURL.slice((imageURL.lastIndexOf("/") ?? 0) + 1) ?? ""
+  const fileExtension = imageFileName.split(".").pop()
+  const newFileName = `${username}_${adminIndex}.${fileExtension}`
+  saveImage(username, newFileName, buffer)
 
-  const stream = Readable.from(buffer);
+  const stream = Readable.from(buffer)
   const response = await pinata.pinFileToIPFS(stream, {
     pinataMetadata: { name: newFileName },
-  });
-  return response.IpfsHash;
+  })
+  return response.IpfsHash
 }
 
 export async function pinJSONToIPFS(
@@ -37,19 +37,19 @@ export async function pinJSONToIPFS(
   username: string,
   json: object,
 ): Promise<string> {
-  const jsonPath = saveJSON(adminIndex, username, json);
+  const jsonPath = saveJSON(adminIndex, username, json)
   const response = await pinata.pinFromFS(jsonPath, {
     pinataMetadata: { name: `${username}_${adminIndex}.json` },
-  });
-  return response.IpfsHash;
+  })
+  return response.IpfsHash
 }
 
 export async function unpin(hash: string) {
-  return pinata.unpin(hash);
+  return pinata.unpin(hash)
 }
 
 export function linkToIPFSGateway(hash: string) {
-  return `${config.PINATA_GATEWAY}/ipfs/${hash}?pinataGatewayToken=${config.PINATA_GATEWAY_KEY}`;
+  return `${config.PINATA_GATEWAY}/ipfs/${hash}?pinataGatewayToken=${config.PINATA_GATEWAY_KEY}`
 }
 
 async function fetchFileFromIPFS(
@@ -58,12 +58,12 @@ async function fetchFileFromIPFS(
 ): Promise<Buffer> {
   const response = await fetch(`${gateway}${cid}`, {
     signal: AbortSignal.timeout(120_000),
-  });
+  })
   if (!response.ok) {
-    throw new Error(`HTTP error! Status: ${response.status}`);
+    throw new Error(`HTTP error! Status: ${response.status}`)
   }
-  const fileData = await response.arrayBuffer();
-  return Buffer.from(fileData);
+  const fileData = await response.arrayBuffer()
+  return Buffer.from(fileData)
 }
 
 export function warmIPFSHash(hash: string) {
@@ -74,13 +74,11 @@ export function warmIPFSHash(hash: string) {
     "https://ipfs.eth.aragon.network/ipfs/",
     "https://gateway.pinata.cloud/ipfs/",
     "https://ipfs.eth.aragon.network/ipfs/",
-  ];
+  ]
   // eslint-disable-next-line no-restricted-syntax
   for (const gateway of gateways) {
     fetchFileFromIPFS(hash, gateway)
-      .then((_) => logger.debug(`Gateway ${gateway} warmed`))
-      .catch((error) =>
-        logger.debug(`Gateway ${gateway} NOT warmed: ${error}`),
-      );
+      .then(() => logger.debug(`Gateway ${gateway} warmed`))
+      .catch(error => logger.debug(`Gateway ${gateway} NOT warmed: ${error}`))
   }
 }

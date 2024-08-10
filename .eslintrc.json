@@ -15,7 +15,8 @@
     "plugin:unicorn/recommended",
     "plugin:prettier/recommended",
     "eslint:recommended",
-    "plugin:@typescript-eslint/recommended"
+    "plugin:@typescript-eslint/recommended",
+    "eslint:recommended"
   ],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
@@ -23,6 +24,9 @@
   },
   "plugins": ["@typescript-eslint", "prettier", "unicorn", "import"],
   "rules": {
+    "semi": ["error", "never"],
+    "@typescript-eslint/semi": "off",
+    "no-unexpected-multiline": "error",
     "@typescript-eslint/await-thenable": "error",
     "@typescript-eslint/require-await": "error",
     "@typescript-eslint/no-floating-promises": "error",
@@ -45,7 +49,15 @@
     "prettier/prettier": [
       "error",
       {
-        "trailingComma": "all"
+        "trailingComma": "all",
+        "semi": false,
+        "singleQuote": false,
+        "printWidth": 80,
+        "tabWidth": 2,
+        "useTabs": false,
+        "bracketSpacing": true,
+        "arrowParens": "avoid",
+        "endOfLine": "auto"
       }
     ],
     "unicorn/no-array-method-this-argument": "off",
@@ -69,5 +81,13 @@
         "extensions": [".js", ".ts"]
       }
     }
-  }
+  },
+  "overrides": [
+    {
+      "files": ["*.ts"], 
+      "rules": {
+        "no-undef": "off"
+      }
+    }
+  ]
 }

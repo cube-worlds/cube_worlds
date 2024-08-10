@@ -1,26 +1,26 @@
-import { Composer } from "grammy";
-import type { Context } from "#root/bot/context.js";
-import { logHandle } from "#root/bot/helpers/logging.js";
-import { UserState } from "#root/bot/models/user.js";
-import { voteScore } from "#root/bot/helpers/votes.js";
-import { checkNotMinted } from "../middlewares/check-not-minted";
+import { Composer } from "grammy"
+import type { Context } from "#root/bot/context.js"
+import { logHandle } from "#root/bot/helpers/logging.js"
+import { UserState } from "#root/bot/models/user.js"
+import { voteScore } from "#root/bot/helpers/votes.js"
+import { checkNotMinted } from "../middlewares/check-not-minted"
 
-const composer = new Composer<Context>();
+const composer = new Composer<Context>()
 
-const feature = composer.chatType("private");
+const feature = composer.chatType("private")
 
 feature.command(
   "reset",
   checkNotMinted(),
   logHandle("command-reset"),
-  async (ctx) => {
-    ctx.dbuser.state = UserState.WaitNothing;
+  async ctx => {
+    ctx.dbuser.state = UserState.WaitNothing
     if (!ctx.dbuser.votes) {
-      ctx.dbuser.votes = BigInt(await voteScore(ctx));
+      ctx.dbuser.votes = BigInt(await voteScore(ctx))
     }
-    await ctx.dbuser.save();
-    await ctx.reply(ctx.t("reset"));
+    await ctx.dbuser.save()
+    await ctx.reply(ctx.t("reset"))
   },
-);
+)
 
-export { composer as resetFeature };
+export { composer as resetFeature }

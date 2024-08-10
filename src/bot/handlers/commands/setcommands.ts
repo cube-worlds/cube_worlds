@@ -1,14 +1,14 @@
-import { BotCommand, LanguageCode } from "@grammyjs/types";
-import { CommandContext } from "grammy";
-import { i18n, isMultipleLocales } from "#root/bot/i18n.js";
-import { config } from "#root/config.js";
-import type { Context } from "#root/bot/context.js";
+import { BotCommand, LanguageCode } from "@grammyjs/types"
+import { CommandContext } from "grammy"
+import { i18n, isMultipleLocales } from "#root/bot/i18n.js"
+import { config } from "#root/config.js"
+import type { Context } from "#root/bot/context.js"
 
 function getLanguageCommand(localeCode: string): BotCommand {
   return {
     command: "language",
     description: i18n.t(localeCode, "language_command.description"),
-  };
+  }
 }
 
 function getPrivateChatCommands(localeCode: string): BotCommand[] {
@@ -37,7 +37,7 @@ function getPrivateChatCommands(localeCode: string): BotCommand[] {
       command: "whales",
       description: i18n.t(localeCode, "whales_command.description"),
     },
-  ];
+  ]
 }
 
 function getPrivateChatAdminCommands(localeCode: string): BotCommand[] {
@@ -86,16 +86,16 @@ function getPrivateChatAdminCommands(localeCode: string): BotCommand[] {
       command: "setcommands",
       description: i18n.t(localeCode, "setcommands_command.description"),
     },
-  ];
+  ]
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function getGroupChatCommands(localeCode: string): BotCommand[] {
-  return [];
+// eslint-disable-next-line no-unused-vars
+function getGroupChatCommands(_localeCode: string): BotCommand[] {
+  return []
 }
 
 export async function setCommandsHandler(ctx: CommandContext<Context>) {
-  const DEFAULT_LANGUAGE_CODE = "en";
+  const DEFAULT_LANGUAGE_CODE = "en"
 
   // set private chat commands
   await ctx.api.setMyCommands(
@@ -108,10 +108,10 @@ export async function setCommandsHandler(ctx: CommandContext<Context>) {
         type: "all_private_chats",
       },
     },
-  );
+  )
 
   if (isMultipleLocales) {
-    const requests = i18n.locales.map((code) =>
+    const requests = i18n.locales.map(code =>
       ctx.api.setMyCommands(
         [
           ...getPrivateChatCommands(code),
@@ -126,9 +126,9 @@ export async function setCommandsHandler(ctx: CommandContext<Context>) {
           },
         },
       ),
-    );
+    )
 
-    await Promise.all(requests);
+    await Promise.all(requests)
   }
 
   // set group chat commands
@@ -136,39 +136,39 @@ export async function setCommandsHandler(ctx: CommandContext<Context>) {
     scope: {
       type: "all_group_chats",
     },
-  });
+  })
 
   if (isMultipleLocales) {
-    const requests = i18n.locales.map((code) =>
+    const requests = i18n.locales.map(code =>
       ctx.api.setMyCommands(getGroupChatCommands(code), {
         language_code: code as LanguageCode,
         scope: {
           type: "all_group_chats",
         },
       }),
-    );
+    )
     // const nameRequests = i18n.locales.map((code) =>
     //   ctx.api.setMyName("$CUBE Worlds", { language_code: code }),
     // );
 
     // when the chat is empty
-    const descriptionRequests = i18n.locales.map((code) =>
+    const descriptionRequests = i18n.locales.map(code =>
       ctx.api.setMyDescription(i18n.t(code, "bot.description"), {
         language_code: code as LanguageCode,
       }),
-    );
+    )
 
     // bot's profile page and in share links
-    const shortDescriptionRequests = i18n.locales.map((code) =>
+    const shortDescriptionRequests = i18n.locales.map(code =>
       ctx.api.setMyShortDescription(i18n.t(code, "bot.short_description"), {
         language_code: code as LanguageCode,
       }),
-    );
+    )
     await Promise.all([
       ...requests,
       ...descriptionRequests,
       ...shortDescriptionRequests,
-    ]);
+    ])
   }
 
   // set private chat commands for owner
@@ -189,8 +189,8 @@ export async function setCommandsHandler(ctx: CommandContext<Context>) {
           chat_id: adminId,
         },
       },
-    );
+    )
   }
 
-  return ctx.reply(ctx.t("admin.commands-updated"));
+  return ctx.reply(ctx.t("admin.commands-updated"))
 }

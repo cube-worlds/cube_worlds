@@ -1,7 +1,7 @@
-import "dotenv/config";
-import z from "zod";
-import { parseEnv, port } from "znv";
-import { API_CONSTANTS } from "grammy";
+import "dotenv/config"
+import z from "zod"
+import { parseEnv, port } from "znv"
+import { API_CONSTANTS } from "grammy"
 
 const createConfigFromEnvironment = (environment: NodeJS.ProcessEnv) => {
   const config = parseEnv(environment, {
@@ -40,7 +40,7 @@ const createConfigFromEnvironment = (environment: NodeJS.ProcessEnv) => {
     OPENAI_API_KEY: z.string(),
     TELEMETREE_API_KEY: z.string(),
     TELEMETREE_PROJECT_ID: z.string(),
-  });
+  })
 
   if (config.BOT_MODE === "webhook") {
     // validate webhook url in webhook mode
@@ -48,16 +48,16 @@ const createConfigFromEnvironment = (environment: NodeJS.ProcessEnv) => {
       .url()
       .parse(config.BOT_WEBHOOK, {
         path: ["BOT_WEBHOOK"],
-      });
+      })
   }
 
   return {
     ...config,
     isDev: process.env.NODE_ENV === "development",
     isProd: process.env.NODE_ENV === "production",
-  };
-};
+  }
+}
 
-export type Config = ReturnType<typeof createConfigFromEnvironment>;
+export type Config = ReturnType<typeof createConfigFromEnvironment>
 
-export const config = createConfigFromEnvironment(process.env);
+export const config = createConfigFromEnvironment(process.env)
