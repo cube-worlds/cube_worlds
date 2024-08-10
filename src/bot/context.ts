@@ -1,5 +1,5 @@
 import { Update, UserFromGetMe } from "@grammyjs/types";
-import { Context as DefaultContext, SessionFlavor, type Api } from "grammy";
+import { Context as DefaultContext, type Api } from "grammy";
 import type { AutoChatActionFlavor } from "@grammyjs/auto-chat-action";
 import type { HydrateFlavor } from "@grammyjs/hydrate";
 import type { I18nFlavor } from "@grammyjs/i18n";
@@ -8,10 +8,6 @@ import type { Logger } from "#root/logger.js";
 import { User } from "#root/bot/models/user.js";
 import { DocumentType } from "@typegoose/typegoose";
 
-export type SessionData = {
-  // field?: string;
-};
-
 type ExtendedContextFlavor = {
   dbuser: DocumentType<User>;
   logger: Logger;
@@ -19,11 +15,7 @@ type ExtendedContextFlavor = {
 
 export type Context = ParseModeFlavor<
   HydrateFlavor<
-    DefaultContext &
-      ExtendedContextFlavor &
-      SessionFlavor<SessionData> &
-      I18nFlavor &
-      AutoChatActionFlavor
+    DefaultContext & ExtendedContextFlavor & I18nFlavor & AutoChatActionFlavor
   >
 >;
 

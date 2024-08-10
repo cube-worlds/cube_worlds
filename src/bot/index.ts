@@ -2,13 +2,9 @@ import { queueMenu } from "#root/bot/keyboards/queue-menu.js";
 import { autoChatAction } from "@grammyjs/auto-chat-action";
 import { hydrate } from "@grammyjs/hydrate";
 import { hydrateReply, parseMode } from "@grammyjs/parse-mode";
-import { BotConfig, StorageAdapter, Bot as TelegramBot, session } from "grammy";
+import { BotConfig, Bot as TelegramBot } from "grammy";
 import { autoRetry } from "@grammyjs/auto-retry";
-import {
-  Context,
-  SessionData,
-  createContextConstructor,
-} from "#root/bot/context.js";
+import { Context, createContextConstructor } from "#root/bot/context.js";
 import {
   adminFeature,
   languageFeature,
@@ -40,12 +36,10 @@ import slapReaction from "./middlewares/reaction";
 import { userFeature } from "./features/admin/user";
 
 type Options = {
-  sessionStorage?: StorageAdapter<SessionData>;
   config?: Omit<BotConfig<Context>, "ContextConstructor">;
 };
 
 export function createBot(token: string, options: Options) {
-  const { sessionStorage } = options;
   const bot = new TelegramBot(token, {
     ...options.config,
     ContextConstructor: createContextConstructor({ logger }),
@@ -63,12 +57,6 @@ export function createBot(token: string, options: Options) {
   protectedBot.use(autoChatAction(bot.api));
   protectedBot.use(hydrateReply);
   protectedBot.use(hydrate());
-  protectedBot.use(
-    session({
-      initial: () => ({}),
-      storage: sessionStorage,
-    }),
-  );
   protectedBot.use(slapReaction);
   protectedBot.use(i18n);
   protectedBot.use(attachUser);
