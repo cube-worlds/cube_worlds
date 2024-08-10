@@ -2,9 +2,9 @@
 import { Address, beginCell, Cell, internal, SendMode, toNano } from "@ton/core"
 import { OpenedWallet } from "#root/bot/helpers/wallet.js"
 import { config } from "#root/config.js"
-import { logger } from "#root/logger"
-import { openWallet, sleep, waitSeqno } from "../helpers/ton"
-import { NftCollection } from "./nft-collection"
+import { logger } from "#root/logger.js"
+import { NftCollection } from "#root/bot/helpers/nft-collection.js"
+import { openWallet, sleep, waitSeqno } from "#root/bot/helpers/ton.js"
 
 export type NFTMintParameters = {
   queryId: number

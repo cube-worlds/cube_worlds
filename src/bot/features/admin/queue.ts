@@ -13,8 +13,8 @@ import { Address, toNano } from "@ton/core"
 import { PhotoSize } from "@grammyjs/types"
 import { changeImageData } from "#root/bot/callback-data/image-selection.js"
 import { SelectImageButton, photoKeyboard } from "#root/bot/keyboards/photo.js"
-import { NftCollection } from "#root/bot/models/nft-collection.js"
-import { NFTMintParameters, NftItem } from "#root/bot/models/nft-item.js"
+import { NftCollection } from "#root/bot/helpers/nft-collection.js"
+import { NFTMintParameters, NftItem } from "#root/bot/helpers/nft-item.js"
 import {
   pinImageURLToIPFS,
   pinJSONToIPFS,

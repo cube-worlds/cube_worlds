@@ -14,7 +14,7 @@ import {
 } from "#root/bot/helpers/ton.js"
 import { config } from "#root/config.js"
 import { logger } from "#root/logger"
-import { OpenedWallet } from "../helpers/wallet"
+import { OpenedWallet } from "#root/bot/helpers/wallet.js"
 
 export type collectionData = {
   ownerAddress: Address

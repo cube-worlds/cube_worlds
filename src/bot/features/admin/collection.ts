@@ -1,7 +1,7 @@
 import { Composer } from "grammy"
 import type { Context } from "#root/bot/context.js"
 import { logHandle } from "#root/bot/helpers/logging.js"
-import { NftCollection } from "#root/bot/models/nft-collection.js"
+import { NftCollection } from "#root/bot/helpers/nft-collection.js"
 import { config } from "#root/config.js"
 import { chatAction } from "@grammyjs/auto-chat-action"
 import { openWallet, waitSeqno } from "#root/bot/helpers/ton.js"
