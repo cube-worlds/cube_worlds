@@ -13,7 +13,7 @@ export default async function attachUser(ctx: Context, next: NextFunction) {
     throw new Error("User not found");
   }
   ctx.dbuser = user;
-  if (!ctx.dbuser.languageSelected) {
+  if (!ctx.dbuser.languageSelected || !ctx.dbuser.language) {
     const locale = await ctx.i18n.getLocale();
     const localeSupported = i18n.locales.includes(locale);
     if (!localeSupported) {
@@ -25,6 +25,8 @@ export default async function attachUser(ctx: Context, next: NextFunction) {
     ctx.dbuser.languageSelected = true;
     await ctx.dbuser.save();
   }
-  await ctx.i18n.setLocale(ctx.dbuser.language);
+  if (ctx.dbuser.language) {
+    await ctx.i18n.setLocale(ctx.dbuser.language);
+  }
   return next();
 }
