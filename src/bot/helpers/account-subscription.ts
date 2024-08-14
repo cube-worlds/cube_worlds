@@ -15,12 +15,7 @@ export class AccountSubscription {
 
   onTransaction: any
 
-  constructor(
-    tonweb: any,
-    accountAddress: any,
-    startTime: any,
-    onTransaction: any,
-  ) {
+  constructor(tonweb: any, accountAddress: any, startTime: any, onTransaction: any) {
     this.tonweb = tonweb
     this.accountAddress = accountAddress
     this.startTime = startTime // start unixtime (stored in your database), transactions made earlier will be discarded.
@@ -65,12 +60,7 @@ export class AccountSubscription {
         retryCount += 1
         if (retryCount < 10) {
           await sleep(retryCount * 1000)
-          return getTransactions(
-            time,
-            offsetTransactionLT,
-            offsetTransactionHash,
-            retryCount,
-          )
+          return getTransactions(time, offsetTransactionLT, offsetTransactionHash, retryCount)
         }
         return 0
       }
@@ -98,12 +88,7 @@ export class AccountSubscription {
       }
 
       const lastTx = transactions.at(-1)
-      return getTransactions(
-        time,
-        lastTx.transaction_id.lt,
-        lastTx.transaction_id.hash,
-        0,
-      )
+      return getTransactions(time, lastTx.transaction_id.lt, lastTx.transaction_id.hash, 0)
     }
 
     let isProcessing = false

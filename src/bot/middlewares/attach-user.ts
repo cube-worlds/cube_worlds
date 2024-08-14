@@ -1,8 +1,8 @@
 import { NextFunction } from "grammy"
 import { findOrCreateUser } from "#root/bot/models/user.js"
 import { Context } from "#root/bot/context.js"
-import { i18n } from "../i18n"
-import { createChangeLanguageKeyboard } from "../keyboards/change-language"
+import { i18n } from "#root/bot/i18n.js"
+import { createChangeLanguageKeyboard } from "#root/bot/keyboards/change-language.js"
 
 export default async function attachUser(ctx: Context, next: NextFunction) {
   if (!ctx.from) {

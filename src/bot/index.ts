@@ -4,11 +4,7 @@ import { hydrate } from "@grammyjs/hydrate"
 import { hydrateReply, parseMode } from "@grammyjs/parse-mode"
 import { BotConfig, StorageAdapter, Bot as TelegramBot, session } from "grammy"
 import { autoRetry } from "@grammyjs/auto-retry"
-import {
-  Context,
-  SessionData,
-  createContextConstructor,
-} from "#root/bot/context.js"
+import { Context, SessionData, createContextConstructor } from "#root/bot/context.js"
 import {
   adminFeature,
   languageFeature,
@@ -29,6 +25,7 @@ import {
   statsFeature,
   playFeature,
   balancesFeature,
+  balanceFeature,
 } from "#root/bot/features/index.js"
 import { errorHandler } from "#root/bot/handlers/index.js"
 import { i18n, isMultipleLocales } from "#root/bot/i18n.js"
@@ -91,6 +88,7 @@ export function createBot(token: string, options: Options) {
   protectedBot.use(transactionFeature)
   protectedBot.use(addressesFeature)
   protectedBot.use(playFeature)
+  protectedBot.use(balanceFeature)
   protectedBot.use(userFeature)
   protectedBot.use(balancesFeature)
 

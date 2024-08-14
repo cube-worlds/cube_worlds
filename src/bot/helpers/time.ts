@@ -1,12 +1,7 @@
 export function timeUnitsBetween(startDate: Date, endDate: Date) {
   let delta = Math.abs(endDate.getTime() - startDate.getTime()) / 1000
   const isNegative = startDate > endDate ? -1 : 1
-  const units: [
-    [string, number],
-    [string, number],
-    [string, number],
-    [string, number],
-  ] = [
+  const units: [[string, number], [string, number], [string, number], [string, number]] = [
     ["days", 24 * 60 * 60],
     ["hours", 60 * 60],
     ["minutes", 60],
@@ -24,4 +19,11 @@ export function timeUnitsBetween(startDate: Date, endDate: Date) {
       ),
     {},
   )
+}
+
+export function formatDateTimeCompact(input: Date): string {
+  const d = input.toISOString().split("T")
+  const date = d[0].slice(2) // .split("-").join("/")
+  const time = d[1].split(".")[0]
+  return `${date} ${time}`
 }

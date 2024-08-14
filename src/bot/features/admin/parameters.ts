@@ -17,9 +17,7 @@ feature.command("description", logHandle("command-description"), async ctx => {
     await ctx.reply(`<code>/description ${ctx.dbuser.customDescription}</code>`)
     return
   }
-  await ctx.reply(
-    `<code>/description</code> ${oldCustomDescription ?? "about selected person"}`,
-  )
+  await ctx.reply(`<code>/description</code> ${oldCustomDescription ?? "about selected person"}`)
 })
 
 feature.command("positive", logHandle("command-positive"), async ctx => {
@@ -73,9 +71,7 @@ feature.command("scale", logHandle("command-scale"), async ctx => {
     await ctx.dbuser.save()
     return ctx.reply(`New scale: <code>/scale ${newScale}</code>`)
   }
-  return ctx.reply(
-    `Current scale: <code>/scale ${oldScale}</code>. Can be in range [0 .. 35]`,
-  )
+  return ctx.reply(`Current scale: <code>/scale ${oldScale}</code>. Can be in range [0 .. 35]`)
 })
 
 feature.command("steps", logHandle("command-steps"), async ctx => {
@@ -89,9 +85,7 @@ feature.command("steps", logHandle("command-steps"), async ctx => {
     await ctx.dbuser.save()
     return ctx.reply(`New steps: <code>/steps ${newSteps}</code>`)
   }
-  return ctx.reply(
-    `Current steps: <code>/steps ${oldSteps}</code>. Can be in range [ 10 .. 50 ]`,
-  )
+  return ctx.reply(`Current steps: <code>/steps ${oldSteps}</code>. Can be in range [ 10 .. 50 ]`)
 })
 
 feature.command("preset", logHandle("command-preset"), async ctx => {
@@ -115,8 +109,7 @@ Can be: ${presets.join(", ")}`,
 
 feature.command("sampler", logHandle("command-sampler"), async ctx => {
   const oldSampler = ctx.dbuser.sampler ?? SDSampler.K_DPMPP_2S_ANCESTRAL
-  const newSampler: SDSampler =
-    SDSampler[ctx.match.trim() as keyof typeof SDSampler]
+  const newSampler: SDSampler = SDSampler[ctx.match.trim() as keyof typeof SDSampler]
   if (newSampler) {
     ctx.dbuser.sampler = newSampler
     await ctx.dbuser.save()

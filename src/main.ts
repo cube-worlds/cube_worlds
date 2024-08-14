@@ -1,15 +1,17 @@
 #!/usr/bin/env tsx
 import { onShutdown } from "node-graceful-shutdown"
+import mongoose from "mongoose"
 import { createBot } from "#root/bot/index.js"
 import { config } from "#root/config.js"
 import { logger } from "#root/logger.js"
 import { createServer } from "#root/server.js"
-import mongoose from "mongoose"
-import { Subscription } from "#root/subscription"
+import { Subscription } from "#root/subscription.js"
+import { createInitialBalancesIfNotExists } from "#root/bot/models/user.js"
 
 try {
   await mongoose.connect(config.MONGO)
   const bot = createBot(config.BOT_TOKEN, {})
+  await createInitialBalancesIfNotExists()
   const server = await createServer(bot)
 
   // Graceful shutdown

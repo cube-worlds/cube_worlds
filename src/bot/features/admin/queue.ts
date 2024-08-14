@@ -2,11 +2,7 @@
 import { Composer, InputFile } from "grammy"
 import type { Context } from "#root/bot/context.js"
 import { logHandle } from "#root/bot/helpers/logging.js"
-import {
-  photoCaption,
-  queueMenu,
-  sendUserMetadata,
-} from "#root/bot/keyboards/queue-menu.js"
+import { photoCaption, queueMenu, sendUserMetadata } from "#root/bot/keyboards/queue-menu.js"
 import { isAdmin } from "#root/bot/filters/is-admin.js"
 import { config } from "#root/config.js"
 import { Address, toNano } from "@ton/core"
@@ -15,17 +11,8 @@ import { changeImageData } from "#root/bot/callback-data/image-selection.js"
 import { SelectImageButton, photoKeyboard } from "#root/bot/keyboards/photo.js"
 import { NftCollection } from "#root/bot/helpers/nft-collection.js"
 import { NFTMintParameters, NftItem } from "#root/bot/helpers/nft-item.js"
-import {
-  pinImageURLToIPFS,
-  pinJSONToIPFS,
-  unpin,
-  warmIPFSHash,
-} from "#root/bot/helpers/ipfs.js"
-import {
-  ClipGuidancePreset,
-  SDSampler,
-  generate,
-} from "#root/bot/helpers/generation.js"
+import { pinImageURLToIPFS, pinJSONToIPFS, unpin, warmIPFSHash } from "#root/bot/helpers/ipfs.js"
+import { ClipGuidancePreset, SDSampler, generate } from "#root/bot/helpers/generation.js"
 import { randomAttributes } from "#root/bot/helpers/attributes.js"
 import { countUsers, findUserById } from "#root/bot/models/user.js"
 import { ChatGPTAPI } from "chatgpt"
@@ -37,7 +24,7 @@ import {
   sendPreviewNFT,
   sendToGroupsNewNFT,
   // sendNewPlaces,
-} from "../../helpers/telegram"
+} from "#root/bot/helpers/telegram.js"
 
 const composer = new Composer<Context>()
 
@@ -78,8 +65,7 @@ feature.callbackQuery(
             },
           })
           const name = selectedUser.name ?? ""
-          const info =
-            ctx.dbuser.customDescription ?? selectedUser.description ?? ""
+          const info = ctx.dbuser.customDescription ?? selectedUser.description ?? ""
           const result = await api.sendMessage(
             `Write an inspiring text about a person named "${name}" who has decided to start a journey.
             You could also use additional information: "${info}", if it feels appropriate, and translate into English if not.
@@ -139,14 +125,10 @@ feature.callbackQuery(
 
         case SelectImageButton.Avatar: {
           const nextAvatarNumber =
-            ctx.dbuser.selectedUser === selectedUser.id
-              ? (ctx.dbuser.avatarNumber ?? -1) + 1
-              : 0
+            ctx.dbuser.selectedUser === selectedUser.id ? (ctx.dbuser.avatarNumber ?? -1) + 1 : 0
           ctx.dbuser.avatarNumber = nextAvatarNumber
           await ctx.dbuser.save()
-          sendUserMetadata(ctx, selectedUser).catch(error =>
-            ctx.reply((error as Error).message),
-          )
+          sendUserMetadata(ctx, selectedUser).catch(error => ctx.reply((error as Error).message))
           break
         }
 
@@ -185,11 +167,7 @@ feature.callbackQuery(
             attributes: randomAttributes(),
           }
           ctx.logger.info(json)
-          const ipfsJSONHash = await pinJSONToIPFS(
-            adminIndex(ctx.dbuser.id),
-            username,
-            json,
-          )
+          const ipfsJSONHash = await pinJSONToIPFS(adminIndex(ctx.dbuser.id), username, json)
           selectedUser.nftImage = ipfsImageHash
           selectedUser.nftJson = ipfsJSONHash
           await selectedUser.save()
@@ -222,8 +200,7 @@ feature.callbackQuery(
           selectedUser.mintedAt = new Date()
           await selectedUser.save()
 
-          const nextItemIndex =
-            await NftCollection.fetchNextItemIndexWithRetry()
+          const nextItemIndex = await NftCollection.fetchNextItemIndexWithRetry()
           const userAddress = Address.parse(selectedUser.wallet ?? "")
           const parameters: NFTMintParameters = {
             queryId: 0,
@@ -297,9 +274,7 @@ feature.callbackQuery(
     } catch (error) {
       ctx.logger.error(error)
       const { message } = error as Error
-      await (message
-        ? ctx.reply(`Error: ${message}`)
-        : ctx.reply(ctx.t("wrong")))
+      await (message ? ctx.reply(`Error: ${message}`) : ctx.reply(ctx.t("wrong")))
     }
     ctx.chatAction = null
   },

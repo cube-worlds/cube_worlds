@@ -1,12 +1,7 @@
 /* eslint-disable no-restricted-syntax */
 import { Menu } from "@grammyjs/menu"
 import { Context } from "#root/bot/context.js"
-import {
-  User,
-  UserState,
-  findQueue,
-  findUserById,
-} from "#root/bot/models/user.js"
+import { User, UserState, findQueue, findUserById } from "#root/bot/models/user.js"
 import { config } from "#root/config.js"
 import { getUserProfileFile } from "#root/bot/helpers/photo.js"
 import { saveImageFromUrl } from "#root/bot/helpers/files.js"
@@ -29,10 +24,7 @@ Minted: ${user.minted ? "✅" : "❌"} ${user.nftUrl ? `[NFT](${user.nftUrl})` :
 `
 }
 
-export async function sendUserMetadata(
-  context: Context,
-  selectedUser: DocumentType<User>,
-) {
+export async function sendUserMetadata(context: Context, selectedUser: DocumentType<User>) {
   context.chatAction = "upload_document"
 
   const adminUser = context.dbuser
@@ -55,12 +47,7 @@ export async function sendUserMetadata(
     const username = selectedUser.name
     if (!username) return context.reply("Empty username")
     // eslint-disable-next-line no-param-reassign
-    selectedUser.avatar = await saveImageFromUrl(
-      photoUrl,
-      admIndex,
-      username,
-      true,
-    )
+    selectedUser.avatar = await saveImageFromUrl(photoUrl, admIndex, username, true)
     await selectedUser.save()
 
     await context.replyWithPhoto(nextAvatar.file_id, {
@@ -120,9 +107,7 @@ export const queueMenu = new Menu("queue").dynamic(async (cntxt, range) => {
             const oldUsername = user.name
             user.name = author.user.username
             await user.save()
-            return ctx.reply(
-              `Username changed from @${oldUsername} to @${user.name}`,
-            )
+            return ctx.reply(`Username changed from @${oldUsername} to @${user.name}`)
           }
 
           await sendUserMetadata(context, user)

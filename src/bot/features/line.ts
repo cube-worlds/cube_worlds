@@ -1,12 +1,7 @@
 import { Composer } from "grammy"
 import type { Context } from "#root/bot/context.js"
 import { logHandle } from "#root/bot/helpers/logging.js"
-import {
-  UserState,
-  countAllLine,
-  findLine,
-  placeInLine,
-} from "#root/bot/models/user.js"
+import { UserState, countAllLine, findLine, placeInLine } from "#root/bot/models/user.js"
 import { getMarkdownTable } from "markdown-table-ts"
 import { bigIntWithCustomSeparator } from "../helpers/numbers"
 import { removeMiddle } from "../helpers/text"

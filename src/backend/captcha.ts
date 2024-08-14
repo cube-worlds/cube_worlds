@@ -28,15 +28,10 @@ const checkCaptcha = (fastify: any, _options: any, done: () => void) => {
       const user = await findUserById(userId)
       if (!user || !user.suspicionDices) return { result: false }
       if (user.suspicionDices === Number(data) + 1 + 100) {
-        logger.info(
-          `Solved captcha from ${user.id} with ${user.suspicionDices} suspicion dices`,
-        )
+        logger.info(`Solved captcha from ${user.id} with ${user.suspicionDices} suspicion dices`)
         user.suspicionDices = 0
         await user.save()
-        await _options.bot.api.sendMessage(
-          userId,
-          i18n.t(user.language, "dice.captcha_solved"),
-        )
+        await _options.bot.api.sendMessage(userId, i18n.t(user.language, "dice.captcha_solved"))
         return { result: true }
       }
     }

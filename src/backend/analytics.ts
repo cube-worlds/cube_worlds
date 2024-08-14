@@ -76,12 +76,7 @@ function aesEncrypt(
 }
 
 // Main function to process and send an event
-async function processEvent(
-  event: object,
-  publicKey: string,
-  apiGateway: string,
-  apiKey: string,
-) {
+async function processEvent(event: object, publicKey: string, apiGateway: string, apiKey: string) {
   try {
     // Generate AES key and IV
     const { key, iv } = generateAESKeyIV()
@@ -116,10 +111,7 @@ async function processEvent(
 
 const analyticsHandler = (fastify: any, _options: any, done: () => void) => {
   fastify.get("/config", async (_request: any, _reply: any) => {
-    return getEncryptionKeys(
-      config.TELEMETREE_PROJECT_ID,
-      config.TELEMETREE_API_KEY,
-    )
+    return getEncryptionKeys(config.TELEMETREE_PROJECT_ID, config.TELEMETREE_API_KEY)
   })
 
   fastify.post("/send", async (_request: any, _reply: any) => {

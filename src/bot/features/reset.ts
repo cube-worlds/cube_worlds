@@ -9,18 +9,13 @@ const composer = new Composer<Context>()
 
 const feature = composer.chatType("private")
 
-feature.command(
-  "reset",
-  checkNotMinted(),
-  logHandle("command-reset"),
-  async ctx => {
-    ctx.dbuser.state = UserState.WaitNothing
-    if (!ctx.dbuser.votes) {
-      ctx.dbuser.votes = BigInt(await voteScore(ctx))
-    }
-    await ctx.dbuser.save()
-    await ctx.reply(ctx.t("reset"))
-  },
-)
+feature.command("reset", checkNotMinted(), logHandle("command-reset"), async ctx => {
+  ctx.dbuser.state = UserState.WaitNothing
+  if (!ctx.dbuser.votes) {
+    ctx.dbuser.votes = BigInt(await voteScore(ctx))
+  }
+  await ctx.dbuser.save()
+  await ctx.reply(ctx.t("reset"))
+})
 
 export { composer as resetFeature }

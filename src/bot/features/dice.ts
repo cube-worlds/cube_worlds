@@ -3,11 +3,12 @@ import { Composer, InlineKeyboard } from "grammy"
 import type { Context } from "#root/bot/context.js"
 import { logHandle } from "#root/bot/helpers/logging.js"
 import { logger } from "#root/logger"
-import { sleep } from "../helpers/ton"
-import { timeUnitsBetween } from "../helpers/time"
-import { sendMessageToAdmins, sendPlaceInLine } from "../helpers/telegram"
-import { UserState, addPoints } from "../models/user"
-import { generateRandomString } from "../helpers/text"
+import { sleep } from "#root/bot/helpers/ton.js"
+import { timeUnitsBetween } from "#root/bot/helpers/time.js"
+import { sendMessageToAdmins, sendPlaceInLine } from "#root/bot/helpers/telegram.js"
+import { UserState, addPoints } from "#root/bot/models/user.js"
+import { generateRandomString } from "#root/bot/helpers/text.js"
+import { BalanceChangeType } from "#root/bot/models/balance.js"
 
 const composer = new Composer<Context>()
 
@@ -19,9 +20,7 @@ feature.command("dice", logHandle("command-dice"), async ctx => {
     return
   }
   const waitMinutes = config.isProd ? 5 : 1
-  const waitDate = new Date(
-    ctx.dbuser.dicedAt.getTime() + waitMinutes * 60 * 1000,
-  )
+  const waitDate = new Date(ctx.dbuser.dicedAt.getTime() + waitMinutes * 60 * 1000)
   const now = new Date()
   const waitDateToCompare = new Date(waitDate.getTime() - 3000)
   if (waitDateToCompare > now) {
@@ -40,14 +39,10 @@ feature.command("dice", logHandle("command-dice"), async ctx => {
   }
   const lastDicedTime = ctx.dbuser.dicedAt.getTime()
   const suspicionTime = waitMinutes * 3
-  const compareDateForCaptcha = new Date(
-    lastDicedTime + suspicionTime * 60 * 1000,
-  )
+  const compareDateForCaptcha = new Date(lastDicedTime + suspicionTime * 60 * 1000)
   if (compareDateForCaptcha > now) {
     ctx.dbuser.suspicionDices += 1
-    logger.info(
-      `${ctx.dbuser.id} has ${ctx.dbuser.suspicionDices} suspicion dices`,
-    )
+    logger.info(`${ctx.dbuser.id} has ${ctx.dbuser.suspicionDices} suspicion dices`)
   }
   //  else {
   //   ctx.dbuser.suspicionDices = 0;
@@ -72,91 +67,87 @@ feature.command("dice", logHandle("command-dice"), async ctx => {
   })
 })
 
-feature.callbackQuery(
-  /^dice_/,
-  logHandle("dice-callback-query"),
-  async (ctx: Context) => {
-    const userDiceData = `dice_${ctx.dbuser.diceKey}`
-    const data = ctx.callbackQuery?.data ?? ""
-    try {
-      await ctx.deleteMessage()
-    } catch {
-      // do nothing
+feature.callbackQuery(/^dice_/, logHandle("dice-callback-query"), async (ctx: Context) => {
+  const userDiceData = `dice_${ctx.dbuser.diceKey}`
+  const data = ctx.callbackQuery?.data ?? ""
+  try {
+    await ctx.deleteMessage()
+  } catch {
+    // do nothing
+  }
+  if (!(userDiceData === data)) {
+    return
+  }
+  ctx.dbuser.diceKey = generateRandomString(10)
+  await ctx.dbuser.save()
+  const dice1 = ctx.replyWithDice("🎲")
+  const dice2 = ctx.replyWithDice("🎲")
+  const result = await Promise.all([dice1, dice2])
+  const value1 = result[0].dice.value
+  const value2 = result[1].dice.value
+  const isRecurred = value1 === value2
+  if (isRecurred) {
+    if (!ctx.dbuser.diceSeries) {
+      ctx.dbuser.diceSeries = 1
     }
-    if (!(userDiceData === data)) {
-      return
-    }
-    ctx.dbuser.diceKey = generateRandomString(10)
-    await ctx.dbuser.save()
-    const dice1 = ctx.replyWithDice("🎲")
-    const dice2 = ctx.replyWithDice("🎲")
-    const result = await Promise.all([dice1, dice2])
-    const value1 = result[0].dice.value
-    const value2 = result[1].dice.value
-    const isRecurred = value1 === value2
-    if (isRecurred) {
-      if (!ctx.dbuser.diceSeries) {
-        ctx.dbuser.diceSeries = 1
-      }
-      if (ctx.dbuser.diceSeriesNumber === value1) {
-        ctx.dbuser.diceSeries = (ctx.dbuser.diceSeries ?? 0) + 1
-      } else {
-        ctx.dbuser.diceSeries = 1
-        ctx.dbuser.diceSeriesNumber = value1
-      }
+    if (ctx.dbuser.diceSeriesNumber === value1) {
+      ctx.dbuser.diceSeries = (ctx.dbuser.diceSeries ?? 0) + 1
     } else {
-      ctx.dbuser.diceSeries = undefined
-      ctx.dbuser.diceSeriesNumber = undefined
+      ctx.dbuser.diceSeries = 1
+      ctx.dbuser.diceSeriesNumber = value1
     }
+  } else {
+    ctx.dbuser.diceSeries = undefined
+    ctx.dbuser.diceSeriesNumber = undefined
+  }
 
-    const diceSeries = ctx.dbuser.diceSeries ?? 0
-    const diceSeriesNumber = ctx.dbuser.diceSeriesNumber ?? 0
-    const username = ctx.dbuser.name ?? "undefined"
+  const diceSeries = ctx.dbuser.diceSeries ?? 0
+  const diceSeriesNumber = ctx.dbuser.diceSeriesNumber ?? 0
+  const username = ctx.dbuser.name ?? "undefined"
 
-    let score = value1 + value2
-    if (diceSeries > 1) {
-      score *= diceSeries
-    }
+  let score = value1 + value2
+  if (diceSeries > 1) {
+    score *= diceSeries
+  }
 
-    ctx.dbuser.dicedAt = new Date()
-    await ctx.dbuser.save()
-    await addPoints(ctx.dbuser.id, BigInt(score))
+  ctx.dbuser.dicedAt = new Date()
+  await ctx.dbuser.save()
+  await addPoints(ctx.dbuser.id, BigInt(score), BalanceChangeType.Dice)
 
-    sleep(3000)
-      .then(async () => {
-        if (!ctx.dbuser.minted && diceSeries === 3) {
-          ctx.dbuser.diceWinner = true
-          await ctx.dbuser.save()
-          await ctx.reply(
-            ctx.t("dice.mint_winner", {
-              username,
-              diceSeriesNumber,
-              diceSeries,
-            }),
-          )
-          await sendMessageToAdmins(
-            ctx.api,
-            `🎲 Pair of ${diceSeriesNumber} dices ${diceSeries} times in a row by @${username}!`,
-          )
-          await ctx.replyWithSticker(
-            "CAACAgIAAxkBAAEq6zpmIPgeW-peX09nTeFVvHXneFJZaQACQxoAAtzjkEhebdhBXbkEnzQE",
-          )
-        } else {
-          await (diceSeries > 1
-            ? ctx.reply(
-                ctx.t("dice.success_series", {
-                  score,
-                  diceSeries,
-                  diceSeriesNumber,
-                }),
-              )
-            : ctx.reply(ctx.t("dice.success", { score })))
-          await sleep(1000)
-          await sendPlaceInLine(ctx.api, ctx.dbuser.id, true)
-        }
-      })
-      .catch(error => logger.error(error))
-  },
-)
+  sleep(3000)
+    .then(async () => {
+      if (!ctx.dbuser.minted && diceSeries === 3) {
+        ctx.dbuser.diceWinner = true
+        await ctx.dbuser.save()
+        await ctx.reply(
+          ctx.t("dice.mint_winner", {
+            username,
+            diceSeriesNumber,
+            diceSeries,
+          }),
+        )
+        await sendMessageToAdmins(
+          ctx.api,
+          `🎲 Pair of ${diceSeriesNumber} dices ${diceSeries} times in a row by @${username}!`,
+        )
+        await ctx.replyWithSticker(
+          "CAACAgIAAxkBAAEq6zpmIPgeW-peX09nTeFVvHXneFJZaQACQxoAAtzjkEhebdhBXbkEnzQE",
+        )
+      } else {
+        await (diceSeries > 1
+          ? ctx.reply(
+              ctx.t("dice.success_series", {
+                score,
+                diceSeries,
+                diceSeriesNumber,
+              }),
+            )
+          : ctx.reply(ctx.t("dice.success", { score })))
+        await sleep(1000)
+        await sendPlaceInLine(ctx.api, ctx.dbuser.id, true)
+      }
+    })
+    .catch(error => logger.error(error))
+})
 
 export { composer as diceFeature }

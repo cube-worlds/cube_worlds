@@ -10,12 +10,8 @@ feature.on("message", logHandle("unhandled-message"), (ctx: Context) => {
   return ctx.reply(ctx.t("unhandled"))
 })
 
-feature.on(
-  "callback_query",
-  logHandle("unhandled-callback-query"),
-  (ctx: Context) => {
-    return ctx.answerCallbackQuery()
-  },
-)
+feature.on("callback_query", logHandle("unhandled-callback-query"), (ctx: Context) => {
+  return ctx.answerCallbackQuery()
+})
 
 export { composer as unhandledFeature }

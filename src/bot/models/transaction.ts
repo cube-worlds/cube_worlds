@@ -1,9 +1,4 @@
-import {
-  modelOptions,
-  prop,
-  getModelForClass,
-  DocumentType,
-} from "@typegoose/typegoose"
+import { modelOptions, prop, getModelForClass, DocumentType } from "@typegoose/typegoose"
 
 @modelOptions({
   schemaOptions: { timestamps: false },

@@ -85,18 +85,15 @@ export async function generate(
   // DO NOT CHANGE
   formData.append("samples", 1)
 
-  const response = await fetch(
-    `${apiHost}/v1/generation/${engineId}/image-to-image`,
-    {
-      method: "POST",
-      headers: {
-        ...formData.getHeaders(),
-        Accept: "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: formData,
+  const response = await fetch(`${apiHost}/v1/generation/${engineId}/image-to-image`, {
+    method: "POST",
+    headers: {
+      ...formData.getHeaders(),
+      Accept: "application/json",
+      Authorization: `Bearer ${apiKey}`,
     },
-  )
+    body: formData,
+  })
 
   if (!response.ok) {
     throw new Error(`Non-200 response: ${await response.text()}`)

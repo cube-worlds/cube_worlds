@@ -1,10 +1,5 @@
 import { Address } from "@ton/core"
-import {
-  DocumentType,
-  getModelForClass,
-  modelOptions,
-  prop,
-} from "@typegoose/typegoose"
+import { DocumentType, getModelForClass, modelOptions, prop } from "@typegoose/typegoose"
 
 export enum CNFTImageType {
   Dice = "Dice",

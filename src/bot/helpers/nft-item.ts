@@ -40,11 +40,7 @@ export class NftItem {
     return nftUrl
   }
 
-  private async deploy(
-    wallet: OpenedWallet,
-    seqno: number,
-    parameters: NFTMintParameters,
-  ) {
+  private async deploy(wallet: OpenedWallet, seqno: number, parameters: NFTMintParameters) {
     logger.info(`Deploy NFT with seqno ${seqno} was started.`)
     const collectionAddress = Address.parse(config.COLLECTION_ADDRESS)
     await wallet.contract.sendTransfer({

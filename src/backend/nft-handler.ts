@@ -51,11 +51,7 @@ function toJSON(nft: DocumentType<CNFT>) {
   }
 }
 
-const nftHandler = (
-  fastify: FastifyInstance,
-  _options: any,
-  done: () => void,
-) => {
+const nftHandler = (fastify: FastifyInstance, _options: any, done: () => void) => {
   fastify.get("/collection.json", (_request: any, _reply: any) => {
     return {
       name: "Cube Worlds Citizens",
@@ -63,10 +59,7 @@ const nftHandler = (
       image: "https://cubeworlds.club/avatar.png",
       // external_url: null,
       // external_link: null,
-      social_links: [
-        "https://t.me/cube_worlds_bot",
-        "https://twitter.com/cube_worlds",
-      ],
+      social_links: ["https://t.me/cube_worlds_bot", "https://twitter.com/cube_worlds"],
       marketplace: "getgems.io",
       cover_image: "https://cubeworlds.club/background.png",
     }

@@ -5,11 +5,7 @@ import { logger } from "#root/logger"
 import { validate } from "@tma.js/init-data-node"
 import { FastifyInstance } from "fastify"
 
-export const authHandler = (
-  fastify: FastifyInstance,
-  _options: unknown,
-  done: () => void,
-) => {
+export const authHandler = (fastify: FastifyInstance, _options: unknown, done: () => void) => {
   // eslint-disable-next-line no-unused-vars
   fastify.post("/:userId", async (request, _reply) => {
     const { userId } = request.params as any

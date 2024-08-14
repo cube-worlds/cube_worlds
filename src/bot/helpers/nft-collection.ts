@@ -1,17 +1,5 @@
-import {
-  Address,
-  Cell,
-  internal,
-  beginCell,
-  contractAddress,
-  StateInit,
-  SendMode,
-} from "@ton/core"
-import {
-  encodeOffChainContent,
-  sleep,
-  tonClient,
-} from "#root/bot/helpers/ton.js"
+import { Address, Cell, internal, beginCell, contractAddress, StateInit, SendMode } from "@ton/core"
+import { encodeOffChainContent, sleep, tonClient } from "#root/bot/helpers/ton.js"
 import { config } from "#root/config.js"
 import { logger } from "#root/logger"
 import { OpenedWallet } from "#root/bot/helpers/wallet.js"
@@ -55,21 +43,16 @@ export class NftCollection {
   private static async fetchNextItemIndex(): Promise<number> {
     const nftCollectionAddress = Address.parse(config.COLLECTION_ADDRESS)
 
-    const { stack } = await tonClient.runMethod(
-      nftCollectionAddress,
-      "get_collection_data",
-    )
+    const { stack } = await tonClient.runMethod(nftCollectionAddress, "get_collection_data")
     const nextItemIndex = stack.readBigNumber()
     return Number(nextItemIndex)
   }
 
   static async getNftAddressByIndex(itemIndex: number): Promise<Address> {
     const collectionAddress = Address.parse(config.COLLECTION_ADDRESS)
-    const response = await tonClient.runMethod(
-      collectionAddress,
-      "get_nft_address_by_index",
-      [{ type: "int", value: BigInt(itemIndex) }],
-    )
+    const response = await tonClient.runMethod(collectionAddress, "get_nft_address_by_index", [
+      { type: "int", value: BigInt(itemIndex) },
+    ])
     return response.stack.readAddress()
   }
 

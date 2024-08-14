@@ -1,13 +1,15 @@
-import {
-  getModelForClass,
-  modelOptions,
-  prop,
-  DocumentType,
-} from "@typegoose/typegoose"
+import { getModelForClass, modelOptions, prop, DocumentType } from "@typegoose/typegoose"
 import { TimeStamps } from "@typegoose/typegoose/lib/defaultClasses.js"
 import { Address } from "@ton/core"
-import { logger } from "#root/logger"
-import { ClipGuidancePreset, SDSampler } from "../helpers/generation"
+import { logger } from "#root/logger.js"
+import { ClipGuidancePreset, SDSampler } from "#root/bot/helpers/generation.js"
+import {
+  addChangeBalanceRecord,
+  BalanceChangeType,
+  countAllBalanceRecords,
+  countUserBalanceRecords,
+  getAggregatedBalance,
+} from "#root/bot/models/balance"
 
 export enum UserState {
   WaitNothing = "WaitNothing",
@@ -131,7 +133,11 @@ export class User extends TimeStamps {
 
 const UserModel = getModelForClass(User)
 
-export function findOrCreateUser(id: number) {
+export async function findOrCreateUser(id: number) {
+  const isEmptyRecords = (await countUserBalanceRecords(id)) === 0
+  if (isEmptyRecords) {
+    await addChangeBalanceRecord(id, BigInt(0), BalanceChangeType.Initial)
+  }
   return UserModel.findOneAndUpdate(
     { id },
     {},
@@ -142,9 +148,7 @@ export function findOrCreateUser(id: number) {
   )
 }
 
-export async function findUserByAddress(
-  address: Address,
-): Promise<DocumentType<User> | null> {
+export async function findUserByAddress(address: Address): Promise<DocumentType<User> | null> {
   // EQ address
   const bounceableAddress = address.toString({ bounceable: true })
   // UQ address
@@ -158,15 +162,11 @@ export async function findUserByAddress(
   return UserModel.findOne({ wallet: nonBounceableAddress })
 }
 
-export async function findUserById(
-  id: number,
-): Promise<DocumentType<User> | null> {
+export async function findUserById(id: number): Promise<DocumentType<User> | null> {
   return UserModel.findOne({ id })
 }
 
-export async function findUserByName(
-  name: string,
-): Promise<DocumentType<User> | null> {
+export async function findUserByName(name: string): Promise<DocumentType<User> | null> {
   return UserModel.findOne({ name })
 }
 
@@ -240,9 +240,7 @@ export async function placeInLine(votes: bigint): Promise<number | undefined> {
   return count
 }
 
-export async function placeInWhales(
-  votes: bigint,
-): Promise<number | undefined> {
+export async function placeInWhales(votes: bigint): Promise<number | undefined> {
   const count = await UserModel.countDocuments({
     votes: { $gte: votes },
   })
@@ -252,7 +250,7 @@ export async function placeInWhales(
   return count
 }
 
-export async function addPoints(userId: number, add: bigint) {
+export async function addPoints(userId: number, add: bigint, reason: BalanceChangeType) {
   try {
     const updatedUser = await UserModel.findOneAndUpdate(
       { id: userId },
@@ -262,6 +260,14 @@ export async function addPoints(userId: number, add: bigint) {
     if (!updatedUser) {
       throw new Error("User for addPoints not found")
     }
+
+    const newRecord = await addChangeBalanceRecord(userId, add, reason)
+    if (logger.level === "debug") {
+      logger.debug(
+        `Add ${newRecord.amount} points to ${userId}. Now ${await getAggregatedBalance(userId)}`,
+      )
+    }
+
     logger.info(`Add ${add} points to ${userId}. Now ${updatedUser.votes}`)
     // TODO: save log in db
     return updatedUser.votes
@@ -290,4 +296,14 @@ export async function userStats() {
     updatedAt: { $gte: dayAgo },
   })
   return { all, minted, notMinted, month, week, day }
+}
+
+export async function createInitialBalancesIfNotExists() {
+  if ((await countAllBalanceRecords()) > 0) {
+    return
+  }
+  const users = await UserModel.find()
+  await Promise.all(
+    users.map(user => addChangeBalanceRecord(user.id, user.votes, BalanceChangeType.Initial)),
+  )
 }

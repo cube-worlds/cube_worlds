@@ -1,8 +1,8 @@
 import { Api, Middleware, RawApi } from "grammy"
 import { config } from "#root/config"
-import { Context } from "../context"
-import { i18n } from "../i18n"
-import { inviteTelegramUrl, shareTelegramLink } from "../helpers/telegram"
+import { Context } from "#root/bot/context.js"
+import { i18n } from "#root/bot/i18n.js"
+import { inviteTelegramUrl, shareTelegramLink } from "#root/bot/helpers/telegram.js"
 
 export async function sendMintedMessage(
   api: Api<RawApi>,
@@ -32,12 +32,7 @@ ${i18n.t(userLocale, "speedup.variants", {
 export function checkNotMinted(): Middleware<Context> {
   return (ctx, next) => {
     if (ctx.dbuser.minted) {
-      return sendMintedMessage(
-        ctx.api,
-        ctx.dbuser.id,
-        ctx.dbuser.language,
-        ctx.dbuser.nftUrl ?? "",
-      )
+      return sendMintedMessage(ctx.api, ctx.dbuser.id, ctx.dbuser.language, ctx.dbuser.nftUrl ?? "")
     }
     return next()
   }

@@ -3,6 +3,7 @@ import type { Context } from "#root/bot/context.js"
 import { logHandle } from "#root/bot/helpers/logging.js"
 import { isAdmin } from "#root/bot/filters/is-admin.js"
 import { fromNano } from "@ton/core"
+import { BalanceChangeType } from "#root/bot/models/balance"
 import { addPoints, findUserByName } from "../../models/user"
 import { findTransaction } from "../../models/transaction"
 import { tonToPoints } from "../../helpers/ton"
@@ -20,9 +21,7 @@ feature.command("transaction", logHandle("command-transaction"), async ctx => {
 
     const trx = await findTransaction(numberLt, hash)
     if (!trx) {
-      return ctx.reply(
-        `Transaction with hash \`${hash}\` and lt \`${numberLt}\` not found`,
-      )
+      return ctx.reply(`Transaction with hash \`${hash}\` and lt \`${numberLt}\` not found`)
     }
 
     if (trx.accepted) {
@@ -45,7 +44,7 @@ feature.command("transaction", logHandle("command-transaction"), async ctx => {
     // add points to user balance
     const ton = fromNano(trx.coins)
     const points = tonToPoints(Number(ton))
-    await addPoints(user.id, points)
+    await addPoints(user.id, points, BalanceChangeType.Donation)
 
     // send messages
     await sendPlaceInLine(ctx.api, user.id, true)

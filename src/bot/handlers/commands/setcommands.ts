@@ -115,9 +115,7 @@ export async function setCommandsHandler(ctx: CommandContext<Context>) {
       ctx.api.setMyCommands(
         [
           ...getPrivateChatCommands(code),
-          ...(isMultipleLocales
-            ? [getLanguageCommand(DEFAULT_LANGUAGE_CODE)]
-            : []),
+          ...(isMultipleLocales ? [getLanguageCommand(DEFAULT_LANGUAGE_CODE)] : []),
         ],
         {
           language_code: code as LanguageCode,
@@ -164,11 +162,7 @@ export async function setCommandsHandler(ctx: CommandContext<Context>) {
         language_code: code as LanguageCode,
       }),
     )
-    await Promise.all([
-      ...requests,
-      ...descriptionRequests,
-      ...shortDescriptionRequests,
-    ])
+    await Promise.all([...requests, ...descriptionRequests, ...shortDescriptionRequests])
   }
 
   // set private chat commands for owner
@@ -179,9 +173,7 @@ export async function setCommandsHandler(ctx: CommandContext<Context>) {
       [
         ...getPrivateChatCommands(DEFAULT_LANGUAGE_CODE),
         ...getPrivateChatAdminCommands(DEFAULT_LANGUAGE_CODE),
-        ...(isMultipleLocales
-          ? [getLanguageCommand(DEFAULT_LANGUAGE_CODE)]
-          : []),
+        ...(isMultipleLocales ? [getLanguageCommand(DEFAULT_LANGUAGE_CODE)] : []),
       ],
       {
         scope: {

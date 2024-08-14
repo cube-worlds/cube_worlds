@@ -2,12 +2,7 @@ import { config } from "#root/config"
 import { Api, InputMediaBuilder, RawApi } from "grammy"
 import { TranslationVariables } from "@grammyjs/i18n"
 import { logger } from "#root/logger"
-import {
-  findMintedWithDate,
-  findQueue,
-  findUserById,
-  placeInLine,
-} from "../models/user"
+import { findMintedWithDate, findQueue, findUserById, placeInLine } from "../models/user"
 import { getRandomCoolEmoji } from "./emoji"
 import { bigIntWithCustomSeparator } from "./numbers"
 import { i18n } from "../i18n"
@@ -84,10 +79,7 @@ export async function sendPlaceInLine(
   const placeDecreased = place < lastSendedPlace
   if (sendAnyway || placeDecreased) {
     const inviteLink = inviteTelegramUrl(user.id)
-    const shareLink = shareTelegramLink(
-      user.id,
-      i18n.t(user.language, "mint.share"),
-    )
+    const shareLink = shareTelegramLink(user.id, i18n.t(user.language, "mint.share"))
     const titleKey = `speedup.${user.minted ? "title_minted" : "title_not_minted"}`
     const titleVariables: TranslationVariables<string> = {
       points: bigIntWithCustomSeparator(user.votes),
@@ -134,16 +126,12 @@ export async function sendPreviewNFT(
   const collectionLink = `<a href="https://getgems.io/${collection}?utm_campaign=${collection}&utm_source=inline&utm_medium=collection">Cube Worlds</a>`
   const emoji1 = diceWinner ? "🎲" : getRandomCoolEmoji().emoji
   const emoji2 = diceWinner ? "🎲" : getRandomCoolEmoji().emoji
-  const caption = i18n.t(
-    lang,
-    `queue.${diceWinner ? `new_nft_dice` : `new_nft`}`,
-    {
-      emoji1,
-      emoji2,
-      number: nftNumber,
-      collectionLink,
-    },
-  )
+  const caption = i18n.t(lang, `queue.${diceWinner ? `new_nft_dice` : `new_nft`}`, {
+    emoji1,
+    emoji2,
+    number: nftNumber,
+    collectionLink,
+  })
   const linkTitle = i18n.t(lang, "queue.new_nft_button")
   // eslint-disable-next-line no-await-in-loop
   return api.sendPhoto(chat, linkToIPFSGateway(ipfsImageHash), {
@@ -184,9 +172,7 @@ export async function sendToGroupsNewNFT(
         diceWinner,
       )
       // eslint-disable-next-line no-await-in-loop
-      await api.setMessageReaction(result.chat.id, result.message_id, [
-        getRandomCoolEmoji(),
-      ])
+      await api.setMessageReaction(result.chat.id, result.message_id, [getRandomCoolEmoji()])
     }
   } catch (error) {
     logger.error(error)

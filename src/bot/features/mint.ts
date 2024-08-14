@@ -2,23 +2,16 @@ import { VoteModel, isUserAlreadyVoted } from "#root/bot/models/vote.js"
 import { Composer } from "grammy"
 import type { Context } from "#root/bot/context.js"
 import { logHandle } from "#root/bot/helpers/logging.js"
-import {
-  UserState,
-  addPoints,
-  findUserByAddress,
-} from "#root/bot/models/user.js"
+import { UserState, addPoints, findUserByAddress } from "#root/bot/models/user.js"
 import { getUserProfilePhoto } from "#root/bot/helpers/photo.js"
 import { Address } from "@ton/core"
 import { voteScore } from "#root/bot/helpers/votes.js"
 import { ChatFullInfo } from "grammy/types"
 import { logger } from "#root/logger"
-import {
-  getCubeChannel,
-  getCubeChat,
-  sendPlaceInLine,
-} from "../helpers/telegram"
+import { getCubeChannel, getCubeChat, sendPlaceInLine } from "../helpers/telegram"
 import { sendMintedMessage } from "../middlewares/check-not-minted"
 import { isUserAddressValid } from "../helpers/ton"
+import { BalanceChangeType } from "../models/balance"
 
 const composer = new Composer<Context>()
 
@@ -49,10 +42,7 @@ async function sendWaitDescription(ctx: Context) {
   }
 }
 
-async function isUserSubscribed(
-  ctx: Context,
-  channel: string,
-): Promise<boolean> {
+async function isUserSubscribed(ctx: Context, channel: string): Promise<boolean> {
   try {
     const subscriber = await ctx.api.getChatMember(channel, ctx.dbuser.id)
     const validStatuses = ["creator", "administrator", "member"]
@@ -75,22 +65,13 @@ async function sendReferralBonus(ctx: Context) {
   voteModel.receiver = receiverId
   voteModel.quantity = add
   await voteModel.save()
-
-  await addPoints(receiverId, BigInt(add))
+  await addPoints(receiverId, BigInt(add), BalanceChangeType.Referral)
   await sendPlaceInLine(ctx.api, receiverId, true)
 }
 
-async function mintAction(
-  ctx: Context,
-  removeSubscriptionCheckMessage: boolean = false,
-) {
+async function mintAction(ctx: Context, removeSubscriptionCheckMessage: boolean = false) {
   if (ctx.dbuser.minted) {
-    return sendMintedMessage(
-      ctx.api,
-      ctx.dbuser.id,
-      ctx.dbuser.language,
-      ctx.dbuser.nftUrl ?? "",
-    )
+    return sendMintedMessage(ctx.api, ctx.dbuser.id, ctx.dbuser.language, ctx.dbuser.nftUrl ?? "")
   }
 
   const chat = getCubeChat(ctx.dbuser.language)
@@ -183,29 +164,25 @@ feature.on("message:text", logHandle("message-handler")).filter(
   },
 )
 
-feature
-  .on("callback_query", logHandle("check-subscription-callback-query"))
-  .filter(
-    (ctx: Context) => ctx.hasCallbackQuery("check_subscription"),
-    async ctx => {
-      await mintAction(ctx, true)
-    },
-  )
+feature.on("callback_query", logHandle("check-subscription-callback-query")).filter(
+  (ctx: Context) => ctx.hasCallbackQuery("check_subscription"),
+  async ctx => {
+    await mintAction(ctx, true)
+  },
+)
 
-feature
-  .on("callback_query", logHandle("correct_description-callback-query"))
-  .filter(
-    (ctx: Context) => ctx.hasCallbackQuery("correct_description"),
-    async (ctx: Context) => {
-      const bio = await getBio(ctx)
-      if (bio) {
-        await saveDescription(ctx, bio)
-        await ctx.deleteMessage()
-      } else {
-        return ctx.reply("wrong")
-      }
-    },
-  )
+feature.on("callback_query", logHandle("correct_description-callback-query")).filter(
+  (ctx: Context) => ctx.hasCallbackQuery("correct_description"),
+  async (ctx: Context) => {
+    const bio = await getBio(ctx)
+    if (bio) {
+      await saveDescription(ctx, bio)
+      await ctx.deleteMessage()
+    } else {
+      return ctx.reply("wrong")
+    }
+  },
+)
 
 feature.on("message:text", logHandle("message-handler")).filter(
   ctx => ctx.dbuser.state === UserState.WaitWallet,
@@ -220,9 +197,7 @@ feature.on("message:text", logHandle("message-handler")).filter(
       }
       const userWithWallet = await findUserByAddress(address)
       if (userWithWallet && ctx.dbuser.id !== userWithWallet.id) {
-        return ctx.reply(
-          ctx.t("wallet.already_exists", { wallet: address.toString() }),
-        )
+        return ctx.reply(ctx.t("wallet.already_exists", { wallet: address.toString() }))
       }
       ctx.dbuser.wallet = address.toString()
       ctx.dbuser.state = UserState.Submited

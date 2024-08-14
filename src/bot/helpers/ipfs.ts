@@ -19,8 +19,7 @@ export async function pinImageURLToIPFS(
   const image = await fetch(imageURL)
   const arrayBuffer = await image.arrayBuffer()
   const buffer = Buffer.from(arrayBuffer)
-  const imageFileName =
-    imageURL.slice((imageURL.lastIndexOf("/") ?? 0) + 1) ?? ""
+  const imageFileName = imageURL.slice((imageURL.lastIndexOf("/") ?? 0) + 1) ?? ""
   const fileExtension = imageFileName.split(".").pop()
   const newFileName = `${username}_${adminIndex}.${fileExtension}`
   saveImage(username, newFileName, buffer)
@@ -52,10 +51,7 @@ export function linkToIPFSGateway(hash: string) {
   return `${config.PINATA_GATEWAY}/ipfs/${hash}?pinataGatewayToken=${config.PINATA_GATEWAY_KEY}`
 }
 
-async function fetchFileFromIPFS(
-  cid: string,
-  gateway: string,
-): Promise<Buffer> {
+async function fetchFileFromIPFS(cid: string, gateway: string): Promise<Buffer> {
   const response = await fetch(`${gateway}${cid}`, {
     signal: AbortSignal.timeout(120_000),
   })

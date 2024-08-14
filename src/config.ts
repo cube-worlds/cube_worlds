@@ -21,9 +21,7 @@ const createConfigFromEnvironment = (environment: NodeJS.ProcessEnv) => {
     BOT_WEBHOOK: z.string().default(""),
     BOT_SERVER_HOST: z.string().default("0.0.0.0"),
     BOT_SERVER_PORT: port().default(80),
-    BOT_ALLOWED_UPDATES: z
-      .array(z.enum(API_CONSTANTS.ALL_UPDATE_TYPES))
-      .default([]),
+    BOT_ALLOWED_UPDATES: z.array(z.enum(API_CONSTANTS.ALL_UPDATE_TYPES)).default([]),
     MONGO: z.string(),
     BOT_ADMINS: z.array(z.number()).default([]),
     WEB_APP_URL: z.string().url(),

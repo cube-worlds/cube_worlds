@@ -19,9 +19,7 @@ feature.callbackQuery(
   changeLanguageData.filter(),
   logHandle("keyboard-language-select"),
   async (ctx: Context) => {
-    const { code: languageCode } = changeLanguageData.unpack(
-      ctx.callbackQuery?.data ?? "",
-    )
+    const { code: languageCode } = changeLanguageData.unpack(ctx.callbackQuery?.data ?? "")
 
     if (i18n.locales.includes(languageCode)) {
       await ctx.i18n.setLocale(languageCode)

@@ -13,10 +13,8 @@ import {
 } from "#root/bot/models/transaction"
 import { AccountSubscription } from "#root/bot/helpers/account-subscription"
 import { tonToPoints } from "#root/bot/helpers/ton"
-import {
-  sendMessageToAdmins,
-  sendPlaceInLine,
-} from "#root/bot/helpers/telegram"
+import { sendMessageToAdmins, sendPlaceInLine } from "#root/bot/helpers/telegram"
+import { BalanceChangeType } from "./bot/models/balance"
 
 export class Subscription {
   bot: Bot<Context, Api<RawApi>>
@@ -51,9 +49,7 @@ export class Subscription {
     // save to the database that this payment has been processed.
     const trx = await findTransaction(lt, hash)
     if (trx) {
-      return logger.debug(
-        `Exists ${TonWeb.utils.fromNano(value)} TON from ${senderAddress}`,
-      )
+      return logger.debug(`Exists ${TonWeb.utils.fromNano(value)} TON from ${senderAddress}`)
     }
 
     const ton = Number(fromNano(value))
@@ -67,9 +63,7 @@ export class Subscription {
     trxModel.hash = hash
     trxModel.accepted = true
     await trxModel.save()
-    logger.info(
-      `Receive ${TonWeb.utils.fromNano(value)} TON from ${senderAddress.toString()}"`,
-    )
+    logger.info(`Receive ${TonWeb.utils.fromNano(value)} TON from ${senderAddress.toString()}"`)
 
     const points = tonToPoints(ton)
     logger.info(`Received ${ton} TON => ${points} points`)
@@ -86,12 +80,9 @@ export class Subscription {
       return
     }
 
-    await addPoints(user.id, points)
+    await addPoints(user.id, points, BalanceChangeType.Donation)
 
-    await this.bot.api.sendMessage(
-      user.id,
-      i18n.t(user.language, "donation", { ton }),
-    )
+    await this.bot.api.sendMessage(user.id, i18n.t(user.language, "donation", { ton }))
 
     await sendPlaceInLine(this.bot.api, user.id, true)
     await sendMessageToAdmins(

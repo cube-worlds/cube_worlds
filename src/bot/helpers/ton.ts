@@ -2,15 +2,7 @@
 /* eslint-disable no-use-before-define */
 /* eslint-disable no-await-in-loop */
 import { mnemonicToPrivateKey } from "@ton/crypto"
-import {
-  Address,
-  beginCell,
-  Cell,
-  internal,
-  SendMode,
-  TonClient,
-  WalletContractV4,
-} from "@ton/ton"
+import { Address, beginCell, Cell, internal, SendMode, TonClient, WalletContractV4 } from "@ton/ton"
 import { config } from "#root/config.js"
 import { OpenedWallet } from "./wallet"
 
@@ -105,11 +97,7 @@ export function encodeOffChainContent(content: string) {
   return makeSnakeCell(data)
 }
 
-export async function waitSeqno(
-  seqno: number,
-  wallet: OpenedWallet,
-  maxAttempts = 30,
-) {
+export async function waitSeqno(seqno: number, wallet: OpenedWallet, maxAttempts = 30) {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     await sleep(2000)
     const seqnoAfter = await wallet.contract.getSeqno()
@@ -117,9 +105,7 @@ export async function waitSeqno(
       return
     }
   }
-  throw new Error(
-    `Seqno wait failed. Check https://tonviewer.com/${config.COLLECTION_OWNER}`,
-  )
+  throw new Error(`Seqno wait failed. Check https://tonviewer.com/${config.COLLECTION_OWNER}`)
 }
 
 export function sleep(ms: number): Promise<void> {
