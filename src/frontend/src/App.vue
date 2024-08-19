@@ -9,7 +9,10 @@
         <div class="sun-core"></div>
         <div class="sun-rays"></div>
       </div>
+      <div class="planet earth"></div>
+      <div class="planet mars"></div>
     </div>
+    <div class="ufo" :style="ufoStyle"></div>
     <Footer />
     <ClosingConfirmation />
     <ExpandedViewport />
@@ -17,7 +20,7 @@
 </template>
 
 <script>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { ClosingConfirmation, ExpandedViewport } from "vue-tg";
 import Footer from "./components/nested/Footer.vue";
 
@@ -30,6 +33,12 @@ export default {
   },
   setup() {
     const stars = ref([]);
+    const ufoPosition = ref({ x: 0, y: 0 });
+
+    const ufoStyle = computed(() => ({
+      left: `${ufoPosition.value.x}%`,
+      top: `${ufoPosition.value.y}%`,
+    }));
 
     onMounted(() => {
       stars.value = Array.from({ length: 200 }, () => ({
@@ -38,9 +47,16 @@ export default {
         animationDuration: `${Math.random() * 3 + 1}s`,
         animationDelay: `${Math.random() * 2}s`,
       }));
+
+      setInterval(() => {
+        ufoPosition.value = {
+          x: Math.random() * 100,
+          y: Math.random() * 100,
+        };
+      }, 5000);
     });
 
-    return { stars };
+    return { stars, ufoStyle };
   },
 };
 </script>
@@ -55,6 +71,7 @@ export default {
   align-items: center;
   justify-content: center;
   flex-direction: column;
+  background-color: #000033;
 }
 
 .content-wrapper {
@@ -127,6 +144,49 @@ export default {
   animation: rotate 20s linear infinite;
 }
 
+.planet {
+  position: absolute;
+  border-radius: 50%;
+}
+
+.earth {
+  width: 7px;
+  height: 7px;
+  background-color: #3366ff;
+  left: 50px;
+  animation: orbit 20s linear infinite;
+}
+
+.mars {
+  width: 30px;
+  height: 30px;
+  background-color: #ff6666;
+  left: 70px;
+  animation: orbit 30s linear infinite;
+}
+
+.ufo {
+  position: fixed;
+  width: 60px;
+  height: 30px;
+  background-color: #000000 0;
+  border-radius: 50% 50% 0 0;
+  transition: all 2s ease;
+  z-index: 20;
+}
+
+.ufo::before {
+  content: "";
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 5px;
+  background-color: #cccccc;
+  border-radius: 0 0 10px 10px;
+}
+
 @keyframes pulse {
   0%,
   100% {
@@ -143,6 +203,15 @@ export default {
   }
   100% {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes orbit {
+  0% {
+    transform: rotate(0deg) translateX(100px) rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg) translateX(100px) rotate(-360deg);
   }
 }
 </style>

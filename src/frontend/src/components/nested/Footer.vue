@@ -1,11 +1,15 @@
 <template>
   <div class="cosmic-footer">
     <div class="footer-links">
-      <router-link to="/" class="footer-link">Main</router-link>
-      <!-- <router-link to="/faq" class="footer-link">FAQ</router-link> -->
-      <router-link to="/cnft" class="footer-link">Claim cNFT</router-link>
-      <router-link to="/clicker" class="footer-link">Clicker Game</router-link>
-      <!-- <router-link to="/presentation" class="footer-link">Presentation</router-link> -->
+      <router-link to="/" class="footer-link">🏠</router-link>
+      <!-- <router-link to="/nft" class="footer-link">🖼️</router-link> -->
+      <!-- <router-link to="/game" class="footer-link">🎮</router-link> -->
+      <!-- <router-link to="/faq" class="footer-link">📖</router-link> -->
+      <!-- <router-link to="/presentation" class="footer-link">🎙️</router-link> -->
+      <!-- <router-link to="/leaderboard" class="footer-link">🏆</router-link> -->
+      <!-- <router-link to="/balance" class="footer-link">💰</router-link> -->
+      <router-link to="/cnft" class="footer-link">🎨</router-link>
+      <router-link to="/clicker" class="footer-link">🖱️</router-link>
     </div>
   </div>
 </template>
@@ -34,9 +38,7 @@
 .footer-link {
   color: #fff;
   text-decoration: none;
-  font-size: 1rem;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  font-size: 2rem;
   transition: all 0.3s ease;
   position: relative;
   padding: 0.5rem 1rem;
@@ -55,7 +57,7 @@
 }
 
 .footer-link:hover {
-  color: #ff9933;
+  transform: scale(1.2) rotate(15deg);
 }
 
 .footer-link:hover::after {
