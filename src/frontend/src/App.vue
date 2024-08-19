@@ -10,10 +10,10 @@
         <div class="sun-rays"></div>
       </div>
     </div>
+    <Footer />
+    <ClosingConfirmation />
+    <ExpandedViewport />
   </div>
-  <Footer />
-  <ClosingConfirmation />
-  <ExpandedViewport />
 </template>
 
 <script>
@@ -46,16 +46,6 @@ export default {
 </script>
 
 <style scoped>
-.content-wrapper {
-  position: relative;
-  z-index: 10;
-  width: 100%;
-  height: 100%;
-  overflow: auto;
-  padding: 2rem;
-  box-sizing: border-box;
-}
-
 .cosmos {
   position: relative;
   width: 100%;
@@ -65,7 +55,16 @@ export default {
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  padding: 2rem 0;
+}
+
+.content-wrapper {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  height: calc(100% - 60px);
+  overflow: auto;
+  padding: 2rem;
+  box-sizing: border-box;
 }
 
 .star {
@@ -135,15 +134,6 @@ export default {
   }
   50% {
     transform: scale(1.05);
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
   }
 }
 

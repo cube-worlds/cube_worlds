@@ -362,7 +362,7 @@ watch(
 .connect-prompt {
   text-align: center;
   font-size: 1.2em;
-  color: #e74c3c;
+  color: #ff6600;
   margin-top: 30px;
 }
 
