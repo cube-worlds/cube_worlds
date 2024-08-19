@@ -18,7 +18,7 @@ const feature = composer.chatType("private")
 feature.command("balance", logHandle("command-balance"), async ctx => {
   const argument = ctx.match.trim()
   let userId = ctx.dbuser.id
-  if (argument && isAdmin(ctx.dbuser.id)) {
+  if (argument && isAdmin(ctx)) {
     const [username] = argument.split(" ")
     const user = await findUserByName(username.replace(/^@/, ""))
     if (user) {
