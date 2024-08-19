@@ -18,11 +18,13 @@ const feature = composer.chatType("private")
 feature.command("balance", logHandle("command-balance"), async ctx => {
   const argument = ctx.match.trim()
   let userId = ctx.dbuser.id
+  let { name } = ctx.dbuser
   if (argument && isAdmin(ctx)) {
     const [username] = argument.split(" ")
     const user = await findUserByName(username.replace(/^@/, ""))
     if (user) {
       userId = user.id
+      name = user.name
     }
   }
   const count = await countAllBalanceRecords()
@@ -32,7 +34,7 @@ feature.command("balance", logHandle("command-balance"), async ctx => {
     getBalanceChangeTypeName(v.type),
     v.createdAt ? formatDateTimeCompact(v.createdAt) : "",
   ])
-  const md = `
+  const md = `${name ? `@${name}'s balance` : ""}
 \`\`\`\n${getMarkdownTable({
     table: {
       head: ["$CUBE", "Type", "Date"],
