@@ -11,6 +11,7 @@ import {
 import { formatDateTimeCompact } from "#root/bot/helpers/time.js"
 import { findUserByName } from "#root/bot/models/user.js"
 import { isAdmin } from "#root/bot/filters/is-admin.js"
+import { escapeMarkdown } from "#root/bot/helpers/markdown.js"
 
 const composer = new Composer<Context>()
 const feature = composer.chatType("private")
@@ -34,7 +35,7 @@ feature.command("balance", logHandle("command-balance"), async ctx => {
     getBalanceChangeTypeName(v.type),
     v.createdAt ? formatDateTimeCompact(v.createdAt) : "",
   ])
-  const md = `${name ? `@${name}'s balance` : ""}
+  const md = `${name ? `@${escapeMarkdown(name)}'s balance` : ""}
 \`\`\`\n${getMarkdownTable({
     table: {
       head: ["$CUBE", "Type", "Date"],
