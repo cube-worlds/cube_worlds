@@ -3,8 +3,8 @@
     <div class="footer-links">
       <router-link to="/" class="footer-link">Main</router-link>
       <!-- <router-link to="/faq" class="footer-link">FAQ</router-link> -->
-      <router-link to="/clicker" class="footer-link">Clicker Game</router-link>
       <router-link to="/cnft" class="footer-link">Claim cNFT</router-link>
+      <router-link to="/clicker" class="footer-link">Clicker Game</router-link>
       <!-- <router-link to="/presentation" class="footer-link">Presentation</router-link> -->
     </div>
   </div>

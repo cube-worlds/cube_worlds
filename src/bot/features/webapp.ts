@@ -7,7 +7,7 @@ const composer = new Composer<Context>()
 
 const feature = composer.chatType("private")
 
-feature.command("webapp", logHandle("command-webapp"), ctx => {
+feature.command(["miniapp", "webapp"], logHandle("command-webapp"), ctx => {
   return ctx.reply("Test webapp", {
     reply_markup: new InlineKeyboard()
       .webApp("Open Web App", config.WEB_APP_URL)
