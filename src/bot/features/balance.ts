@@ -21,7 +21,7 @@ feature.command("balance", logHandle("command-balance"), async ctx => {
     getBalanceChangeTypeName(v.type),
     v.createdAt ? formatDateTimeCompact(v.createdAt) : "",
   ])
-  const md = `${ctx.t("line.count", { count })}
+  const md = `
 \`\`\`\n${getMarkdownTable({
     table: {
       head: ["$CUBE", "Type", "Date"],
