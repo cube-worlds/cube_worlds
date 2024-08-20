@@ -23,7 +23,7 @@ const checkCaptcha = (fastify: any, _options: any, done: () => void) => {
   fastify.get("/check", async (request: any, _reply: any) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { userId, count } = request.query as any
-    const data = decryptNumber("foJhCnaPow", count)
+    const data = decryptNumber("jsdIUbvFtZgd", count)
     if (userId && data) {
       const user = await findUserById(userId)
       if (!user || !user.suspicionDices) return { result: false }

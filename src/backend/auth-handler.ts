@@ -1,24 +1,31 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { findUserById } from "#root/bot/models/user"
 import { config } from "#root/config"
 import { logger } from "#root/logger"
 import { validate } from "@tma.js/init-data-node"
-import { FastifyInstance } from "fastify"
+import { FastifyInstance, FastifyRequest } from "fastify"
+
+interface Parameters {
+  userId: string
+}
+
+interface Body {
+  initData: string
+  referId?: string
+}
 
 export const authHandler = (fastify: FastifyInstance, _options: unknown, done: () => void) => {
-  // eslint-disable-next-line no-unused-vars
-  fastify.post("/:userId", async (request, _reply) => {
-    const { userId } = request.params as any
+  fastify.post("/:userId", async (request: FastifyRequest<{ Params: Parameters; Body: Body }>) => {
+    const { userId } = request.params
     if (!userId) {
       return { error: "No userId provided" }
     }
-    const { initData, referId } = request.body as any
+    const { initData, referId } = request.body
     if (!initData) {
       return { error: `No initData or hash provided` }
     }
     try {
       validate(initData, config.BOT_TOKEN, { expiresIn: 86_400 })
-      const user = await findUserById(userId)
+      const user = await findUserById(Number(userId))
       if (!user) {
         return { error: "User not found" }
       }
@@ -34,7 +41,7 @@ export const authHandler = (fastify: FastifyInstance, _options: unknown, done: (
           logger.error("Referrer not found or same as user")
         }
       } else {
-        logger.error("referId undefined or user already invited")
+        logger.info("ReferId is undefined or user already invited")
       }
       return {
         id: user.id,
