@@ -13,7 +13,7 @@
       <div class="planet mars"></div>
     </div>
     <div class="ufo" :style="ufoStyle"></div>
-    <Footer />
+    <MainMenu />
     <ClosingConfirmation />
     <ExpandedViewport />
   </div>
@@ -22,12 +22,12 @@
 <script>
 import { ref, onMounted, computed } from "vue";
 import { ClosingConfirmation, ExpandedViewport } from "vue-tg";
-import Footer from "./components/nested/Footer.vue";
+import MainMenu from "./components/nested/MainMenu.vue";
 
 export default {
   name: "CubeWorldsMainPage",
   components: {
-    Footer,
+    MainMenu,
     ClosingConfirmation,
     ExpandedViewport,
   },

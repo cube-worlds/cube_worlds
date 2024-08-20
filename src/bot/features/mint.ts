@@ -78,8 +78,6 @@ async function mintAction(ctx: Context, removeSubscriptionCheckMessage: boolean 
   const isChatSubscribed = await isUserSubscribed(ctx, chat)
   const channel = getCubeChannel(ctx.dbuser.language)
   const isChannelSubscribed = await isUserSubscribed(ctx, channel)
-  logger.error(`Channel ${isChannelSubscribed}`)
-  logger.error(`Chat ${isChatSubscribed}`)
   if (isChannelSubscribed && isChatSubscribed) {
     if (removeSubscriptionCheckMessage) {
       await ctx.deleteMessage()
