@@ -24,7 +24,7 @@ import {
   addressesFeature,
   statsFeature,
   playFeature,
-  balancesFeature,
+  accountsFeature,
   balanceFeature,
 } from "#root/bot/features/index.js"
 import { errorHandler } from "#root/bot/handlers/index.js"
@@ -90,7 +90,7 @@ export function createBot(token: string, options: Options) {
   protectedBot.use(playFeature)
   protectedBot.use(balanceFeature)
   protectedBot.use(userFeature)
-  protectedBot.use(balancesFeature)
+  protectedBot.use(accountsFeature)
 
   if (isMultipleLocales) {
     protectedBot.use(languageFeature)

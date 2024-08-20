@@ -48,7 +48,7 @@ async function getStabilityBalance(): Promise<number> {
   return balance.credits
 }
 
-feature.command("balances", logHandle("command-balances"), async ctx => {
+feature.command("accounts", logHandle("command-accounts"), async ctx => {
   const stabilityBalance = await getStabilityBalance()
   return ctx.replyWithMarkdownV1(
     `Stability balance: ${stabilityBalance} credits
@@ -59,4 +59,4 @@ OpenAI balance can be found in the [OpenAI dashboard](https://platform.openai.co
   )
 })
 
-export { composer as balancesFeature }
+export { composer as accountsFeature }
