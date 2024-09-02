@@ -36,7 +36,7 @@
     "@ton/ton": "^15.0.0",
     "@typegoose/typegoose": "^12.6.0",
     "@types/node-rsa": "^1.1.4",
-    "axios": "^1.7.4",
+    "axios": "^1.7.7",
     "callback-data": "1.1.1",
     "chatgpt": "^5.2.5",
     "dotenv": "16.4.5",
