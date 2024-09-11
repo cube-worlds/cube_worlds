@@ -1,6 +1,5 @@
 <template>
   <div class="cnft-container">
-    <div id="ton-connect"></div>
     <h1>{{ $t("cnft-header") }}</h1>
 
     <div v-if="userStorage.wallet">
@@ -32,15 +31,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, Ref } from "vue";
+import { ref, watch, onMounted, Ref, inject } from "vue";
 import { MainButton, useWebAppHapticFeedback, useWebApp } from "vue-tg";
 import { useUserStore } from "../stores/userStore.js";
 import { Address, Cell, beginCell } from "@ton/core";
 import { TonConnectUI } from "@tonconnect/ui";
 import { ElLoading, ElMessage } from "element-plus";
-import { useAuth } from "../composables/use-auth.js";
-import { useFluent } from "fluent-vue";
-import { enBundle, ruBundle } from "../fluent.js";
 
 const loadingInstance = ElLoading.service({ fullscreen: true, visible: false });
 
@@ -50,14 +46,14 @@ const collectionAddress = "EQAaSqEwAh00YOCc9ZwtqfNcXeehbl97yKQKCZPRGwCov51V";
 
 const miniapp = useWebApp();
 const userStorage = useUserStore();
-const fluent = useFluent();
+
+const tonConnectUI = inject<Ref<TonConnectUI | null>>("tonConnectUI");
 
 let metadata = ref();
 let cnft = ref();
 let cnftExists = ref();
 let eligible: Ref<Boolean> = ref(true);
 let cnftAddress: Address | undefined = undefined;
-let tonConnectUI: TonConnectUI;
 
 // for test
 // metadata.value = {
@@ -73,34 +69,6 @@ function sleep(ms: number): Promise<void> {
     setTimeout(resolve, ms);
   });
 }
-
-onMounted(async () => {
-  const referId = undefined; // TODO?
-  const webAppUser = useWebApp().initDataUnsafe.user;
-  if (webAppUser) {
-    const { user, error, login } = useAuth(useWebApp().initData, webAppUser.id, referId);
-    await login();
-    console.log(user.value, error.value);
-    const lang = user.value.language;
-    fluent.bundles.value = [lang === "ru" ? ruBundle : enBundle];
-  }
-  tonConnectUI = new TonConnectUI({
-    manifestUrl: "https://cubeworlds.club/tonconnect-manifest.json",
-    buttonRootId: "ton-connect",
-    // language: "ru",
-    // uiPreferences: {
-    //   theme: THEME.DARK,
-    // },
-    actionsConfiguration: {
-      returnStrategy: "back",
-      twaReturnUrl: "https://t.me/cube_worlds_bot/cnft?startapp=from_wallet",
-    },
-  });
-  tonConnectUI.onStatusChange((wallet) => {
-    console.info("Wallet updated: " + wallet);
-    userStorage.setWallet(wallet ?? undefined);
-  });
-});
 
 async function tapButton() {
   if (cnftExists.value) {
@@ -145,7 +113,10 @@ async function claim() {
   };
 
   try {
-    const result = await tonConnectUI.sendTransaction(transaction);
+    const result = await tonConnectUI?.value?.sendTransaction(transaction);
+    if (!result) {
+      throw new Error("Transaction was not sent");
+    }
     console.info("Transaction was sent successfully, BOC: ", result.boc);
     await runMintCheck();
     notificationOccurred("success");
@@ -364,10 +335,6 @@ watch(
   font-size: 1.2em;
   color: #ff6600;
   margin-top: 30px;
-}
-
-#ton-connect {
-  margin-bottom: 20px;
 }
 
 @media (max-width: 768px) {

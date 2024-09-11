@@ -48,6 +48,7 @@ export const authHandler = (fastify: FastifyInstance, _options: unknown, done: (
         language: user.language,
         wallet: user.wallet,
         referalId: user.referalId,
+        balance: user.votes.toString(),
       }
     } catch (error_) {
       return { error: error_ }

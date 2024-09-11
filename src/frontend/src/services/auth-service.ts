@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios from "axios"
 
 export const authenticateUser = async (initData: string, userId: number, referId: number | undefined) => {
   try {
@@ -8,4 +8,4 @@ export const authenticateUser = async (initData: string, userId: number, referId
     console.error('Error authenticating user:', error);
     throw error;
   }
-};
+}

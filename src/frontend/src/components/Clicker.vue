@@ -29,44 +29,16 @@
 </template>
 
 <script setup lang="ts">
-import { useWebApp, useWebAppHapticFeedback, MainButton, useWebAppPopup } from "vue-tg";
-import { useAuth } from "../composables/use-auth";
+import { useWebAppHapticFeedback, MainButton, useWebAppPopup } from "vue-tg";
 import { Ref, onMounted, onUnmounted, ref } from "vue";
-import { useFluent } from "fluent-vue";
-import { enBundle, ruBundle } from "../fluent.js";
 import { useUserStore } from "../stores/userStore.js";
+import { useFluent } from "fluent-vue";
 
-const fluent = useFluent();
 const { $t } = useFluent();
 const userStore = useUserStore();
 
-function getUserIdFromRefString(refString: string): number | undefined {
-  const match = refString.match(/ref_(\d+)/);
-  return match && match[1] ? parseInt(match[1], 10) : undefined;
-}
-
 onMounted(async () => {
   disableZoom();
-  const initData = useWebApp().initDataUnsafe;
-  const webAppUser = initData.user;
-  if (webAppUser) {
-    let referId = undefined;
-    const start_param = initData.start_param;
-    if (start_param) {
-      referId = getUserIdFromRefString(start_param);
-      console.log("start_param:", start_param);
-    }
-    const { user, error, login } = useAuth(useWebApp().initData, webAppUser.id, referId);
-    await login();
-    console.log(user.value ? user.value : error.value);
-
-    const lang = user.value.language;
-    fluent.bundles.value = [lang === "ru" ? ruBundle : enBundle];
-
-    if (user.value) {
-      userStore.setUser(user.value);
-    }
-  }
 });
 
 onUnmounted(() => {

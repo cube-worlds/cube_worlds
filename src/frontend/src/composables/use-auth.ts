@@ -7,17 +7,19 @@ export const useAuth = (initData: string, userId: number, referId: number | unde
 
   const login = async () => {
     try {
-      const userString = sessionStorage.getItem("user");
-      if (userString) {
-        const userModel = JSON.parse(userString);
-        user.value = userModel;
-        return;
-      }
+      // const userString = sessionStorage.getItem("user");
+      // if (userString) {
+      //   const userModel = JSON.parse(userString);
+      //   user.value = userModel;
+      //   return;
+      // }
       const userModel = await authenticateUser(initData, userId, referId);
       user.value = userModel;
       sessionStorage.setItem("user", JSON.stringify(userModel));
+      return true
     } catch (error_) {
       error.value = error_
+      return false
     }
   };
 

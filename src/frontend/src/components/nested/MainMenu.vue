@@ -2,7 +2,7 @@
   <div class="cosmic-menu">
     <div class="menu-links">
       <router-link to="/" class="menu-link">🏠</router-link>
-      <router-link to="/nft" class="menu-link">🖼️</router-link>
+      <!-- <router-link to="/nft" class="menu-link">🖼️</router-link> -->
       <!-- <router-link to="/game" class="menu-link">🎮</router-link> -->
       <!-- <router-link to="/faq" class="menu-link">📖</router-link> -->
       <!-- <router-link to="/presentation" class="menu-link">🎙️</router-link> -->

@@ -2,6 +2,15 @@
   <div class="cosmos">
     <div v-for="(star, index) in stars" :key="index" class="star" :style="star"></div>
     <div class="content-wrapper">
+      <div class="top-bar">
+        <div class="coin-balance">{{ balance }} CUBE</div>
+
+        <div id="ton-connect"></div>
+        <!-- <div class="wallet-address" @click="toggleMenu">
+          {{ walletAddress }}
+          <i class="arrow" :class="{ up: isMenuOpen, down: !isMenuOpen }"></i>
+        </div> -->
+      </div>
       <RouterView />
     </div>
     <div class="solar-system">
@@ -19,46 +28,103 @@
   </div>
 </template>
 
-<script>
-import { ref, onMounted, computed } from "vue";
-import { ClosingConfirmation, ExpandedViewport } from "vue-tg";
+<script setup lang="ts">
+import { ref, onMounted, computed, provide, Ref } from "vue";
+import { useWebApp, ClosingConfirmation, ExpandedViewport } from "vue-tg";
 import MainMenu from "./components/nested/MainMenu.vue";
+import { useAuth } from "./composables/use-auth";
+import { useUserStore } from "./stores/userStore";
+import { TonConnectUI } from "@tonconnect/ui";
+import { enBundle, ruBundle } from "./fluent";
+import { useFluent } from "fluent-vue";
 
-export default {
-  name: "CubeWorldsMainPage",
-  components: {
-    MainMenu,
-    ClosingConfirmation,
-    ExpandedViewport,
-  },
-  setup() {
-    const stars = ref([]);
-    const ufoPosition = ref({ x: 0, y: 0 });
+const fluent = useFluent();
+const userStorage = useUserStore();
 
-    const ufoStyle = computed(() => ({
-      left: `${ufoPosition.value.x}%`,
-      top: `${ufoPosition.value.y}%`,
-    }));
+const tonConnectUI = ref<TonConnectUI | null>(null);
+provide("tonConnectUI", tonConnectUI);
 
-    onMounted(() => {
-      stars.value = Array.from({ length: 200 }, () => ({
-        top: `${Math.random() * 100}%`,
-        left: `${Math.random() * 100}%`,
-        animationDuration: `${Math.random() * 3 + 1}s`,
-        animationDelay: `${Math.random() * 2}s`,
-      }));
+const userStore = useUserStore();
 
-      setInterval(() => {
-        ufoPosition.value = {
-          x: Math.random() * 100,
-          y: Math.random() * 100,
-        };
-      }, 5000);
-    });
+// const isMenuOpen = ref(false);
+// const walletAddress = ref("UQjf...8hGa");
+const balance: Ref<number | undefined> = ref(undefined);
 
-    return { stars, ufoStyle };
-  },
-};
+const stars: Ref<
+  Array<{ top: string; left: string; animationDuration: string; animationDelay: string }>
+> = ref([]);
+const ufoPosition = ref({ x: 0, y: 0 });
+
+const ufoStyle = computed(() => ({
+  left: `${ufoPosition.value.x}%`,
+  top: `${ufoPosition.value.y}%`,
+}));
+
+function getUserIdFromRefString(refString: string): number | undefined {
+  const match = refString.match(/ref_(\d+)/);
+  return match && match[1] ? parseInt(match[1], 10) : undefined;
+}
+
+onMounted(async () => {
+  tonConnectUI.value = new TonConnectUI({
+    manifestUrl: "https://cubeworlds.club/tonconnect-manifest.json",
+    buttonRootId: "ton-connect",
+    actionsConfiguration: {
+      returnStrategy: "back",
+      twaReturnUrl: "https://t.me/cube_worlds_bot/cnft?startapp=from_wallet",
+    },
+  });
+  tonConnectUI.value.onStatusChange((wallet) => {
+    console.info("Wallet updated: " + wallet);
+    userStorage.setWallet(wallet ?? undefined);
+  });
+
+  stars.value = Array.from({ length: 200 }, () => ({
+    top: `${Math.random() * 100}%`,
+    left: `${Math.random() * 100}%`,
+    animationDuration: `${Math.random() * 3 + 1}s`,
+    animationDelay: `${Math.random() * 2}s`,
+  }));
+
+  setInterval(() => {
+    ufoPosition.value = {
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+    };
+  }, 5000);
+
+  const initData = useWebApp().initDataUnsafe;
+  const webAppUser = initData.user;
+  if (webAppUser) {
+    let referId = undefined;
+    const start_param = initData.start_param;
+    if (start_param) {
+      referId = getUserIdFromRefString(start_param);
+      console.log("start_param:", start_param);
+    }
+    const { user, error, login } = useAuth(useWebApp().initData, webAppUser.id, referId);
+    if (error.value) {
+      console.log(error.value);
+      return;
+    }
+    const isLoggedIn = await login();
+    if (isLoggedIn) {
+      const lang = user.value.language;
+      fluent.bundles.value = [lang === "ru" ? ruBundle : enBundle];
+      if (user.value) {
+        userStore.setUser(user.value);
+        balance.value = user.value.balance;
+        console.log(user.value);
+      }
+    } else {
+      console.error("Login error:", error.value);
+    }
+  }
+});
+
+// const toggleMenu = () => {
+//   isMenuOpen.value = !isMenuOpen.value;
+// };
 </script>
 
 <style scoped>
@@ -82,6 +148,47 @@ export default {
   overflow: auto;
   padding: 2rem;
   box-sizing: border-box;
+}
+
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 0.5rem 1rem;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+}
+
+.coin-balance {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #fff;
+}
+
+.wallet-address {
+  font-size: 0.9rem;
+  color: #ccc;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.arrow {
+  border: solid #ccc;
+  border-width: 0 2px 2px 0;
+  display: inline-block;
+  padding: 3px;
+  margin-left: 0.5rem;
+  transition: transform 0.3s;
+}
+
+.arrow.up {
+  transform: rotate(-135deg);
+}
+
+.arrow.down {
+  transform: rotate(45deg);
 }
 
 .star {

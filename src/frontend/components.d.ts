@@ -14,6 +14,7 @@ declare module 'vue' {
     Header: typeof import('./src/components/Header.vue')['default']
     Main: typeof import('./src/components/Main.vue')['default']
     MainMenu: typeof import('./src/components/nested/MainMenu.vue')['default']
+    Pagination: typeof import('./src/components/nested/Pagination.vue')['default']
     Presentation: typeof import('./src/components/Presentation.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
