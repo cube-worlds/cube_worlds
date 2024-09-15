@@ -7,7 +7,7 @@ export interface UserStore {
   language: string;
   wallet: string;
   referalId: number | undefined;
-  balance: number | undefined;
+  balance: string | undefined;
   ip: string;
 }
 

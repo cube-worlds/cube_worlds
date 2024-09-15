@@ -4,7 +4,12 @@
     <div class="content-wrapper">
       <div class="top-bar">
         <div class="coin-balance">
-          {{ balance ? bigIntWithCustomSeparator(balance) : "???" }} $CUBE
+          {{
+            userStore.user?.balance
+              ? bigIntWithCustomSeparator(BigInt(userStore.user?.balance))
+              : "???"
+          }}
+          $CUBE
         </div>
         <div id="ton-connect"></div>
       </div>
@@ -42,7 +47,6 @@ const tonConnectUI = ref<TonConnectUI | null>(null)
 provide("tonConnectUI", tonConnectUI)
 
 const userStore = useUserStore()
-const balance: Ref<bigint | undefined> = ref(undefined)
 
 const stars: Ref<
   Array<{ top: string; left: string; animationDuration: string; animationDelay: string }>
@@ -107,7 +111,6 @@ onMounted(async () => {
       fluent.bundles.value = [lang === "ru" ? ruBundle : enBundle]
       if (user.value) {
         userStore.setUser(user.value)
-        balance.value = BigInt(user.value.balance)
         console.log(user.value)
       }
     } else {
