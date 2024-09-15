@@ -38,7 +38,7 @@
         </li>
       </ul>
       <div v-else class="empty-state">
-        <p>No cosmic entities detected</p>
+        <p>No entities detected</p>
         <button @click="fetchFeed" class="refresh-button">
           <span class="refresh-icon">↻</span> Scan Again
         </button>

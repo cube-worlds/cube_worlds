@@ -1,16 +1,23 @@
 <template>
   <div class="cosmic-menu">
     <div class="menu-links">
-      <router-link to="/" class="menu-link">🏠</router-link>
+      <router-link to="/" class="menu-link" active-class="active">🏠</router-link>
+      <router-link to="/cnft" class="menu-link" active-class="active">🎨</router-link>
+      <router-link to="/clicker" class="menu-link" active-class="active">🖱️</router-link>
+      <router-link
+        to="/feed"
+        class="menu-link"
+        v-show="isDevelopment"
+        active-class="active"
+        >🎯</router-link
+      >
+
       <!-- <router-link to="/nft" class="menu-link">🖼️</router-link> -->
       <!-- <router-link to="/game" class="menu-link">🎮</router-link> -->
       <!-- <router-link to="/faq" class="menu-link">📖</router-link> -->
       <!-- <router-link to="/presentation" class="menu-link">🎙️</router-link> -->
       <!-- <router-link to="/leaderboard" class="menu-link">🏆</router-link> -->
       <!-- <router-link to="/balance" class="menu-link">💰</router-link> -->
-      <router-link to="/cnft" class="menu-link">🎨</router-link>
-      <router-link to="/clicker" class="menu-link">🖱️</router-link>
-      <router-link to="/feed" class="menu-link" v-show="isDevelopment">🎯</router-link>
     </div>
   </div>
 </template>
@@ -68,5 +75,18 @@ const isDevelopment = ref(import.meta.env.VITE_ENV === "development")
 
 .menu-link:hover::after {
   transform: scaleX(1);
+}
+
+.menu-link.active {
+  transform: scale(1.2);
+  color: #ff9933;
+}
+
+.menu-link.active::after {
+  transform: scaleX(1);
+}
+
+.menu-link:hover:not(.active) {
+  transform: scale(1.1);
 }
 </style>

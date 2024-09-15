@@ -6,12 +6,7 @@
         <div class="coin-balance">
           {{ balance ? bigIntWithCustomSeparator(balance) : "???" }} $CUBE
         </div>
-
         <div id="ton-connect"></div>
-        <!-- <div class="wallet-address" @click="toggleMenu">
-          {{ walletAddress }}
-          <i class="arrow" :class="{ up: isMenuOpen, down: !isMenuOpen }"></i>
-        </div> -->
       </div>
       <RouterView />
     </div>
@@ -120,10 +115,6 @@ onMounted(async () => {
     }
   }
 })
-
-// const toggleMenu = () => {
-//   isMenuOpen.value = !isMenuOpen.value;
-// };
 </script>
 
 <style scoped>
