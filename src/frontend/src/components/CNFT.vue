@@ -64,6 +64,19 @@ let cnftAddress: Address | undefined = undefined;
 // eligible.value = true;
 // cnftExists.value = false;
 
+onMounted(async () => {
+  const hexAddress = userStorage.wallet?.account.address;
+  if (!hexAddress) {
+    return;
+  }
+  loadingInstance.visible.value = true;
+  try {
+    await parseNftData(hexAddress);
+  } catch (error) {
+    await showError(error);
+  }
+});
+
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
@@ -154,7 +167,10 @@ async function showError(error: unknown) {
 }
 
 async function parseCNFT(wallet: string) {
-  const baseUrl = "https://cubeworlds.club/cnfts"; // "http://localhost:8081";
+  let baseUrl = "https://cubeworlds.club/cnfts";
+  if (process.env.NODE_ENV === "development") {
+    baseUrl = "http://localhost:8081";
+  }
   const url = `${baseUrl}/v1/address/${wallet}`;
   const response = await fetch(url);
   if (!response.ok) {
@@ -166,7 +182,10 @@ async function parseCNFT(wallet: string) {
 }
 
 async function parseMetadata(wallet: string) {
-  const baseUrl = `https://cubeworlds.club`; // `http://localhost:80`;
+  let baseUrl = `https://cubeworlds.club`;
+  if (process.env.NODE_ENV === "development") {
+    baseUrl = `http://localhost:80`;
+  }
   const url = `${baseUrl}/api/nft/${wallet}`;
   try {
     const response = await fetch(url);
@@ -192,9 +211,8 @@ async function isNftExists(nftIndex: number) {
     console.log(data);
     const hexAddress = data.decoded.address;
     cnftAddress = Address.parseRaw(hexAddress);
-    const accountUrl = `https://tonapi.io/v2/blockchain/accounts/${cnftAddress.toString({
-      urlSafe: true,
-    })}`;
+    const cnftAddressString = cnftAddress.toString({ urlSafe: true });
+    const accountUrl = `https://tonapi.io/v2/blockchain/accounts/${cnftAddressString}`;
     const responseAccount = await fetch(accountUrl);
     console.log(responseAccount.status);
     return responseAccount.status == 200;
