@@ -139,11 +139,12 @@ onMounted(async () => {
   width: 100%;
   height: calc(100% - 60px);
   overflow: auto;
-  padding: 2rem;
+  padding: 0.3rem;
   box-sizing: border-box;
 }
 
 .top-bar {
+  position: sticky;
   display: flex;
   justify-content: space-between;
   align-items: center;

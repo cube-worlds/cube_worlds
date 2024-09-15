@@ -51,8 +51,8 @@ export const authHandler = (fastify: FastifyInstance, _options: unknown, done: (
         balance: user.votes.toString(),
         ip: request.ip,
       }
-    } catch (error_) {
-      return { error: error_ }
+    } catch (error) {
+      return { error: (error as Error)?.message ?? "Unknown error" }
     }
   })
 

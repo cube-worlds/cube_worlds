@@ -1,6 +1,5 @@
 <template>
   <h1>{{ $t("clicker-title") }}</h1>
-
   <div class="card">
     <div class="cube-container">
       <div class="cube">
@@ -29,54 +28,54 @@
 </template>
 
 <script setup lang="ts">
-import { useWebAppHapticFeedback, MainButton, useWebAppPopup } from "vue-tg";
-import { Ref, onMounted, onUnmounted, ref } from "vue";
-import { useUserStore } from "../stores/userStore.js";
-import { useFluent } from "fluent-vue";
+import { useWebAppHapticFeedback, MainButton, useWebAppPopup } from "vue-tg"
+import { Ref, onMounted, onUnmounted, ref } from "vue"
+import { useUserStore } from "../stores/userStore.js"
+import { useFluent } from "fluent-vue"
 
-const { $t } = useFluent();
-const userStore = useUserStore();
+const { $t } = useFluent()
+const userStore = useUserStore()
 
 onMounted(async () => {
-  disableZoom();
-});
+  disableZoom()
+})
 
 onUnmounted(() => {
-  restoreZoom();
-});
+  restoreZoom()
+})
 
-const { impactOccurred } = useWebAppHapticFeedback();
+const { impactOccurred } = useWebAppHapticFeedback()
 
-const count = ref(0);
-const messages: Ref<{ id: number; x: number; y: number; value: number }[]> = ref([]);
+const count = ref(0)
+const messages: Ref<{ id: number; x: number; y: number; value: number }[]> = ref([])
 
 const tap = (value: number, event: MouseEvent) => {
-  const impacts = ["light", "medium", "heavy", "rigid", "soft"] as const;
-  const randomImpact = impacts[Math.floor(Math.random() * impacts.length)];
-  impactOccurred(randomImpact);
+  const impacts = ["light", "medium", "heavy", "rigid", "soft"] as const
+  const randomImpact = impacts[Math.floor(Math.random() * impacts.length)]
+  impactOccurred(randomImpact)
 
-  const multiplier = randomImpact === "light" ? 1 : impacts.indexOf(randomImpact) + 1;
-  const add = value * multiplier;
-  count.value += add;
+  const multiplier = randomImpact === "light" ? 1 : impacts.indexOf(randomImpact) + 1
+  const add = value * multiplier
+  count.value += add
 
-  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
   const message = {
     id: Date.now(),
     x: event.clientX - rect.left,
     y: event.clientY - rect.top,
     value: add,
-  };
-  messages.value.push(message);
+  }
+  messages.value.push(message)
 
   setTimeout(() => {
-    messages.value = messages.value.filter((m) => m.id !== message.id);
-  }, 1000);
-};
+    messages.value = messages.value.filter((m) => m.id !== message.id)
+  }, 1000)
+}
 
-const popup = useWebAppPopup();
+const popup = useWebAppPopup()
 
 function showAlert() {
-  if (count.value < 30) return;
+  if (count.value < 30) return
 
   popup.showPopup(
     {
@@ -89,33 +88,33 @@ function showAlert() {
     },
     (buttonId: string) => {
       if (buttonId === "share") {
-        const text = $t("clicker-share-text");
-        const user = userStore.user;
-        const startParam = user?.id ? `?startapp=ref_${user.id}` : "";
-        const url = `https://t.me/cube_worlds_bot/clicker${startParam}`;
+        const text = $t("clicker-share-text")
+        const user = userStore.user
+        const startParam = user?.id ? `?startapp=ref_${user.id}` : ""
+        const url = `https://t.me/cube_worlds_bot/clicker${startParam}`
         const shareLink = `https://t.me/share/url?url=${encodeURIComponent(
           url
-        )}&text=${encodeURIComponent(text)}`;
-        window.open(shareLink);
+        )}&text=${encodeURIComponent(text)}`
+        window.open(shareLink)
       }
     }
-  );
+  )
 }
 
 const disableZoom = () => {
-  const meta = document.createElement("meta");
-  meta.name = "viewport";
+  const meta = document.createElement("meta")
+  meta.name = "viewport"
   meta.content =
-    "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no";
-  document.head.appendChild(meta);
-};
+    "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+  document.head.appendChild(meta)
+}
 
 const restoreZoom = () => {
-  const meta = document.querySelector('meta[name="viewport"]');
+  const meta = document.querySelector('meta[name="viewport"]')
   if (meta) {
-    document.head.removeChild(meta);
+    document.head.removeChild(meta)
   }
-};
+}
 </script>
 
 <style scoped>
@@ -125,6 +124,7 @@ const restoreZoom = () => {
   justify-content: center;
   align-items: center;
 }
+
 .cube-container {
   margin: 4rem 0;
   user-select: none;
@@ -141,6 +141,7 @@ const restoreZoom = () => {
   width: 200px;
   height: 200px;
 }
+
 .cube {
   width: 100%;
   height: 100%;
@@ -148,6 +149,7 @@ const restoreZoom = () => {
   transform-style: preserve-3d;
   animation: rotate 20s infinite linear;
 }
+
 .cube div {
   position: absolute;
   width: 100%;
@@ -168,18 +170,23 @@ const restoreZoom = () => {
 .front {
   transform: rotateY(0deg) translateZ(100px);
 }
+
 .back {
   transform: rotateY(180deg) translateZ(100px);
 }
+
 .right {
   transform: rotateY(90deg) translateZ(100px);
 }
+
 .left {
   transform: rotateY(-90deg) translateZ(100px);
 }
+
 .top {
   transform: rotateX(90deg) translateZ(100px);
 }
+
 .bottom {
   transform: rotateX(-90deg) translateZ(100px);
 }
@@ -188,6 +195,7 @@ const restoreZoom = () => {
   0% {
     transform: rotateX(0) rotateY(0) rotateZ(0);
   }
+
   100% {
     transform: rotateX(360deg) rotateY(360deg) rotateZ(360deg);
   }
@@ -211,11 +219,16 @@ const restoreZoom = () => {
   animation: float-up 1s ease-out;
 }
 
+h1 {
+  font-size: 2em;
+}
+
 @keyframes float-up {
   0% {
     opacity: 1;
     transform: translateY(0);
   }
+
   100% {
     opacity: 0;
     transform: translateY(-50px);
