@@ -153,7 +153,7 @@ async function runMintCheck() {
 
 async function parseCNFT(wallet: string) {
   let baseUrl = "https://cubeworlds.club/cnfts"
-  if (process.env.NODE_ENV === "development") {
+  if (process.env.VITE_ENV === "development") {
     baseUrl = "http://localhost:8081"
   }
   const url = `${baseUrl}/v1/address/${wallet}`
@@ -168,7 +168,7 @@ async function parseCNFT(wallet: string) {
 
 async function parseMetadata(wallet: string) {
   let baseUrl = `https://cubeworlds.club`
-  if (process.env.NODE_ENV === "development") {
+  if (process.env.VITE_ENV === "development") {
     baseUrl = `http://localhost:80`
   }
   const url = `${baseUrl}/api/nft/${wallet}`

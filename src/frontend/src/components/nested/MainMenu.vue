@@ -10,10 +10,15 @@
       <!-- <router-link to="/balance" class="menu-link">💰</router-link> -->
       <router-link to="/cnft" class="menu-link">🎨</router-link>
       <router-link to="/clicker" class="menu-link">🖱️</router-link>
-      <router-link to="/feed" class="menu-link">🎯</router-link>
+      <router-link to="/feed" class="menu-link" v-show="isDevelopment">🎯</router-link>
     </div>
   </div>
 </template>
+
+<script setup lang="ts">
+import { ref } from "vue"
+const isDevelopment = ref(import.meta.env.VITE_ENV === "development")
+</script>
 
 <style lang="css" scoped>
 .cosmic-menu {

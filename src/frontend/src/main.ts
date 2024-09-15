@@ -21,8 +21,11 @@ const routes = [
   { path: "/faq", name: "FAQPage", component: FAQComponent },
   { path: "/cnft", mame: "CNFTPage", component: CNFTComponent },
   { path: "/presentation", mame: "PresentationPage", component: PresentationComponent },
-  { path: "/feed", mame: "FeedPage", component: FeedComponent },
 ];
+
+if (import.meta.env.VITE_ENV === "development") {
+  routes.push({ path: "/feed", mame: "FeedPage", component: FeedComponent });
+}
 
 const router = createRouter({
   history: createWebHistory(),

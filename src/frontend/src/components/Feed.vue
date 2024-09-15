@@ -20,14 +20,18 @@
             <img :src="item.icon" :alt="item.name" class="feed-icon" />
             <div class="feed-text">
               <h3>{{ item.name }}</h3>
-              <p>{{ usdToPoints(item.payout) }} $CUBE</p>
+              <p>{{ item.description }}</p>
             </div>
           </div>
+          <p>{{ usdToPoints(item.payout) }} $CUBE</p>
           <button
             class="feed-button"
             :disabled="item.is_done"
             @click="handleClick(item)"
-            :style="{ cursor: item.is_done ? 'not-allowed' : 'pointer' }"
+            :style="{
+              cursor: item.is_done ? 'not-allowed' : 'pointer',
+              color: item.is_done ? '#ccc' : '#fff',
+            }"
           >
             {{ item.is_done ? "Done" : item.btn_label }}
           </button>
@@ -50,6 +54,14 @@ import useLoadingAndError from "../composables/useLoadingAndError"
 import { usdToPoints } from "../../../bot/helpers/points"
 import { sleep } from "../../../bot/helpers/time"
 import { useUserStore } from "../stores/userStore"
+import { useWebAppHapticFeedback } from "vue-tg"
+
+const { impactOccurred } = useWebAppHapticFeedback()
+
+function openLink(url: string) {
+  window.open(url, "_blank", "noopener,noreferrer")
+  impactOccurred("light")
+}
 
 interface TappAdsOffer {
   id: number
@@ -79,8 +91,8 @@ function escape(str: string) {
 const fetchFeed = async () => {
   if (refreshing.value) return
   refreshing.value = true
+  loadingInstance.visible.value = true
   try {
-    loadingInstance.visible.value = true
     if (!tappAdsKey) {
       throw new Error("Something went wrong")
     }
@@ -104,7 +116,7 @@ const fetchFeed = async () => {
 const handleClick = async (item: any) => {
   try {
     loadingInstance.visible.value = true
-    window.open(item.url, "_blank", "noopener,noreferrer")
+    openLink(item.url)
     await sleep(1000)
     const res = await axios.get(item.click_postback)
     if (res.data.is_done === true) {
@@ -152,7 +164,6 @@ watch(
   max-height: 100vh;
   overflow-y: auto;
   background-color: rgba(0, 0, 51, 0.8);
-  padding: 20px;
   font-family: "Arial", sans-serif;
   color: #fff;
 }

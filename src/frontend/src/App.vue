@@ -4,7 +4,7 @@
     <div class="content-wrapper">
       <div class="top-bar">
         <div class="coin-balance">
-          {{ balance ? bigIntWithCustomSeparator(balance) : "???" }} CUBE
+          {{ balance ? bigIntWithCustomSeparator(balance) : "???" }} $CUBE
         </div>
 
         <div id="ton-connect"></div>
@@ -160,7 +160,7 @@ onMounted(async () => {
 }
 
 .coin-balance {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: bold;
   color: #fff;
 }
