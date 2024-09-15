@@ -3,7 +3,9 @@
     <div v-for="(star, index) in stars" :key="index" class="star" :style="star"></div>
     <div class="content-wrapper">
       <div class="top-bar">
-        <div class="coin-balance">{{ balance }} CUBE</div>
+        <div class="coin-balance">
+          {{ balance ? bigIntWithCustomSeparator(balance) : "???" }} CUBE
+        </div>
 
         <div id="ton-connect"></div>
         <!-- <div class="wallet-address" @click="toggleMenu">
@@ -37,6 +39,7 @@ import { useUserStore } from "./stores/userStore";
 import { TonConnectUI } from "@tonconnect/ui";
 import { enBundle, ruBundle } from "./fluent";
 import { useFluent } from "fluent-vue";
+import { bigIntWithCustomSeparator } from "../../bot/helpers/numbers";
 
 const fluent = useFluent();
 const userStorage = useUserStore();
@@ -45,10 +48,7 @@ const tonConnectUI = ref<TonConnectUI | null>(null);
 provide("tonConnectUI", tonConnectUI);
 
 const userStore = useUserStore();
-
-// const isMenuOpen = ref(false);
-// const walletAddress = ref("UQjf...8hGa");
-const balance: Ref<number | undefined> = ref(undefined);
+const balance: Ref<bigint | undefined> = ref(undefined);
 
 const stars: Ref<
   Array<{ top: string; left: string; animationDuration: string; animationDelay: string }>
@@ -113,7 +113,7 @@ onMounted(async () => {
       fluent.bundles.value = [lang === "ru" ? ruBundle : enBundle];
       if (user.value) {
         userStore.setUser(user.value);
-        balance.value = user.value.balance;
+        balance.value = BigInt(user.value.balance);
         console.log(user.value);
       }
     } else {

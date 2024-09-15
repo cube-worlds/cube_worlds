@@ -7,6 +7,7 @@
     "#root/*": "./build/src/*"
   },
   "scripts": {
+    "tunnel": "ngrok http --domain dominant-annually-lobster.ngrok-free.app 80",
     "lint": "eslint .",
     "format": "eslint . --fix",
     "typecheck": "tsc",
