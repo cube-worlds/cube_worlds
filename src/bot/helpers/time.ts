@@ -1,3 +1,9 @@
+export function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => {
+    setTimeout(resolve, ms)
+  })
+}
+
 export function timeUnitsBetween(startDate: Date, endDate: Date) {
   let delta = Math.abs(endDate.getTime() - startDate.getTime()) / 1000
   const isNegative = startDate > endDate ? -1 : 1

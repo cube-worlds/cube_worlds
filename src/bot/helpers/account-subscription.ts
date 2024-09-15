@@ -3,8 +3,8 @@
 /* eslint-disable no-param-reassign */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { logger } from "#root/logger"
-import { sleep } from "#root/bot/helpers/ton"
 import TonWeb from "tonweb"
+import { sleep } from "#root/bot/helpers/time.js"
 
 export class AccountSubscription {
   tonweb: TonWeb

@@ -4,7 +4,8 @@ import { OpenedWallet } from "#root/bot/helpers/wallet.js"
 import { config } from "#root/config.js"
 import { logger } from "#root/logger.js"
 import { NftCollection } from "#root/bot/helpers/nft-collection.js"
-import { openWallet, sleep, waitSeqno } from "#root/bot/helpers/ton.js"
+import { openWallet, waitSeqno } from "#root/bot/helpers/ton.js"
+import { sleep } from "./time"
 
 export type NFTMintParameters = {
   queryId: number

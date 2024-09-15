@@ -5,6 +5,7 @@ import { mnemonicToPrivateKey } from "@ton/crypto"
 import { Address, beginCell, Cell, internal, SendMode, TonClient, WalletContractV4 } from "@ton/ton"
 import { config } from "#root/config.js"
 import { OpenedWallet } from "./wallet"
+import { sleep } from "./time"
 
 const toncenterBaseEndpoint: string = config.TESTNET
   ? "https://testnet.toncenter.com"
@@ -106,12 +107,6 @@ export async function waitSeqno(seqno: number, wallet: OpenedWallet, maxAttempts
     }
   }
   throw new Error(`Seqno wait failed. Check https://tonviewer.com/${config.COLLECTION_OWNER}`)
-}
-
-export function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => {
-    setTimeout(resolve, ms)
-  })
 }
 
 const stopList = new Set([

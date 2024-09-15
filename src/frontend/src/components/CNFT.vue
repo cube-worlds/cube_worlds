@@ -37,6 +37,7 @@ import { useUserStore } from "../stores/userStore.js";
 import { Address, Cell, beginCell } from "@ton/core";
 import { TonConnectUI } from "@tonconnect/ui";
 import { ElLoading, ElMessage } from "element-plus";
+import { sleep } from "../../../bot/helpers/time";
 
 const loadingInstance = ElLoading.service({ fullscreen: true, visible: false });
 
@@ -72,16 +73,11 @@ onMounted(async () => {
   loadingInstance.visible.value = true;
   try {
     await parseNftData(hexAddress);
+    loadingInstance.visible.value = false;
   } catch (error) {
     await showError(error);
   }
 });
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-}
 
 async function tapButton() {
   if (cnftExists.value) {

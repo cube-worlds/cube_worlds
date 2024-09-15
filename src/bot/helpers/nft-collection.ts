@@ -1,8 +1,9 @@
 import { Address, Cell, internal, beginCell, contractAddress, StateInit, SendMode } from "@ton/core"
-import { encodeOffChainContent, sleep, tonClient } from "#root/bot/helpers/ton.js"
+import { encodeOffChainContent, tonClient } from "#root/bot/helpers/ton.js"
 import { config } from "#root/config.js"
 import { logger } from "#root/logger"
 import { OpenedWallet } from "#root/bot/helpers/wallet.js"
+import { sleep } from "#root/bot/helpers/time.js"
 
 export type collectionData = {
   ownerAddress: Address

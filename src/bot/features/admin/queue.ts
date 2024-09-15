@@ -17,7 +17,7 @@ import { randomAttributes } from "#root/bot/helpers/attributes.js"
 import { countUsers, findUserById } from "#root/bot/models/user.js"
 import { ChatGPTAPI } from "chatgpt"
 import { logger } from "#root/logger"
-import { sleep } from "#root/bot/helpers/ton"
+import { sleep } from "#root/bot/helpers/time.js"
 import {
   adminIndex,
   sendPostToChannels,
