@@ -2,9 +2,15 @@
   "typescript.tsdk": "node_modules/typescript/lib",
   "eslint.codeActionsOnSave.mode": "problems",
   "eslint.format.enable": true,
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": true,
+  "typescript.format.semicolons": "remove",
+  "typescript.preferences.quoteStyle": "single",
   "[typescript]": {
-    "editor.formatOnSave": true,
     "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+  },
+  "[vue]": {
+    "editor.defaultFormatter": "Vue.volar"
   },
   "vue3snippets.enable-compile-vue-file-on-did-save-code": true
 }

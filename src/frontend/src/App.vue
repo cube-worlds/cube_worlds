@@ -31,38 +31,37 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, provide, Ref } from "vue";
-import { useWebApp, ClosingConfirmation, ExpandedViewport } from "vue-tg";
-import MainMenu from "./components/nested/MainMenu.vue";
-import { useAuth } from "./composables/use-auth";
-import { useUserStore } from "./stores/userStore";
-import { TonConnectUI } from "@tonconnect/ui";
-import { enBundle, ruBundle } from "./fluent";
-import { useFluent } from "fluent-vue";
-import { bigIntWithCustomSeparator } from "../../bot/helpers/numbers";
+import { ref, onMounted, computed, provide, Ref } from "vue"
+import { useWebApp, ClosingConfirmation, ExpandedViewport } from "vue-tg"
+import MainMenu from "./components/nested/MainMenu.vue"
+import { useAuth } from "./composables/use-auth"
+import { useUserStore } from "./stores/userStore"
+import { TonConnectUI } from "@tonconnect/ui"
+import { enBundle, ruBundle } from "./fluent"
+import { useFluent } from "fluent-vue"
+import { bigIntWithCustomSeparator } from "../../bot/helpers/numbers"
 
-const fluent = useFluent();
-const userStorage = useUserStore();
+const fluent = useFluent()
 
-const tonConnectUI = ref<TonConnectUI | null>(null);
-provide("tonConnectUI", tonConnectUI);
+const tonConnectUI = ref<TonConnectUI | null>(null)
+provide("tonConnectUI", tonConnectUI)
 
-const userStore = useUserStore();
-const balance: Ref<bigint | undefined> = ref(undefined);
+const userStore = useUserStore()
+const balance: Ref<bigint | undefined> = ref(undefined)
 
 const stars: Ref<
   Array<{ top: string; left: string; animationDuration: string; animationDelay: string }>
-> = ref([]);
-const ufoPosition = ref({ x: 0, y: 0 });
+> = ref([])
+const ufoPosition = ref({ x: 0, y: 0 })
 
 const ufoStyle = computed(() => ({
   left: `${ufoPosition.value.x}%`,
   top: `${ufoPosition.value.y}%`,
-}));
+}))
 
 function getUserIdFromRefString(refString: string): number | undefined {
-  const match = refString.match(/ref_(\d+)/);
-  return match && match[1] ? parseInt(match[1], 10) : undefined;
+  const match = refString.match(/ref_(\d+)/)
+  return match && match[1] ? parseInt(match[1], 10) : undefined
 }
 
 onMounted(async () => {
@@ -73,54 +72,54 @@ onMounted(async () => {
       returnStrategy: "back",
       twaReturnUrl: "https://t.me/cube_worlds_bot/cnft?startapp=from_wallet",
     },
-  });
+  })
   tonConnectUI.value.onStatusChange((wallet) => {
-    console.info("Wallet updated: " + wallet);
-    userStorage.setWallet(wallet ?? undefined);
-  });
+    console.info("Wallet updated: " + wallet)
+    userStore.setWallet(wallet ?? undefined)
+  })
 
   stars.value = Array.from({ length: 200 }, () => ({
     top: `${Math.random() * 100}%`,
     left: `${Math.random() * 100}%`,
     animationDuration: `${Math.random() * 3 + 1}s`,
     animationDelay: `${Math.random() * 2}s`,
-  }));
+  }))
 
   setInterval(() => {
     ufoPosition.value = {
       x: Math.random() * 100,
       y: Math.random() * 100,
-    };
-  }, 5000);
+    }
+  }, 5000)
 
-  const initData = useWebApp().initDataUnsafe;
-  const webAppUser = initData.user;
+  const initData = useWebApp().initDataUnsafe
+  const webAppUser = initData.user
   if (webAppUser) {
-    let referId = undefined;
-    const start_param = initData.start_param;
+    let referId = undefined
+    const start_param = initData.start_param
     if (start_param) {
-      referId = getUserIdFromRefString(start_param);
-      console.log("start_param:", start_param);
+      referId = getUserIdFromRefString(start_param)
+      console.log("start_param:", start_param)
     }
-    const { user, error, login } = useAuth(useWebApp().initData, webAppUser.id, referId);
+    const { user, error, login } = useAuth(useWebApp().initData, webAppUser.id, referId)
     if (error.value) {
-      console.log(error.value);
-      return;
+      console.log(error.value)
+      return
     }
-    const isLoggedIn = await login();
+    const isLoggedIn = await login()
     if (isLoggedIn) {
-      const lang = user.value.language;
-      fluent.bundles.value = [lang === "ru" ? ruBundle : enBundle];
+      const lang = user.value.language
+      fluent.bundles.value = [lang === "ru" ? ruBundle : enBundle]
       if (user.value) {
-        userStore.setUser(user.value);
-        balance.value = BigInt(user.value.balance);
-        console.log(user.value);
+        userStore.setUser(user.value)
+        balance.value = BigInt(user.value.balance)
+        console.log(user.value)
       }
     } else {
-      console.error("Login error:", error.value);
+      console.error("Login error:", error.value)
     }
   }
-});
+})
 
 // const toggleMenu = () => {
 //   isMenuOpen.value = !isMenuOpen.value;
@@ -205,6 +204,7 @@ onMounted(async () => {
     opacity: 0.5;
     transform: scale(1);
   }
+
   100% {
     opacity: 1;
     transform: scale(1.5);
@@ -243,11 +243,9 @@ onMounted(async () => {
   left: -20%;
   right: -20%;
   bottom: -20%;
-  background: radial-gradient(
-    circle,
-    rgba(255, 153, 51, 0.3) 0%,
-    rgba(255, 102, 0, 0) 70%
-  );
+  background: radial-gradient(circle,
+      rgba(255, 153, 51, 0.3) 0%,
+      rgba(255, 102, 0, 0) 70%);
   animation: rotate 20s linear infinite;
 }
 
@@ -295,10 +293,12 @@ onMounted(async () => {
 }
 
 @keyframes pulse {
+
   0%,
   100% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(1.05);
   }
@@ -308,6 +308,7 @@ onMounted(async () => {
   0% {
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg);
   }
@@ -317,6 +318,7 @@ onMounted(async () => {
   0% {
     transform: rotate(0deg) translateX(100px) rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg) translateX(100px) rotate(-360deg);
   }

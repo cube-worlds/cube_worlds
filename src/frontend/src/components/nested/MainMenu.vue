@@ -10,6 +10,7 @@
       <!-- <router-link to="/balance" class="menu-link">💰</router-link> -->
       <router-link to="/cnft" class="menu-link">🎨</router-link>
       <router-link to="/clicker" class="menu-link">🖱️</router-link>
+      <router-link to="/feed" class="menu-link">🎯</router-link>
     </div>
   </div>
 </template>
