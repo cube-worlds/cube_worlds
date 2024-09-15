@@ -1,7 +1,7 @@
 import { findUserById } from "#root/bot/models/user"
 import { config } from "#root/config"
 import { logger } from "#root/logger"
-import { validate } from "@tma.js/init-data-node"
+import { validate } from "@telegram-apps/init-data-node"
 import { FastifyInstance, FastifyRequest } from "fastify"
 
 interface Parameters {

@@ -98,7 +98,7 @@ onMounted(async () => {
     const start_param = initData.start_param
     if (start_param) {
       referId = getUserIdFromRefString(start_param)
-      console.log("start_param:", start_param)
+      console.log("referId:", referId)
     }
     const { user, error, login } = useAuth(useWebApp().initData, webAppUser.id, referId)
     if (error.value) {
