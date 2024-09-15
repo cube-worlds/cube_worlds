@@ -12,6 +12,7 @@ import FAQComponent from "./components/FAQ.vue";
 import PresentationComponent from "./components/Presentation.vue";
 import { fluent } from "./fluent";
 import ClickerComponent from "./components/Clicker.vue";
+import FeedComponent from "./components/Feed.vue";
 
 const routes = [
   // RESERVED: /cnfts /api
@@ -20,6 +21,7 @@ const routes = [
   { path: "/faq", name: "FAQPage", component: FAQComponent },
   { path: "/cnft", mame: "CNFTPage", component: CNFTComponent },
   { path: "/presentation", mame: "PresentationPage", component: PresentationComponent },
+  { path: "/feed", mame: "FeedPage", component: FeedComponent },
 ];
 
 const router = createRouter({

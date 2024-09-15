@@ -8,6 +8,7 @@ export interface UserStore {
   wallet: string;
   referalId: number | undefined;
   balance: number | undefined;
+  ip: string;
 }
 
 export const useUserStore = defineStore("userStore", () => {

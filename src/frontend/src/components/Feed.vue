@@ -20,7 +20,7 @@
             <img :src="item.icon" :alt="item.name" class="feed-icon" />
             <div class="feed-text">
               <h3>{{ item.name }}</h3>
-              <p>{{ item.description }}</p>
+              <p>{{ usdToPoints(item.payout) }} $CUBE</p>
             </div>
           </div>
           <button
@@ -44,10 +44,12 @@
 </template>
 
 <script setup lang="ts" name="FeedComponent">
-import { ref, onMounted, Ref, watch, onUpdated } from "vue"
-import { useUserStore } from "../stores/userStore"
-import useLoadingAndError from "../composables/useLoadingAndError"
+import { ref, onMounted, Ref, watch } from "vue"
 import axios from "axios"
+import useLoadingAndError from "../composables/useLoadingAndError"
+import { usdToPoints } from "../../../bot/helpers/points"
+import { sleep } from "../../../bot/helpers/time"
+import { useUserStore } from "../stores/userStore"
 
 interface TappAdsOffer {
   id: number
@@ -86,7 +88,7 @@ const fetchFeed = async () => {
       params: {
         apikey: tappAdsKey,
         user_id: userStore.user?.id,
-        ip: "0.0.0.0", // TODO!
+        ip: userStore.user?.ip ?? "0.0.0.0",
         ua: escape(navigator.userAgent),
       },
     })
@@ -103,9 +105,7 @@ const handleClick = async (item: any) => {
   try {
     loadingInstance.visible.value = true
     window.open(item.url, "_blank", "noopener,noreferrer")
-    await new Promise((resolve) => {
-      setTimeout(resolve, 1000)
-    })
+    await sleep(1000)
     const res = await axios.get(item.click_postback)
     if (res.data.is_done === true) {
       item.is_done = true

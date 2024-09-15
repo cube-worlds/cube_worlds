@@ -250,7 +250,11 @@ export async function placeInWhales(votes: bigint): Promise<number | undefined> 
   return count
 }
 
-export async function addPoints(userId: number, add: bigint, reason: BalanceChangeType) {
+export async function addPoints(
+  userId: number,
+  add: bigint,
+  reason: BalanceChangeType,
+): Promise<bigint> {
   try {
     const updatedUser = await UserModel.findOneAndUpdate(
       { id: userId },
@@ -262,14 +266,11 @@ export async function addPoints(userId: number, add: bigint, reason: BalanceChan
     }
 
     const newRecord = await addChangeBalanceRecord(userId, add, reason)
-    if (logger.level === "debug") {
-      logger.debug(
-        `Add ${newRecord.amount} points to ${userId}. Now ${await getAggregatedBalance(userId)}`,
-      )
-    }
+    logger.debug(
+      `Add ${newRecord.amount} points to user ${userId}. Now ${await getAggregatedBalance(userId)}`,
+    )
 
     logger.info(`Add ${add} points to ${userId}. Now ${updatedUser.votes}`)
-    // TODO: save log in db
     return updatedUser.votes
   } catch (error) {
     logger.error(`!!! Can't add points ${add} to user ${userId}`)

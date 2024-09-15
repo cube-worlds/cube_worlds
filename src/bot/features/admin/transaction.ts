@@ -6,7 +6,7 @@ import { fromNano } from "@ton/core"
 import { BalanceChangeType } from "#root/bot/models/balance"
 import { addPoints, findUserByName } from "../../models/user"
 import { findTransaction } from "../../models/transaction"
-import { tonToPoints } from "../../helpers/ton"
+import { tonToPoints } from "../../helpers/points"
 import { sendMessageToAdmins, sendPlaceInLine } from "../../helpers/telegram"
 
 const composer = new Composer<Context>()

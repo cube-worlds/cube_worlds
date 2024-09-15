@@ -12,7 +12,7 @@ import {
   getLastestTransaction,
 } from "#root/bot/models/transaction"
 import { AccountSubscription } from "#root/bot/helpers/account-subscription"
-import { tonToPoints } from "#root/bot/helpers/ton"
+import { tonToPoints } from "#root/bot/helpers/points"
 import { sendMessageToAdmins, sendPlaceInLine } from "#root/bot/helpers/telegram"
 import { BalanceChangeType } from "./bot/models/balance"
 
