@@ -4,13 +4,7 @@
       <router-link to="/" class="menu-link" active-class="active">🏠</router-link>
       <router-link to="/cnft" class="menu-link" active-class="active">🎨</router-link>
       <router-link to="/clicker" class="menu-link" active-class="active">🖱️</router-link>
-      <router-link
-        to="/tasks"
-        class="menu-link"
-        v-show="isDevelopment"
-        active-class="active"
-        >🎯</router-link
-      >
+      <router-link to="/tasks" class="menu-link" active-class="active">🎯</router-link>
 
       <!-- <router-link to="/nft" class="menu-link">🖼️</router-link> -->
       <!-- <router-link to="/game" class="menu-link">🎮</router-link> -->
