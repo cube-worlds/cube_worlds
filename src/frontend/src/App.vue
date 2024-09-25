@@ -4,11 +4,7 @@
     <div class="content-wrapper">
       <div class="top-bar">
         <div class="coin-balance">
-          {{
-            userStore.user?.balance
-              ? bigIntWithCustomSeparator(BigInt(userStore.user?.balance))
-              : "???"
-          }}
+          {{ bigIntWithCustomSeparator(userStore.balance) }}
           $CUBE
         </div>
         <div id="ton-connect"></div>

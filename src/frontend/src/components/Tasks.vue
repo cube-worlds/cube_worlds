@@ -125,6 +125,9 @@ const handleClick = async (item: any) => {
     const res = await axios.get(item.click_postback + addParams)
     if (res.data.is_done === true) {
       item.is_done = true
+      if (userStore.user?.balance && res.data.payout) {
+        userStore.setBalance(userStore.balance + usdToPoints(res.data.payout ?? 0))
+      }
     }
   } catch (err) {
     console.error("Error handling click:", err)
