@@ -1,7 +1,7 @@
 import { pino } from "pino"
 import { config } from "#root/config.js"
 
-export const logger = pino({
+export const loggerOptions = {
   level: config.LOG_LEVEL,
   transport: {
     targets: [
@@ -26,6 +26,8 @@ export const logger = pino({
           ]),
     ],
   },
-})
+}
+
+export const logger = pino(loggerOptions)
 
 export type Logger = typeof logger

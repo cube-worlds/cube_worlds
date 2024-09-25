@@ -1,7 +1,7 @@
 import fastify from "fastify"
 import { webhookCallback } from "grammy"
 import type { Bot } from "#root/bot/index.js"
-import { logger } from "#root/logger.js"
+import { logger, loggerOptions } from "#root/logger.js"
 import path from "node:path"
 import fastifyStatic from "@fastify/static"
 import { fileURLToPath } from "node:url"
@@ -12,7 +12,7 @@ import analyticsHandler from "./backend/analytics"
 
 export const createServer = async (bot: Bot) => {
   const server = fastify({
-    logger,
+    logger: loggerOptions,
   })
 
   server.setErrorHandler(async (error, _request, response) => {
