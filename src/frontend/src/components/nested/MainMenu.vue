@@ -5,7 +5,7 @@
       <router-link to="/cnft" class="menu-link" active-class="active">🎨</router-link>
       <router-link to="/clicker" class="menu-link" active-class="active">🖱️</router-link>
       <router-link
-        to="/feed"
+        to="/tasks"
         class="menu-link"
         v-show="isDevelopment"
         active-class="active"

@@ -12,7 +12,7 @@ import FAQComponent from "./components/FAQ.vue";
 import PresentationComponent from "./components/Presentation.vue";
 import { fluent } from "./fluent";
 import ClickerComponent from "./components/Clicker.vue";
-import FeedComponent from "./components/Feed.vue";
+import TasksComponent from "./components/Tasks.vue";
 
 const routes = [
   // RESERVED: /cnfts /api
@@ -24,7 +24,7 @@ const routes = [
 ];
 
 if (import.meta.env.VITE_ENV === "development") {
-  routes.push({ path: "/feed", mame: "FeedPage", component: FeedComponent });
+  routes.push({ path: "/tasks", mame: "TasksPage", component: TasksComponent });
 }
 
 const router = createRouter({

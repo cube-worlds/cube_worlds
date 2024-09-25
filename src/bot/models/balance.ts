@@ -9,6 +9,7 @@ export enum BalanceChangeType {
   Dice = 3,
   Referral = 4,
   Donation = 5, // TON
+  Task = 6,
 }
 
 export function getBalanceChangeTypeName(type: BalanceChangeType): string {

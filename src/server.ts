@@ -9,6 +9,7 @@ import { authHandler } from "./backend/auth-handler"
 import nftHandler from "./backend/nft-handler"
 import checkCaptcha from "./backend/captcha"
 import analyticsHandler from "./backend/analytics"
+import tappadsHandler from "./backend/tappads"
 
 export const createServer = async (bot: Bot) => {
   const server = fastify({
@@ -26,6 +27,8 @@ export const createServer = async (bot: Bot) => {
   await server.register(analyticsHandler, { prefix: "/api/analytics" })
 
   await server.register(nftHandler, { prefix: "/api/nft" })
+
+  await server.register(tappadsHandler, { prefix: "/api/tappads" })
 
   await server.register(checkCaptcha, { bot })
 

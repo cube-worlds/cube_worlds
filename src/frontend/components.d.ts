@@ -11,7 +11,6 @@ declare module 'vue' {
     Clicker: typeof import('./src/components/Clicker.vue')['default']
     CNFT: typeof import('./src/components/CNFT.vue')['default']
     FAQ: typeof import('./src/components/FAQ.vue')['default']
-    Feed: typeof import('./src/components/Feed.vue')['default']
     Header: typeof import('./src/components/Header.vue')['default']
     Main: typeof import('./src/components/Main.vue')['default']
     MainMenu: typeof import('./src/components/nested/MainMenu.vue')['default']
@@ -19,5 +18,6 @@ declare module 'vue' {
     Presentation: typeof import('./src/components/Presentation.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    Tasks: typeof import('./src/components/Tasks.vue')['default']
   }
 }
