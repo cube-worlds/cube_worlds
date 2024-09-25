@@ -121,7 +121,7 @@ const handleClick = async (item: any) => {
     const userId = userStore.user?.id
     const ip = userStore.user?.ip ?? "0.0.0.0"
     const ua = escape(navigator.userAgent)
-    const addParams = `&ip=${ip}&ua=${ua}&sub2=${userId}`
+    const addParams = `&ip=${ip}&ua=${ua}&sub3=${userId}`
     const res = await axios.get(item.click_postback + addParams)
     if (res.data.is_done === true) {
       item.is_done = true
