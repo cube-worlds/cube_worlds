@@ -21,11 +21,12 @@ const routes = [
   { path: "/faq", name: "FAQPage", component: FAQComponent },
   { path: "/cnft", mame: "CNFTPage", component: CNFTComponent },
   { path: "/presentation", mame: "PresentationPage", component: PresentationComponent },
+  { path: "/tasks", mame: "TasksPage", component: TasksComponent }
 ];
 
-if (import.meta.env.VITE_ENV === "development") {
-  routes.push({ path: "/tasks", mame: "TasksPage", component: TasksComponent });
-}
+// if (import.meta.env.VITE_ENV === "development") {
+//   routes.push({ path: "/tasks", mame: "TasksPage", component: TasksComponent });
+// }
 
 const router = createRouter({
   history: createWebHistory(),
