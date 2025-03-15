@@ -1,9 +1,10 @@
-import { config } from "#root/config.js"
-import pinataSDK from "@pinata/sdk"
-import { Readable } from "node:stream"
-import { saveImage, saveJSON } from "#root/bot/helpers/files"
-import fetch from "node-fetch"
-import { logger } from "#root/logger"
+import { Buffer } from 'node:buffer'
+import { Readable } from 'node:stream'
+import { saveImage, saveJSON } from '#root/bot/helpers/files'
+import { config } from '#root/config.js'
+import { logger } from '#root/logger'
+import pinataSDK from '@pinata/sdk'
+import fetch from 'node-fetch'
 
 // eslint-disable-next-line new-cap
 const pinata = new pinataSDK({
@@ -19,8 +20,8 @@ export async function pinImageURLToIPFS(
   const image = await fetch(imageURL)
   const arrayBuffer = await image.arrayBuffer()
   const buffer = Buffer.from(arrayBuffer)
-  const imageFileName = imageURL.slice((imageURL.lastIndexOf("/") ?? 0) + 1) ?? ""
-  const fileExtension = imageFileName.split(".").pop()
+  const imageFileName = imageURL.slice((imageURL.lastIndexOf('/') ?? 0) + 1) ?? ''
+  const fileExtension = imageFileName.split('.').pop()
   const newFileName = `${username}_${adminIndex}.${fileExtension}`
   saveImage(username, newFileName, buffer)
 
@@ -65,13 +66,13 @@ async function fetchFileFromIPFS(cid: string, gateway: string): Promise<Buffer> 
 export function warmIPFSHash(hash: string) {
   // https://ipfs.github.io/public-gateway-checker/
   const gateways = [
-    "https://ipfs.io/ipfs/",
-    "https://dweb.link/ipfs/",
-    "https://ipfs.eth.aragon.network/ipfs/",
-    "https://gateway.pinata.cloud/ipfs/",
-    "https://ipfs.eth.aragon.network/ipfs/",
+    'https://ipfs.io/ipfs/',
+    'https://dweb.link/ipfs/',
+    'https://ipfs.eth.aragon.network/ipfs/',
+    'https://gateway.pinata.cloud/ipfs/',
+    'https://ipfs.eth.aragon.network/ipfs/',
   ]
-  // eslint-disable-next-line no-restricted-syntax
+
   for (const gateway of gateways) {
     fetchFileFromIPFS(hash, gateway)
       .then(() => logger.debug(`Gateway ${gateway} warmed`))

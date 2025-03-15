@@ -1,11 +1,9 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { config } from "#root/config"
-import { logger } from "#root/logger"
-import axios from "axios"
-import crypto from "node:crypto"
-import NodeRSA from "node-rsa"
-import { Buffer } from "node:buffer"
+import type { Buffer } from 'node:buffer'
+import crypto from 'node:crypto'
+import { config } from '#root/config'
+import { logger } from '#root/logger'
+import axios from 'axios'
+import NodeRSA from 'node-rsa'
 
 export interface EventUserDetails {
   username?: string
@@ -29,8 +27,8 @@ export interface BaseEvent {
   telegramID: string
   language: string
   device: string
-  referrerType: string | "N/A"
-  referrer: string | "0"
+  referrerType: string | 'N/A'
+  referrer: string | '0'
   timestamp: string
   isAutocapture: boolean
   wallet: string | undefined
@@ -45,15 +43,16 @@ async function getEncryptionKeys(projectId: string, apiKey: string) {
       headers: { Authorization: `Bearer ${apiKey}` },
     })
     return response.data
-  } catch (error) {
-    logger.error("Error fetching encryption keys:", error)
+  }
+  catch (error) {
+    logger.error('Error fetching encryption keys:', error)
   }
 }
 
 // Function to encrypt data using RSA public key
 function rsaEncrypt(publicKeyString: string, message: Buffer) {
   const key = new NodeRSA(publicKeyString)
-  return key.encrypt(message, "base64")
+  return key.encrypt(message, 'base64')
 }
 
 // Function to generate a random AES key and IV
@@ -69,9 +68,9 @@ function aesEncrypt(
   iv: Buffer | crypto.BinaryLike | null,
   message: string,
 ) {
-  const cipher = crypto.createCipheriv("aes-128-cbc", key, iv)
-  let encrypted = cipher.update(message, "utf8", "base64")
-  encrypted += cipher.final("base64")
+  const cipher = crypto.createCipheriv('aes-128-cbc', key, iv)
+  let encrypted = cipher.update(message, 'utf8', 'base64')
+  encrypted += cipher.final('base64')
   return encrypted
 }
 
@@ -98,28 +97,29 @@ async function processEvent(event: object, publicKey: string, apiGateway: string
     // Send a POST request with the encrypted payload
     const response = await axios.post(apiGateway, payload, {
       headers: {
-        "Content-Type": "application/json",
-        "X-Api-Key": apiKey,
+        'Content-Type': 'application/json',
+        'X-Api-Key': apiKey,
       },
     })
 
     return response.data
-  } catch (error) {
+  }
+  catch (error) {
     logger.error(error)
   }
 }
 
-const analyticsHandler = (fastify: any, _options: any, done: () => void) => {
-  fastify.get("/config", async (_request: any, _reply: any) => {
+function analyticsHandler(fastify: any, _options: any, done: () => void) {
+  fastify.get('/config', async (_request: any, _reply: any) => {
     return getEncryptionKeys(config.TELEMETREE_PROJECT_ID, config.TELEMETREE_API_KEY)
   })
 
-  fastify.post("/send", async (_request: any, _reply: any) => {
+  fastify.post('/send', async (_request: any, _reply: any) => {
     // Example usage
-    const publicKey = "your_rsa_public_key" // Replace with the actual RSA public key
-    const apiKey = "your_telemetree_key" // Replace with your actual Telemetree API key
-    const apiGateway = "api-analytics.ton.solutions/events" // Replace with your actual API endpoint
-    const eventData = { event: "click" } // change
+    const publicKey = 'your_rsa_public_key' // Replace with the actual RSA public key
+    const apiKey = 'your_telemetree_key' // Replace with your actual Telemetree API key
+    const apiGateway = 'api-analytics.ton.solutions/events' // Replace with your actual API endpoint
+    const eventData = { event: 'click' } // change
 
     await processEvent(eventData, publicKey, apiGateway, apiKey)
       .then(response => logger.info(response))

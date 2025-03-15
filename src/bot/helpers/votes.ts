@@ -1,4 +1,4 @@
-import { Context } from "grammy"
+import type { Context } from 'grammy'
 
 export async function voteScore(ctx: Context): Promise<number> {
   const author = await ctx.getAuthor()

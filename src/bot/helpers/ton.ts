@@ -1,15 +1,14 @@
-/* eslint-disable no-plusplus */
-/* eslint-disable no-use-before-define */
-/* eslint-disable no-await-in-loop */
-import { mnemonicToPrivateKey } from "@ton/crypto"
-import { Address, beginCell, Cell, internal, SendMode, TonClient, WalletContractV4 } from "@ton/ton"
-import { config } from "#root/config.js"
-import { OpenedWallet } from "./wallet"
-import { sleep } from "./time"
+import type { Address } from '@ton/ton'
+import type { OpenedWallet } from './wallet'
+import { Buffer } from 'node:buffer'
+import { config } from '#root/config.js'
+import { mnemonicToPrivateKey } from '@ton/crypto'
+import { beginCell, Cell, internal, SendMode, TonClient, WalletContractV4 } from '@ton/ton'
+import { sleep } from './time'
 
 const toncenterBaseEndpoint: string = config.TESTNET
-  ? "https://testnet.toncenter.com"
-  : "https://toncenter.com"
+  ? 'https://testnet.toncenter.com'
+  : 'https://toncenter.com'
 
 export const tonClient = new TonClient({
   endpoint: `${toncenterBaseEndpoint}/api/v2/jsonRPC`,
@@ -56,7 +55,7 @@ function bufferToChunks(buff: Buffer, chunkSize: number) {
   const chunks: Buffer[] = []
   while (buff.byteLength > 0) {
     chunks.push(buff.slice(0, chunkSize))
-    // eslint-disable-next-line no-param-reassign
+
     buff = buff.slice(chunkSize)
   }
   return chunks
@@ -75,7 +74,6 @@ function makeSnakeCell(data: Buffer): Cell {
 
   let currentCell = beginCell()
 
-  // eslint-disable-next-line no-plusplus
   for (let index = chunks.length - 1; index >= 0; index--) {
     const chunk = chunks[index]
 
@@ -110,12 +108,12 @@ export async function waitSeqno(seqno: number, wallet: OpenedWallet, maxAttempts
 }
 
 const stopList = new Set([
-  "EQA2JYPGPywx6Sn590nUd06B2HgOkFvJ-cCnTO6yTEdacbUG", // @wallet
-  "UQBX63RAdgShn34EAFMV73Cut7Z15lUZd1hnVva68SEl7pGn", // MEXC
-  "UQCFr3jo0DXpIBF82mVGFc3zcdRkSAtinhENPFMQ2FqzYv0E", // Huobi
-  "UQDD8dqOzaj4zUK6ziJOo_G2lx6qf1TEktTRkFJ7T1c_fKne", // Bybit
-  "UQBfAN7LfaUYgXZNw5Wc7GBgkEX2yhuJ5ka95J1JJwXXf9t5", // OKX
-  "UQCA1BI4QRZ8qYmskSRDzJmkucGodYRTZCf_b9hckjla6Yug", // Kucoin
+  'EQA2JYPGPywx6Sn590nUd06B2HgOkFvJ-cCnTO6yTEdacbUG', // @wallet
+  'UQBX63RAdgShn34EAFMV73Cut7Z15lUZd1hnVva68SEl7pGn', // MEXC
+  'UQCFr3jo0DXpIBF82mVGFc3zcdRkSAtinhENPFMQ2FqzYv0E', // Huobi
+  'UQDD8dqOzaj4zUK6ziJOo_G2lx6qf1TEktTRkFJ7T1c_fKne', // Bybit
+  'UQBfAN7LfaUYgXZNw5Wc7GBgkEX2yhuJ5ka95J1JJwXXf9t5', // OKX
+  'UQCA1BI4QRZ8qYmskSRDzJmkucGodYRTZCf_b9hckjla6Yug', // Kucoin
 ])
 
 export function isUserAddressValid(a: Address): boolean {
@@ -126,7 +124,8 @@ export function isUserAddressValid(a: Address): boolean {
   }
   try {
     return a.workChain === 0 || a.workChain === -1
-  } catch {
+  }
+  catch {
     return false
   }
 }

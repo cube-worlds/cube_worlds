@@ -1,10 +1,6 @@
-/* eslint-disable no-await-in-loop */
-/* eslint-disable no-restricted-syntax */
-/* eslint-disable no-param-reassign */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { logger } from "#root/logger"
-import TonWeb from "tonweb"
-import { sleep } from "#root/bot/helpers/time.js"
+import type TonWeb from 'tonweb'
+import { sleep } from '#root/bot/helpers/time.js'
+import { logger } from '#root/logger'
 
 export class AccountSubscription {
   tonweb: TonWeb
@@ -35,7 +31,8 @@ export class AccountSubscription {
         logger.debug(
           `Get ${COUNT} transactions before transaction ${offsetTransactionLT}:${offsetTransactionHash}`,
         )
-      } else {
+      }
+      else {
         logger.debug(`Get last ${COUNT} transactions`)
       }
 
@@ -54,7 +51,8 @@ export class AccountSubscription {
           undefined,
           true,
         )
-      } catch (error) {
+      }
+      catch (error) {
         logger.error(error)
         // if an API error occurs, try again
         retryCount += 1
@@ -73,7 +71,8 @@ export class AccountSubscription {
         return time
       }
 
-      if (!time) time = transactions[0].utime
+      if (!time)
+        time = transactions[0].utime
 
       for (const tx of transactions) {
         if (tx.utime < this.startTime) {
@@ -94,7 +93,8 @@ export class AccountSubscription {
     let isProcessing = false
 
     const tick = async () => {
-      if (isProcessing) return
+      if (isProcessing)
+        return
       isProcessing = true
 
       try {
@@ -102,7 +102,8 @@ export class AccountSubscription {
         if ((result ?? 0) > 0) {
           this.startTime = result // store in your database
         }
-      } catch (error) {
+      }
+      catch (error) {
         logger.error(error)
       }
 

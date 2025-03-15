@@ -1,41 +1,41 @@
-import { BotCommand, LanguageCode } from "@grammyjs/types"
-import { CommandContext } from "grammy"
-import { i18n, isMultipleLocales } from "#root/bot/i18n.js"
-import { config } from "#root/config.js"
-import type { Context } from "#root/bot/context.js"
+import type { Context } from '#root/bot/context.js'
+import type { BotCommand, LanguageCode } from '@grammyjs/types'
+import type { CommandContext } from 'grammy'
+import { i18n, isMultipleLocales } from '#root/bot/i18n.js'
+import { config } from '#root/config.js'
 
 function getLanguageCommand(localeCode: string): BotCommand {
   return {
-    command: "language",
-    description: i18n.t(localeCode, "language_command.description"),
+    command: 'language',
+    description: i18n.t(localeCode, 'language_command.description'),
   }
 }
 
 function getPrivateChatCommands(localeCode: string): BotCommand[] {
   return [
     {
-      command: "start",
-      description: i18n.t(localeCode, "start_command.description"),
+      command: 'start',
+      description: i18n.t(localeCode, 'start_command.description'),
     },
     {
-      command: "mint",
-      description: i18n.t(localeCode, "mint_command.description"),
+      command: 'mint',
+      description: i18n.t(localeCode, 'mint_command.description'),
     },
     {
-      command: "play",
-      description: i18n.t(localeCode, "play_command.description"),
+      command: 'play',
+      description: i18n.t(localeCode, 'play_command.description'),
     },
     {
-      command: "line",
-      description: i18n.t(localeCode, "line_command.description"),
+      command: 'line',
+      description: i18n.t(localeCode, 'line_command.description'),
     },
     {
-      command: "dice",
-      description: i18n.t(localeCode, "dice_command.description"),
+      command: 'dice',
+      description: i18n.t(localeCode, 'dice_command.description'),
     },
     {
-      command: "whales",
-      description: i18n.t(localeCode, "whales_command.description"),
+      command: 'whales',
+      description: i18n.t(localeCode, 'whales_command.description'),
     },
   ]
 }
@@ -43,59 +43,58 @@ function getPrivateChatCommands(localeCode: string): BotCommand[] {
 function getPrivateChatAdminCommands(localeCode: string): BotCommand[] {
   return [
     {
-      command: "queue",
-      description: "🔥 Show queue",
+      command: 'queue',
+      description: '🔥 Show queue',
     },
     {
-      command: "description",
-      description: "🏞️ Custom description",
+      command: 'description',
+      description: '🏞️ Custom description',
     },
     {
-      command: "user",
-      description: "🙍🏻‍♂️ Info about user",
+      command: 'user',
+      description: '🙍🏻‍♂️ Info about user',
     },
     {
-      command: "positive",
-      description: "👍 Positive prompt",
+      command: 'positive',
+      description: '👍 Positive prompt',
     },
     {
-      command: "negative",
-      description: "👎 Negative prompt",
+      command: 'negative',
+      description: '👎 Negative prompt',
     },
     {
-      command: "strength",
-      description: "💪 Strength for images",
+      command: 'strength',
+      description: '💪 Strength for images',
     },
     {
-      command: "scale",
-      description: "⚖️ Scale for images",
+      command: 'scale',
+      description: '⚖️ Scale for images',
     },
     {
-      command: "steps",
-      description: "🦶 Steps for images",
+      command: 'steps',
+      description: '🦶 Steps for images',
     },
     {
-      command: "preset",
-      description: "🎛️ Preset for images",
+      command: 'preset',
+      description: '🎛️ Preset for images',
     },
     {
-      command: "sampler",
-      description: "🎚️ Sampler for images",
+      command: 'sampler',
+      description: '🎚️ Sampler for images',
     },
     {
-      command: "setcommands",
-      description: i18n.t(localeCode, "setcommands_command.description"),
+      command: 'setcommands',
+      description: i18n.t(localeCode, 'setcommands_command.description'),
     },
   ]
 }
 
-// eslint-disable-next-line no-unused-vars
 function getGroupChatCommands(_localeCode: string): BotCommand[] {
   return []
 }
 
 export async function setCommandsHandler(ctx: CommandContext<Context>) {
-  const DEFAULT_LANGUAGE_CODE = "en"
+  const DEFAULT_LANGUAGE_CODE = 'en'
 
   // set private chat commands
   await ctx.api.setMyCommands(
@@ -105,7 +104,7 @@ export async function setCommandsHandler(ctx: CommandContext<Context>) {
     ],
     {
       scope: {
-        type: "all_private_chats",
+        type: 'all_private_chats',
       },
     },
   )
@@ -120,7 +119,7 @@ export async function setCommandsHandler(ctx: CommandContext<Context>) {
         {
           language_code: code as LanguageCode,
           scope: {
-            type: "all_private_chats",
+            type: 'all_private_chats',
           },
         },
       ),
@@ -132,7 +131,7 @@ export async function setCommandsHandler(ctx: CommandContext<Context>) {
   // set group chat commands
   await ctx.api.setMyCommands(getGroupChatCommands(DEFAULT_LANGUAGE_CODE), {
     scope: {
-      type: "all_group_chats",
+      type: 'all_group_chats',
     },
   })
 
@@ -141,7 +140,7 @@ export async function setCommandsHandler(ctx: CommandContext<Context>) {
       ctx.api.setMyCommands(getGroupChatCommands(code), {
         language_code: code as LanguageCode,
         scope: {
-          type: "all_group_chats",
+          type: 'all_group_chats',
         },
       }),
     )
@@ -151,14 +150,14 @@ export async function setCommandsHandler(ctx: CommandContext<Context>) {
 
     // when the chat is empty
     const descriptionRequests = i18n.locales.map(code =>
-      ctx.api.setMyDescription(i18n.t(code, "bot.description"), {
+      ctx.api.setMyDescription(i18n.t(code, 'bot.description'), {
         language_code: code as LanguageCode,
       }),
     )
 
     // bot's profile page and in share links
     const shortDescriptionRequests = i18n.locales.map(code =>
-      ctx.api.setMyShortDescription(i18n.t(code, "bot.short_description"), {
+      ctx.api.setMyShortDescription(i18n.t(code, 'bot.short_description'), {
         language_code: code as LanguageCode,
       }),
     )
@@ -166,9 +165,8 @@ export async function setCommandsHandler(ctx: CommandContext<Context>) {
   }
 
   // set private chat commands for owner
-  // eslint-disable-next-line no-restricted-syntax
+
   for (const adminId of config.BOT_ADMINS) {
-    // eslint-disable-next-line no-await-in-loop
     await ctx.api.setMyCommands(
       [
         ...getPrivateChatCommands(DEFAULT_LANGUAGE_CODE),
@@ -177,12 +175,12 @@ export async function setCommandsHandler(ctx: CommandContext<Context>) {
       ],
       {
         scope: {
-          type: "chat",
+          type: 'chat',
           chat_id: adminId,
         },
       },
     )
   }
 
-  return ctx.reply(ctx.t("admin.commands-updated"))
+  return ctx.reply(ctx.t('admin.commands-updated'))
 }

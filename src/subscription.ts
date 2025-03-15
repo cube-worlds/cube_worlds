@@ -1,20 +1,20 @@
-import { config } from "#root/config.js"
-import { logger } from "#root/logger"
-import TonWeb from "tonweb"
-import { Address, fromNano } from "@ton/core"
-import { Bot, Api, RawApi } from "grammy"
-import { addPoints, findUserByAddress } from "#root/bot/models/user"
-import { i18n } from "#root/bot/i18n"
-import { Context } from "#root/bot/context"
+import type { Context } from '#root/bot/context'
+import type { Api, Bot, RawApi } from 'grammy'
+import { AccountSubscription } from '#root/bot/helpers/account-subscription'
+import { tonToPoints } from '#root/bot/helpers/points'
+import { sendMessageToAdmins, sendPlaceInLine } from '#root/bot/helpers/telegram'
+import { i18n } from '#root/bot/i18n'
 import {
-  TransactionModel,
   findTransaction,
   getLastestTransaction,
-} from "#root/bot/models/transaction"
-import { AccountSubscription } from "#root/bot/helpers/account-subscription"
-import { tonToPoints } from "#root/bot/helpers/points"
-import { sendMessageToAdmins, sendPlaceInLine } from "#root/bot/helpers/telegram"
-import { BalanceChangeType } from "./bot/models/balance"
+  TransactionModel,
+} from '#root/bot/models/transaction'
+import { addPoints, findUserByAddress } from '#root/bot/models/user'
+import { config } from '#root/config.js'
+import { logger } from '#root/logger'
+import { Address, fromNano } from '@ton/core'
+import TonWeb from 'tonweb'
+import { BalanceChangeType } from './bot/models/balance'
 
 export class Subscription {
   bot: Bot<Context, Api<RawApi>>
@@ -26,13 +26,12 @@ export class Subscription {
 
     this.tonweb = new TonWeb(
       new TonWeb.HttpProvider(
-        `https://${config.TESTNET ? "testnet." : ""}toncenter.com/api/v2/jsonRPC`,
+        `https://${config.TESTNET ? 'testnet.' : ''}toncenter.com/api/v2/jsonRPC`,
         { apiKey: config.TONCENTER_API_KEY },
       ),
     )
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onTransaction = async (tx: any) => {
     // It is important to check that Toncoins did not bounce back in case of an error
     if (!tx.in_msg.source || tx.out_msgs.length > 0) {
@@ -82,12 +81,12 @@ export class Subscription {
 
     await addPoints(user.id, points, BalanceChangeType.Donation)
 
-    await this.bot.api.sendMessage(user.id, i18n.t(user.language, "donation", { ton }))
+    await this.bot.api.sendMessage(user.id, i18n.t(user.language, 'donation', { ton }))
 
     await sendPlaceInLine(this.bot.api, user.id, true)
     await sendMessageToAdmins(
       this.bot.api,
-      `🚀 RECEIVED ${ton} TON FROM @${user.name}${message ? ` with message "${message}"` : ""}. Minted: ${user.minted ? "✅" : "❌"}`,
+      `🚀 RECEIVED ${ton} TON FROM @${user.name}${message ? ` with message "${message}"` : ''}. Minted: ${user.minted ? '✅' : '❌'}`,
     )
   }
 

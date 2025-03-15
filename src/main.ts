@@ -1,12 +1,14 @@
 #!/usr/bin/env tsx
-import { onShutdown } from "node-graceful-shutdown"
-import mongoose from "mongoose"
-import { createBot } from "#root/bot/index.js"
-import { config } from "#root/config.js"
-import { logger } from "#root/logger.js"
-import { createServer } from "#root/server.js"
-import { Subscription } from "#root/subscription.js"
-import { createInitialBalancesIfNotExists } from "#root/bot/models/user.js"
+/* eslint-disable antfu/no-top-level-await */
+import process from 'node:process'
+import { createBot } from '#root/bot/index.js'
+import { createInitialBalancesIfNotExists } from '#root/bot/models/user.js'
+import { config } from '#root/config.js'
+import { logger } from '#root/logger.js'
+import { createServer } from '#root/server.js'
+import { Subscription } from '#root/subscription.js'
+import mongoose from 'mongoose'
+import { onShutdown } from 'node-graceful-shutdown'
 
 try {
   await mongoose.connect(config.MONGO)
@@ -14,19 +16,25 @@ try {
   await createInitialBalancesIfNotExists()
   const server = await createServer(bot)
 
-  // Graceful shutdown
-  onShutdown(async () => {
-    logger.info("shutdown")
-
+  async function shutdown() {
+    logger.info('shutdown')
     await server.close()
     await bot.stop()
+  }
+
+  process.once('SIGINT', async () => await shutdown())
+  process.once('SIGTERM', async () => await shutdown())
+
+  // Graceful shutdown
+  onShutdown(async () => {
+    await shutdown()
   })
 
   const subscription = new Subscription(bot)
-  // eslint-disable-next-line no-void
+
   void subscription.startProcessTransactions()
 
-  if (config.BOT_MODE === "webhook") {
+  if (config.BOT_MODE === 'webhook') {
     // to prevent receiving updates before the bot is ready
     await bot.init()
 
@@ -38,21 +46,16 @@ try {
     await bot.api.setWebhook(config.BOT_WEBHOOK, {
       allowed_updates: config.BOT_ALLOWED_UPDATES,
     })
-  } else if (config.BOT_MODE === "polling") {
+  }
+  else if (config.BOT_MODE === 'polling') {
     await server.listen({
       host: config.BOT_SERVER_HOST,
       port: config.BOT_SERVER_PORT,
     })
-    await bot.start({
-      allowed_updates: config.BOT_ALLOWED_UPDATES,
-      onStart: ({ username }) =>
-        logger.info({
-          msg: "Bot running...",
-          username,
-        }),
-    })
+    await bot.start()
   }
-} catch (error) {
+}
+catch (error) {
   logger.error(error)
   process.exit(1)
 }

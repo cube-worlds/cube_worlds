@@ -1,9 +1,9 @@
-import { ref } from "vue";
-import { authenticateUser } from "../services/auth-service";
+import { ref } from 'vue'
+import { authenticateUser } from '../services/auth-service'
 
-export const useAuth = (initData: string, userId: number, referId: number | undefined) => {
-  const user = ref();
-  const error = ref();
+export function useAuth(initData: string, userId: number, referId: number | undefined) {
+  const user = ref()
+  const error = ref()
 
   const login = async () => {
     try {
@@ -13,19 +13,20 @@ export const useAuth = (initData: string, userId: number, referId: number | unde
       //   user.value = userModel;
       //   return;
       // }
-      const userModel = await authenticateUser(initData, userId, referId);
-      user.value = userModel;
-      sessionStorage.setItem("user", JSON.stringify(userModel));
+      const userModel = await authenticateUser(initData, userId, referId)
+      user.value = userModel
+      sessionStorage.setItem('user', JSON.stringify(userModel))
       return true
-    } catch (error_) {
+    }
+    catch (error_) {
       error.value = error_
       return false
     }
-  };
+  }
 
   return {
     user,
     error,
     login,
-  };
-};
+  }
+}

@@ -1,44 +1,46 @@
-import { queueMenu } from "#root/bot/keyboards/queue-menu.js"
-import { autoChatAction } from "@grammyjs/auto-chat-action"
-import { hydrate } from "@grammyjs/hydrate"
-import { hydrateReply, parseMode } from "@grammyjs/parse-mode"
-import { BotConfig, StorageAdapter, Bot as TelegramBot, session } from "grammy"
-import { autoRetry } from "@grammyjs/auto-retry"
-import { Context, SessionData, createContextConstructor } from "#root/bot/context.js"
+import type { Context, SessionData } from '#root/bot/context.js'
+import type { BotConfig, StorageAdapter } from 'grammy'
+import { createContextConstructor } from '#root/bot/context.js'
 import {
-  adminFeature,
-  languageFeature,
-  unhandledFeature,
-  resetFeature,
-  mintFeature,
-  startFeature,
-  diceFeature,
-  queueFeature,
-  collectionFeature,
-  topupFeature,
-  parametersFeature,
-  whalesFeature,
-  lineFeature,
-  transactionFeature,
-  webappFeature,
-  addressesFeature,
-  statsFeature,
-  playFeature,
   accountsFeature,
+  addressesFeature,
+  adminFeature,
   balanceFeature,
-} from "#root/bot/features/index.js"
-import { errorHandler } from "#root/bot/handlers/index.js"
-import { i18n, isMultipleLocales } from "#root/bot/i18n.js"
-import { updateLogger } from "#root/bot/middlewares/index.js"
-import { config } from "#root/config.js"
-import { logger } from "#root/logger.js"
-import attachUser from "#root/bot/middlewares/attach-user.js"
-import slapReaction from "./middlewares/reaction"
-import { userFeature } from "./features/admin/user"
+  collectionFeature,
+  diceFeature,
+  languageFeature,
+  lineFeature,
+  mintFeature,
+  parametersFeature,
+  playFeature,
+  queueFeature,
+  resetFeature,
+  startFeature,
+  statsFeature,
+  topupFeature,
+  transactionFeature,
+  unhandledFeature,
+  webappFeature,
+  whalesFeature,
+} from '#root/bot/features/index.js'
+import { errorHandler } from '#root/bot/handlers/index.js'
+import { i18n, isMultipleLocales } from '#root/bot/i18n.js'
+import { queueMenu } from '#root/bot/keyboards/queue-menu.js'
+import attachUser from '#root/bot/middlewares/attach-user.js'
+import { updateLogger } from '#root/bot/middlewares/index.js'
+import { config } from '#root/config.js'
+import { logger } from '#root/logger.js'
+import { autoChatAction } from '@grammyjs/auto-chat-action'
+import { autoRetry } from '@grammyjs/auto-retry'
+import { hydrate } from '@grammyjs/hydrate'
+import { hydrateReply, parseMode } from '@grammyjs/parse-mode'
+import { session, Bot as TelegramBot } from 'grammy'
+import { userFeature } from './features/admin/user'
+import slapReaction from './middlewares/reaction'
 
-type Options = {
+interface Options {
   sessionStorage?: StorageAdapter<SessionData>
-  config?: Omit<BotConfig<Context>, "ContextConstructor">
+  config?: Omit<BotConfig<Context>, 'ContextConstructor'>
 }
 
 export function createBot(token: string, options: Options) {
@@ -50,7 +52,7 @@ export function createBot(token: string, options: Options) {
   const protectedBot = bot.errorBoundary(errorHandler)
 
   // Middlewares
-  bot.api.config.use(parseMode("HTML"))
+  bot.api.config.use(parseMode('HTML'))
   bot.api.config.use(autoRetry())
 
   if (config.isDev) {

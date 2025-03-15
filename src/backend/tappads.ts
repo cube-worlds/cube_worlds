@@ -1,14 +1,12 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable camelcase */
-import { usdToPoints } from "#root/bot/helpers/points"
-import { BalanceChangeType } from "#root/bot/models/balance"
-import { addPoints, findUserById } from "#root/bot/models/user"
-import { config } from "#root/config"
-import { logger } from "#root/logger"
+import { usdToPoints } from '#root/bot/helpers/points'
+import { BalanceChangeType } from '#root/bot/models/balance'
+import { addPoints, findUserById } from '#root/bot/models/user'
+import { config } from '#root/config'
+import { logger } from '#root/logger'
 
-const tappadsHandler = (fastify: any, _options: any, done: () => void) => {
+function tappadsHandler(fastify: any, _options: any, done: () => void) {
   const secretUrl = config.TAPPADS_SECRET_URL
-  // eslint-disable-next-line no-unused-vars
+
   fastify.get(secretUrl, async (request: any, _reply: any) => {
     const { offer, payout, currency, goal_id, clickid, sub3 } = request.query
     if (sub3) {

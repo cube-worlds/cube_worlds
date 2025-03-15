@@ -1,10 +1,10 @@
-import { defineConfig } from "vite";
-import vue from "@vitejs/plugin-vue";
-import AutoImport from "unplugin-auto-import/vite";
-import Components from "unplugin-vue-components/vite";
-import { ElementPlusResolver } from "unplugin-vue-components/resolvers";
-import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfill";
-import rollupNodePolyFill from "rollup-plugin-polyfill-node";
+import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill'
+import vue from '@vitejs/plugin-vue'
+import rollupNodePolyFill from 'rollup-plugin-polyfill-node'
+import AutoImport from 'unplugin-auto-import/vite'
+import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
+import Components from 'unplugin-vue-components/vite'
+import { defineConfig } from 'vite'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -21,7 +21,7 @@ export default defineConfig({
     esbuildOptions: {
       // Node.js global to browser globalThis
       define: {
-        global: "globalThis",
+        global: 'globalThis',
       },
       // Enable esbuild polyfill plugins
       plugins: [
@@ -36,4 +36,4 @@ export default defineConfig({
       plugins: [rollupNodePolyFill()],
     },
   },
-});
+})

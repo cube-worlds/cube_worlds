@@ -1,8 +1,9 @@
-import { modelOptions, prop, getModelForClass, DocumentType } from "@typegoose/typegoose"
+import type { DocumentType } from '@typegoose/typegoose'
+import { getModelForClass, modelOptions, prop } from '@typegoose/typegoose'
 
 @modelOptions({
   schemaOptions: { timestamps: false },
-  options: { customName: "tx" },
+  options: { customName: 'tx' },
 })
 export class Transaction {
   @prop({ type: Number, required: true, index: true })

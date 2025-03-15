@@ -1,20 +1,20 @@
 {
   "compilerOptions": {
-    "experimentalDecorators": true,
-    "strict": true,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "preserveWatchOutput": true,
-    "noEmit": true,
-    "module": "ES2022",
     "target": "ES2021",
-    "moduleResolution": "Node10",
-    "sourceMap": true,
-    "outDir": "build",
+    "experimentalDecorators": true,
     "rootDir": ".",
+    "module": "ES2022",
+    "moduleResolution": "Node10",
     "paths": {
       "#root/*": ["./src/*"]
-    }
+    },
+    "strict": true,
+    "noEmit": true,
+    "outDir": "build",
+    "sourceMap": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "preserveWatchOutput": true
   },
   "include": ["src/**/*"],
   "exclude": ["src/frontend/components.d.ts"]

@@ -1,5 +1,5 @@
-import { modelOptions, prop, getModelForClass } from "@typegoose/typegoose"
-import { TimeStamps } from "@typegoose/typegoose/lib/defaultClasses.js"
+import { getModelForClass, modelOptions, prop } from '@typegoose/typegoose'
+import { TimeStamps } from '@typegoose/typegoose/lib/defaultClasses.js'
 
 @modelOptions({
   schemaOptions: { timestamps: true },

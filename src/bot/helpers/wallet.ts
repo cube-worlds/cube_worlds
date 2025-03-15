@@ -1,8 +1,8 @@
-import { OpenedContract } from "@ton/core"
-import { KeyPair } from "@ton/crypto"
-import { WalletContractV4 } from "@ton/ton"
+import type { OpenedContract } from '@ton/core'
+import type { KeyPair } from '@ton/crypto'
+import type { WalletContractV4 } from '@ton/ton'
 
-export type OpenedWallet = {
+export interface OpenedWallet {
   contract: OpenedContract<WalletContractV4>
   keyPair: KeyPair
 }

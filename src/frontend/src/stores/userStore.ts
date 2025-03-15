@@ -1,27 +1,28 @@
-import { ConnectedWallet } from "@tonconnect/ui";
-import { defineStore } from "pinia";
-import { ref, Ref } from "vue";
+import type { ConnectedWallet } from '@tonconnect/ui'
+import type { Ref } from 'vue'
+import { defineStore } from 'pinia'
+import { ref } from 'vue'
 
 export interface UserStore {
-  id: number;
-  language: string;
-  wallet: string;
-  referalId: number | undefined;
-  balance: string | undefined;
-  ip: string;
+  id: number
+  language: string
+  wallet: string
+  referalId: number | undefined
+  balance: string | undefined
+  ip: string
 }
 
-export const useUserStore = defineStore("userStore", () => {
-  const wallet: Ref<ConnectedWallet | undefined> = ref();
-  const user: Ref<UserStore | undefined> = ref();
+export const useUserStore = defineStore('userStore', () => {
+  const wallet: Ref<ConnectedWallet | undefined> = ref()
+  const user: Ref<UserStore | undefined> = ref()
   const balance = ref(BigInt(0))
 
   function setWallet(value: ConnectedWallet | undefined) {
-    wallet.value = value;
+    wallet.value = value
   }
 
   function setUser(value: UserStore) {
-    user.value = value;
+    user.value = value
     setBalance(value.balance)
   }
 
@@ -32,5 +33,5 @@ export const useUserStore = defineStore("userStore", () => {
     balance.value = BigInt(value)
   }
 
-  return { wallet, setWallet, user, setUser, balance, setBalance };
+  return { wallet, setWallet, user, setUser, balance, setBalance }
 })

@@ -1,6 +1,5 @@
-/* eslint-disable no-restricted-syntax */
-import { modelOptions, prop, getModelForClass } from "@typegoose/typegoose"
-import { getEnumKeyByValue } from "../helpers/enum"
+import { getModelForClass, modelOptions, prop } from '@typegoose/typegoose'
+import { getEnumKeyByValue } from '../helpers/enum'
 
 export enum BalanceChangeType {
   Initial = 0,
@@ -13,7 +12,7 @@ export enum BalanceChangeType {
 }
 
 export function getBalanceChangeTypeName(type: BalanceChangeType): string {
-  return getEnumKeyByValue(BalanceChangeType, type) ?? "Unknown"
+  return getEnumKeyByValue(BalanceChangeType, type) ?? 'Unknown'
 }
 
 @modelOptions({
@@ -67,7 +66,7 @@ export async function getAggregatedBalance(userId: number): Promise<bigint> {
     {
       $group: {
         _id: undefined,
-        amount: { $sum: "$amount" },
+        amount: { $sum: '$amount' },
       },
     },
   ])

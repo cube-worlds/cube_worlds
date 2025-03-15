@@ -1,19 +1,19 @@
-import { Update, UserFromGetMe } from "@grammyjs/types"
-import { Context as DefaultContext, SessionFlavor, type Api } from "grammy"
-import type { AutoChatActionFlavor } from "@grammyjs/auto-chat-action"
-import type { HydrateFlavor } from "@grammyjs/hydrate"
-import type { I18nFlavor } from "@grammyjs/i18n"
-import type { ParseModeFlavor } from "@grammyjs/parse-mode"
-import type { Logger } from "#root/logger.js"
-import { User } from "#root/bot/models/user.js"
-import { DocumentType } from "@typegoose/typegoose"
+import type { User } from '#root/bot/models/user.js'
+import type { Logger } from '#root/logger.js'
+import type { AutoChatActionFlavor } from '@grammyjs/auto-chat-action'
+import type { HydrateFlavor } from '@grammyjs/hydrate'
+import type { I18nFlavor } from '@grammyjs/i18n'
+import type { ParseModeFlavor } from '@grammyjs/parse-mode'
+import type { Update, UserFromGetMe } from '@grammyjs/types'
+import type { DocumentType } from '@typegoose/typegoose'
+import type { Api, SessionFlavor } from 'grammy'
+import { Context as DefaultContext } from 'grammy'
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export type SessionData = {
+export interface SessionData {
   // field?: string
 }
 
-type ExtendedContextFlavor = {
+interface ExtendedContextFlavor {
   dbuser: DocumentType<User>
   logger: Logger
 }
@@ -21,10 +21,10 @@ type ExtendedContextFlavor = {
 export type Context = ParseModeFlavor<
   HydrateFlavor<
     DefaultContext &
-      ExtendedContextFlavor &
-      SessionFlavor<SessionData> &
-      I18nFlavor &
-      AutoChatActionFlavor
+    ExtendedContextFlavor &
+    SessionFlavor<SessionData> &
+    I18nFlavor &
+    AutoChatActionFlavor
   >
 >
 

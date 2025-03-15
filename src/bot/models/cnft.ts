@@ -1,27 +1,28 @@
-import { Address } from "@ton/core"
-import { DocumentType, getModelForClass, modelOptions, prop } from "@typegoose/typegoose"
+import type { DocumentType } from '@typegoose/typegoose'
+import { Address } from '@ton/core'
+import { getModelForClass, modelOptions, prop } from '@typegoose/typegoose'
 
 export enum CNFTImageType {
-  Dice = "Dice",
-  Whale = "Whale",
-  Diamond = "Diamond",
-  Coin = "Coin",
-  Knight = "Knight",
-  Common = "Common",
+  Dice = 'Dice',
+  Whale = 'Whale',
+  Diamond = 'Diamond',
+  Coin = 'Coin',
+  Knight = 'Knight',
+  Common = 'Common',
 }
 
 const colors = [
-  "#000000",
-  "#000099",
-  "#00FF33",
-  "#FF00FF",
-  "#FF0099",
-  "#FF6600",
-  "#99FF00",
-  "#FF3300",
-  "#9933FF",
-  "#3300FF",
-  "#00CCFF",
+  '#000000',
+  '#000099',
+  '#00FF33',
+  '#FF00FF',
+  '#FF0099',
+  '#FF6600',
+  '#99FF00',
+  '#FF3300',
+  '#9933FF',
+  '#3300FF',
+  '#00CCFF',
 ]
 
 export function cnftHexColor(colorNumber: number): string {
@@ -103,13 +104,17 @@ export async function addCNFT(
   let type: CNFTImageType = CNFTImageType.Common
   if (diceWinner) {
     type = CNFTImageType.Dice
-  } else if (votes > BigInt(1_000_000)) {
+  }
+  else if (votes > BigInt(1_000_000)) {
     type = CNFTImageType.Whale
-  } else if (votes > BigInt(500_000)) {
+  }
+  else if (votes > BigInt(500_000)) {
     type = CNFTImageType.Diamond
-  } else if (votes > BigInt(100_000)) {
+  }
+  else if (votes > BigInt(100_000)) {
     type = CNFTImageType.Coin
-  } else if (referrals > 0) {
+  }
+  else if (referrals > 0) {
     type = CNFTImageType.Knight
   }
 

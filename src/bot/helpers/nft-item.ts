@@ -1,13 +1,14 @@
-/* eslint-disable no-await-in-loop */
-import { Address, beginCell, Cell, internal, SendMode, toNano } from "@ton/core"
-import { OpenedWallet } from "#root/bot/helpers/wallet.js"
-import { config } from "#root/config.js"
-import { logger } from "#root/logger.js"
-import { NftCollection } from "#root/bot/helpers/nft-collection.js"
-import { openWallet, waitSeqno } from "#root/bot/helpers/ton.js"
-import { sleep } from "./time"
+import type { OpenedWallet } from '#root/bot/helpers/wallet.js'
+import type { Cell } from '@ton/core'
+import { Buffer } from 'node:buffer'
+import { NftCollection } from '#root/bot/helpers/nft-collection.js'
+import { openWallet, waitSeqno } from '#root/bot/helpers/ton.js'
+import { config } from '#root/config.js'
+import { logger } from '#root/logger.js'
+import { Address, beginCell, internal, SendMode, toNano } from '@ton/core'
+import { sleep } from './time'
 
-export type NFTMintParameters = {
+export interface NFTMintParameters {
   queryId: number
   itemOwnerAddress: Address
   itemIndex: number
@@ -17,7 +18,7 @@ export type NFTMintParameters = {
 
 export class NftItem {
   public async deployNFT(parameters: NFTMintParameters): Promise<string> {
-    const wallet = await openWallet(config.MNEMONICS.split(" "))
+    const wallet = await openWallet(config.MNEMONICS.split(' '))
     const seqno = await wallet.contract.getSeqno()
     const maxAttempts = 30
     let attemptsCount = 0
@@ -26,7 +27,8 @@ export class NftItem {
         await this.deploy(wallet, seqno, parameters)
         await waitSeqno(seqno, wallet)
         break // If waitSeqno succeeds, break out of the loop
-      } catch (error) {
+      }
+      catch (error) {
         attemptsCount += 1
         logger.error(`Attempt ${attemptsCount} failed: ${error}`)
         await sleep(5000)
@@ -37,7 +39,7 @@ export class NftItem {
     }
 
     const nft = await NftCollection.getNftAddressByIndex(parameters.itemIndex)
-    const nftUrl = `https://${config.TESTNET ? "testnet." : ""}getgems.io/collection/${config.COLLECTION_ADDRESS}/${nft.toString()}`
+    const nftUrl = `https://${config.TESTNET ? 'testnet.' : ''}getgems.io/collection/${config.COLLECTION_ADDRESS}/${nft.toString()}`
     return nftUrl
   }
 
@@ -49,7 +51,7 @@ export class NftItem {
       secretKey: wallet.keyPair.secretKey,
       messages: [
         internal({
-          value: toNano("0.026"),
+          value: toNano('0.026'),
           to: collectionAddress,
           body: this.createMintBody(parameters),
         }),
@@ -58,7 +60,6 @@ export class NftItem {
     })
   }
 
-  // eslint-disable-next-line class-methods-use-this
   private createMintBody(parameters: NFTMintParameters): Cell {
     const body = beginCell()
     body.storeUint(1, 32)

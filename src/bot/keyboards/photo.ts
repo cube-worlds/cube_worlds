@@ -1,23 +1,23 @@
-import { changeImageData } from "#root/bot/callback-data/image-selection.js"
+import { changeImageData } from '#root/bot/callback-data/image-selection.js'
 
 export enum SelectImageButton {
-  Refresh = "refresh",
-  Description = "description",
-  Avatar = "avatar",
-  Upload = "upload",
-  Mint = "mint",
+  Refresh = 'refresh',
+  Description = 'description',
+  Avatar = 'avatar',
+  Upload = 'upload',
+  Mint = 'mint',
 }
 
 export const photoKeyboard = [
   [
     {
-      text: "📝 Description",
+      text: '📝 Description',
       callback_data: changeImageData.pack({
         select: SelectImageButton.Description,
       }),
     },
     {
-      text: "🔄 Regenerate",
+      text: '🔄 Regenerate',
       callback_data: changeImageData.pack({
         select: SelectImageButton.Refresh,
       }),
@@ -25,7 +25,7 @@ export const photoKeyboard = [
   ],
   [
     {
-      text: "🦄 Change avatar",
+      text: '🦄 Change avatar',
       callback_data: changeImageData.pack({
         select: SelectImageButton.Avatar,
       }),
@@ -33,13 +33,13 @@ export const photoKeyboard = [
   ],
   [
     {
-      text: "🚀 IPFS",
+      text: '🚀 IPFS',
       callback_data: changeImageData.pack({
         select: SelectImageButton.Upload,
       }),
     },
     {
-      text: "✅ Mint",
+      text: '✅ Mint',
       callback_data: changeImageData.pack({
         select: SelectImageButton.Mint,
       }),

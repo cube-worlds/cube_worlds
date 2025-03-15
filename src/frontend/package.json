@@ -1,8 +1,8 @@
 {
   "name": "cubeworlds-webapp",
-  "private": true,
-  "version": "0.1.0",
   "type": "module",
+  "version": "0.1.0",
+  "private": true,
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc && vite build",
@@ -11,26 +11,26 @@
   "dependencies": {
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
     "@fluent/bundle": "^0.18.0",
-    "@ton/core": "^0.58.1",
-    "@tonconnect/ui": "^2.0.9",
-    "@vitejs/plugin-vue": "^5.1.4",
-    "axios": "^1.7.7",
-    "element-plus": "^2.8.3",
-    "fluent-vue": "^3.6.0",
-    "pinia": "^2.2.2",
+    "@ton/core": "^0.60.1",
+    "@tonconnect/ui": "^2.0.12",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "axios": "^1.8.3",
+    "element-plus": "^2.9.6",
+    "fluent-vue": "^3.7.0",
+    "pinia": "^3.0.1",
     "rollup-plugin-polyfill-node": "^0.13.0",
-    "unplugin-auto-import": "^0.18.3",
-    "unplugin-vue-components": "^0.27.4",
-    "vite": "^5.4.8",
-    "vue": "^3.5.8",
-    "vue-router": "^4.4.5"
+    "unplugin-auto-import": "^19.1.1",
+    "unplugin-vue-components": "^28.4.1",
+    "vite": "^6.2.2",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0"
   },
   "devDependencies": {
-    "@babel/eslint-parser": "^7.25.1",
-    "@types/telegram-web-app": "^7.10.0",
-    "eslint-plugin-vue": "^9.28.0",
-    "typescript": "^5.6.2",
+    "@babel/eslint-parser": "^7.26.10",
+    "@types/telegram-web-app": "^7.10.1",
+    "eslint-plugin-vue": "^10.0.0",
+    "typescript": "^5.8.2",
     "vue-tg": "^0.8.0",
-    "vue-tsc": "^2.1.6"
+    "vue-tsc": "^2.2.8"
   }
 }

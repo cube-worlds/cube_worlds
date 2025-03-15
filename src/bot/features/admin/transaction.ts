@@ -1,22 +1,22 @@
-import { Composer } from "grammy"
-import type { Context } from "#root/bot/context.js"
-import { logHandle } from "#root/bot/helpers/logging.js"
-import { isAdmin } from "#root/bot/filters/is-admin.js"
-import { fromNano } from "@ton/core"
-import { BalanceChangeType } from "#root/bot/models/balance"
-import { addPoints, findUserByName } from "../../models/user"
-import { findTransaction } from "../../models/transaction"
-import { tonToPoints } from "../../helpers/points"
-import { sendMessageToAdmins, sendPlaceInLine } from "../../helpers/telegram"
+import type { Context } from '#root/bot/context.js'
+import { isAdmin } from '#root/bot/filters/is-admin.js'
+import { logHandle } from '#root/bot/helpers/logging.js'
+import { BalanceChangeType } from '#root/bot/models/balance'
+import { fromNano } from '@ton/core'
+import { Composer } from 'grammy'
+import { tonToPoints } from '../../helpers/points'
+import { sendMessageToAdmins, sendPlaceInLine } from '../../helpers/telegram'
+import { findTransaction } from '../../models/transaction'
+import { addPoints, findUserByName } from '../../models/user'
 
 const composer = new Composer<Context>()
 
-const feature = composer.chatType("private").filter(isAdmin)
+const feature = composer.chatType('private').filter(isAdmin)
 
-feature.command("transaction", logHandle("command-transaction"), async ctx => {
+feature.command('transaction', logHandle('command-transaction'), async (ctx) => {
   const argument = ctx.match.trim()
   if (argument) {
-    const [hash, lt, username] = argument.split(" ")
+    const [hash, lt, username] = argument.split(' ')
     const numberLt = Number(lt)
 
     const trx = await findTransaction(numberLt, hash)
@@ -25,14 +25,14 @@ feature.command("transaction", logHandle("command-transaction"), async ctx => {
     }
 
     if (trx.accepted) {
-      return ctx.reply("Transaction is already accepted!")
+      return ctx.reply('Transaction is already accepted!')
     }
 
     if (!username) {
-      return ctx.reply("Username is empty!")
+      return ctx.reply('Username is empty!')
     }
 
-    const user = await findUserByName(username.replace(/^@/, ""))
+    const user = await findUserByName(username.replace(/^@/, ''))
     if (!user) {
       return ctx.reply(`User ${username} not found`)
     }
@@ -50,10 +50,11 @@ feature.command("transaction", logHandle("command-transaction"), async ctx => {
     await sendPlaceInLine(ctx.api, user.id, true)
     await sendMessageToAdmins(
       ctx.api,
-      `⚡️ FOUND TX OF @${user.name} FOR ${ton} TON. Minted: ${user.minted ? "✅" : "❌"}`,
+      `⚡️ FOUND TX OF @${user.name} FOR ${ton} TON. Minted: ${user.minted ? '✅' : '❌'}`,
     )
-  } else {
-    return ctx.reply("`/transaction` hash lt username")
+  }
+  else {
+    return ctx.reply('`/transaction` hash lt username')
   }
 })
 

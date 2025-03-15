@@ -1,5 +1,6 @@
-import fs from "node:fs"
-import path from "node:path"
+import { Buffer } from 'node:buffer'
+import fs from 'node:fs'
+import path from 'node:path'
 
 export function folderPath(username: string): string {
   const fp = `./data/${username}/`
@@ -25,9 +26,9 @@ export async function saveImageFromUrl(
   const image = await fetch(imageURL)
   const arrayBuffer = await image.arrayBuffer()
   const buffer = Buffer.from(arrayBuffer)
-  const imageFileName = imageURL.slice((imageURL.lastIndexOf("/") ?? 0) + 1) ?? ""
-  const fileExtension = imageFileName.split(".").pop()
-  const newFileName = `${original ? "ava_" : ""}${username}_${adminIndex}.${fileExtension}`
+  const imageFileName = imageURL.slice((imageURL.lastIndexOf('/') ?? 0) + 1) ?? ''
+  const fileExtension = imageFileName.split('.').pop()
+  const newFileName = `${original ? 'ava_' : ''}${username}_${adminIndex}.${fileExtension}`
   return saveImage(username, newFileName, buffer)
 }
 

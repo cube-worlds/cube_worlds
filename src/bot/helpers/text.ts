@@ -1,4 +1,4 @@
-import { randomBytes } from "node:crypto"
+import { randomBytes } from 'node:crypto'
 
 export function removeMiddle(s: string, cornerLength: number = 4) {
   if (s.length < cornerLength * 2) {
@@ -12,9 +12,9 @@ export function removeMiddle(s: string, cornerLength: number = 4) {
 export function generateRandomString(length: number): string {
   const randomBytesBuffer = randomBytes(Math.ceil((length * 3) / 4))
   return randomBytesBuffer
-    .toString("base64")
+    .toString('base64')
     .slice(0, length)
-    .replaceAll("+", "-")
-    .replaceAll("/", "_")
-    .replaceAll("=", "")
+    .replaceAll('+', '-')
+    .replaceAll('/', '_')
+    .replaceAll('=', '')
 }

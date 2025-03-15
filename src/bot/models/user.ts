@@ -1,21 +1,22 @@
-import { getModelForClass, modelOptions, prop, DocumentType } from "@typegoose/typegoose"
-import { TimeStamps } from "@typegoose/typegoose/lib/defaultClasses.js"
-import { Address } from "@ton/core"
-import { logger } from "#root/logger.js"
-import { ClipGuidancePreset, SDSampler } from "#root/bot/helpers/generation.js"
+import type { ClipGuidancePreset, SDSampler } from '#root/bot/helpers/generation.js'
+import type { Address } from '@ton/core'
+import type { DocumentType } from '@typegoose/typegoose'
 import {
   addChangeBalanceRecord,
   BalanceChangeType,
   countAllBalanceRecords,
   countUserBalanceRecords,
   getAggregatedBalance,
-} from "#root/bot/models/balance"
+} from '#root/bot/models/balance'
+import { logger } from '#root/logger.js'
+import { getModelForClass, modelOptions, prop } from '@typegoose/typegoose'
+import { TimeStamps } from '@typegoose/typegoose/lib/defaultClasses.js'
 
 export enum UserState {
-  WaitNothing = "WaitNothing",
-  WaitDescription = "WaitDescription",
-  WaitWallet = "WaitWallet",
-  Submited = "Submited",
+  WaitNothing = 'WaitNothing',
+  WaitDescription = 'WaitDescription',
+  WaitWallet = 'WaitWallet',
+  Submited = 'Submited',
 }
 
 @modelOptions({ schemaOptions: { timestamps: true } })
@@ -23,7 +24,7 @@ export class User extends TimeStamps {
   @prop({ type: Number, required: true, index: true, unique: true })
   id!: number
 
-  @prop({ type: String, required: true, default: "en" })
+  @prop({ type: String, required: true, default: 'en' })
   language!: string
 
   @prop({ type: Boolean })
@@ -184,7 +185,7 @@ export function findMintedWithDate() {
 
 export async function countAllBalances(): Promise<number> {
   const result = await UserModel.aggregate([
-    { $group: { _id: undefined, sum: { $sum: "$votes" } } },
+    { $group: { _id: undefined, sum: { $sum: '$votes' } } },
   ])
   if (result.length === 0) {
     return 0
@@ -262,7 +263,7 @@ export async function addPoints(
       { new: true },
     )
     if (!updatedUser) {
-      throw new Error("User for addPoints not found")
+      throw new Error('User for addPoints not found')
     }
 
     const newRecord = await addChangeBalanceRecord(userId, add, reason)
@@ -272,7 +273,8 @@ export async function addPoints(
 
     logger.info(`Add ${add} points to ${userId}. Now ${updatedUser.votes}`)
     return updatedUser.votes
-  } catch (error) {
+  }
+  catch (error) {
     logger.error(`!!! Can't add points ${add} to user ${userId}`)
     throw error
   }

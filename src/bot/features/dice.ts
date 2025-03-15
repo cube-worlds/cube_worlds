@@ -1,21 +1,21 @@
-import { config } from "#root/config.js"
-import { Composer, InlineKeyboard } from "grammy"
-import type { Context } from "#root/bot/context.js"
-import { logHandle } from "#root/bot/helpers/logging.js"
-import { logger } from "#root/logger"
-import { sleep, timeUnitsBetween } from "#root/bot/helpers/time.js"
-import { sendMessageToAdmins, sendPlaceInLine } from "#root/bot/helpers/telegram.js"
-import { UserState, addPoints } from "#root/bot/models/user.js"
-import { generateRandomString } from "#root/bot/helpers/text.js"
-import { BalanceChangeType } from "#root/bot/models/balance.js"
+import type { Context } from '#root/bot/context.js'
+import { logHandle } from '#root/bot/helpers/logging.js'
+import { sendMessageToAdmins, sendPlaceInLine } from '#root/bot/helpers/telegram.js'
+import { generateRandomString } from '#root/bot/helpers/text.js'
+import { sleep, timeUnitsBetween } from '#root/bot/helpers/time.js'
+import { BalanceChangeType } from '#root/bot/models/balance.js'
+import { addPoints, UserState } from '#root/bot/models/user.js'
+import { config } from '#root/config.js'
+import { logger } from '#root/logger'
+import { Composer, InlineKeyboard } from 'grammy'
 
 const composer = new Composer<Context>()
 
-const feature = composer.chatType("private")
+const feature = composer.chatType('private')
 
-feature.command("dice", logHandle("command-dice"), async ctx => {
+feature.command('dice', logHandle('command-dice'), async (ctx) => {
   if (!ctx.dbuser.wallet || ctx.dbuser.state !== UserState.Submited) {
-    await ctx.reply(ctx.t("unhandled"))
+    await ctx.reply(ctx.t('unhandled'))
     return
   }
   const waitMinutes = config.isProd ? 5 : 1
@@ -26,7 +26,7 @@ feature.command("dice", logHandle("command-dice"), async ctx => {
     const between = timeUnitsBetween(now, waitDate)
     const { minutes, seconds } = between
     return ctx.reply(
-      ctx.t("dice.wait", {
+      ctx.t('dice.wait', {
         minutes,
         seconds,
       }),
@@ -48,9 +48,9 @@ feature.command("dice", logHandle("command-dice"), async ctx => {
   // }
   if (ctx.dbuser.suspicionDices >= 105) {
     await ctx.dbuser.save()
-    return ctx.reply(ctx.t("dice.captcha_title"), {
+    return ctx.reply(ctx.t('dice.captcha_title'), {
       reply_markup: new InlineKeyboard().webApp(
-        ctx.t("dice.captcha_button"),
+        ctx.t('dice.captcha_button'),
         `${config.WEB_APP_URL}/captcha/?user_id=${ctx.dbuser.id}&enemies=${ctx.dbuser.suspicionDices - 100}`,
       ),
     })
@@ -58,20 +58,21 @@ feature.command("dice", logHandle("command-dice"), async ctx => {
 
   ctx.dbuser.diceKey = generateRandomString(10)
   await ctx.dbuser.save()
-  await ctx.reply(ctx.t("dice.wish_luck"), {
+  await ctx.reply(ctx.t('dice.wish_luck'), {
     reply_markup: new InlineKeyboard().add({
-      text: "🎲🎲",
+      text: '🎲🎲',
       callback_data: `dice_${ctx.dbuser.diceKey}`,
     }),
   })
 })
 
-feature.callbackQuery(/^dice_/, logHandle("dice-callback-query"), async (ctx: Context) => {
+feature.callbackQuery(/^dice_/, logHandle('dice-callback-query'), async (ctx: Context) => {
   const userDiceData = `dice_${ctx.dbuser.diceKey}`
-  const data = ctx.callbackQuery?.data ?? ""
+  const data = ctx.callbackQuery?.data ?? ''
   try {
     await ctx.deleteMessage()
-  } catch {
+  }
+  catch {
     // do nothing
   }
   if (!(userDiceData === data)) {
@@ -79,8 +80,8 @@ feature.callbackQuery(/^dice_/, logHandle("dice-callback-query"), async (ctx: Co
   }
   ctx.dbuser.diceKey = generateRandomString(10)
   await ctx.dbuser.save()
-  const dice1 = ctx.replyWithDice("🎲")
-  const dice2 = ctx.replyWithDice("🎲")
+  const dice1 = ctx.replyWithDice('🎲')
+  const dice2 = ctx.replyWithDice('🎲')
   const result = await Promise.all([dice1, dice2])
   const value1 = result[0].dice.value
   const value2 = result[1].dice.value
@@ -91,18 +92,20 @@ feature.callbackQuery(/^dice_/, logHandle("dice-callback-query"), async (ctx: Co
     }
     if (ctx.dbuser.diceSeriesNumber === value1) {
       ctx.dbuser.diceSeries = (ctx.dbuser.diceSeries ?? 0) + 1
-    } else {
+    }
+    else {
       ctx.dbuser.diceSeries = 1
       ctx.dbuser.diceSeriesNumber = value1
     }
-  } else {
+  }
+  else {
     ctx.dbuser.diceSeries = undefined
     ctx.dbuser.diceSeriesNumber = undefined
   }
 
   const diceSeries = ctx.dbuser.diceSeries ?? 0
   const diceSeriesNumber = ctx.dbuser.diceSeriesNumber ?? 0
-  const username = ctx.dbuser.name ?? "undefined"
+  const username = ctx.dbuser.name ?? 'undefined'
 
   let score = value1 + value2
   if (diceSeries > 1) {
@@ -119,7 +122,7 @@ feature.callbackQuery(/^dice_/, logHandle("dice-callback-query"), async (ctx: Co
         ctx.dbuser.diceWinner = true
         await ctx.dbuser.save()
         await ctx.reply(
-          ctx.t("dice.mint_winner", {
+          ctx.t('dice.mint_winner', {
             username,
             diceSeriesNumber,
             diceSeries,
@@ -130,18 +133,19 @@ feature.callbackQuery(/^dice_/, logHandle("dice-callback-query"), async (ctx: Co
           `🎲 Pair of ${diceSeriesNumber} dices ${diceSeries} times in a row by @${username}!`,
         )
         await ctx.replyWithSticker(
-          "CAACAgIAAxkBAAEq6zpmIPgeW-peX09nTeFVvHXneFJZaQACQxoAAtzjkEhebdhBXbkEnzQE",
+          'CAACAgIAAxkBAAEq6zpmIPgeW-peX09nTeFVvHXneFJZaQACQxoAAtzjkEhebdhBXbkEnzQE',
         )
-      } else {
+      }
+      else {
         await (diceSeries > 1
           ? ctx.reply(
-              ctx.t("dice.success_series", {
+              ctx.t('dice.success_series', {
                 score,
                 diceSeries,
                 diceSeriesNumber,
               }),
             )
-          : ctx.reply(ctx.t("dice.success", { score })))
+          : ctx.reply(ctx.t('dice.success', { score })))
         await sleep(1000)
         await sendPlaceInLine(ctx.api, ctx.dbuser.id, true)
       }

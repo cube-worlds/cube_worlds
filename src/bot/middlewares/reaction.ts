@@ -1,11 +1,11 @@
-import { NextFunction } from "grammy"
-import { Context } from "#root/bot/context"
+import type { Context } from '#root/bot/context'
+import type { NextFunction } from 'grammy'
 
 export default async function slapReaction(ctx: Context, next: NextFunction) {
   if (!ctx.from && ctx.channelPost) {
-    const channelUsername = ctx.channelPost.chat.username ?? ""
-    if (["cube_worlds", "cube_worlds_ru"].includes(channelUsername)) {
-      return ctx.channelPost.react("🔥")
+    const channelUsername = ctx.channelPost.chat.username ?? ''
+    if (['cube_worlds', 'cube_worlds_ru'].includes(channelUsername)) {
+      return ctx.channelPost.react('🔥')
     }
     return
   }

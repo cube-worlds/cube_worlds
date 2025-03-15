@@ -1,6 +1,6 @@
-import type { Context } from "#root/bot/context.js"
-import { logger } from "#root/logger"
-import { PhotoSize } from "@grammyjs/types"
+import type { Context } from '#root/bot/context.js'
+import type { PhotoSize } from '@grammyjs/types'
+import { logger } from '#root/logger'
 
 export async function getUserProfilePhoto(
   ctx: Context,
@@ -19,9 +19,9 @@ export async function getUserProfilePhoto(
       logger.info(photo)
       return photo
     }
-    throw new Error("No square photos")
+    throw new Error('No square photos')
   }
-  throw new Error("No profile avatars")
+  throw new Error('No profile avatars')
 }
 
 export async function getUserProfileFile(ctx: Context, userId: number, avatarNumber: number) {
@@ -29,5 +29,5 @@ export async function getUserProfileFile(ctx: Context, userId: number, avatarNum
   if (photo) {
     return ctx.api.getFile(photo.file_id)
   }
-  throw new Error("No user photo")
+  throw new Error('No user photo')
 }
