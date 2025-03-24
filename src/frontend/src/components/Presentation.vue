@@ -60,30 +60,34 @@
     <div class="slide">
       <h2>$CUBE Token Distribution</h2>
       <table class="token-table">
-        <tr>
-          <th>Time Period</th>
-          <th>$CUBE per TON</th>
-        </tr>
-        <tr>
-          <td>Initial</td>
-          <td>50,000</td>
-        </tr>
-        <tr>
-          <td>After 3 months</td>
-          <td>25,000</td>
-        </tr>
-        <tr>
-          <td>After 6 months</td>
-          <td>12,500</td>
-        </tr>
-        <tr>
-          <td>After 9 months</td>
-          <td>6,250</td>
-        </tr>
-        <tr>
-          <td>After 12 months</td>
-          <td>3,125</td>
-        </tr>
+        <thead>
+          <tr>
+            <th>Time Period</th>
+            <th>$CUBE per TON</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Initial</td>
+            <td>50,000</td>
+          </tr>
+          <tr>
+            <td>After 3 months</td>
+            <td>25,000</td>
+          </tr>
+          <tr>
+            <td>After 6 months</td>
+            <td>12,500</td>
+          </tr>
+          <tr>
+            <td>After 9 months</td>
+            <td>6,250</td>
+          </tr>
+          <tr>
+            <td>After 12 months</td>
+            <td>3,125</td>
+          </tr>
+        </tbody>
       </table>
       <p>Distribution halves every 3 months</p>
     </div>
