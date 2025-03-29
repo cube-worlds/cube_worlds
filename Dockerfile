@@ -18,7 +18,7 @@ COPY . .
 
 # Build frontend
 RUN npm --prefix src/frontend ci
-RUN npm --prefix src/frontend run build
+RUN npm --prefix src/frontend run build:frontend
 
 USER node
 
