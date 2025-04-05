@@ -7,7 +7,9 @@ import App from './App.vue'
 import ClickerComponent from './components/Clicker.vue'
 import CNFTComponent from './components/CNFT.vue'
 import FAQComponent from './components/FAQ.vue'
+import LeaderboardComponent from './components/Leaderboard.vue'
 import MainComponent from './components/Main.vue'
+import NotFoundComponent from './components/NotFound.vue'
 import PresentationComponent from './components/Presentation.vue'
 import SatoshiComponent from './components/Satoshi.vue'
 import TasksComponent from './components/Tasks.vue'
@@ -24,6 +26,8 @@ const routes = [
   { path: '/cnft', mame: 'CNFTPage', component: CNFTComponent },
   { path: '/presentation', mame: 'PresentationPage', component: PresentationComponent },
   { path: '/tasks', mame: 'TasksPage', component: TasksComponent },
+  { path: '/leaderboard', mame: 'LeaderboardPage', component: LeaderboardComponent },
+  { path: '/:pathMatch(.*)*', component: NotFoundComponent },
 ]
 
 // if (import.meta.env.VITE_ENV === "development") {

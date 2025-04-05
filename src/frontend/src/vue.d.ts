@@ -1,6 +1,5 @@
 declare module '*.vue' {
-  // eslint-disable-next-line ts/no-require-imports
-  import Vue = require('vue')
+  import type Vue from 'vue'
 
   const value: Vue.ComponentOptions<Vue>
   export default value
