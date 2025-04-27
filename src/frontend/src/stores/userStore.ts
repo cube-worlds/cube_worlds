@@ -4,34 +4,34 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
 export interface UserStore {
-  id: number
-  language: string
-  wallet: string
-  referalId: number | undefined
-  balance: string | undefined
-  ip: string
+    id: number
+    language: string
+    wallet: string
+    referalId: number | undefined
+    balance: string | undefined
+    ip: string
 }
 
 export const useUserStore = defineStore('userStore', () => {
-  const wallet: Ref<ConnectedWallet | undefined> = ref()
-  const user: Ref<UserStore | undefined> = ref()
-  const balance = ref(BigInt(0))
+    const wallet: Ref<ConnectedWallet | undefined> = ref()
+    const user: Ref<UserStore | undefined> = ref()
+    const balance = ref(BigInt(0))
 
-  function setWallet(value: ConnectedWallet | undefined) {
-    wallet.value = value
-  }
-
-  function setUser(value: UserStore) {
-    user.value = value
-    setBalance(value.balance)
-  }
-
-  function setBalance(value: string | bigint | undefined) {
-    if (value === undefined) {
-      return
+    function setWallet(value: ConnectedWallet | undefined) {
+        wallet.value = value
     }
-    balance.value = BigInt(value)
-  }
 
-  return { wallet, setWallet, user, setUser, balance, setBalance }
+    function setUser(value: UserStore) {
+        user.value = value
+        setBalance(value.balance)
+    }
+
+    function setBalance(value: string | bigint | undefined) {
+        if (value === undefined) {
+            return
+        }
+        balance.value = BigInt(value)
+    }
+
+    return { wallet, setWallet, user, setUser, balance, setBalance }
 })

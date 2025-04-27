@@ -1,16 +1,16 @@
-import type { Context } from '#root/bot/context.js'
-import { isAdmin } from '#root/bot/filters/is-admin.js'
-import { logHandle } from '#root/bot/helpers/logging.js'
+import type { Context } from '#root/bot/context'
+import { isAdmin } from '#root/bot/filters/is-admin'
+import { logHandle } from '#root/common/helpers/logging'
+import { userStats } from '#root/common/models/User'
 import { Composer } from 'grammy'
-import { userStats } from '../models/user'
 
 const composer = new Composer<Context>()
 
 const feature = composer.chatType('private').filter(isAdmin)
 
 feature.command('stats', logHandle('command-stats'), async (ctx) => {
-  const stats = await userStats()
-  return ctx.reply(`All: ${stats.all}
+    const stats = await userStats()
+    return ctx.reply(`All: ${stats.all}
 With wallet: ${stats.notMinted}
 NFT minted: ${stats.minted}
 

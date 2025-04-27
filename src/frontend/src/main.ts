@@ -18,16 +18,16 @@ import 'element-plus/dist/index.css'
 import './style.css'
 
 const routes = [
-  // RESERVED: /cnfts /api
-  { path: '/', name: 'MainPage', component: MainComponent },
-  { path: '/satoshi', name: 'SatoshiPage', component: SatoshiComponent },
-  { path: '/clicker', name: 'ClickerPage', component: ClickerComponent },
-  { path: '/faq', name: 'FAQPage', component: FAQComponent },
-  { path: '/cnft', mame: 'CNFTPage', component: CNFTComponent },
-  { path: '/presentation', mame: 'PresentationPage', component: PresentationComponent },
-  { path: '/tasks', mame: 'TasksPage', component: TasksComponent },
-  { path: '/leaderboard', mame: 'LeaderboardPage', component: LeaderboardComponent },
-  { path: '/:pathMatch(.*)*', component: NotFoundComponent },
+    // RESERVED: /cnfts /api
+    { path: '/', name: 'MainPage', component: MainComponent },
+    { path: '/satoshi', name: 'SatoshiPage', component: SatoshiComponent },
+    { path: '/clicker', name: 'ClickerPage', component: ClickerComponent },
+    { path: '/faq', name: 'FAQPage', component: FAQComponent },
+    { path: '/cnft', mame: 'CNFTPage', component: CNFTComponent },
+    { path: '/presentation', mame: 'PresentationPage', component: PresentationComponent },
+    { path: '/tasks', mame: 'TasksPage', component: TasksComponent },
+    { path: '/leaderboard', mame: 'LeaderboardPage', component: LeaderboardComponent },
+    { path: '/:pathMatch(.*)*', component: NotFoundComponent },
 ]
 
 // if (import.meta.env.VITE_ENV === "development") {
@@ -35,15 +35,15 @@ const routes = [
 // }
 
 const router = createRouter({
-  history: createWebHistory(),
-  routes,
+    history: createWebHistory(),
+    routes,
 })
 
 const pinia = createPinia()
 
 createApp(App)
-  .use(fluent)
-  .use(pinia)
-  .use(router)
-  .use(ElementPlus, { size: 'default', zIndex: 3000, locale: ruLocale })
-  .mount('#app')
+    .use(fluent)
+    .use(pinia)
+    .use(router)
+    .use(ElementPlus, { size: 'default', zIndex: 3000, locale: ruLocale })
+    .mount('#app')

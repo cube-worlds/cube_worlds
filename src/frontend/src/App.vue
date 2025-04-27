@@ -38,10 +38,10 @@ import { useWebApp, ClosingConfirmation, ExpandedViewport } from "vue-tg"
 import MainMenu from "./components/nested/MainMenu.vue"
 import { useAuth } from "./composables/use-auth"
 import { useUserStore } from "./stores/userStore"
-import { TonConnectUI } from "@tonconnect/ui"
+import { ConnectedWallet, TonConnectUI } from "@tonconnect/ui"
 import { enBundle, ruBundle } from "./fluent"
 import { useFluent } from "fluent-vue"
-import { bigIntWithCustomSeparator } from "../../bot/helpers/numbers"
+import { bigIntWithCustomSeparator } from "#root/common/helpers/numbers"
 
 const fluent = useFluent()
 
@@ -74,7 +74,7 @@ onMounted(async () => {
       twaReturnUrl: "https://t.me/cube_worlds_bot/cnft?startapp=from_wallet",
     },
   })
-  tonConnectUI.value.onStatusChange((wallet) => {
+  tonConnectUI.value.onStatusChange((wallet: ConnectedWallet | null) => {
     console.info("Wallet updated: " + wallet)
     userStore.setWallet(wallet ?? undefined)
   })

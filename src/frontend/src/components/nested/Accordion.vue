@@ -1,10 +1,13 @@
 <template>
-  <div class="accordion">
-    <div v-for="(item, index) in items" :key="index" class="accordion-item">
-      <div class="accordion-header" @click="toggle(index)">
+  <div class="w-full">
+    <div v-for="(item, index) in items" :key="index" class="mb-2">
+      <div
+        class="p-4 cursor-pointer text-white font-psychic-force hover:bg-opacity-10 hover:bg-white transition-colors"
+        @click="toggle(index)"
+      >
         <h2>{{ item.question }}</h2>
       </div>
-      <div v-show="item.open" class="accordion-content">
+      <div v-show="item.open" class="p-4 text-gray-300">
         <p>{{ item.answer }}</p>
       </div>
     </div>
@@ -29,27 +32,5 @@ export default {
 </script>
 
 <style scoped>
-.accordion {
-}
-
-.accordion-item {
-}
-
-.accordion-header {
-  padding: 1rem;
-  cursor: pointer;
-  /* background-color: #333; */
-  color: #fff;
-  font-family: Psychic-Force, sans-serif;
-}
-
-.accordion-header:hover {
-  /* background-color: #444; */
-}
-
-.accordion-content {
-  padding: 1rem;
-  /* background-color: #222; */
-  color: #ddd;
-}
+/* No empty rulesets - using Tailwind classes instead */
 </style>

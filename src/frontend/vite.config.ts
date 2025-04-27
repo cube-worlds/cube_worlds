@@ -8,35 +8,45 @@ import { defineConfig } from 'vite'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  server: {
-    allowedHosts: ['cubeworlds.club', 'dominant-annually-lobster.ngrok-free.app'],
-  },
-  plugins: [
-    vue(),
-    AutoImport({
-      resolvers: [ElementPlusResolver()],
-    }),
-    Components({
-      resolvers: [ElementPlusResolver()],
-    }),
-  ],
-  optimizeDeps: {
-    esbuildOptions: {
-      // Node.js global to browser globalThis
-      define: {
-        global: 'globalThis',
-      },
-      // Enable esbuild polyfill plugins
-      plugins: [
-        NodeGlobalsPolyfillPlugin({
-          buffer: true,
+    plugins: [
+        vue(),
+        AutoImport({
+            resolvers: [ElementPlusResolver()],
         }),
-      ],
+        Components({
+            resolvers: [ElementPlusResolver()],
+        }),
+    ],
+    optimizeDeps: {
+        esbuildOptions: {
+            // Node.js global to browser globalThis
+            define: {
+                global: 'globalThis',
+            },
+            // Enable esbuild polyfill plugins
+            plugins: [
+                NodeGlobalsPolyfillPlugin({
+                    buffer: true,
+                }),
+            ],
+        },
+        include: ['vue', 'vue-router', 'pinia'],
     },
-  },
-  build: {
-    rollupOptions: {
-      plugins: [rollupNodePolyFill()],
+    build: {
+        rollupOptions: {
+            plugins: [rollupNodePolyFill()],
+        },
+        target: 'esnext',
+        outDir: 'dist',
+        assetsDir: 'assets',
+        sourcemap: true,
     },
-  },
+    server: {
+        allowedHosts: [
+            'cubeworlds.club',
+            'dominant-annually-lobster.ngrok-free.app',
+        ],
+        port: 5173,
+        host: true,
+    },
 })

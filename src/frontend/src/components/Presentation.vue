@@ -1,5 +1,5 @@
 <template>
-  <div id="presentation" @keyup.passive.="nextSlide">
+  <div id="presentation" @keyup.passive="nextSlide">
     <div class="slide active">
       <h1>Cube Worlds</h1>
       <div class="cube-word">CUBE WORLDS</div>
@@ -130,15 +130,15 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, onUnmounted } from "vue";
 const currentSlide = ref(0);
-const slides = ref([]);
+const slides = ref<HTMLDivElement[]>([]);
 
-const showSlide = (n) => {
-  slides.value[currentSlide.value].classList.remove("active");
+const showSlide = (n: number) => {
+  slides.value[currentSlide.value]?.classList.remove("active");
   currentSlide.value = (n + slides.value.length) % slides.value.length;
-  slides.value[currentSlide.value].classList.add("active");
+  slides.value[currentSlide.value]?.classList.add("active");
 };
 
 const nextSlide = () => {
@@ -149,7 +149,7 @@ const prevSlide = () => {
   showSlide(currentSlide.value - 1);
 };
 
-const handleKeydown = (event) => {
+const handleKeydown = (event: any) => {
   if (event.key === "ArrowRight") {
     nextSlide();
   } else if (event.key === "ArrowLeft") {
@@ -160,11 +160,11 @@ const handleKeydown = (event) => {
 let touchStartX = 0;
 let touchEndX = 0;
 
-function handleTouchStart(event) {
+function handleTouchStart(event: any) {
   touchStartX = event.changedTouches[0].screenX;
 }
 
-function handleTouchEnd(event) {
+function handleTouchEnd(event: any) {
   touchEndX = event.changedTouches[0].screenX;
   handleSwipe();
 }
@@ -179,7 +179,7 @@ function handleSwipe() {
 }
 
 onMounted(() => {
-  slides.value = document.querySelectorAll(".slide");
+  slides.value = Array.from(document.querySelectorAll<HTMLDivElement>(".slide"));
   document.addEventListener("keydown", handleKeydown);
 
   document.addEventListener("touchstart", handleTouchStart, false);

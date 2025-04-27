@@ -16,8 +16,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
-const isDevelopment = ref(import.meta.env.VITE_ENV === "development");
 </script>
 
 <style lang="css" scoped>
