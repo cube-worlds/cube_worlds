@@ -36,7 +36,7 @@
     "@grammyjs/types": "3.19.0",
     "@pinata/sdk": "^2.1.0",
     "@telegram-apps/init-data-node": "^2.0.3",
-    "@ton/core": "^0.60.1",
+    "@ton/core": "^0.62.0",
     "@ton/crypto": "^3.3.0",
     "@ton/ton": "^15.2.1",
     "@typegoose/typegoose": "^12.13.0",
