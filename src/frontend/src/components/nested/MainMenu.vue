@@ -2,23 +2,20 @@
   <div class="cosmic-menu">
     <div class="menu-links">
       <router-link to="/" class="menu-link" active-class="active">🏠</router-link>
-      <router-link to="/cnft" class="menu-link" active-class="active">🎨</router-link>
-      <router-link to="/clicker" class="menu-link" active-class="active">🖱️</router-link>
+      <!-- <router-link to="/cnft" class="menu-link" active-class="active">🎨</router-link> -->
+      <!-- <router-link to="/clicker" class="menu-link" active-class="active">🖱️</router-link> -->
+      <router-link to="/satoshi" class="menu-link" active-class="active">💰</router-link>
       <router-link to="/tasks" class="menu-link" active-class="active">🎯</router-link>
+      <router-link to="/leaderboard" class="menu-link" active-class="active">🏆</router-link>
 
       <!-- <router-link to="/nft" class="menu-link">🖼️</router-link> -->
       <!-- <router-link to="/game" class="menu-link">🎮</router-link> -->
-      <!-- <router-link to="/faq" class="menu-link">📖</router-link> -->
       <!-- <router-link to="/presentation" class="menu-link">🎙️</router-link> -->
-      <!-- <router-link to="/leaderboard" class="menu-link">🏆</router-link> -->
-      <!-- <router-link to="/balance" class="menu-link">💰</router-link> -->
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue"
-const isDevelopment = ref(import.meta.env.VITE_ENV === "development")
 </script>
 
 <style lang="css" scoped>

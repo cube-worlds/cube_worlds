@@ -36,8 +36,8 @@ import { MainButton, useWebAppHapticFeedback, useWebApp } from "vue-tg"
 import { useUserStore } from "../stores/userStore.js"
 import { Address, Cell, beginCell } from "@ton/core"
 import { TonConnectUI } from "@tonconnect/ui"
-import { sleep } from "../../../bot/helpers/time"
-import useLoadingAndError from "../composables/useLoadingAndError.js"
+import { sleep } from "#root/common/helpers/time"
+import useLoadingAndError from "../composables/useLoadingAndError"
 
 const { loadingInstance, showError } = useLoadingAndError()
 

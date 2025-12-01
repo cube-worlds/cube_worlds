@@ -1,4 +1,4 @@
-FROM node:bookworm-slim AS base
+FROM node:20-bookworm-slim AS base
 
 # Create app directory
 WORKDIR /usr/src
@@ -18,7 +18,7 @@ COPY . .
 
 # Build frontend
 RUN npm --prefix src/frontend ci
-RUN npm --prefix src/frontend run build
+RUN npm --prefix src/frontend run build:frontend
 
 USER node
 

@@ -1,16 +1,23 @@
 <template>
   <div class="cosmos">
     <div v-for="(star, index) in stars" :key="index" class="star" :style="star"></div>
-    <div class="content-wrapper">
-      <div class="top-bar">
-        <div class="coin-balance">
-          {{ bigIntWithCustomSeparator(userStore.balance) }}
-          $CUBE
-        </div>
-        <div id="ton-connect"></div>
+
+    <div class="top-bar">
+      <div class="coin-balance">
+        {{ bigIntWithCustomSeparator(userStore.balance) }}
+        $CUBE
       </div>
+      <div id="ton-connect"></div>
+    </div>
+
+    <div class="content-wrapper">
       <RouterView />
     </div>
+
+    <div class="footer">
+      <MainMenu />
+    </div>
+
     <div class="solar-system">
       <div class="sun">
         <div class="sun-core"></div>
@@ -20,7 +27,6 @@
       <div class="planet mars"></div>
     </div>
     <div class="ufo" :style="ufoStyle"></div>
-    <MainMenu />
     <ClosingConfirmation />
     <ExpandedViewport />
   </div>
@@ -32,10 +38,10 @@ import { useWebApp, ClosingConfirmation, ExpandedViewport } from "vue-tg"
 import MainMenu from "./components/nested/MainMenu.vue"
 import { useAuth } from "./composables/use-auth"
 import { useUserStore } from "./stores/userStore"
-import { TonConnectUI } from "@tonconnect/ui"
+import { ConnectedWallet, TonConnectUI } from "@tonconnect/ui"
 import { enBundle, ruBundle } from "./fluent"
 import { useFluent } from "fluent-vue"
-import { bigIntWithCustomSeparator } from "../../bot/helpers/numbers"
+import { bigIntWithCustomSeparator } from "#root/common/helpers/numbers"
 
 const fluent = useFluent()
 
@@ -68,7 +74,7 @@ onMounted(async () => {
       twaReturnUrl: "https://t.me/cube_worlds_bot/cnft?startapp=from_wallet",
     },
   })
-  tonConnectUI.value.onStatusChange((wallet) => {
+  tonConnectUI.value.onStatusChange((wallet: ConnectedWallet | null) => {
     console.info("Wallet updated: " + wallet)
     userStore.setWallet(wallet ?? undefined)
   })
@@ -123,62 +129,56 @@ onMounted(async () => {
   height: 100vh;
   overflow: hidden;
   display: flex;
-  align-items: center;
-  justify-content: center;
   flex-direction: column;
   background-color: #000033;
+}
+
+.top-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background-color: rgba(0, 0, 51, 0.8);
+  backdrop-filter: blur(5px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  height: 50px;
 }
 
 .content-wrapper {
   position: relative;
   z-index: 10;
   width: 100%;
-  height: calc(100% - 60px);
-  overflow: auto;
-  padding: 0.3rem;
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem;
   box-sizing: border-box;
+  margin-top: 50px; /* Same as top-bar height */
+  margin-bottom: 60px; /* Same as footer height */
+  padding-top: 1rem;
+  padding-bottom: 1rem;
 }
 
-.top-bar {
-  position: sticky;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-  padding: 0.5rem 1rem;
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 0.5rem;
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background-color: rgba(0, 0, 51, 0.8);
+  backdrop-filter: blur(5px);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  height: 60px;
 }
 
 .coin-balance {
   font-size: 1.1rem;
   font-weight: bold;
   color: #fff;
-}
-
-.wallet-address {
-  font-size: 0.9rem;
-  color: #ccc;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-}
-
-.arrow {
-  border: solid #ccc;
-  border-width: 0 2px 2px 0;
-  display: inline-block;
-  padding: 3px;
-  margin-left: 0.5rem;
-  transition: transform 0.3s;
-}
-
-.arrow.up {
-  transform: rotate(-135deg);
-}
-
-.arrow.down {
-  transform: rotate(45deg);
 }
 
 .star {
@@ -188,6 +188,7 @@ onMounted(async () => {
   background-color: #fff;
   border-radius: 50%;
   animation: twinkle 1s infinite alternate;
+  z-index: 1;
 }
 
 @keyframes twinkle {
@@ -211,6 +212,7 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   transition: transform 0.5s ease;
+  z-index: 2;
 }
 
 .sun {
@@ -284,7 +286,6 @@ onMounted(async () => {
 }
 
 @keyframes pulse {
-
   0%,
   100% {
     transform: scale(1);
