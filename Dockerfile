@@ -1,4 +1,4 @@
-FROM node:bookworm-slim AS base
+FROM node:20-bookworm-slim AS base
 
 # Create app directory
 WORKDIR /usr/src
