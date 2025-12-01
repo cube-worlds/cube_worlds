@@ -74,9 +74,9 @@ export async function sendUserMetadata(context: Context, selectedUser: DocumentT
             await context.api.sendMessage(adminUser.id, message)
         } else if (errorMessage.startsWith('Call to \'getFile\' failed!')) {
             const nextAvatarNumber
-        = context.dbuser.selectedUser === selectedUser.id
-            ? (context.dbuser.avatarNumber ?? -1) + 1
-            : 0
+                = context.dbuser.selectedUser === selectedUser.id
+                    ? (context.dbuser.avatarNumber ?? -1) + 1
+                    : 0
             context.dbuser.avatarNumber = nextAvatarNumber
             await context.dbuser.save()
             return context.reply('Avatar is unavailable, trying to change it')

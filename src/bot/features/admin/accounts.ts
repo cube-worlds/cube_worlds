@@ -51,10 +51,11 @@ async function getStabilityBalance(): Promise<number> {
 
 feature.command('accounts', logHandle('command-accounts'), async (ctx) => {
     const stabilityBalance = await getStabilityBalance()
-    return ctx.replyWithMarkdownV1(
+    return ctx.reply(
         `Stability balance: ${stabilityBalance} credits
 OpenAI balance can be found in the [OpenAI dashboard](https://platform.openai.com/settings/organization/billing/overview)`,
         {
+            parse_mode: 'Markdown',
             link_preview_options: { is_disabled: true },
         },
     )

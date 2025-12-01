@@ -10,6 +10,17 @@
           </div>
         </button>
       </div>
+
+      <div class="prize-info">
+        <div class="info-item">
+          <span class="info-label">Approximate Prize:</span>
+          <span class="info-value">≈ {{ approximatePrize }} $CUBE</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Participants:</span>
+          <span class="info-value">{{ totalParticipants }}</span>
+        </div>
+      </div>
     </template>
 
     <template v-else>
@@ -18,6 +29,21 @@
           <span class="stake-amount">{{ currentStake }}</span>
           <span class="cube-symbol">$CUBE</span>
           <span class="multiplier">{{ currentMultiplier }}×</span>
+        </div>
+
+        <div class="prize-info active">
+          <div class="info-item">
+            <span class="info-label">Approximate Prize:</span>
+            <span class="info-value">≈ {{ approximatePrize }} $CUBE</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Participants:</span>
+            <span class="info-value">{{ totalParticipants }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Your Share:</span>
+            <span class="info-value">{{ calculateShare }}%</span>
+          </div>
         </div>
 
         <div class="action-buttons">
@@ -41,11 +67,25 @@
         </div>
       </div>
     </template>
+
+    <div class="satoshi-footer">
+      <a href="https://chiliec.github.io/Satoshi/" target="_blank" class="mining-link">
+        <div class="mining-icon">
+          <div class="pickaxe"></div>
+          <div class="sparkles">
+            <div class="sparkle"></div>
+            <div class="sparkle"></div>
+            <div class="sparkle"></div>
+          </div>
+        </div>
+        <span>Direct Mining</span>
+      </a>
+    </div>
   </div>
 </template>
 
-<script setup>
-import { ref } from 'vue';
+<script setup lang="ts">
+import { ref, computed } from 'vue';
 import axios from 'axios';
 
 const initialStake = 100;
@@ -55,6 +95,15 @@ const maxMultiplier = 5;
 const hasParticipated = ref(false);
 const currentStake = ref(initialStake);
 const currentMultiplier = ref(1);
+const totalParticipants = ref(143);
+const approximatePrize = ref(15600);
+const totalPoolStake = ref(76400);
+
+const calculateShare = computed(() => {
+  const userEffectiveStake = currentStake.value * currentMultiplier.value;
+  const sharePercentage = (userEffectiveStake / totalPoolStake.value) * 100;
+  return sharePercentage.toFixed(2);
+});
 
 async function participate() {
   try {
@@ -65,6 +114,9 @@ async function participate() {
 
     if (response.status === 200) {
       hasParticipated.value = true;
+      totalParticipants.value++;
+      totalPoolStake.value += initialStake;
+      // In a real implementation, you would update these values from the response
     }
   } catch (error) {
     console.error('Failed to participate:', error);
@@ -81,7 +133,10 @@ async function increaseStake() {
       });
 
       if (response.status === 200) {
+        const previousStake = currentStake.value;
         currentStake.value = Math.min(currentStake.value + stakeToAdd, maxStake);
+        totalPoolStake.value += (currentStake.value - previousStake);
+        // Update approximate prize and other stats based on response
       }
     } catch (error) {
       console.error('Failed to increase stake:', error);
@@ -109,6 +164,8 @@ function increaseMultiplier() {
   justify-content: center;
   padding: 2rem;
   color: white;
+  min-height: 70vh;
+  position: relative;
 }
 
 .cosmic-button-container {
@@ -230,6 +287,7 @@ function increaseMultiplier() {
   font-size: 3.5rem;
   background: linear-gradient(to right, #f9d423, #ff4e50);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -254,6 +312,7 @@ function increaseMultiplier() {
   gap: 1rem;
   width: 100%;
   max-width: 600px;
+  margin-top: 2rem;
 }
 
 .action-button {
@@ -300,6 +359,133 @@ function increaseMultiplier() {
   font-size: 0.9rem;
 }
 
+.prize-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1rem 0;
+  padding: 1rem;
+  border-radius: 1rem;
+  background-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(4px);
+  width: 100%;
+  max-width: 400px;
+}
+
+.prize-info.active {
+  background-color: rgba(255, 255, 255, 0.15);
+  animation: subtle-glow 3s infinite alternate;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.3rem 0;
+}
+
+.info-label {
+  color: #a0a0ff;
+  font-size: 0.9rem;
+}
+
+.info-value {
+  font-weight: bold;
+  font-size: 0.9rem;
+  color: #ffffff;
+}
+
+.satoshi-footer {
+  position: absolute;
+  bottom: 1rem;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.mining-link {
+  display: flex;
+  align-items: center;
+  color: #a0a0ff;
+  text-decoration: none;
+  font-size: 0.9rem;
+  padding: 0.5rem 1rem;
+  border-radius: 2rem;
+  background-color: rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.mining-link:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 0 15px rgba(160, 160, 255, 0.4);
+}
+
+.mining-icon {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  margin-right: 0.5rem;
+}
+
+.pickaxe {
+  position: absolute;
+  width: 10px;
+  height: 2px;
+  background-color: #a0a0ff;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.pickaxe:before {
+  content: '';
+  position: absolute;
+  width: 6px;
+  height: 2px;
+  background-color: #a0a0ff;
+  top: -2px;
+  right: -1px;
+  transform: rotate(-60deg);
+}
+
+.sparkles {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.sparkle {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background-color: #ffffff;
+  border-radius: 50%;
+}
+
+.sparkle:nth-child(1) {
+  top: 30%;
+  left: 70%;
+  animation: sparkle 1.5s infinite;
+}
+
+.sparkle:nth-child(2) {
+  top: 60%;
+  left: 80%;
+  animation: sparkle 1.7s infinite;
+  animation-delay: 0.5s;
+}
+
+.sparkle:nth-child(3) {
+  top: 50%;
+  left: 90%;
+  animation: sparkle 1.3s infinite;
+  animation-delay: 0.3s;
+}
+
 @keyframes glow-pulse {
   0%, 100% { opacity: 0.2; }
   50% { opacity: 0.5; }
@@ -318,5 +504,16 @@ function increaseMultiplier() {
 @keyframes twinkle {
   0% { opacity: 0; transform: scale(1); }
   100% { opacity: 1; transform: scale(1.5); }
+}
+
+@keyframes sparkle {
+  0% { opacity: 0; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.5); }
+  100% { opacity: 0; transform: scale(1); }
+}
+
+@keyframes subtle-glow {
+  0% { box-shadow: 0 0 5px rgba(160, 160, 255, 0.2); }
+  100% { box-shadow: 0 0 15px rgba(160, 160, 255, 0.5); }
 }
 </style>

@@ -33,7 +33,6 @@ import { logger } from '#root/logger'
 import { autoChatAction } from '@grammyjs/auto-chat-action'
 import { autoRetry } from '@grammyjs/auto-retry'
 import { hydrate } from '@grammyjs/hydrate'
-import { hydrateReply, parseMode } from '@grammyjs/parse-mode'
 import { session, Bot as TelegramBot } from 'grammy'
 import { userFeature } from './features/admin/user'
 import slapReaction from './middlewares/reaction'
@@ -52,7 +51,6 @@ export function createBot(token: string, options: Options) {
     const protectedBot = bot.errorBoundary(errorHandler)
 
     // Middlewares
-    bot.api.config.use(parseMode('HTML'))
     bot.api.config.use(autoRetry())
 
     if (config.isDev) {
@@ -60,7 +58,6 @@ export function createBot(token: string, options: Options) {
     }
 
     protectedBot.use(autoChatAction(bot.api))
-    protectedBot.use(hydrateReply)
     protectedBot.use(hydrate())
     protectedBot.use(
         session({

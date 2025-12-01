@@ -44,7 +44,7 @@ async function getEncryptionKeys(projectId: string, apiKey: string) {
         })
         return response.data
     } catch (error) {
-        logger.error('Error fetching encryption keys:', error)
+        logger.error(`Error fetching encryption keys: ${error}`)
     }
 }
 

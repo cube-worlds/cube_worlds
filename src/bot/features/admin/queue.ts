@@ -127,7 +127,7 @@ feature.callbackQuery(
 
                 case SelectImageButton.Avatar: {
                     const nextAvatarNumber
-            = ctx.dbuser.selectedUser === selectedUser.id ? (ctx.dbuser.avatarNumber ?? -1) + 1 : 0
+                        = ctx.dbuser.selectedUser === selectedUser.id ? (ctx.dbuser.avatarNumber ?? -1) + 1 : 0
                     ctx.dbuser.avatarNumber = nextAvatarNumber
                     await ctx.dbuser.save()
                     sendUserMetadata(ctx, selectedUser).catch(error => ctx.reply((error as Error).message))

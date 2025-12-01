@@ -42,7 +42,7 @@ feature.command('whales', logHandle('command-line'), async (ctx) => {
         body,
     },
 })}\n\`\`\``
-    await ctx.replyWithMarkdown(md)
+    await ctx.reply(md, { parse_mode: 'Markdown' })
 })
 
 export { composer as whalesFeature }

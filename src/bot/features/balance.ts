@@ -43,7 +43,7 @@ feature.command('balance', logHandle('command-balance'), async (ctx) => {
         body,
     },
 })}\n\`\`\``
-    await ctx.replyWithMarkdown(md)
+    await ctx.reply(md, { parse_mode: 'Markdown' })
 })
 
 export { composer as balanceFeature }

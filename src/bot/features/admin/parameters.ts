@@ -91,7 +91,7 @@ feature.command('steps', logHandle('command-steps'), async (ctx) => {
 feature.command('preset', logHandle('command-preset'), async (ctx) => {
     const oldPreset = ctx.dbuser.preset ?? ClipGuidancePreset.NONE
     const newPreset: ClipGuidancePreset
-    = ClipGuidancePreset[ctx.match.trim() as keyof typeof ClipGuidancePreset]
+        = ClipGuidancePreset[ctx.match.trim() as keyof typeof ClipGuidancePreset]
     if (newPreset) {
         ctx.dbuser.preset = newPreset
         await ctx.dbuser.save()
