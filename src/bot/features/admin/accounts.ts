@@ -9,24 +9,6 @@ const composer = new Composer<Context>()
 
 const feature = composer.chatType('private').filter(isAdmin)
 
-// async function getOpenAIBalance(): Promise<any> {
-//   const apiHost = "https://api.openai.com";
-//   const url = `${apiHost}/dashboard/billing/usage`;
-//   const apiKey = config.OPENAI_API_KEY;
-//   if (!apiKey) throw new Error("Missing OpenAI API key.");
-//   const response = await fetch(url, {
-//     method: "GET",
-//     headers: {
-//       Authorization: `Bearer ${apiKey}`,
-//     },
-//   });
-//   if (!response.ok) {
-//     throw new Error(`Non-200 response: ${await response.text()}`);
-//   }
-//   const balance = await response.json();
-//   return balance;
-// }
-
 async function getStabilityBalance(): Promise<number> {
     const apiHost = 'https://api.stability.ai'
     const url = `${apiHost}/v1/user/balance`

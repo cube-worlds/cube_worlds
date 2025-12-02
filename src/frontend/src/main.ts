@@ -10,7 +10,6 @@ import FAQComponent from './components/FAQ.vue'
 import LeaderboardComponent from './components/Leaderboard.vue'
 import MainComponent from './components/Main.vue'
 import NotFoundComponent from './components/NotFound.vue'
-import PresentationComponent from './components/Presentation.vue'
 import SatoshiComponent from './components/Satoshi.vue'
 import { fluent } from './fluent'
 import 'element-plus/dist/index.css'
@@ -23,7 +22,6 @@ const routes = [
     { path: '/clicker', name: 'ClickerPage', component: ClickerComponent },
     { path: '/faq', name: 'FAQPage', component: FAQComponent },
     { path: '/cnft', mame: 'CNFTPage', component: CNFTComponent },
-    { path: '/presentation', mame: 'PresentationPage', component: PresentationComponent },
     { path: '/leaderboard', mame: 'LeaderboardPage', component: LeaderboardComponent },
     { path: '/:pathMatch(.*)*', component: NotFoundComponent },
 ]
