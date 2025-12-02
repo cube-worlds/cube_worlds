@@ -12,7 +12,6 @@ import MainComponent from './components/Main.vue'
 import NotFoundComponent from './components/NotFound.vue'
 import PresentationComponent from './components/Presentation.vue'
 import SatoshiComponent from './components/Satoshi.vue'
-import TasksComponent from './components/Tasks.vue'
 import { fluent } from './fluent'
 import 'element-plus/dist/index.css'
 import './style.css'
@@ -25,14 +24,9 @@ const routes = [
     { path: '/faq', name: 'FAQPage', component: FAQComponent },
     { path: '/cnft', mame: 'CNFTPage', component: CNFTComponent },
     { path: '/presentation', mame: 'PresentationPage', component: PresentationComponent },
-    { path: '/tasks', mame: 'TasksPage', component: TasksComponent },
     { path: '/leaderboard', mame: 'LeaderboardPage', component: LeaderboardComponent },
     { path: '/:pathMatch(.*)*', component: NotFoundComponent },
 ]
-
-// if (import.meta.env.VITE_ENV === "development") {
-//   routes.push({ path: "/tasks", mame: "TasksPage", component: TasksComponent });
-// }
 
 const router = createRouter({
     history: createWebHistory(),

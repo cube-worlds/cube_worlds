@@ -9,7 +9,6 @@ import analyticsHandler from './backend/analytics'
 import { authHandler } from './backend/auth-handler'
 import checkCaptcha from './backend/captcha'
 import nftHandler from './backend/nft-handler'
-import tappadsHandler from './backend/tappads'
 import { config } from './config'
 
 export async function createServer(bot: Bot) {
@@ -28,8 +27,6 @@ export async function createServer(bot: Bot) {
     await server.register(analyticsHandler, { prefix: '/api/analytics' })
 
     await server.register(nftHandler, { prefix: '/api/nft' })
-
-    await server.register(tappadsHandler, { prefix: '/api/tappads' })
 
     await server.register(checkCaptcha, { bot })
 

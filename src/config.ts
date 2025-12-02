@@ -39,7 +39,6 @@ function createConfigFromEnvironment(environment: NodeJS.ProcessEnv) {
         OPENAI_API_KEY: z.string(),
         TELEMETREE_API_KEY: z.string(),
         TELEMETREE_PROJECT_ID: z.string(),
-        TAPPADS_SECRET_URL: z.string(),
     })
 
     if (config.BOT_MODE === 'webhook') {

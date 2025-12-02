@@ -25,6 +25,5 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     Satoshi: typeof import('./src/components/Satoshi.vue')['default']
-    Tasks: typeof import('./src/components/Tasks.vue')['default']
   }
 }

@@ -5,7 +5,6 @@
       <!-- <router-link to="/cnft" class="menu-link" active-class="active">🎨</router-link> -->
       <!-- <router-link to="/clicker" class="menu-link" active-class="active">🖱️</router-link> -->
       <router-link to="/satoshi" class="menu-link" active-class="active">💰</router-link>
-      <router-link to="/tasks" class="menu-link" active-class="active">🎯</router-link>
       <router-link to="/leaderboard" class="menu-link" active-class="active">🏆</router-link>
 
       <!-- <router-link to="/nft" class="menu-link">🖼️</router-link> -->
