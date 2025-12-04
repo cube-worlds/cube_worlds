@@ -15,12 +15,9 @@ export async function createServer(bot: Bot) {
         logger: loggerOptions,
     })
 
-    // Register API routes first (more specific routes)
-    await server.register(async (fastify) => {
-        await fastify.register(authHandler, { prefix: '/auth' })
-        await fastify.register(captchaHandler, { prefix: '/captcha', bot })
-        await fastify.register(nftHandler, { prefix: '/nft' })
-    }, { prefix: '/api' })
+    await server.register(authHandler, { prefix: '/api/auth' })
+    await server.register(captchaHandler, { prefix: '/api/captcha', bot })
+    await server.register(nftHandler, { prefix: '/api/nft' })
 
     const __filename = fileURLToPath(import.meta.url)
     const __dirname = path.dirname(__filename)

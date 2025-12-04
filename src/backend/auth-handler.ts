@@ -3,7 +3,6 @@ import { findUserById } from '#root/common/models/User'
 import { config } from '#root/config'
 import { logger } from '#root/logger'
 import { validate } from '@telegram-apps/init-data-node'
-import fp from 'fastify-plugin'
 
 interface Parameters {
     userId: string
@@ -56,4 +55,4 @@ async function authHandler(fastify: FastifyInstance) {
     })
 }
 
-export default fp(authHandler)
+export default authHandler

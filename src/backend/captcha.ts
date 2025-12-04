@@ -1,13 +1,11 @@
 import type { FastifyInstance } from 'fastify'
 import { i18n } from '#root/common/i18n'
 import { findUserById } from '#root/common/models/User'
-import { logger } from '@typegoose/typegoose/lib/logSettings'
-import fp from 'fastify-plugin'
+import { logger } from '#root/logger'
 
 function decryptNumber(key: string, encryptedNumber: string): number {
     const encryptedData = atob(encryptedNumber)
     let decryptedData = ''
-
     for (let i = 0; i < encryptedData.length; i++) {
         const fromData = encryptedData.codePointAt(i)
         const fromKey = key.codePointAt(i % key.length)
@@ -24,11 +22,9 @@ async function captchaHandler(fastify: FastifyInstance, options: any) {
         const data = decryptNumber('jsdIUbvFtZgdKlq', count)
         if (!userId || !data)
             return { result: false }
-
         const user = await findUserById(userId)
         if (!user || !user.suspicionDices)
             return { result: false }
-
         if (user.suspicionDices === Number(data) + 101) {
             logger.info(`Solved captcha from ${user.id} with ${user.suspicionDices} suspicion dices`)
             user.suspicionDices = 0
@@ -40,4 +36,4 @@ async function captchaHandler(fastify: FastifyInstance, options: any) {
     })
 }
 
-export default fp(captchaHandler)
+export default captchaHandler

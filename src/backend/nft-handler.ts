@@ -10,7 +10,6 @@ import {
     getCNFTByWallet,
 } from '#root/common/models/CNFT'
 import { logger } from '#root/logger'
-import fp from 'fastify-plugin'
 import sharp from 'sharp'
 
 function nftImage(type: CNFTImageType) {
@@ -102,7 +101,6 @@ async function nftHandler(fastify: FastifyInstance) {
             .flatten({ background: cnftHexColor(Number(color)) })
             .webp({ nearLossless: true, quality: 100 })
             .toBuffer()
-
         reply.header('Content-Type', 'image/webp')
         reply.header('Content-Length', data.length)
         reply.type('image/webp')
@@ -110,4 +108,4 @@ async function nftHandler(fastify: FastifyInstance) {
     })
 }
 
-export default fp(nftHandler)
+export default nftHandler
