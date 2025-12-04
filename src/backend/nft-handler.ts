@@ -10,6 +10,7 @@ import {
     getCNFTByWallet,
 } from '#root/common/models/CNFT'
 import { logger } from '#root/logger'
+import fp from 'fastify-plugin'
 import sharp from 'sharp'
 
 function nftImage(type: CNFTImageType) {
@@ -49,7 +50,7 @@ function toJSON(nft: DocumentType<CNFT>) {
     }
 }
 
-function nftHandler(fastify: FastifyInstance, _options: any, done: () => void) {
+async function nftHandler(fastify: FastifyInstance) {
     fastify.get('/collection.json', (_request: any, _reply: any) => {
         return {
             name: 'Cube Worlds Citizens',
@@ -107,7 +108,6 @@ function nftHandler(fastify: FastifyInstance, _options: any, done: () => void) {
         reply.type('image/webp')
         reply.send(data)
     })
-
-    done()
 }
-export default nftHandler
+
+export default fp(nftHandler)

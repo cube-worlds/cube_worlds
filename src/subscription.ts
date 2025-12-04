@@ -48,7 +48,8 @@ export class Subscription {
         // save to the database that this payment has been processed.
         const trx = await findTransaction(lt, hash)
         if (trx) {
-            return logger.debug(`Exists ${TonWeb.utils.fromNano(value)} TON from ${senderAddress}`)
+            logger.debug(`Exists ${TonWeb.utils.fromNano(value)} TON from ${senderAddress}`)
+            return
         }
 
         const ton = Number(fromNano(value))

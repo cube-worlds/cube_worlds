@@ -32,7 +32,7 @@ export class AccountSubscription {
                     `Get ${COUNT} transactions before transaction ${offsetTransactionLT}:${offsetTransactionHash}`,
                 )
             } else {
-                logger.debug(`Get last ${COUNT} transactions`)
+                // logger.debug(`Get last ${COUNT} transactions`)
             }
 
             // TON transaction has composite ID: account address (on which the transaction took place) + transaction LT (logical time) + transaction hash.

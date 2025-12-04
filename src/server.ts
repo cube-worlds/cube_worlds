@@ -5,9 +5,8 @@ import { logger, loggerOptions } from '#root/logger'
 import fastifyStatic from '@fastify/static'
 import fastify from 'fastify'
 import { webhookCallback } from 'grammy'
-import analyticsHandler from './backend/analytics'
-import { authHandler } from './backend/auth-handler'
-import checkCaptcha from './backend/captcha'
+import authHandler from './backend/auth-handler'
+import captchaHandler from './backend/captcha'
 import nftHandler from './backend/nft-handler'
 import { config } from './config'
 
@@ -16,34 +15,38 @@ export async function createServer(bot: Bot) {
         logger: loggerOptions,
     })
 
-    server.setErrorHandler(async (error, _request, response) => {
-        logger.error(error)
-
-        await response.status(500).send({ error: 'Oops! Something went wrong.' })
-    })
-
-    await server.register(authHandler, { prefix: '/api/auth' })
-
-    await server.register(analyticsHandler, { prefix: '/api/analytics' })
-
-    await server.register(nftHandler, { prefix: '/api/nft' })
-
-    await server.register(checkCaptcha, { bot })
+    // Register API routes first (more specific routes)
+    await server.register(async (fastify) => {
+        await fastify.register(authHandler, { prefix: '/auth' })
+        await fastify.register(captchaHandler, { prefix: '/captcha', bot })
+        await fastify.register(nftHandler, { prefix: '/nft' })
+    }, { prefix: '/api' })
 
     const __filename = fileURLToPath(import.meta.url)
     const __dirname = path.dirname(__filename)
+
     await server.register(fastifyStatic, {
         root: path.join(path.join(__dirname, 'frontend'), 'dist'),
         prefix: '/',
     })
+
     await server.register(fastifyStatic, {
         root: path.join(path.join(__dirname, 'frontend'), 'captcha'),
         prefix: '/captcha/',
         decorateReply: false,
     })
 
-    server.setNotFoundHandler(async (_request, reply) => {
-        await reply.sendFile('index.html')
+    server.setNotFoundHandler({ preHandler: [] }, (req, reply) => {
+        if (req.raw.url && req.raw.url.startsWith('/api/')) {
+            return reply.status(404).send({ error: 'API route not found' })
+        }
+        reply.type('text/html')
+        reply.sendFile('index.html')
+    })
+
+    server.setErrorHandler(async (error, _request, response) => {
+        logger.error(error)
+        await response.status(500).send({ error: 'Oops! Something went wrong.' })
     })
 
     if (config.BOT_MODE === 'webhook') {
@@ -56,5 +59,6 @@ export async function createServer(bot: Bot) {
         )
     }
 
+    logger.info(server.printRoutes())
     return server
 }
