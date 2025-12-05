@@ -23,7 +23,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 1rem;
+  padding: 0.5rem;
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(10px);
   z-index: 100;
@@ -31,25 +31,28 @@
 
 .menu-links {
   display: flex;
-  justify-content: center;
-  gap: 2rem;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 500px;
 }
 
 .menu-link {
+  flex: 1;
+  text-align: center;
   color: #fff;
   text-decoration: none;
-  font-size: 2rem;
+  font-size: 1.8rem;
   transition: all 0.3s ease;
   position: relative;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 0;
 }
 
 .menu-link::after {
   content: "";
   position: absolute;
   bottom: 0;
-  left: 0;
-  width: 100%;
+  left: 20%;
+  width: 60%;
   height: 2px;
   background: #ff9933;
   transform: scaleX(0);
@@ -57,15 +60,11 @@
 }
 
 .menu-link:hover {
-  transform: scale(1.2) rotate(15deg);
-}
-
-.menu-link:hover::after {
-  transform: scaleX(1);
+  transform: scale(1.3) rotate(15deg);
 }
 
 .menu-link.active {
-  transform: scale(1.2);
+  transform: scale(1);
   color: #ff9933;
 }
 
@@ -73,7 +72,9 @@
   transform: scaleX(1);
 }
 
-.menu-link:hover:not(.active) {
-  transform: scale(1.1);
+@media (max-width: 400px) {
+  .menu-link {
+    font-size: 1.5rem;
+  }
 }
 </style>
