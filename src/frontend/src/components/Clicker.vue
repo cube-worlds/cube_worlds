@@ -22,13 +22,11 @@
         </div>
       </transition-group>
     </div>
-
-    <MainButton :text="`Balance: ${count} $CUBE`" @click="showAlert" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { useHapticFeedback, MainButton, usePopup } from "vue-tg"
+import { useHapticFeedback, usePopup } from "vue-tg"
 import { Ref, onMounted, onUnmounted, ref } from "vue"
 import { useUserStore } from "../stores/userStore.js"
 import { useFluent } from "fluent-vue"
@@ -70,13 +68,15 @@ const tap = (value: number, event: MouseEvent) => {
   setTimeout(() => {
     messages.value = messages.value.filter((m) => m.id !== message.id)
   }, 1000)
+
+  if (count.value > 300) {
+    showAlert()
+  }
 }
 
 const popup = usePopup()
 
 async function showAlert() {
-  if (count.value < 30) return
-
   if (!popup.showPopup) return
   const result = await popup.showPopup({
     title: $t("clicker-no-title"),

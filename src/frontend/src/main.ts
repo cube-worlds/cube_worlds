@@ -4,11 +4,11 @@ import { createPinia } from 'pinia'
 import { createApp } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import App from './App.vue'
+import ClaimComponent from './components/Claim.vue'
 import ClickerComponent from './components/Clicker.vue'
 import CNFTComponent from './components/CNFT.vue'
 import FAQComponent from './components/FAQ.vue'
 import LeaderboardComponent from './components/Leaderboard.vue'
-import MainComponent from './components/Main.vue'
 import NotFoundComponent from './components/NotFound.vue'
 import SatoshiMiningComponent from './components/SatoshiMining.vue'
 import { fluent } from './fluent'
@@ -17,7 +17,7 @@ import './style.css'
 
 const routes = [
     // RESERVED: /cnfts /api
-    { path: '/', name: 'MainPage', component: MainComponent },
+    { path: '/', name: 'ClaimPage', component: ClaimComponent },
     { path: '/satoshi', name: 'SatoshiMiningPage', component: SatoshiMiningComponent },
     { path: '/clicker', name: 'ClickerPage', component: ClickerComponent },
     { path: '/faq', name: 'FAQPage', component: FAQComponent },
