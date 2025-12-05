@@ -4,8 +4,7 @@
 
     <div class="top-bar">
       <div class="coin-balance">
-        {{ bigIntWithCustomSeparator(userStore.balance) }}
-        $CUBE
+        {{ displayedBalance }} $CUBE
       </div>
       <div id="ton-connect"></div>
     </div>
@@ -34,7 +33,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed, provide, Ref } from "vue"
-import { useWebApp, ClosingConfirmation, ExpandedViewport } from "vue-tg"
+import { useMiniApp, ClosingConfirmation, ExpandedViewport } from "vue-tg"
 import MainMenu from "./components/nested/MainMenu.vue"
 import { useAuth } from "./composables/use-auth"
 import { useUserStore } from "./stores/userStore"
@@ -65,6 +64,12 @@ function getUserIdFromRefString(refString: string): number | undefined {
   return match && match[1] ? parseInt(match[1], 10) : undefined
 }
 
+const displayedBalance = computed(() => {
+  if (userStore.balance === null) return "???"
+  return bigIntWithCustomSeparator(userStore.balance)
+})
+
+
 onMounted(async () => {
   tonConnectUI.value = new TonConnectUI({
     manifestUrl: "https://cubeworlds.club/tonconnect-manifest.json",
@@ -93,7 +98,7 @@ onMounted(async () => {
     }
   }, 5000)
 
-  const initData = useWebApp().initDataUnsafe
+  const initData = useMiniApp().initDataUnsafe
   const webAppUser = initData.user
   if (webAppUser) {
     let referId = undefined
@@ -102,7 +107,7 @@ onMounted(async () => {
       referId = getUserIdFromRefString(start_param)
       console.log("referId:", referId)
     }
-    const { user, error, login } = useAuth(useWebApp().initData, webAppUser.id, referId)
+    const { user, error, login } = useAuth(useMiniApp().initData, webAppUser.id, referId)
     if (error.value) {
       console.log(error.value)
       return

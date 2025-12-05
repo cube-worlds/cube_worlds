@@ -28,7 +28,7 @@
 </template>
 
 <script setup lang="ts">
-import { useWebAppHapticFeedback, MainButton, useWebAppPopup } from "vue-tg"
+import { useHapticFeedback, MainButton, usePopup } from "vue-tg"
 import { Ref, onMounted, onUnmounted, ref } from "vue"
 import { useUserStore } from "../stores/userStore.js"
 import { useFluent } from "fluent-vue"
@@ -44,7 +44,7 @@ onUnmounted(() => {
   restoreZoom()
 })
 
-const { impactOccurred } = useWebAppHapticFeedback()
+const { impactOccurred } = useHapticFeedback()
 
 const count = ref(0)
 const messages: Ref<{ id: number; x: number; y: number; value: number }[]> = ref([])
@@ -52,7 +52,7 @@ const messages: Ref<{ id: number; x: number; y: number; value: number }[]> = ref
 const tap = (value: number, event: MouseEvent) => {
   const impacts = ["light", "medium", "heavy", "rigid", "soft"] as const
   const randomImpact = impacts[Math.floor(Math.random() * impacts.length)]
-  impactOccurred(randomImpact)
+  impactOccurred?.(randomImpact)
 
   const multiplier = randomImpact === "light" ? 1 : impacts.indexOf(randomImpact) + 1
   const add = value * multiplier
@@ -72,33 +72,31 @@ const tap = (value: number, event: MouseEvent) => {
   }, 1000)
 }
 
-const popup = useWebAppPopup()
+const popup = usePopup()
 
-function showAlert() {
+async function showAlert() {
   if (count.value < 30) return
 
-  popup.showPopup(
-    {
-      title: $t("clicker-no-title"),
-      message: $t("clicker-no"),
-      buttons: [
-        { id: "share", type: "default", text: "Share" },
-        { id: "close", type: "default", text: "Close" },
-      ],
-    },
-    (buttonId: string) => {
-      if (buttonId === "share") {
-        const text = $t("clicker-share-text")
-        const user = userStore.user
-        const startParam = user?.id ? `?startapp=ref_${user.id}` : ""
-        const url = `https://t.me/cube_worlds_bot/clicker${startParam}`
-        const shareLink = `https://t.me/share/url?url=${encodeURIComponent(
-          url
-        )}&text=${encodeURIComponent(text)}`
-        window.open(shareLink)
-      }
-    }
-  )
+  if (!popup.showPopup) return
+  const result = await popup.showPopup({
+    title: $t("clicker-no-title"),
+    message: $t("clicker-no"),
+    buttons: [
+      { id: "share", text: "Share" },
+      { id: "close", text: "Close" },
+    ],
+  })
+
+  if (result === "share") {
+    const text = $t("clicker-share-text")
+    const user = userStore.user
+    const startParam = user?.id ? `?startapp=ref_${user.id}` : ""
+    const url = `https://t.me/cube_worlds_bot/clicker${startParam}`
+    const shareLink = `https://t.me/share/url?url=${encodeURIComponent(
+      url
+    )}&text=${encodeURIComponent(text)}`
+    window.open(shareLink)
+  }
 }
 
 const disableZoom = () => {

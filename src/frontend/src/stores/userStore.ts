@@ -15,7 +15,7 @@ export interface UserStore {
 export const useUserStore = defineStore('userStore', () => {
     const wallet: Ref<ConnectedWallet | undefined> = ref()
     const user: Ref<UserStore | undefined> = ref()
-    const balance = ref(BigInt(0))
+    const balance = ref<bigint | null>(null)
 
     function setWallet(value: ConnectedWallet | undefined) {
         wallet.value = value
@@ -27,9 +27,8 @@ export const useUserStore = defineStore('userStore', () => {
     }
 
     function setBalance(value: string | bigint | undefined) {
-        if (value === undefined) {
+        if (value === undefined)
             return
-        }
         balance.value = BigInt(value)
     }
 

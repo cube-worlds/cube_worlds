@@ -32,8 +32,8 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, Ref, inject } from "vue"
-import { MainButton, useWebAppHapticFeedback, useWebApp } from "vue-tg"
-import { useUserStore } from "../stores/userStore.js"
+import { MainButton, useHapticFeedback, useMiniApp } from "vue-tg"
+import { useUserStore } from "../stores/userStore"
 import { Address, Cell, beginCell } from "@ton/core"
 import { TonConnectUI } from "@tonconnect/ui"
 import { sleep } from "#root/common/helpers/time"
@@ -41,13 +41,12 @@ import useLoadingAndError from "../composables/useLoadingAndError"
 
 const { loadingInstance, showError } = useLoadingAndError()
 
-const { notificationOccurred } = useWebAppHapticFeedback()
+const { notificationOccurred } = useHapticFeedback()
 
 const collectionAddress = "EQAaSqEwAh00YOCc9ZwtqfNcXeehbl97yKQKCZPRGwCov51V"
 
-const miniapp = useWebApp()
+const miniapp = useMiniApp()
 const userStorage = useUserStore()
-
 const tonConnectUI = inject<Ref<TonConnectUI | null>>("tonConnectUI")
 
 let metadata = ref()
@@ -128,10 +127,10 @@ async function claim() {
     }
     console.info("Transaction was sent successfully, BOC: ", result.boc)
     await runMintCheck()
-    notificationOccurred("success")
+    notificationOccurred?.("success")
   } catch (e) {
     showError(e)
-    notificationOccurred("error")
+    notificationOccurred?.("error")
   }
 }
 
