@@ -1,6 +1,6 @@
 import type { Context } from '#root/bot/context'
 import { logHandle } from '#root/common/helpers/logging'
-import { bigIntWithCustomSeparator } from '#root/common/helpers/numbers'
+import { commaSeparatedNumber } from '#root/common/helpers/numbers'
 import { removeMiddle } from '#root/common/helpers/text'
 import { countAllLine, findLine, placeInLine, UserState } from '#root/common/models/User'
 import { Composer } from 'grammy'
@@ -16,7 +16,7 @@ feature.command('line', logHandle('command-line'), async (ctx) => {
     const body = line.map((v, index) => [
         String(index + 1) + (v.diceWinner ? ' (dice)' : ''),
         removeMiddle(v.name ?? 'undefined', 6),
-        bigIntWithCustomSeparator(v.votes),
+        commaSeparatedNumber(v.votes),
     ])
     if (
         !ctx.dbuser.minted
@@ -30,7 +30,7 @@ feature.command('line', logHandle('command-line'), async (ctx) => {
                 [
                     String(place),
                     removeMiddle(ctx.dbuser.name ?? 'undefined', 6),
-                    bigIntWithCustomSeparator(ctx.dbuser.votes),
+                    commaSeparatedNumber(ctx.dbuser.votes),
                 ],
             )
         }

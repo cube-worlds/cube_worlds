@@ -1,6 +1,6 @@
 import type { Context } from '#root/bot/context'
 import { logHandle } from '#root/common/helpers/logging'
-import { bigIntWithCustomSeparator } from '#root/common/helpers/numbers'
+import { commaSeparatedNumber } from '#root/common/helpers/numbers'
 import { removeMiddle } from '#root/common/helpers/text'
 import {
     countAllBalances,
@@ -16,13 +16,13 @@ const composer = new Composer<Context>()
 const feature = composer.chatType('private')
 
 feature.command('whales', logHandle('command-line'), async (ctx) => {
-    const points = bigIntWithCustomSeparator(BigInt(await countAllBalances()))
+    const points = commaSeparatedNumber(await countAllBalances())
     const count = await countAllWallets()
     const whales = await findWhales(50)
     const body = whales.map((v, index) => [
         String(index + 1),
         removeMiddle(v.wallet ?? 'undefined'),
-        bigIntWithCustomSeparator(v.votes),
+        commaSeparatedNumber(v.votes),
     ])
     if (!whales.some(v => v.wallet === ctx.dbuser.wallet)) {
         const place = await placeInWhales(ctx.dbuser.votes)
@@ -31,7 +31,7 @@ feature.command('whales', logHandle('command-line'), async (ctx) => {
             [
                 String(place),
                 removeMiddle(ctx.dbuser.wallet ?? 'undefined'),
-                bigIntWithCustomSeparator(ctx.dbuser.votes),
+                commaSeparatedNumber(ctx.dbuser.votes),
             ],
         )
     }

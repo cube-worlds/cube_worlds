@@ -23,5 +23,6 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SatoshiMining: typeof import('./src/components/SatoshiMining.vue')['default']
+    Trade: typeof import('./src/components/Trade.vue')['default']
   }
 }

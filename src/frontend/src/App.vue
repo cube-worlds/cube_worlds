@@ -40,7 +40,7 @@ import { useUserStore } from "./stores/userStore"
 import { ConnectedWallet, TonConnectUI } from "@tonconnect/ui"
 import { enBundle, ruBundle } from "./fluent"
 import { useFluent } from "fluent-vue"
-import { bigIntWithCustomSeparator } from "#root/common/helpers/numbers"
+import { commaSeparatedNumber } from "#root/common/helpers/numbers"
 
 const fluent = useFluent()
 
@@ -66,7 +66,7 @@ function getUserIdFromRefString(refString: string): number | undefined {
 
 const displayedBalance = computed(() => {
   if (userStore.balance === null) return "???"
-  return bigIntWithCustomSeparator(userStore.balance)
+  return commaSeparatedNumber(userStore.balance)
 })
 
 

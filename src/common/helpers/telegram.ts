@@ -7,7 +7,7 @@ import { logger } from '#root/logger'
 import { InputMediaBuilder } from 'grammy'
 import { getRandomCoolEmoji } from './emoji'
 import { linkToIPFSGateway } from './ipfs'
-import { bigIntWithCustomSeparator } from './numbers'
+import { commaSeparatedNumber } from './numbers'
 
 interface Languages {
     ru: string
@@ -81,7 +81,7 @@ export async function sendPlaceInLine(
         const shareLink = shareTelegramLink(user.id, i18n.t(user.language, 'mint.share'))
         const titleKey = `speedup.${user.minted ? 'title_minted' : 'title_not_minted'}`
         const titleVariables: TranslationVariables<string> = {
-            points: bigIntWithCustomSeparator(user.votes),
+            points: commaSeparatedNumber(user.votes),
         }
         await api.sendMessage(
             user.id,
