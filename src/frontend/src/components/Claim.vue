@@ -1,6 +1,6 @@
 <template>
   <div class="claim-container">
-    <h2 class="claim-title">Daily Claim</h2>
+    <h1 class="claim-title">Daily Claim</h1>
 
     <div class="progress-container">
       <div class="progress-bar">

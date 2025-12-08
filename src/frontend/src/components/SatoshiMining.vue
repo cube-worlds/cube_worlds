@@ -1,9 +1,7 @@
 <template>
   <div class="mining-container">
     <div class="card">
-      <div class="title-row">
-        <h2>$SATOSHI Mining</h2>
-      </div>
+      <h1>$SATOSHI Mining</h1>
 
       <button class="mine-btn" @click="submitMining">
         Press F
@@ -263,12 +261,6 @@ onMounted(() => {
   margin-bottom: 12px;
   backdrop-filter: blur(4px);
   border: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.title-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
 }
 
 .mine-btn {

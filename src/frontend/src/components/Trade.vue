@@ -1,7 +1,7 @@
 <template>
   <div class="trade-page">
     <div class="card">
-      <h2>Exchange $CUBE to $SATOSHI</h2>
+      <h1>Exchange $CUBE to $SATOSHI</h1>
 
       <div v-if="userBalanceNum < minUserBalance" class="warn">
         Your balance is below {{ minUserBalance }} $CUBE — exchange unavailable
@@ -226,13 +226,6 @@ async function doChange() {
   margin-bottom: 12px;
   backdrop-filter: blur(4px);
   border: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-h2 {
-  font-size: 18px;
-  font-weight: 700;
-  margin: 0 0 16px 0;
-  color: #fff;
 }
 
 .warn {
