@@ -6,7 +6,7 @@
       <div class="coin-balance">
         {{ displayedBalance }} $CUBE
       </div>
-      <div id="ton-connect"></div>
+      <div id="ton-connect" v-show="userStore.user !== undefined"></div>
     </div>
 
     <div class="content-wrapper">
