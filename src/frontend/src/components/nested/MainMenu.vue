@@ -1,18 +1,23 @@
 <template>
   <div class="cosmic-menu">
     <div class="menu-links">
-      <router-link to="/" class="menu-link" active-class="active">🏠</router-link>
-      <router-link to="/leaderboard" class="menu-link" active-class="active">🏆</router-link>
-      <router-link to="/trade" class="menu-link" active-class="active">💰</router-link>
-      <router-link to="/satoshi" class="menu-link" active-class="active">⛏️</router-link>
-      <router-link to="/cnft" class="menu-link" active-class="active">🎨</router-link>
-      <!-- <router-link to="/faq" class="menu-link" active-class="active">🤔</router-link> -->
-      <!-- <router-link to="/clicker" class="menu-link" active-class="active">🖱️</router-link> -->
+      <router-link
+        v-for="item in menu"
+        :key="item.path"
+        :to="item.path"
+        class="menu-link"
+        active-class="active"
+      >
+        {{ item.emoji }}
+      </router-link>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { menuRoutes } from '@/routes'
+
+const menu = menuRoutes.filter(r => r.showInMenu)
 </script>
 
 <style lang="css" scoped>

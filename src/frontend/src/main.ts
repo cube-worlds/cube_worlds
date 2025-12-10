@@ -4,33 +4,14 @@ import { createPinia } from 'pinia'
 import { createApp } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import App from './App.vue'
-import ClaimComponent from './components/Claim.vue'
-import ClickerComponent from './components/Clicker.vue'
-import CNFTComponent from './components/CNFT.vue'
-import FAQComponent from './components/FAQ.vue'
-import LeaderboardComponent from './components/Leaderboard.vue'
-import NotFoundComponent from './components/NotFound.vue'
-import SatoshiMiningComponent from './components/SatoshiMining.vue'
-import TradeComponent from './components/Trade.vue'
 import { fluent } from './fluent'
+import { vueRoutes } from './routes'
 import 'element-plus/dist/index.css'
 import './style.css'
 
-const routes = [
-    // RESERVED: /cnfts /api
-    { path: '/', name: 'ClaimPage', component: ClaimComponent },
-    { path: '/trade', name: 'TradePage', component: TradeComponent },
-    { path: '/satoshi', name: 'SatoshiMiningPage', component: SatoshiMiningComponent },
-    { path: '/clicker', name: 'ClickerPage', component: ClickerComponent },
-    { path: '/faq', name: 'FAQPage', component: FAQComponent },
-    { path: '/cnft', mame: 'CNFTPage', component: CNFTComponent },
-    { path: '/leaderboard', mame: 'LeaderboardPage', component: LeaderboardComponent },
-    { path: '/:pathMatch(.*)*', component: NotFoundComponent },
-]
-
 const router = createRouter({
     history: createWebHistory(),
-    routes,
+    routes: vueRoutes,
 })
 
 const pinia = createPinia()

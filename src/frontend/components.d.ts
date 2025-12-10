@@ -15,6 +15,7 @@ declare module 'vue' {
     Claim: typeof import('./src/components/Claim.vue')['default']
     Clicker: typeof import('./src/components/Clicker.vue')['default']
     CNFT: typeof import('./src/components/CNFT.vue')['default']
+    Exchange: typeof import('./src/components/Exchange.vue')['default']
     FAQ: typeof import('./src/components/FAQ.vue')['default']
     Leaderboard: typeof import('./src/components/Leaderboard.vue')['default']
     MainMenu: typeof import('./src/components/nested/MainMenu.vue')['default']
@@ -23,6 +24,5 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SatoshiMining: typeof import('./src/components/SatoshiMining.vue')['default']
-    Trade: typeof import('./src/components/Trade.vue')['default']
   }
 }
