@@ -35,7 +35,7 @@
 import { ref, onMounted, computed, provide, Ref } from "vue"
 import { useMiniApp, ClosingConfirmation, ExpandedViewport } from "vue-tg"
 import MainMenu from "./components/nested/MainMenu.vue"
-import { useAuth } from "./composables/use-auth"
+import { useAuth } from "./composables/useAuth"
 import { useUserStore } from "./stores/userStore"
 import { ConnectedWallet, TonConnectUI } from "@tonconnect/ui"
 import { enBundle, ruBundle } from "./fluent"

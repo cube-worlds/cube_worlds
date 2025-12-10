@@ -46,34 +46,22 @@ import TonWeb from "tonweb"
 import type { TonConnectUI } from "@tonconnect/ui"
 import { useUserStore } from "../stores/userStore"
 import { commaSeparatedNumber } from "#root/common/helpers/numbers.ts"
+import { useRetry } from "../composables/useRetry"
 
 const tonConnectUI = inject("tonConnectUI") as { value: TonConnectUI | null } | undefined
 const userStore = useUserStore()
+const { retry } = useRetry()
 
 const minUserBalance = 1000
-
-const retryFetch = async (url: string, retries = 5, delay = 500) => {
-  for (let i = 0; i < retries; i++) {
-    try {
-      const r = await fetch(url)
-      if (r.ok) return r
-    } catch (_) {}
-    await new Promise(res => setTimeout(res, delay))
-  }
-  throw new Error("Fetch failed after retries: " + url)
-}
 
 function toNumberSafe(v: any) {
   const n = Number(v ?? 0)
   return Number.isNaN(n) ? 0 : n
 }
 
-const userBalanceRaw = computed(() => userStore.balance ?? 0)
-const userBalanceNum = computed(() => Math.floor(toNumberSafe(userBalanceRaw.value)))
+const userBalanceNum = computed(() => Math.floor(toNumberSafe(userStore.balance)))
 
-const selectedAmount = ref(
-  Math.max(minUserBalance, userBalanceNum.value > 0 ? Math.min(userBalanceNum.value, minUserBalance) : minUserBalance)
-)
+const selectedAmount = ref(minUserBalance)
 
 const sumAll = ref<number | null>(null)
 const commonSatoshiRaw = ref<number | null>(null)
@@ -83,10 +71,9 @@ const txResult = ref<string | null>(null)
 const error = ref<string | null>(null)
 
 const satoshiReceived = computed(() => {
-  if (sumAll.value == null || commonSatoshiRaw.value == null) return null
-  if (!selectedAmount.value || sumAll.value === 0) return null
-  const res = (selectedAmount.value / sumAll.value) * commonSatoshiRaw.value
-  return Math.floor(isFinite(res) ? res : 0)
+  if (!sumAll.value || !commonSatoshiRaw.value) return null
+  const r = (selectedAmount.value / sumAll.value) * commonSatoshiRaw.value
+  return Math.floor(isFinite(r) ? r : 0)
 })
 
 const formattedSelectedAmount = computed(() =>
@@ -98,18 +85,20 @@ const formattedSatoshiReceived = computed(() =>
 )
 
 const actionDisabled = computed(() => {
+  if (!satoshiReceived.value || satoshiReceived.value < 1) return true
   if (userBalanceNum.value < minUserBalance) return true
   if (selectedAmount.value < minUserBalance) return true
-  if (!tonConnectUI || !tonConnectUI.value) return true
+  if (!tonConnectUI?.value) return true
   return sending.value
 })
 
 const SUM_API = "/api/trade/balances"
 
 const isDev = import.meta.env.VITE_ENV === "development"
-console.log(isDev ? "Development mode" : "Production mode")
+const rpcAddress = isDev
+  ? "https://testnet.toncenter.com/api/v2/jsonRPC"
+  : "https://toncenter.com/api/v2/jsonRPC"
 
-const rpcAddress = isDev ? "https://testnet.toncenter.com/api/v2/jsonRPC" : "https://toncenter.com/api/v2/jsonRPC"
 const provider = new TonWeb.HttpProvider(rpcAddress)
 const tonweb = new TonWeb(provider)
 
@@ -122,36 +111,28 @@ const satoshiWalletAddress = isDev
   : "EQCd7tILlcnS89uI0OD4Zzz7yQHGLhGzBedk88PKGEbmv7zP"
 
 async function fetchSumAll() {
-  try {
-    const r = await retryFetch(SUM_API)
-    const json = await r.json()
-    sumAll.value = toNumberSafe(json.sum)
-  } catch {
-    sumAll.value = null
+  const r = await retry(() => fetch(SUM_API))
+  if (!r) {
     error.value = "Failed to fetch total CUBE supply"
+    sumAll.value = null
+    return
   }
+  const json = await r.json()
+  sumAll.value = toNumberSafe(json.sum)
 }
 
-async function fetchSatoshiWalletBalance(maxRetries = 10, retryDelay = 1000) {
-  let retries = 0
-  while (retries <= maxRetries) {
-    try {
-      const result = await tonweb.provider.call2(satoshiWalletAddress, "get_wallet_data")
-      commonSatoshiRaw.value = toNumberSafe(
-        TonWeb.utils.fromNano(String(result[0] ?? 0))
-      )
-    } catch (e) {
-      retries++;
-      if (retries > maxRetries) {
-        console.error('Error getting jetton data after maximum retries:', e)
-        commonSatoshiRaw.value = null
-        return
-      }
-      console.warn(`Jetton data fetch attempt ${retries} failed, retrying in ${retryDelay}ms...`)
-      await new Promise((resolve) => setTimeout(resolve, retryDelay))
-      retryDelay *= 2
-    }
+async function fetchSatoshiWalletBalance() {
+  const res = await retry(() =>
+    tonweb.provider.call2(satoshiWalletAddress, "get_wallet_data")
+  )
+  if (!res) {
+    error.value = "Failed to fetch total SATOSHI supply"
+    commonSatoshiRaw.value = null
+    return
   }
+  commonSatoshiRaw.value = toNumberSafe(
+    TonWeb.utils.fromNano(String(res[0] ?? 0))
+  )
 }
 
 onMounted(async () => {
@@ -169,7 +150,7 @@ async function doChange() {
   error.value = null
   txResult.value = null
 
-  const ui = tonConnectUI?.value ?? null
+  const ui = tonConnectUI?.value
   if (!ui) {
     error.value = "Wallet UI not found"
     return

@@ -83,8 +83,10 @@
 import { ref, inject, computed, onMounted, Ref } from "vue"
 import TonWeb from "tonweb"
 import type { TonConnectUI } from "@tonconnect/ui"
+import { useRetry } from "../composables/useRetry"
 
 const tonConnectUI = inject<Ref<TonConnectUI | null>>("tonConnectUI")
+const { retry } = useRetry()
 
 const contractAddress = "EQCkdx5PSWjj-Bt0X-DRCfNev6ra1NVv9qqcu-W2-SaToSHI"
 
@@ -171,55 +173,34 @@ async function submitMining() {
   })
 }
 
-async function fetchJetton(maxRetries = 10, retryDelay = 1000) {
-  let retries = 0
-    while (retries <= maxRetries) {
-        try {
-            const result = await tonweb.provider.call2(contractAddress, 'get_jetton_data');
-            jettonData.value = {
-                total_supply: result[0],
-                // mintable: result[1],
-                admin_address: result[2],
-                // content: result[3],
-                // wallet_code: result[4],
-            };
-        } catch (e) {
-            retries++;
-            if (retries > maxRetries) {
-                console.error('Error getting jetton data after maximum retries:', e)
-                jettonData.value = null
-                return
-            }
-            console.warn(`Jetton data fetch attempt ${retries} failed, retrying in ${retryDelay}ms...`)
-            await new Promise((resolve) => setTimeout(resolve, retryDelay))
-            retryDelay *= 2
-        }
-    }
+async function fetchJetton() {
+  const res = await retry(() => tonweb.provider.call2(contractAddress, 'get_jetton_data'))
+  if (!res) {
+    jettonData.value = null
+    return
+  }
+  jettonData.value = {
+    total_supply: res[0],
+    // mintable: result[1],
+    admin_address: res[2],
+    // content: result[3],
+    // wallet_code: result[4],
+  }
 }
 
-async function fetchMining(maxRetries = 10, retryDelay = 1000) {
-  let retries = 0
-    while (retries <= maxRetries) {
-        try {
-            const result = await tonweb.provider.call2(contractAddress, 'get_mining_data')
-            miningData.value = {
-                last_block: parseInt(result[0]),
-                last_block_time: parseInt(result[1]),
-                attempts: parseInt(result[2]),
-                subsidy: result[3],
-                probability: parseInt(result[4]),
-            };
-        } catch (e) {
-            retries++;
-            if (retries > maxRetries) {
-                console.error('Error getting mining data after maximum retries:', e)
-                miningData.value = null
-            }
-            console.warn(`Mining data fetch attempt ${retries} failed, retrying in ${retryDelay}ms...`)
-            await new Promise((resolve) => setTimeout(resolve, retryDelay))
-            retryDelay *= 2
-        }
-    }
+async function fetchMining() {
+  const res = await retry(() => tonweb.provider.call2(contractAddress, 'get_mining_data'))
+  if (!res) {
+    miningData.value = null
+    return
+  }
+  miningData.value = {
+    last_block: parseInt(res[0]),
+    last_block_time: parseInt(res[1]),
+    attempts: parseInt(res[2]),
+    subsidy: res[3],
+    probability: parseInt(res[4]),
+  }
 }
 
 function updateTimer() {
