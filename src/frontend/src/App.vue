@@ -1,131 +1,145 @@
-<template>
-  <div class="cosmos">
-    <div v-for="(star, index) in stars" :key="index" class="star" :style="star"></div>
-
-    <div class="top-bar">
-      <div class="coin-balance">
-        {{ displayedBalance }} $CUBE
-      </div>
-      <div id="ton-connect" v-show="userStore.user !== undefined"></div>
-    </div>
-
-    <div class="content-wrapper">
-      <RouterView />
-    </div>
-
-    <div class="footer">
-      <MainMenu />
-    </div>
-
-    <div class="solar-system">
-      <div class="sun">
-        <div class="sun-core"></div>
-        <div class="sun-rays"></div>
-      </div>
-      <div class="planet earth"></div>
-      <div class="planet mars"></div>
-    </div>
-    <div class="ufo" :style="ufoStyle"></div>
-    <ClosingConfirmation />
-    <ExpandedViewport />
-  </div>
-</template>
-
 <script setup lang="ts">
-import { ref, onMounted, computed, provide, Ref } from "vue"
-import { useMiniApp, ClosingConfirmation, ExpandedViewport } from "vue-tg"
-import MainMenu from "./components/nested/MainMenu.vue"
-import { useAuth } from "./composables/useAuth"
-import { useUserStore } from "./stores/userStore"
-import { ConnectedWallet, TonConnectUI } from "@tonconnect/ui"
-import { enBundle, ruBundle } from "./fluent"
-import { useFluent } from "fluent-vue"
-import { commaSeparatedNumber } from "#root/common/helpers/numbers"
+import type { ConnectedWallet } from '@tonconnect/ui'
+import type { Ref } from 'vue'
+import { commaSeparatedNumber } from '#root/common/helpers/numbers'
+import { TonConnectUI } from '@tonconnect/ui'
+import { useFluent } from 'fluent-vue'
+import { computed, onMounted, provide, ref } from 'vue'
+import { ClosingConfirmation, ExpandedViewport, useMiniApp } from 'vue-tg'
+import MainMenu from './components/nested/MainMenu.vue'
+import { useAuth } from './composables/useAuth'
+import { enBundle, ruBundle } from './fluent'
+import { useUserStore } from './stores/userStore'
 
 const fluent = useFluent()
 
 const tonConnectUI = ref<TonConnectUI | null>(null)
-provide("tonConnectUI", tonConnectUI)
+provide('tonConnectUI', tonConnectUI)
 
 const userStore = useUserStore()
 
 const stars: Ref<
-  Array<{ top: string; left: string; animationDuration: string; animationDelay: string }>
+    Array<{ top: string, left: string, animationDuration: string, animationDelay: string }>
 > = ref([])
 const ufoPosition = ref({ x: 0, y: 0 })
 
 const ufoStyle = computed(() => ({
-  left: `${ufoPosition.value.x}%`,
-  top: `${ufoPosition.value.y}%`,
+    left: `${ufoPosition.value.x}%`,
+    top: `${ufoPosition.value.y}%`,
 }))
 
 function getUserIdFromRefString(refString: string): number | undefined {
-  const match = refString.match(/ref_(\d+)/)
-  return match && match[1] ? parseInt(match[1], 10) : undefined
+    const match = refString.match(/ref_(\d+)/)
+    return match && match[1] ? Number.parseInt(match[1], 10) : undefined
 }
 
 const displayedBalance = computed(() => {
-  if (userStore.balance === null) return "???"
-  return commaSeparatedNumber(userStore.balance)
+    if (userStore.balance === null)
+        return '???'
+    return commaSeparatedNumber(userStore.balance)
 })
-
 
 onMounted(async () => {
-  tonConnectUI.value = new TonConnectUI({
-    manifestUrl: "https://cubeworlds.club/tonconnect-manifest.json",
-    buttonRootId: "ton-connect",
-    actionsConfiguration: {
-      returnStrategy: "back",
-      twaReturnUrl: "https://t.me/cube_worlds_bot/cnft?startapp=from_wallet",
-    },
-  })
-  tonConnectUI.value.onStatusChange((wallet: ConnectedWallet | null) => {
-    console.info("Wallet updated: " + wallet)
-    userStore.setWallet(wallet ?? undefined)
-  })
+    tonConnectUI.value = new TonConnectUI({
+        manifestUrl: 'https://cubeworlds.club/tonconnect-manifest.json',
+        buttonRootId: 'ton-connect',
+        actionsConfiguration: {
+            returnStrategy: 'back',
+            twaReturnUrl: 'https://t.me/cube_worlds_bot/cnft?startapp=from_wallet',
+        },
+    })
+    tonConnectUI.value.onStatusChange((wallet: ConnectedWallet | null) => {
+        // console.info(`Wallet updated: ${wallet}`)
+        userStore.setWallet(wallet ?? undefined)
+    })
 
-  stars.value = Array.from({ length: 200 }, () => ({
-    top: `${Math.random() * 100}%`,
-    left: `${Math.random() * 100}%`,
-    animationDuration: `${Math.random() * 3 + 1}s`,
-    animationDelay: `${Math.random() * 2}s`,
-  }))
+    stars.value = Array.from({ length: 200 }, () => ({
+        top: `${Math.random() * 100}%`,
+        left: `${Math.random() * 100}%`,
+        animationDuration: `${Math.random() * 3 + 1}s`,
+        animationDelay: `${Math.random() * 2}s`,
+    }))
 
-  setInterval(() => {
-    ufoPosition.value = {
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-    }
-  }, 5000)
+    setInterval(() => {
+        ufoPosition.value = {
+            x: Math.random() * 100,
+            y: Math.random() * 100,
+        }
+    }, 5000)
 
-  const initData = useMiniApp().initDataUnsafe
-  const webAppUser = initData.user
-  if (webAppUser) {
-    let referId = undefined
-    const start_param = initData.start_param
-    if (start_param) {
-      referId = getUserIdFromRefString(start_param)
-      console.log("referId:", referId)
+    const initData = useMiniApp().initDataUnsafe
+    const webAppUser = initData.user
+    if (webAppUser) {
+        let referId
+        const start_param = initData.start_param
+        if (start_param) {
+            referId = getUserIdFromRefString(start_param)
+            // console.log('referId:', referId)
+        }
+        const { user, error, login } = useAuth(useMiniApp().initData, webAppUser.id, referId)
+        if (error.value) {
+            console.error(error.value)
+            return
+        }
+        const isLoggedIn = await login()
+        if (isLoggedIn) {
+            const lang = user.value.language
+            fluent.bundles.value = [lang === 'ru' ? ruBundle : enBundle]
+            if (user.value) {
+                userStore.setUser(user.value)
+                // console.log(user.value)
+            }
+        } else {
+            console.error('Login error:', error.value)
+        }
     }
-    const { user, error, login } = useAuth(useMiniApp().initData, webAppUser.id, referId)
-    if (error.value) {
-      console.log(error.value)
-      return
-    }
-    const isLoggedIn = await login()
-    if (isLoggedIn) {
-      const lang = user.value.language
-      fluent.bundles.value = [lang === "ru" ? ruBundle : enBundle]
-      if (user.value) {
-        userStore.setUser(user.value)
-        console.log(user.value)
-      }
-    } else {
-      console.error("Login error:", error.value)
-    }
-  }
 })
 </script>
+
+<template>
+    <LoadingOverlay />
+    <div class="cosmos">
+        <div
+            v-for="(star, index) in stars"
+            :key="index"
+            class="star"
+            :style="star"
+        />
+
+        <div class="top-bar">
+            <div class="coin-balance">
+                {{ displayedBalance }} $CUBE
+            </div>
+            <div
+                v-show="userStore.user !== undefined"
+                id="ton-connect"
+            />
+        </div>
+
+        <div class="content-wrapper">
+            <RouterView />
+        </div>
+
+        <div class="footer">
+            <MainMenu />
+        </div>
+
+        <div class="solar-system">
+            <div class="sun">
+                <div class="sun-core" />
+                <div class="sun-rays" />
+            </div>
+            <div class="planet earth" />
+            <div class="planet mars" />
+        </div>
+        <div
+            class="ufo"
+            :style="ufoStyle"
+        />
+        <ClosingConfirmation />
+        <ExpandedViewport />
+    </div>
+</template>
 
 <style scoped>
 .cosmos {

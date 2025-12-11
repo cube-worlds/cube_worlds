@@ -12,18 +12,18 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     Accordion: typeof import('./src/components/nested/Accordion.vue')['default']
-    Claim: typeof import('./src/components/Claim.vue')['default']
-    Clicker: typeof import('./src/components/Clicker.vue')['default']
+    ClaimComponent: typeof import('./src/components/ClaimComponent.vue')['default']
+    ClickerComponent: typeof import('./src/components/ClickerComponent.vue')['default']
     CNFT: typeof import('./src/components/CNFT.vue')['default']
-    Exchange: typeof import('./src/components/Exchange.vue')['default']
     FAQ: typeof import('./src/components/FAQ.vue')['default']
-    Leaderboard: typeof import('./src/components/Leaderboard.vue')['default']
+    LeaderboardComponent: typeof import('./src/components/LeaderboardComponent.vue')['default']
     LoadingOverlay: typeof import('./src/components/nested/LoadingOverlay.vue')['default']
     MainMenu: typeof import('./src/components/nested/MainMenu.vue')['default']
     NotFound: typeof import('./src/components/NotFound.vue')['default']
     Pagination: typeof import('./src/components/nested/Pagination.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SatoshiExchange: typeof import('./src/components/SatoshiExchange.vue')['default']
     SatoshiMining: typeof import('./src/components/SatoshiMining.vue')['default']
   }
 }

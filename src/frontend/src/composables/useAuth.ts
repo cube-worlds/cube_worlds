@@ -18,6 +18,7 @@ export function useAuth(initData: string, userId: number, referId: number | unde
             sessionStorage.setItem('user', JSON.stringify(userModel))
             return true
         } catch (error_) {
+            console.error('Authentication error:', error_)
             error.value = error_
             return false
         }

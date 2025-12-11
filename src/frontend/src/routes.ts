@@ -1,10 +1,10 @@
-import ClaimComponent from './components/Claim.vue'
-import ClickerComponent from './components/Clicker.vue'
+import ClaimComponent from './components/ClaimComponent.vue'
+import ClickerComponent from './components/ClickerComponent.vue'
 import CNFTComponent from './components/CNFT.vue'
-import ExchangeComponent from './components/Exchange.vue'
 import FAQComponent from './components/FAQ.vue'
-import LeaderboardComponent from './components/Leaderboard.vue'
+import LeaderboardComponent from './components/LeaderboardComponent.vue'
 import NotFoundComponent from './components/NotFound.vue'
+import ExchangeComponent from './components/SatoshiExchange.vue'
 import SatoshiMiningComponent from './components/SatoshiMining.vue'
 
 export interface MenuRoute {

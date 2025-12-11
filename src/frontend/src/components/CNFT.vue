@@ -1,59 +1,28 @@
-<template>
-  <div class="cnft-container">
-    <h1>{{ $t("cnft-header") }}</h1>
-
-    <div v-if="userStorage.wallet">
-      <div v-if="metadata && eligible" class="cnft-content">
-        <h2 class="nft-name">{{ metadata?.name }}</h2>
-        <div class="image-container">
-          <img :src="metadata?.image" alt="NFT Image" />
-        </div>
-        <p class="cnft-description">{{ metadata?.description }}</p>
-        <div class="action-button">
-          <MainButton
-            v-if="miniapp.isReady"
-            :text="$t(cnftExists ? 'cnft-show-button' : 'cnft-claim-button')"
-            @click="tapButton"
-          />
-          <button v-else @click="tapButton">
-            {{ $t(cnftExists ? "cnft-show-button" : "cnft-claim-button") }}
-          </button>
-        </div>
-      </div>
-      <div v-else class="not-eligible">
-        {{ $t("cnft-not-eligible") }}
-      </div>
-    </div>
-    <div v-else class="connect-prompt">
-      {{ $t("cnft-connect") }}
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
-import { ref, watch, onMounted, Ref, inject } from "vue"
-import { MainButton, useHapticFeedback, useMiniApp } from "vue-tg"
-import { useUserStore } from "../stores/userStore"
-import { Address, Cell, beginCell } from "@ton/core"
-import { TonConnectUI } from "@tonconnect/ui"
-import { sleep } from "#root/common/helpers/time"
-import useLoadingAndError from "../composables/useLoadingAndError"
+import type { TonConnectUI } from '@tonconnect/ui'
+import type { Ref } from 'vue'
+import { sleep } from '#root/common/helpers/time'
+import { Address, beginCell, Cell } from '@ton/core'
+import { inject, onMounted, ref, watch } from 'vue'
+import { MainButton, useHapticFeedback, useMiniApp } from 'vue-tg'
+import useLoadingAndError from '../composables/useLoadingAndError'
+import { useUserStore } from '../stores/userStore'
 
 const { loadingInstance, showError } = useLoadingAndError()
 
 const { notificationOccurred } = useHapticFeedback()
 
-const collectionAddress = "EQAaSqEwAh00YOCc9ZwtqfNcXeehbl97yKQKCZPRGwCov51V"
+const collectionAddress = 'EQAaSqEwAh00YOCc9ZwtqfNcXeehbl97yKQKCZPRGwCov51V'
 
 const miniapp = useMiniApp()
 const userStorage = useUserStore()
-const tonConnectUI = inject<Ref<TonConnectUI | null>>("tonConnectUI")
+const tonConnectUI = inject<Ref<TonConnectUI | null>>('tonConnectUI')
 
-let metadata = ref()
-let cnft = ref()
-let cnftExists = ref()
-let eligible: Ref<Boolean> = ref(true)
-let cnftAddress: Address | undefined = undefined
+const metadata = ref()
+const cnft = ref()
+const cnftExists = ref()
+const eligible: Ref<boolean> = ref(true)
+let cnftAddress: Address | undefined
 
 // for test
 // metadata.value = {
@@ -65,202 +34,253 @@ let cnftAddress: Address | undefined = undefined
 // cnftExists.value = false;
 
 onMounted(async () => {
-  const hexAddress = userStorage.wallet?.account.address
-  if (!hexAddress) {
-    return
-  }
-  loadingInstance.visible.value = true
-  try {
-    await parseNftData(hexAddress)
-    loadingInstance.visible.value = false
-  } catch (error) {
-    await showError(error)
-  }
+    const hexAddress = userStorage.wallet?.account.address
+    if (!hexAddress) {
+        return
+    }
+    loadingInstance.visible.value = true
+    try {
+        await parseNftData(hexAddress)
+        loadingInstance.visible.value = false
+    } catch (error) {
+        await showError(error)
+    }
 })
 
 async function tapButton() {
-  if (cnftExists.value) {
-    if (!cnftAddress) {
-      console.error("Empty cNFT address")
-      return
+    if (cnftExists.value) {
+        if (!cnftAddress) {
+            console.error('Empty cNFT address')
+            return
+        }
+        window.open(
+            `https://getgems.io/collection/${collectionAddress}/${cnftAddress.toString({
+                urlSafe: true,
+            })}`,
+            '_blank',
+        )
+    } else {
+        await claim()
     }
-    window.open(
-      `https://getgems.io/collection/${collectionAddress}/${cnftAddress.toString({
-        urlSafe: true,
-      })}`,
-      "_blank"
-    )
-  } else {
-    await claim()
-  }
 }
 
 // TL-B schema: claim#013a3ca6 query_id:uint64 item_index:uint256 proof:^Cell = InternalMsgBody;
 async function claim() {
-  const cnft_index = BigInt(cnft.value.item.index)
-  const cnft_proof = cnft.value.proof_cell
-  const query_id = 0
-  const proofCell = Cell.fromBase64(cnft_proof)
+    const cnft_index = BigInt(cnft.value.item.index)
+    const cnft_proof = cnft.value.proof_cell
+    const query_id = 0
+    const proofCell = Cell.fromBase64(cnft_proof)
 
-  const body = beginCell()
-    .storeUint(0x013a3ca6, 32)
-    .storeUint(query_id, 64)
-    .storeUint(cnft_index, 256)
-    .storeRef(proofCell)
-    .endCell()
+    const body = beginCell()
+        .storeUint(0x013A3CA6, 32)
+        .storeUint(query_id, 64)
+        .storeUint(cnft_index, 256)
+        .storeRef(proofCell)
+        .endCell()
 
-  const transaction = {
-    validUntil: Math.floor(Date.now() / 1000) + 120,
-    messages: [
-      {
-        address: collectionAddress,
-        amount: "85000000",
-        payload: body.toBoc().toString("base64"),
-      },
-    ],
-  }
-
-  try {
-    const result = await tonConnectUI?.value?.sendTransaction(transaction)
-    if (!result) {
-      throw new Error("Transaction was not sent")
+    const transaction = {
+        validUntil: Math.floor(Date.now() / 1000) + 120,
+        messages: [
+            {
+                address: collectionAddress,
+                amount: '85000000',
+                payload: body.toBoc().toString('base64'),
+            },
+        ],
     }
-    console.info("Transaction was sent successfully, BOC: ", result.boc)
-    await runMintCheck()
-    notificationOccurred?.("success")
-  } catch (e) {
-    showError(e)
-    notificationOccurred?.("error")
-  }
+
+    try {
+        const result = await tonConnectUI?.value?.sendTransaction(transaction)
+        if (!result) {
+            throw new Error('Transaction was not sent')
+        }
+        // console.info('Transaction was sent successfully, BOC: ', result.boc)
+        await runMintCheck()
+        notificationOccurred?.('success')
+    } catch (e) {
+        showError(e)
+        notificationOccurred?.('error')
+    }
 }
 
 async function runMintCheck() {
-  loadingInstance.visible.value = true
-  if (!cnft.value.item.index) {
-    return
-  }
-  while (true) {
-    const nftExists = await isNftExists(cnft.value.item.index)
-    if (nftExists) {
-      cnftExists.value = true
-      loadingInstance.visible.value = false
-      return
+    loadingInstance.visible.value = true
+    if (!cnft.value.item.index) {
+        return
     }
-    await sleep(3000)
-  }
+    while (true) {
+        const nftExists = await isNftExists(cnft.value.item.index)
+        if (nftExists) {
+            cnftExists.value = true
+            loadingInstance.visible.value = false
+            return
+        }
+        await sleep(3000)
+    }
 }
 
 async function parseCNFT(wallet: string) {
-  let baseUrl = "https://cubeworlds.club/cnfts"
-  if (import.meta.env.VITE_ENV === "development") {
-    baseUrl = "http://localhost:8081"
-  }
-  const url = `${baseUrl}/v1/address/${wallet}`
-  const response = await fetch(url)
-  if (!response.ok) {
-    throw new Error(`Error: ${response.status} ${response.statusText}`)
-  }
-  const data = await response.json()
-  console.log("CNFT fetched successfully:", data)
-  return data
+    let baseUrl = 'https://cubeworlds.club/cnfts'
+    if (import.meta.env.VITE_ENV === 'development') {
+        baseUrl = 'http://localhost:8081'
+    }
+    const url = `${baseUrl}/v1/address/${wallet}`
+    const response = await fetch(url)
+    if (!response.ok) {
+        throw new Error(`Error: ${response.status} ${response.statusText}`)
+    }
+    const data = await response.json()
+    // console.log('CNFT fetched successfully:', data)
+    return data
 }
 
 async function parseMetadata(wallet: string) {
-  let baseUrl = `https://cubeworlds.club`
-  if (import.meta.env.VITE_ENV === "development") {
-    baseUrl = `http://localhost:80`
-  }
-  const url = `${baseUrl}/api/nft/${wallet}`
-  try {
-    const response = await fetch(url)
-    if (!response.ok) {
-      throw new Error(`Error: ${response.status} ${response.statusText}`)
+    let baseUrl = `https://cubeworlds.club`
+    if (import.meta.env.VITE_ENV === 'development') {
+        baseUrl = `http://localhost:80`
     }
-    const data = await response.json()
-    console.log("Metadata fetched successfully:", data)
-    return data
-  } catch (error) {
-    showError(error)
-  }
+    const url = `${baseUrl}/api/nft/${wallet}`
+    try {
+        const response = await fetch(url)
+        if (!response.ok) {
+            throw new Error(`Error: ${response.status} ${response.statusText}`)
+        }
+        const data = await response.json()
+        // console.log('Metadata fetched successfully:', data)
+        return data
+    } catch (error) {
+        showError(error)
+    }
 }
 
 async function isNftExists(nftIndex: number) {
-  const url = `https://tonapi.io/v2/blockchain/accounts/${collectionAddress}/methods/get_nft_address_by_index?args=${nftIndex}`
-  try {
-    const response = await fetch(url)
-    if (!response.ok) {
-      throw new Error(`Error: ${response.status} ${response.statusText}`)
+    const url = `https://tonapi.io/v2/blockchain/accounts/${collectionAddress}/methods/get_nft_address_by_index?args=${nftIndex}`
+    try {
+        const response = await fetch(url)
+        if (!response.ok) {
+            throw new Error(`Error: ${response.status} ${response.statusText}`)
+        }
+        const data = await response.json()
+        // console.log(data)
+        const hexAddress = data.decoded.address
+        cnftAddress = Address.parseRaw(hexAddress)
+        const cnftAddressString = cnftAddress.toString({ urlSafe: true })
+        const accountUrl = `https://tonapi.io/v2/blockchain/accounts/${cnftAddressString}`
+        const responseAccount = await fetch(accountUrl)
+        // console.log(responseAccount.status)
+        return responseAccount.status === 200
+    } catch (error) {
+        console.error(error)
+        return false
     }
-    const data = await response.json()
-    console.log(data)
-    const hexAddress = data.decoded.address
-    cnftAddress = Address.parseRaw(hexAddress)
-    const cnftAddressString = cnftAddress.toString({ urlSafe: true })
-    const accountUrl = `https://tonapi.io/v2/blockchain/accounts/${cnftAddressString}`
-    const responseAccount = await fetch(accountUrl)
-    console.log(responseAccount.status)
-    return responseAccount.status == 200
-  } catch (error) {
-    console.log(error)
-    return false
-  }
 }
 
 async function parseNftData(hexAddress: string) {
-  const address = Address.parseRaw(hexAddress)
-  const wallet = address.toString({ bounceable: false })
-  try {
-    cnft.value = await parseCNFT(wallet)
-    eligible.value = true
-  } catch (error) {
-    const message = (error as Error)?.message
-    if (message.includes("400 Bad Request")) {
-      eligible.value = false
-    } else {
-      showError(error)
+    const address = Address.parseRaw(hexAddress)
+    const wallet = address.toString({ bounceable: false })
+    try {
+        cnft.value = await parseCNFT(wallet)
+        eligible.value = true
+    } catch (error) {
+        const message = (error as Error)?.message
+        if (message.includes('400 Bad Request')) {
+            eligible.value = false
+        } else {
+            showError(error)
+        }
+        return
     }
-    return
-  }
-  try {
-    metadata.value = await parseMetadata(wallet)
-    if (cnft.value.item.index) {
-      cnftExists.value = await isNftExists(cnft.value.item.index)
-    } else {
-      cnftExists.value = false
-    }
-    const isBackFromWallet = miniapp.initDataUnsafe.start_param === "from_wallet"
-    if (isBackFromWallet) {
-      await runMintCheck()
-    }
-  } catch (error) {
-    await showError(error)
+    try {
+        metadata.value = await parseMetadata(wallet)
+        if (cnft.value.item.index) {
+            cnftExists.value = await isNftExists(cnft.value.item.index)
+        } else {
+            cnftExists.value = false
+        }
+        const isBackFromWallet = miniapp.initDataUnsafe.start_param === 'from_wallet'
+        if (isBackFromWallet) {
+            await runMintCheck()
+        }
+    } catch (error) {
+        await showError(error)
 
-    loadingInstance.visible.value = false
-  }
+        loadingInstance.visible.value = false
+    }
 }
 
 watch(
-  () => userStorage.wallet,
-  async () => {
-    if (!userStorage.wallet) {
-      console.error("Empty wallet")
-      return
-    }
-    const hexAddress = userStorage.wallet?.account.address
-    if (!hexAddress) {
-      console.error("No hex address")
-      return
-    }
-    loadingInstance.visible.value = true
-    try {
-      await parseNftData(hexAddress)
-      loadingInstance.visible.value = false
-    } catch (error) {
-      await showError(error)
-    }
-  }
+    () => userStorage.wallet,
+    async () => {
+        if (!userStorage.wallet) {
+            console.error('Empty wallet')
+            return
+        }
+        const hexAddress = userStorage.wallet?.account.address
+        if (!hexAddress) {
+            console.error('No hex address')
+            return
+        }
+        loadingInstance.visible.value = true
+        try {
+            await parseNftData(hexAddress)
+            loadingInstance.visible.value = false
+        } catch (error) {
+            await showError(error)
+        }
+    },
 )
 </script>
+
+<template>
+    <div class="cnft-container">
+        <h1>{{ $t("cnft-header") }}</h1>
+
+        <div v-if="userStorage.wallet">
+            <div
+                v-if="metadata && eligible"
+                class="cnft-content"
+            >
+                <h2 class="nft-name">
+                    {{ metadata?.name }}
+                </h2>
+                <div class="image-container">
+                    <img
+                        :src="metadata?.image"
+                        alt="NFT Image"
+                    >
+                </div>
+                <p class="cnft-description">
+                    {{ metadata?.description }}
+                </p>
+                <div class="action-button">
+                    <MainButton
+                        v-if="miniapp.isReady"
+                        :text="$t(cnftExists ? 'cnft-show-button' : 'cnft-claim-button')"
+                        @click="tapButton"
+                    />
+                    <button
+                        v-else
+                        @click="tapButton"
+                    >
+                        {{ $t(cnftExists ? "cnft-show-button" : "cnft-claim-button") }}
+                    </button>
+                </div>
+            </div>
+            <div
+                v-else
+                class="not-eligible"
+            >
+                {{ $t("cnft-not-eligible") }}
+            </div>
+        </div>
+        <div
+            v-else
+            class="connect-prompt"
+        >
+            {{ $t("cnft-connect") }}
+        </div>
+    </div>
+</template>
 
 <style scoped>
 .cnft-container {
