@@ -12,11 +12,17 @@
         "editor.defaultFormatter": "dbaeumer.vscode-eslint",
         "editor.formatOnSave": true
     },
+    "vetur.format.enable": false,
     "editor.codeActionsOnSave": {
         "source.fixAll.eslint": "always",
         "source.fixAll.stylelint": "always"
     },
     "editor.wordWrap": "wordWrapColumn",
     "editor.wordWrapColumn": 120,
-    "editor.wrappingIndent": "indent"
+    "editor.wrappingIndent": "indent",
+    "eslint.validate": [
+        "javascript",
+        "typescript",
+        "vue"
+    ]
 }
