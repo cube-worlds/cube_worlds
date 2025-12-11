@@ -5,6 +5,7 @@ import { createApp } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import App from './App.vue'
 import { fluent } from './fluent'
+import LoadingPlugin from './plugins/loading-plugin'
 import { vueRoutes } from './routes'
 import 'element-plus/dist/index.css'
 import './style.css'
@@ -17,6 +18,7 @@ const router = createRouter({
 const pinia = createPinia()
 
 createApp(App)
+    .use(LoadingPlugin)
     .use(fluent)
     .use(pinia)
     .use(router)

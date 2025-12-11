@@ -18,6 +18,7 @@ declare module 'vue' {
     Exchange: typeof import('./src/components/Exchange.vue')['default']
     FAQ: typeof import('./src/components/FAQ.vue')['default']
     Leaderboard: typeof import('./src/components/Leaderboard.vue')['default']
+    LoadingOverlay: typeof import('./src/components/nested/LoadingOverlay.vue')['default']
     MainMenu: typeof import('./src/components/nested/MainMenu.vue')['default']
     NotFound: typeof import('./src/components/NotFound.vue')['default']
     Pagination: typeof import('./src/components/nested/Pagination.vue')['default']
