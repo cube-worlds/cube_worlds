@@ -218,12 +218,28 @@ function updateTimer() {
 
 async function updateStats() {
   await Promise.all([fetchJetton(), fetchMining()])
+
+  if (!miningData.value || !miningData.value.last_block_time) {
+    return
+  }
+  if ((window as any).updateStatsTimeout) {
+    clearTimeout((window as any).updateStatsTimeout)
+  }
+
+  const blockTimeMs = miningData.value.last_block_time * 1000
+  const now = Date.now()
+  const timeSinceBlock = now - blockTimeMs
+
+  const delay = 10000
+  const msToNextMinute = 60000 - (timeSinceBlock % 60000) + delay
+
+  ;(window as any).updateStatsTimeout = setTimeout(updateStats, msToNextMinute)
 }
+
 
 onMounted(() => {
   updateStats()
   setInterval(updateTimer, 1000)
-  setInterval(updateStats, 15000)
 })
 </script>
 
