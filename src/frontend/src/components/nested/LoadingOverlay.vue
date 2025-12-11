@@ -24,7 +24,7 @@ const progress = inject('loadingProgress') as Ref<number>
   top: 0;
   left: 0;
   width: 100vw;
-  height: 3px;
+  height: 1.5px;
   z-index: 99999;
   pointer-events: none;
   background: transparent;
@@ -32,8 +32,13 @@ const progress = inject('loadingProgress') as Ref<number>
 
 .loading-bar {
   height: 100%;
-  background-color: var(--tg-theme-button-text-color, #646cff);
-  transition: width 0.2s ease;
-  border-radius: 2px;
+  background: linear-gradient(
+    90deg,
+    #646cff 0%,
+    #7c7dff 50%,
+    #646cff 100%
+  );
+  transition: width 0.25s ease-out;
+  box-shadow: 0 0 8px rgba(100, 108, 255, 0.6);
 }
 </style>
