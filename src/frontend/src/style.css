@@ -58,18 +58,42 @@ a:hover {
     color: var(--tg-theme-link-color, #535bf2);
 }
 
-button {
-    border-radius: 8px;
-    border: 1px solid transparent;
-    border-color: var(--tg-theme-button-text-color, #646cff);
-    padding: 0.6em 1.2em;
-    font-size: 1em;
-    font-weight: 500;
-    font-family: inherit;
-    color: var(--tg-theme-button-text-color, #646cff);
-    background-color: var(--tg-theme-button-color, #1a1a1a);
+.main-button {
+    width: 100%;
+    background: linear-gradient(45deg, #3366ff, #6633ff);
+    color: white;
+    border: none;
+    border-radius: 0.75rem;
+    padding: 0.8rem;
+    font-size: 1.1rem;
+    font-weight: bold;
     cursor: pointer;
-    transition: border-color 0.25s;
+    transition: all 0.3s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 0 15px rgba(102, 51, 255, 0.5);
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+}
+
+.main-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px rgba(102, 51, 255, 0.7);
+}
+
+.main-button:disabled {
+    background: linear-gradient(45deg, #666699, #9999cc);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.main-button.claiming {
+    background: linear-gradient(45deg, #666699, #9999cc);
+}
+
+.main-button.claimed {
+    background: linear-gradient(45deg, #33cc66, #33ccaa);
+    animation: pulse 2s;
 }
 
 @font-face {

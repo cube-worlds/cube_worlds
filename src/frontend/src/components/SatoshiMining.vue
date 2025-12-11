@@ -171,7 +171,7 @@ onMounted(() => {
             <h1>$SATOSHI Mining</h1>
 
             <button
-                class="mine-btn"
+                class="main-button"
                 @click="submitMining"
             >
                 Press F
@@ -264,18 +264,6 @@ onMounted(() => {
   margin-bottom: 12px;
   backdrop-filter: blur(4px);
   border: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.mine-btn {
-  width: 100%;
-  margin: 10px 0;
-  padding: 12px;
-  border-radius: 12px;
-  border: none;
-  background: #4e8cff;
-  color: #fff;
-  font-size: 17px;
-  font-weight: bold;
 }
 
 .grid {

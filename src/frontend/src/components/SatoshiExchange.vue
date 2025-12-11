@@ -194,7 +194,7 @@ async function doChange() {
             <div class="actions">
                 <button
                     :disabled="actionDisabled"
-                    class="trade-button"
+                    class="main-button"
                     @click="doChange"
                 >
                     {{ sending ? "Sending..." : "Exchange Now" }}
@@ -320,32 +320,6 @@ async function doChange() {
 
 .actions {
   margin: 16px 0;
-}
-
-.trade-button {
-  width: 100%;
-  padding: 12px;
-  border-radius: 12px;
-  border: none;
-  background: #4e8cff;
-  color: #fff;
-  font-size: 17px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.trade-button:hover:not(:disabled) {
-  background: #6ba3ff;
-}
-
-.trade-button:active:not(:disabled) {
-  transform: scale(0.98);
-}
-
-.trade-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 .tx-result {

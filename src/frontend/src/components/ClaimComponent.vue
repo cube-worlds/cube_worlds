@@ -165,7 +165,7 @@ onMounted(() => {
         </div>
 
         <button
-            class="claim-button"
+            class="main-button"
             :disabled="isButtonDisabled"
             :class="{ claiming: isClaiming, claimed: justClaimed }"
             @click="claimCubes"
@@ -262,44 +262,6 @@ onMounted(() => {
 .claim-time {
   color: #ccccff;
   font-size: 0.9rem;
-}
-
-.claim-button {
-  width: 100%;
-  background: linear-gradient(45deg, #3366ff, #6633ff);
-  color: white;
-  border: none;
-  border-radius: 0.75rem;
-  padding: 0.8rem;
-  font-size: 1.1rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  box-shadow: 0 0 15px rgba(102, 51, 255, 0.5);
-  text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
-}
-
-.claim-button:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 0 20px rgba(102, 51, 255, 0.7);
-}
-
-.claim-button:disabled {
-  background: linear-gradient(45deg, #666699, #9999cc);
-  cursor: not-allowed;
-  opacity: 0.7;
-}
-
-.claim-button.claiming {
-  background: linear-gradient(45deg, #666699, #9999cc);
-}
-
-.claim-button.claimed {
-  background: linear-gradient(45deg, #33cc66, #33ccaa);
-  animation: pulse 2s;
 }
 
 .spinner {
