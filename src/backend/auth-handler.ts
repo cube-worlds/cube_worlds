@@ -24,7 +24,8 @@ async function authHandler(fastify: FastifyInstance) {
             return { error: `No initData or hash provided` }
 
         try {
-            validate(initData, config.BOT_TOKEN, { expiresIn: 86400 })
+            const expiresIn = 60 * 60 * 24 * 7 // 7 days
+            validate(initData, config.BOT_TOKEN, { expiresIn })
             const user = await findUserById(Number(userId))
             if (!user)
                 return { error: 'User not found' }
