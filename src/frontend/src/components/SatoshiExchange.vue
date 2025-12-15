@@ -129,7 +129,7 @@ async function doChange() {
     try {
         const cell = new TonWeb.boc.Cell()
         cell.bits.writeUint(0, 32)
-        cell.bits.writeString(String(selectedAmount.value))
+        cell.bits.writeString(`s:${String(selectedAmount.value)}`)
 
         const payload = btoa(
             String.fromCharCode(...new Uint8Array(await cell.toBoc())),

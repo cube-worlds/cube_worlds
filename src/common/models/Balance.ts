@@ -13,6 +13,7 @@ export enum BalanceChangeType {
     Donation = 5, // TON
     Task = 6,
     Claim = 7,
+    Trade = 8, // for $SATOSHI
 }
 
 export function getBalanceChangeTypeName(type: BalanceChangeType): BalanceChangeKeys {

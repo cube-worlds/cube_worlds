@@ -3,7 +3,6 @@ import type { Ref } from 'vue'
 import { inject } from 'vue'
 
 const visible = inject('loadingVisible') as Ref<boolean>
-const progress = inject('loadingProgress') as Ref<number>
 </script>
 
 <template>
@@ -11,10 +10,7 @@ const progress = inject('loadingProgress') as Ref<number>
         v-show="visible"
         class="loading-container"
     >
-        <div
-            class="loading-bar"
-            :style="{ width: `${progress}%` }"
-        />
+        <div class="loading-bar" />
     </div>
 </template>
 

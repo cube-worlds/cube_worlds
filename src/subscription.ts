@@ -2,7 +2,7 @@ import type { Context } from '#root/bot/context'
 import type { Api, Bot, RawApi } from 'grammy'
 import { AccountSubscription } from '#root/common/helpers/account-subscription'
 import { tonToPoints } from '#root/common/helpers/points'
-import { sendMessageToAdmins, sendPlaceInLine } from '#root/common/helpers/telegram'
+import { sendMessageToAdmins } from '#root/common/helpers/telegram'
 import { i18n } from '#root/common/i18n'
 import { BalanceChangeType } from '#root/common/models/Balance'
 import {
@@ -13,8 +13,9 @@ import {
 import { addPoints, findUserByAddress } from '#root/common/models/User'
 import { config } from '#root/config'
 import { logger } from '#root/logger'
-import { Address, fromNano } from '@ton/core'
+import { Address, beginCell, fromNano, toNano } from '@ton/core'
 import TonWeb from 'tonweb'
+import { convertCubeToSatoshi, getSatoshiWalletAddress } from './common/helpers/satoshi'
 
 export class Subscription {
     bot: Bot<Context, Api<RawApi>>
@@ -66,7 +67,6 @@ export class Subscription {
         logger.info(`Receive ${TonWeb.utils.fromNano(value)} TON from ${senderAddress.toString()}"`)
 
         const points = tonToPoints(ton)
-        logger.info(`Received ${ton} TON => ${points} points`)
 
         const user = await findUserByAddress(senderAddress)
         if (!user) {
@@ -80,15 +80,32 @@ export class Subscription {
             return
         }
 
-        await addPoints(user.id, points, BalanceChangeType.Donation)
+        if ((typeof message === 'string') && message.startsWith('s:')) {
+            const votesRequested = Number.parseInt(message.slice(2), 10)
+            if (user.votes < votesRequested) {
+                await this.bot.api.sendMessage(user.id, ' You have\'nt sufficient $CUBES to exchange for $SATOSHI points.')
+                return
+            }
+            const decreasedBalance = await addPoints(user.id, -points, BalanceChangeType.Donation)
+            logger.info(`User ${user.id} new balance: ${decreasedBalance} points after trade ${points} for $SATOSHI`)
+            const userAddress = senderAddress.toRawString()
+            const satoshiToSend = await convertCubeToSatoshi(this.tonweb, config.isDev, votesRequested)
+            logger.info(`Send ${satoshiToSend} satoshi to ${userAddress}`)
+            await this.sendJetton(userAddress, BigInt(satoshiToSend))
+            await this.bot.api.sendMessage(
+                user.id,
+                `Successfully exchanged ${votesRequested} $CUBES for ${satoshiToSend} $SATOSHI!`,
+            )
+        } else {
+            await addPoints(user.id, points, BalanceChangeType.Donation)
 
-        await this.bot.api.sendMessage(user.id, i18n.t(user.language, 'donation', { ton }))
+            await this.bot.api.sendMessage(user.id, i18n.t(user.language, 'donation', { ton }))
 
-        await sendPlaceInLine(this.bot.api, user.id, true)
-        await sendMessageToAdmins(
-            this.bot.api,
-            `🚀 RECEIVED ${ton} TON FROM @${user.name}${message ? ` with message "${message}"` : ''}. Minted: ${user.minted ? '✅' : '❌'}`,
-        )
+            await sendMessageToAdmins(
+                this.bot.api,
+                `🚀 RECEIVED ${ton} TON FROM @${user.name}${message ? ` with message "${message}"` : ''}. Minted: ${user.minted ? '✅' : '❌'}`,
+            )
+        }
     }
 
     public async startProcessTransactions() {
@@ -101,5 +118,50 @@ export class Subscription {
             this.onTransaction,
         )
         await accountSubscription.start()
+    }
+
+    private async sendJetton(
+        toAddress: string,
+        amount: bigint,
+    ): Promise<void> {
+        try {
+            const satoshiWalletAddress = await getSatoshiWalletAddress(config.isDev)
+            const jettonWalletAddress = Address.parse(satoshiWalletAddress)
+            const destinationAddress = Address.parse(toAddress)
+            const responseDestinationAddress = Address.parse(config.COLLECTION_OWNER)
+
+            const transferBody = beginCell()
+                .storeUint(0xF8A7EA5, 32) // operation code for transfer
+                .storeUint(0, 64) // query id
+                .storeCoins(amount)
+                .storeAddress(destinationAddress)
+                .storeAddress(responseDestinationAddress) // response destination
+                .storeBit(0) // no custom payload
+                .storeCoins(toNano('0.05')) // forward amount for notification
+                .storeBit(0) // no forward payload
+                .endCell()
+
+            logger.info(`Sending ${amount} jettons to ${toAddress}`)
+
+            // Serialize and send the message
+            const bocCell = beginCell()
+                .storeUint(0x10, 6) // Internal message, IHR disabled
+                .storeUint(0, 3) // Bounce, bounced, src present
+                .storeAddress(jettonWalletAddress)
+                .storeCoins(toNano('0.1')) // gas fee
+                .storeUint(0, 1) // No init code
+                .storeRef(transferBody)
+                .endCell()
+
+            const boc = bocCell.toBoc().toString('base64')
+
+            // Send via TonWeb
+            await this.tonweb.provider.sendBoc(boc)
+
+            logger.info(`Jetton transfer initiated successfully to ${toAddress}`)
+        } catch (error) {
+            logger.error(`Failed to send jetton: ${error}`)
+            throw error
+        }
     }
 }

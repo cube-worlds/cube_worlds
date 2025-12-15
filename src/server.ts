@@ -11,6 +11,7 @@ import authHandler from './backend/auth-handler'
 import balancesHandler from './backend/balances'
 import captchaHandler from './backend/captcha'
 import nftHandler from './backend/nft-handler'
+import setWalletHandler from './backend/set-wallet-handler'
 import { config } from './config'
 
 export async function createServer(bot: Bot) {
@@ -20,6 +21,8 @@ export async function createServer(bot: Bot) {
     await server.register(middie)
 
     await server.register(authHandler, { prefix: '/api/auth' })
+    await server.register(setWalletHandler, { prefix: '/api/auth' })
+
     await server.register(captchaHandler, { prefix: '/api/captcha', bot })
     await server.register(nftHandler, { prefix: '/api/nft' })
     await server.register(balancesHandler, { prefix: '/api/trade' })
