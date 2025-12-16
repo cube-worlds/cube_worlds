@@ -13,17 +13,19 @@ export interface UserStore {
 }
 
 export const useUserStore = defineStore('userStore', () => {
-    const wallet: Ref<ConnectedWallet | undefined> = ref()
+    const wallet: Ref<ConnectedWallet | null> = ref(null)
     const user: Ref<UserStore | undefined> = ref()
     const balance = ref<bigint | null>(null)
+    const initData = ref<string>('')
 
-    function setWallet(value: ConnectedWallet | undefined) {
+    function setWallet(value: ConnectedWallet | null) {
         wallet.value = value
     }
 
-    function setUser(value: UserStore) {
-        user.value = value
-        setBalance(value.balance)
+    function setUser(initDataValue: string, storeValue: UserStore) {
+        initData.value = initDataValue
+        user.value = storeValue
+        setBalance(storeValue.balance)
     }
 
     function setBalance(value: string | bigint | undefined) {
@@ -32,5 +34,5 @@ export const useUserStore = defineStore('userStore', () => {
         balance.value = BigInt(value)
     }
 
-    return { wallet, setWallet, user, setUser, balance, setBalance }
+    return { wallet, setWallet, user, setUser, balance, setBalance, initData }
 })

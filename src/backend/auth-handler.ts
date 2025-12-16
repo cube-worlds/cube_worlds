@@ -1,12 +1,9 @@
+import type { InitData } from '@telegram-apps/init-data-node'
 import type { FastifyInstance } from 'fastify'
 import { findUserById } from '#root/common/models/User'
 import { config } from '#root/config'
 import { logger } from '#root/logger'
-import { validate } from '@telegram-apps/init-data-node'
-
-interface Parameters {
-    userId: string
-}
+import { parse, validate } from '@telegram-apps/init-data-node'
 
 interface Body {
     initData: string
@@ -14,11 +11,7 @@ interface Body {
 }
 
 async function authHandler(fastify: FastifyInstance) {
-    fastify.post<{ Params: Parameters, Body: Body }>('/:userId', async (request) => {
-        const { userId } = request.params
-        if (!userId)
-            return { error: 'No userId provided' }
-
+    fastify.post<{ Body: Body }>('/login', async (request) => {
         const { initData, referId } = request.body
         if (!initData)
             return { error: `No initData or hash provided` }
@@ -26,7 +19,13 @@ async function authHandler(fastify: FastifyInstance) {
         try {
             const expiresIn = 60 * 60 * 24 * 7 // 7 days
             validate(initData, config.BOT_TOKEN, { expiresIn })
-            const user = await findUserById(Number(userId))
+            const parsedData: InitData = parse(initData)
+
+            const tgUserId = parsedData?.user?.id
+            if (!tgUserId) {
+                return { error: 'Invalid telegram user id' }
+            }
+            const user = await findUserById(tgUserId)
             if (!user)
                 return { error: 'User not found' }
 

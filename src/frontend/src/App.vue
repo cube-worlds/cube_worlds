@@ -8,6 +8,7 @@ import { computed, onMounted, provide, ref } from 'vue'
 import { ClosingConfirmation, ExpandedViewport, useMiniApp } from 'vue-tg'
 import MainMenu from './components/nested/MainMenu.vue'
 import { useAuth } from './composables/useAuth'
+import { useSetWallet } from './composables/useSetWallet'
 import { enBundle, ruBundle } from './fluent'
 import { useUserStore } from './stores/userStore'
 
@@ -17,6 +18,7 @@ const tonConnectUI = ref<TonConnectUI | null>(null)
 provide('tonConnectUI', tonConnectUI)
 
 const userStore = useUserStore()
+useSetWallet()
 
 const stars: Ref<
     Array<{ top: string, left: string, animationDuration: string, animationDelay: string }>
@@ -49,8 +51,8 @@ onMounted(async () => {
         },
     })
     tonConnectUI.value.onStatusChange((wallet: ConnectedWallet | null) => {
-        // console.info(`Wallet updated: ${wallet}`)
-        userStore.setWallet(wallet ?? undefined)
+        console.error('Wallet status changed:', wallet)
+        userStore.setWallet(wallet)
     })
 
     stars.value = Array.from({ length: 200 }, () => ({
@@ -70,27 +72,22 @@ onMounted(async () => {
     const initData = useMiniApp().initDataUnsafe
     const webAppUser = initData.user
     if (webAppUser) {
-        let referId
+        let referId: number | undefined
         const start_param = initData.start_param
         if (start_param) {
             referId = getUserIdFromRefString(start_param)
-            // console.log('referId:', referId)
         }
-        const { user, error, login } = useAuth(useMiniApp().initData, webAppUser.id, referId)
-        if (error.value) {
-            console.error(error.value)
-            return
-        }
-        const isLoggedIn = await login()
-        if (isLoggedIn) {
-            const lang = user.value.language
-            fluent.bundles.value = [lang === 'ru' ? ruBundle : enBundle]
-            if (user.value) {
-                userStore.setUser(user.value)
-                // console.log(user.value)
+        const { login } = useAuth(useMiniApp().initData, referId)
+        try {
+            const user = await login()
+            if (user) {
+                const lang = user.language
+                fluent.bundles.value = [lang === 'ru' ? ruBundle : enBundle]
+            } else {
+                console.error('Login failed: no user returned')
             }
-        } else {
-            console.error('Login error:', error.value)
+        } catch (e) {
+            console.error('Login error:', e)
         }
     }
 })
