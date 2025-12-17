@@ -1,18 +1,23 @@
 import type TonWeb from 'tonweb'
+import { Address } from '@ton/core'
 import { useRetry } from '../../frontend/src/composables/useRetry'
 import { countAllBalances } from '../models/User'
 
-export async function getSatoshiWalletAddress(isDev: boolean) {
-    return isDev
-        ? 'kQDnOgk7w_OC29bZgkSel0DRpXL8yv8M1EqhtIhjO0wWps1u'
-        : 'EQCd7tILlcnS89uI0OD4Zzz7yQHGLhGzBedk88PKGEbmv7zP'
+export function getSatoshiWalletAddress(isDev: boolean): {
+    isBounceable: boolean
+    isTestOnly: boolean
+    address: Address
+} {
+    return Address.parseFriendly(
+        isDev
+            ? 'kQDnOgk7w_OC29bZgkSel0DRpXL8yv8M1EqhtIhjO0wWps1u'
+            : 'EQCd7tILlcnS89uI0OD4Zzz7yQHGLhGzBedk88PKGEbmv7zP',
+    )
 }
 
-export async function convertCubeToSatoshi(tonweb: TonWeb, isDev: boolean, cubes: number) {
-    const satoshiWalletAddress = await getSatoshiWalletAddress(isDev)
-
+export async function convertCubeToSatoshi(tonweb: TonWeb, isDev: boolean, cubes: number): Promise<number> {
+    const satoshiWalletAddress = getSatoshiWalletAddress(isDev).address.toString()
     const { retry } = useRetry()
-
     const res = await retry(() =>
         tonweb.provider.call2(satoshiWalletAddress, 'get_wallet_data'), 3, 500)
     if (!res) {
