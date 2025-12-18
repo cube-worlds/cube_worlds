@@ -31,7 +31,7 @@ Follow these steps to set up and run bot locally:
    Start the bot and frontend in watch mode (auto-reload when code changes):
 
    ```bash
-   npm run dev:all
+   npm run dev
    ```
 
 ### List of Available Commands
@@ -39,5 +39,5 @@ Follow these steps to set up and run bot locally:
 - `npm run lint` — Lint source code.
 - `npm run format` — Format source code.
 - `npm run typecheck` — Run type checking.
-- `npm run dev:all` — Start the bot and frontend in development mode.
-- `npm run update` — Update all dependencies.
+- `npm run dev` — Start the bot and frontend in development mode.
+- `npm run update:all` — Update all dependencies.

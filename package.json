@@ -16,6 +16,7 @@
     "scripts": {
         "dev": "tsc-watch --onSuccess \"tsx ./src/main.ts\"",
         "tunnel": "ngrok http --domain dominant-annually-lobster.ngrok-free.app 3000",
+        "xtunnel": "xtunnel http 3000",
         "build:bot": "tsc --noEmit false",
         "build:frontend": "npm --prefix src/frontend run build",
         "build:all": "npm run build:bot && npm run build:frontend",
