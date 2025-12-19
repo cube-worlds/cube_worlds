@@ -1,10 +1,10 @@
 import type { Address } from '@ton/ton'
 import type { OpenedWallet } from './wallet'
 import { Buffer } from 'node:buffer'
+import { sleep } from '#root/common/helpers/time'
 import { config } from '#root/config'
 import { mnemonicToPrivateKey } from '@ton/crypto'
 import { beginCell, Cell, internal, SendMode, TonClient, WalletContractV4 } from '@ton/ton'
-import { sleep } from './time'
 
 const toncenterBaseEndpoint: string = config.TESTNET
     ? 'https://testnet.toncenter.com'

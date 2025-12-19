@@ -15,6 +15,16 @@ export function getSatoshiWalletAddress(isDev: boolean): {
     )
 }
 
+export function getSatoshiJettonMasterAddress(isDev: boolean): {
+    isBounceable: boolean
+    isTestOnly: boolean
+    address: Address
+} {
+    return Address.parseFriendly(isDev
+        ? 'kQAHVZTw1JlSNYR8OyU2ho5tqx3jtJYrkUiKEHmLZklAhzA-'
+        : 'EQCkdx5PSWjj-Bt0X-DRCfNev6ra1NVv9qqcu-W2-SaToSHI')
+}
+
 export async function convertCubeToSatoshi(tonweb: TonWeb, isDev: boolean, cubes: number): Promise<number> {
     const satoshiWalletAddress = getSatoshiWalletAddress(isDev).address.toString()
     const { retry } = useRetry()

@@ -15,10 +15,11 @@ import { addPoints, findUserByAddress } from '#root/common/models/User'
 import { config } from '#root/config'
 import { logger } from '#root/logger'
 import { Address, beginCell, fromNano, internal, SendMode, toNano } from '@ton/core'
+import { JettonMaster } from '@ton/ton'
 import TonWeb from 'tonweb'
 import { commaSeparatedNumber } from './common/helpers/numbers'
-import { convertCubeToSatoshi, getSatoshiWalletAddress } from './common/helpers/satoshi'
-import { openWallet } from './common/helpers/ton'
+import { convertCubeToSatoshi, getSatoshiJettonMasterAddress, getSatoshiWalletAddress } from './common/helpers/satoshi'
+import { openWallet, tonClient } from './common/helpers/ton'
 
 export class Subscription {
     bot: Bot<Context, Api<RawApi>>
@@ -130,9 +131,18 @@ export class Subscription {
         toAddress: Address,
         amount: bigint,
     ): Promise<number> {
-        const satoshiWalletAddress = getSatoshiWalletAddress(config.isDev).address
-        // TODO: calculate recipient's jetton wallet address
-        const recipientJettonWalletAddress = toAddress
+        const mySatoshiJettonWallet = getSatoshiWalletAddress(config.isDev).address
+
+        const satoshiMasterAddress
+            = getSatoshiJettonMasterAddress(config.isDev)
+
+        const jettonMasterContract = new JettonMaster(satoshiMasterAddress.address)
+
+        const recipientJettonWalletAddress
+            = await jettonMasterContract.getWalletAddress(
+                tonClient.provider(satoshiMasterAddress.address),
+                toAddress,
+            )
 
         const seqno = await wallet.contract.getSeqno()
 
@@ -145,7 +155,7 @@ export class Subscription {
             secretKey: wallet.keyPair.secretKey,
             messages: [
                 internal({
-                    to: satoshiWalletAddress,
+                    to: mySatoshiJettonWallet,
                     value,
                     bounce,
                     body: beginCell()
