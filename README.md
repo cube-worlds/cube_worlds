@@ -36,8 +36,8 @@ Follow these steps to set up and run bot locally:
 
 ### List of Available Commands
 
+- `npm run dev` — Start the bot and frontend in development mode.
 - `npm run lint` — Lint source code.
 - `npm run format` — Format source code.
 - `npm run typecheck` — Run type checking.
-- `npm run dev` — Start the bot and frontend in development mode.
 - `npm run update:all` — Update all dependencies.
