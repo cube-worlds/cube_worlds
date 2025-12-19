@@ -1,6 +1,6 @@
 import type { Context } from '#root/bot/context'
 import type { Api, Bot, RawApi } from 'grammy'
-import type { OpenedWallet } from './common/helpers/wallet'
+import type { OpenedWallet } from './common/helpers/ton'
 import { AccountSubscription } from '#root/common/helpers/account-subscription'
 import { tonToPoints } from '#root/common/helpers/points'
 import { sendMessageToAdmins } from '#root/common/helpers/telegram'

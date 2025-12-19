@@ -1,4 +1,4 @@
-import type { OpenedWallet } from '#root/common/helpers/wallet'
+import type { OpenedWallet } from '#root/common/helpers/ton'
 import type { Cell } from '@ton/core'
 import { Buffer } from 'node:buffer'
 import { NftCollection } from '#root/common/helpers/nft-collection'

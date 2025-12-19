@@ -1,4 +1,4 @@
-import type { OpenedWallet } from '#root/common/helpers/wallet'
+import type { OpenedWallet } from '#root/common/helpers/ton'
 import type { StateInit } from '@ton/core'
 import { Buffer } from 'node:buffer'
 import { sleep } from '#root/common/helpers/time'

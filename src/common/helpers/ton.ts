@@ -1,5 +1,6 @@
+import type { OpenedContract } from '@ton/core'
+import type { KeyPair } from '@ton/crypto'
 import type { Address } from '@ton/ton'
-import type { OpenedWallet } from './wallet'
 import { Buffer } from 'node:buffer'
 import { sleep } from '#root/common/helpers/time'
 import { config } from '#root/config'
@@ -14,6 +15,11 @@ export const tonClient = new TonClient({
     endpoint: `${toncenterBaseEndpoint}/api/v2/jsonRPC`,
     apiKey: config.TONCENTER_API_KEY,
 })
+
+export interface OpenedWallet {
+    contract: OpenedContract<WalletContractV4>
+    keyPair: KeyPair
+}
 
 export async function openWallet(mnemonic: string[]): Promise<OpenedWallet> {
     const keyPair = await mnemonicToPrivateKey(mnemonic)
