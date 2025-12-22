@@ -202,10 +202,11 @@ export function findAllByCreated() {
     return UserModel.find({ wallet: { $exists: true } }).sort({ createdAt: 1 })
 }
 
-export function findWhales(limit: number) {
+export function findWhales(limit: number, skip: number = 0) {
     return UserModel.find({ wallet: { $exists: true } })
         .select({ _id: 0, wallet: 1, votes: 1, minted: 1 })
         .limit(limit)
+        .skip(skip)
         .sort({ votes: -1 })
 }
 

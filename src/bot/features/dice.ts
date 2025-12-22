@@ -1,7 +1,7 @@
 import type { Context } from '#root/bot/context'
 import { logHandle } from '#root/common/helpers/logging'
+import { generateRandomString } from '#root/common/helpers/random'
 import { sendMessageToAdmins, sendPlaceInLine } from '#root/common/helpers/telegram'
-import { generateRandomString } from '#root/common/helpers/text'
 import { sleep, timeUnitsBetween } from '#root/common/helpers/time'
 import { BalanceChangeType } from '#root/common/models/Balance'
 import { addPoints, UserState } from '#root/common/models/User'

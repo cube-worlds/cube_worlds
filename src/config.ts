@@ -1,7 +1,6 @@
 import process from 'node:process'
 import { API_CONSTANTS } from 'grammy'
-import { parseEnv, port } from 'znv'
-import z from 'zod'
+import { parseEnv, port, z } from 'znv'
 import 'dotenv/config'
 
 function createConfigFromEnvironment(environment: NodeJS.ProcessEnv) {

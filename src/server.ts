@@ -8,8 +8,9 @@ import fastify from 'fastify'
 import { webhookCallback } from 'grammy'
 import { createServer as createViteServer } from 'vite'
 import authHandler from './backend/auth-handler'
-import balancesHandler from './backend/balances'
+import balancesHandler from './backend/balances-handler'
 import captchaHandler from './backend/captcha'
+import leaderboardHandler from './backend/leaderboard-handler'
 import nftHandler from './backend/nft-handler'
 import setWalletHandler from './backend/set-wallet-handler'
 import { config } from './config'
@@ -25,7 +26,9 @@ export async function createServer(bot: Bot) {
 
     await server.register(captchaHandler, { prefix: '/api/captcha', bot })
     await server.register(nftHandler, { prefix: '/api/nft' })
-    await server.register(balancesHandler, { prefix: '/api/trade' })
+
+    await server.register(balancesHandler, { prefix: '/api/users' })
+    await server.register(leaderboardHandler, { prefix: '/api/users' })
 
     const __filename = fileURLToPath(import.meta.url)
     const __dirname = path.dirname(__filename)

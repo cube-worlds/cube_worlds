@@ -18,7 +18,6 @@ function toNumberSafe(v: any) {
 }
 
 const userBalanceNum = computed(() => Math.floor(toNumberSafe(userStore.balance)))
-
 const selectedAmount = ref(minUserBalance)
 
 const sumAll = ref<number | null>(null)
@@ -55,7 +54,7 @@ const actionDisabled = computed(() => {
     return sending.value
 })
 
-const SUM_API = '/api/trade/balances'
+const SUM_API = '/api/users/balances'
 
 const isDev = import.meta.env.VITE_ENV === 'development'
 const rpcAddress = isDev
@@ -81,7 +80,7 @@ async function fetchSumAll() {
         return
     }
     const json = await r.json()
-    sumAll.value = toNumberSafe(json.sum)
+    sumAll.value = toNumberSafe(json.balances)
 }
 
 async function fetchSatoshiWalletBalance() {
@@ -158,6 +157,22 @@ async function doChange() {
 <template>
     <div class="trade-page">
         <div class="card">
+            <!-- OVERLAY -->
+            <div
+                v-if="sending"
+                class="overlay"
+            >
+                <div class="overlay-content">
+                    <div class="spinner" />
+                    <div class="overlay-title">
+                        Transaction in progress
+                    </div>
+                    <div class="overlay-sub">
+                        Confirm the operation in your wallet
+                    </div>
+                </div>
+            </div>
+
             <h1>Exchange $CUBE to $SATOSHI</h1>
 
             <div
@@ -197,7 +212,7 @@ async function doChange() {
                     class="main-button"
                     @click="doChange"
                 >
-                    {{ sending ? "Sending..." : "Exchange Now" }}
+                    Exchange Now
                 </button>
             </div>
 
@@ -226,13 +241,59 @@ async function doChange() {
 }
 
 .card {
+  position: relative;
   background: rgba(0, 0, 40, 0.7);
   border-radius: 12px;
   padding: 14px;
-  margin-bottom: 12px;
   backdrop-filter: blur(4px);
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
+
+/* OVERLAY */
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  background: rgba(10, 20, 60, 0.55);
+  backdrop-filter: blur(6px);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.overlay-content {
+  text-align: center;
+  color: #fff;
+}
+
+.spinner {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 3px solid rgba(255,255,255,0.3);
+  border-top-color: #4e8cff;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 14px;
+}
+
+.overlay-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.overlay-sub {
+  font-size: 13px;
+  opacity: 0.75;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* REST */
 
 .warn {
   color: #ffb3b3;
@@ -248,69 +309,28 @@ async function doChange() {
   padding: 16px 0;
 }
 
-.slider-container {
-  margin-bottom: 12px;
-}
-
 .fancy-slider {
   width: 100%;
   height: 6px;
   border-radius: 10px;
   background: linear-gradient(90deg, rgba(78, 140, 255, 0.2), rgba(78, 140, 255, 0.4));
   outline: none;
-  -webkit-appearance: none;
   appearance: none;
-  cursor: pointer;
 }
 
 .fancy-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
   appearance: none;
   width: 24px;
   height: 24px;
   border-radius: 50%;
   background: #4e8cff;
-  cursor: pointer;
   box-shadow: 0 2px 8px rgba(78, 140, 255, 0.4);
-  transition: all 0.2s ease;
-}
-
-.fancy-slider::-webkit-slider-thumb:active {
-  transform: scale(1.15);
-  box-shadow: 0 4px 12px rgba(78, 140, 255, 0.6);
-}
-
-.fancy-slider::-moz-range-thumb {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: #4e8cff;
-  cursor: pointer;
-  border: none;
-  box-shadow: 0 2px 8px rgba(78, 140, 255, 0.4);
-  transition: all 0.2s ease;
-}
-
-.fancy-slider::-moz-range-thumb:active {
-  transform: scale(1.15);
-  box-shadow: 0 4px 12px rgba(78, 140, 255, 0.6);
-}
-
-.slider-values {
-  display: flex;
-  justify-content: flex-start;
-  font-size: 13px;
-  opacity: 0.8;
-  padding: 0 4px;
-  color: #9cc2ff;
 }
 
 .stat {
   display: flex;
   justify-content: space-between;
   padding: 12px 0;
-  color: #fff;
-  font-size: 14px;
 }
 
 .amount-value {
@@ -318,29 +338,33 @@ async function doChange() {
   font-weight: 600;
 }
 
-.actions {
-  margin: 16px 0;
+.main-button {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(90deg, #4e8cff, #7aa2ff);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tx-result,
+.error {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  text-align: center;
+  font-size: 13px;
 }
 
 .tx-result {
-  margin-top: 10px;
-  padding: 10px 12px;
   background: rgba(100, 200, 100, 0.08);
   color: #b3ffb3;
-  border-radius: 10px;
-  font-size: 13px;
-  text-align: center;
-  border: 1px solid rgba(100, 200, 100, 0.2);
 }
 
 .error {
-  margin-top: 10px;
-  padding: 10px 12px;
   background: rgba(255, 100, 100, 0.08);
   color: #ffb3b3;
-  border-radius: 10px;
-  font-size: 13px;
-  text-align: center;
-  border: 1px solid rgba(255, 100, 100, 0.2);
 }
 </style>
