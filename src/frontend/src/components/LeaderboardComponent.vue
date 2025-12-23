@@ -82,12 +82,11 @@ onMounted(async () => {
                         #{{ i + 1 }}
                     </div>
                     <div class="wallet">
-                        <router-link
-                            :to="`https://tonviewer.com/${item.wallet}`"
+                        <a :href="`https://tonviewer.com/${item.wallet}`"
                             target="_blank"
-                        >
+                            rel="noopener noreferrer">
                             {{ removeMiddle(item.wallet, 10) }}
-                        </router-link>
+                        </a>
                     </div>
                 </div>
                 <div class="right">
