@@ -21,121 +21,117 @@ const userStore = useUserStore()
 useSetWallet()
 
 const stars: Ref<
-    Array<{ top: string, left: string, animationDuration: string, animationDelay: string }>
+  Array<{
+    top: string
+    left: string
+    animationDuration: string
+    animationDelay: string
+  }>
 > = ref([])
 const ufoPosition = ref({ x: 0, y: 0 })
 
 const ufoStyle = computed(() => ({
-    left: `${ufoPosition.value.x}%`,
-    top: `${ufoPosition.value.y}%`,
+  left: `${ufoPosition.value.x}%`,
+  top: `${ufoPosition.value.y}%`,
 }))
 
 function getUserIdFromRefString(refString: string): number | undefined {
-    const match = refString.match(/ref_(\d+)/)
-    return match && match[1] ? Number.parseInt(match[1], 10) : undefined
+  const match = refString.match(/ref_(\d+)/)
+  return match && match[1] ? Number.parseInt(match[1], 10) : undefined
 }
 
 const displayedBalance = computed(() => {
-    if (userStore.balance === null)
-        return '???'
-    return commaSeparatedNumber(userStore.balance)
+  if (userStore.balance === null) return '???'
+  return commaSeparatedNumber(userStore.balance)
 })
 
 onMounted(async () => {
-    tonConnectUI.value = new TonConnectUI({
-        manifestUrl: 'https://cubeworlds.club/tonconnect-manifest.json',
-        buttonRootId: 'ton-connect',
-        actionsConfiguration: {
-            returnStrategy: 'back',
-            twaReturnUrl: 'https://t.me/cube_worlds_bot/cnft?startapp=from_wallet',
-        },
-    })
-    tonConnectUI.value.onStatusChange((wallet: ConnectedWallet | null) => {
-        console.error('Wallet status changed:', wallet)
-        userStore.setWallet(wallet)
-    })
+  tonConnectUI.value = new TonConnectUI({
+    manifestUrl: 'https://cubeworlds.club/tonconnect-manifest.json',
+    buttonRootId: 'ton-connect',
+    actionsConfiguration: {
+      returnStrategy: 'back',
+      twaReturnUrl: 'https://t.me/cube_worlds_bot/cnft?startapp=from_wallet',
+    },
+  })
+  tonConnectUI.value.onStatusChange((wallet: ConnectedWallet | null) => {
+    console.error('Wallet status changed:', wallet)
+    userStore.setWallet(wallet)
+  })
 
-    stars.value = Array.from({ length: 200 }, () => ({
-        top: `${Math.random() * 100}%`,
-        left: `${Math.random() * 100}%`,
-        animationDuration: `${Math.random() * 3 + 1}s`,
-        animationDelay: `${Math.random() * 2}s`,
-    }))
+  stars.value = Array.from({ length: 200 }, () => ({
+    top: `${Math.random() * 100}%`,
+    left: `${Math.random() * 100}%`,
+    animationDuration: `${Math.random() * 3 + 1}s`,
+    animationDelay: `${Math.random() * 2}s`,
+  }))
 
-    setInterval(() => {
-        ufoPosition.value = {
-            x: Math.random() * 100,
-            y: Math.random() * 100,
-        }
-    }, 5000)
-
-    const initData = useMiniApp().initDataUnsafe
-    const webAppUser = initData.user
-    if (webAppUser) {
-        let referId: number | undefined
-        const start_param = initData.start_param
-        if (start_param) {
-            referId = getUserIdFromRefString(start_param)
-        }
-        const { login } = useAuth(useMiniApp().initData, referId)
-        try {
-            const user = await login()
-            if (user) {
-                const lang = user.language
-                fluent.bundles.value = [lang === 'ru' ? ruBundle : enBundle]
-            } else {
-                console.error('Login failed: no user returned')
-            }
-        } catch (e) {
-            console.error('Login error:', e)
-        }
+  setInterval(() => {
+    ufoPosition.value = {
+      x: Math.random() * 100,
+      y: Math.random() * 100,
     }
+  }, 5000)
+
+  const initData = useMiniApp().initDataUnsafe
+  const webAppUser = initData.user
+  if (webAppUser) {
+    let referId: number | undefined
+    const start_param = initData.start_param
+    if (start_param) {
+      referId = getUserIdFromRefString(start_param)
+    }
+    const { login } = useAuth(useMiniApp().initData, referId)
+    try {
+      const user = await login()
+      if (user) {
+        const lang = user.language
+        fluent.bundles.value = [lang === 'ru' ? ruBundle : enBundle]
+      } else {
+        console.error('Login failed: no user returned')
+      }
+    } catch (e) {
+      console.error('Login error:', e)
+    }
+  }
 })
 </script>
 
 <template>
-    <LoadingOverlay />
-    <div class="cosmos">
-        <div
-            v-for="(star, index) in stars"
-            :key="index"
-            class="star"
-            :style="star"
-        />
+  <LoadingOverlay />
+  <div class="cosmos">
+    <div
+      v-for="(star, index) in stars"
+      :key="index"
+      class="star"
+      :style="star"
+    />
 
-        <div class="top-bar">
-            <div class="coin-balance">
-                {{ displayedBalance }} $CUBE
-            </div>
-            <div
-                v-show="userStore.user !== undefined"
-                id="ton-connect"
-            />
-        </div>
-
-        <div class="content-wrapper">
-            <RouterView />
-        </div>
-
-        <div class="footer">
-            <MainMenu />
-        </div>
-
-        <div class="solar-system">
-            <div class="sun">
-                <div class="sun-core" />
-                <div class="sun-rays" />
-            </div>
-            <div class="planet earth" />
-            <div class="planet mars" />
-        </div>
-        <div
-            class="ufo"
-            :style="ufoStyle"
-        />
-        <ClosingConfirmation />
-        <ExpandedViewport />
+    <div class="top-bar">
+      <div class="coin-balance">{{ displayedBalance }} $CUBE</div>
+      <div v-show="userStore.user !== undefined" id="ton-connect" />
     </div>
+
+    <div class="content-wrapper">
+      <RouterView />
+    </div>
+
+    <div class="footer">
+      <MainMenu />
+    </div>
+
+    <div class="solar-system">
+      <div class="sun">
+        <div class="sun-core" />
+        <div class="sun-rays" />
+      </div>
+      <div class="planet earth" />
+      <div class="planet mars" />
+    </div>
+    <div class="ufo" :style="ufoStyle" />
+    <ClosingConfirmation />
+    <ExpandedViewport />
+  </div>
 </template>
 
 <style scoped>
@@ -242,7 +238,9 @@ onMounted(async () => {
   height: 100%;
   border-radius: 50%;
   background: radial-gradient(circle, #ff9933 0%, #ff6600 100%);
-  box-shadow: 0 0 60px #ff9933, 0 0 100px #ff6600;
+  box-shadow:
+    0 0 60px #ff9933,
+    0 0 100px #ff6600;
   animation: pulse 4s infinite alternate;
 }
 
@@ -252,9 +250,11 @@ onMounted(async () => {
   left: -20%;
   right: -20%;
   bottom: -20%;
-  background: radial-gradient(circle,
-      rgba(255, 153, 51, 0.3) 0%,
-      rgba(255, 102, 0, 0) 70%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 153, 51, 0.3) 0%,
+    rgba(255, 102, 0, 0) 70%
+  );
   animation: rotate 20s linear infinite;
 }
 
@@ -290,7 +290,7 @@ onMounted(async () => {
 }
 
 .ufo::before {
-  content: "";
+  content: '';
   position: absolute;
   bottom: -10px;
   left: 50%;

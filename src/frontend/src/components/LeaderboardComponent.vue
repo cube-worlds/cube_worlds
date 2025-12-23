@@ -7,108 +7,93 @@ import { useRetry } from '../composables/useRetry'
 const { retry } = useRetry()
 
 const LIMIT = 100
-const leaderboard = ref<{ wallet: string, votes: number }[]>([])
+const leaderboard = ref<{ wallet: string; votes: number }[]>([])
 const skip = ref(0)
 const totalWallets = ref<number | null>(null)
 const loading = ref(false)
 const error = ref<string | null>(null)
 
 async function fetchTotals() {
-    const r = await retry(() => fetch('/api/users/balances'))
-    if (!r) {
-        error.value = 'Failed to load totals'
-        return
-    }
-    const json = await r.json()
-    totalWallets.value = Number(json.wallets ?? 0)
+  const r = await retry(() => fetch('/api/users/balances'))
+  if (!r) {
+    error.value = 'Failed to load totals'
+    return
+  }
+  const json = await r.json()
+  totalWallets.value = Number(json.wallets ?? 0)
 }
 
 async function fetchLeaderboard() {
-    if (loading.value)
-        return
-    if (totalWallets.value !== null && leaderboard.value.length >= totalWallets.value)
-        return
+  if (loading.value) return
+  if (
+    totalWallets.value !== null &&
+    leaderboard.value.length >= totalWallets.value
+  )
+    return
 
-    loading.value = true
-    error.value = null
-    try {
-        const r = await retry(() =>
-            fetch(`/api/users/leaderboard?skip=${skip.value}&limit=${LIMIT}`),
-        )
-        if (!r)
-            throw new Error('Request failed')
+  loading.value = true
+  error.value = null
+  try {
+    const r = await retry(() =>
+      fetch(`/api/users/leaderboard?skip=${skip.value}&limit=${LIMIT}`),
+    )
+    if (!r) throw new Error('Request failed')
 
-        const json = await r.json()
-        const items = (json as any[]).map(i => ({
-            wallet: i.wallet,
-            votes: Number(i.votes ?? 0),
-        }))
-        leaderboard.value.push(...items)
-        skip.value += items.length
-    } catch (e: any) {
-        error.value = e?.message ?? 'Failed to load leaderboard'
-    } finally {
-        loading.value = false
-    }
+    const json = await r.json()
+    const items = (json as any[]).map((i) => ({
+      wallet: i.wallet,
+      votes: Number(i.votes ?? 0),
+    }))
+    leaderboard.value.push(...items)
+    skip.value += items.length
+  } catch (e: any) {
+    error.value = e?.message ?? 'Failed to load leaderboard'
+  } finally {
+    loading.value = false
+  }
 }
 
 function onScroll(e: Event) {
-    const el = e.target as HTMLElement
-    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 40)
-        fetchLeaderboard()
+  const el = e.target as HTMLElement
+  if (el.scrollTop + el.clientHeight >= el.scrollHeight - 40) fetchLeaderboard()
 }
 
 onMounted(async () => {
-    await fetchTotals()
-    await fetchLeaderboard()
+  await fetchTotals()
+  await fetchLeaderboard()
 })
 </script>
 
 <template>
-    <div
-        class="leaderboard-page"
-        @scroll="onScroll"
-    >
-        <div class="card">
-            <h1>$CUBE Leaderboard</h1>
+  <div class="leaderboard-page" @scroll="onScroll">
+    <div class="card">
+      <h1>$CUBE Leaderboard</h1>
 
-            <div
-                v-for="(item, i) in leaderboard"
-                :key="item.wallet"
-                class="row"
+      <div v-for="(item, i) in leaderboard" :key="item.wallet" class="row">
+        <div class="left">
+          <div class="index">#{{ i + 1 }}</div>
+          <div class="wallet">
+            <a
+              :href="`https://tonviewer.com/${item.wallet}`"
+              target="_blank"
+              rel="noopener noreferrer"
             >
-                <div class="left">
-                    <div class="index">
-                        #{{ i + 1 }}
-                    </div>
-                    <div class="wallet">
-                        <a :href="`https://tonviewer.com/${item.wallet}`"
-                            target="_blank"
-                            rel="noopener noreferrer">
-                            {{ removeMiddle(item.wallet, 10) }}
-                        </a>
-                    </div>
-                </div>
-                <div class="right">
-                    {{ commaSeparatedNumber(item.votes) }}
-                </div>
-            </div>
-
-            <div
-                v-if="loading"
-                class="loader"
-            >
-                Loading…
-            </div>
-
-            <div
-                v-if="error"
-                class="error"
-            >
-                {{ error }}
-            </div>
+              {{ removeMiddle(item.wallet, 10) }}
+            </a>
+          </div>
         </div>
+        <div class="right">
+          {{ commaSeparatedNumber(item.votes) }}
+        </div>
+      </div>
+
+      <div v-if="loading" class="loader">Loading…</div>
+
+      <div v-if="error" class="error">
+        {{ error }}
+      </div>
     </div>
+  </div>
 </template>
 
 <style scoped>
@@ -137,7 +122,7 @@ h1 {
   justify-content: space-between;
   align-items: center;
   padding: 10px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .left {

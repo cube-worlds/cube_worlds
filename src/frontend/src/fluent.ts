@@ -10,5 +10,5 @@ enBundle.addResource(new FluentResource(enMessages))
 ruBundle.addResource(new FluentResource(ruMessages))
 
 export const fluent = createFluentVue({
-    bundles: [enBundle, ruBundle],
+  bundles: [enBundle, ruBundle],
 })

@@ -2,88 +2,84 @@
 import { computed, ref } from 'vue'
 
 export default {
-    name: 'GamePagination',
-    props: {
-        totalPages: {
-            type: Number,
-            required: true,
-        },
+  name: 'GamePagination',
+  props: {
+    totalPages: {
+      type: Number,
+      required: true,
     },
-    emits: ['pageChange'],
-    setup(props, { emit }) {
-        const currentPage = ref(1)
+  },
+  emits: ['pageChange'],
+  setup(props, { emit }) {
+    const currentPage = ref(1)
 
-        const visiblePages = computed(() => {
-            const pages = []
-            const range = 2
-            for (
-                let i = Math.max(1, currentPage.value - range);
-                i <= Math.min(props.totalPages, currentPage.value + range);
-                i++
-            ) {
-                pages.push(i)
-            }
-            return pages
-        })
+    const visiblePages = computed(() => {
+      const pages = []
+      const range = 2
+      for (
+        let i = Math.max(1, currentPage.value - range);
+        i <= Math.min(props.totalPages, currentPage.value + range);
+        i++
+      ) {
+        pages.push(i)
+      }
+      return pages
+    })
 
-        const prevPage = () => {
-            if (currentPage.value > 1) {
-                currentPage.value--
-                emit('pageChange', currentPage.value)
-            }
-        }
+    const prevPage = () => {
+      if (currentPage.value > 1) {
+        currentPage.value--
+        emit('pageChange', currentPage.value)
+      }
+    }
 
-        const nextPage = () => {
-            if (currentPage.value < props.totalPages) {
-                currentPage.value++
-                emit('pageChange', currentPage.value)
-            }
-        }
+    const nextPage = () => {
+      if (currentPage.value < props.totalPages) {
+        currentPage.value++
+        emit('pageChange', currentPage.value)
+      }
+    }
 
-        const goToPage = (page) => {
-            currentPage.value = page
-            emit('pageChange', currentPage.value)
-        }
+    const goToPage = (page) => {
+      currentPage.value = page
+      emit('pageChange', currentPage.value)
+    }
 
-        return {
-            currentPage,
-            visiblePages,
-            prevPage,
-            nextPage,
-            goToPage,
-        }
-    },
+    return {
+      currentPage,
+      visiblePages,
+      prevPage,
+      nextPage,
+      goToPage,
+    }
+  },
 }
 </script>
 
 <template>
-    <div class="game-pagination">
-        <button
-            :disabled="currentPage === 1"
-            class="page-button"
-            @click="prevPage"
-        >
-            Previous
-        </button>
-        <div class="page-numbers">
-            <button
-                v-for="page in visiblePages"
-                :key="page"
-                class="page-number"
-                :class="[{ active: page === currentPage }]"
-                @click="goToPage(page)"
-            >
-                {{ page }}
-            </button>
-        </div>
-        <button
-            :disabled="currentPage === totalPages"
-            class="page-button"
-            @click="nextPage"
-        >
-            Next
-        </button>
+  <div class="game-pagination">
+    <button :disabled="currentPage === 1" class="page-button" @click="prevPage">
+      Previous
+    </button>
+    <div class="page-numbers">
+      <button
+        v-for="page in visiblePages"
+        :key="page"
+        class="page-number"
+        :class="[{ active: page === currentPage }]"
+        @click="goToPage(page)"
+      >
+        {{ page }}
+      </button>
     </div>
+    <button
+      :disabled="currentPage === totalPages"
+      class="page-button"
+      @click="nextPage"
+    >
+      Next
+    </button>
+  </div>
 </template>
 
 <style scoped>

@@ -1,113 +1,113 @@
 :root {
-    font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-    line-height: 1.5;
-    font-weight: 400;
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
 
-    color-scheme: light dark;
-    color: var(--tg-theme-text-color, #ffffffde);
-    background-color: var(--tg-theme-bg-color, #242424);
+  color-scheme: light dark;
+  color: var(--tg-theme-text-color, #ffffffde);
+  background-color: var(--tg-theme-bg-color, #242424);
 
-    font-synthesis: none;
-    text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    -webkit-text-size-adjust: 100%;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
 }
 
 html,
 body {
-    position: fixed;
-    overflow: hidden;
-    padding: 0;
+  position: fixed;
+  overflow: hidden;
+  padding: 0;
 }
 
 body > #app {
-    width: 100vw;
-    height: 100vh;
-    overflow-y: scroll;
-    -webkit-overflow-scrolling: touch;
+  width: 100vw;
+  height: 100vh;
+  overflow-y: scroll;
+  -webkit-overflow-scrolling: touch;
 }
 
 #app {
-    text-align: center;
+  text-align: center;
 }
 
 h1 {
-    font-size: 1.5em;
-    line-height: 1.1;
-    font-family: 'Tiny5', monospace;
-    font-weight: 400;
-    margin: 0 0 16px 0;
-    color: #fff;
+  font-size: 1.5em;
+  line-height: 1.1;
+  font-family: 'Tiny5', monospace;
+  font-weight: 400;
+  margin: 0 0 16px 0;
+  color: #fff;
 }
 h2 {
-    font-size: 1.3em;
-    line-height: 1.1;
-    font-family: 'Tiny5', monospace;
-    font-weight: 400;
-    margin: 0 0 16px 0;
-    color: #fff;
+  font-size: 1.3em;
+  line-height: 1.1;
+  font-family: 'Tiny5', monospace;
+  font-weight: 400;
+  margin: 0 0 16px 0;
+  color: #fff;
 }
 
 a {
-    font-weight: 500;
-    color: var(--tg-theme-link-color, #646cff);
-    text-decoration: inherit;
+  font-weight: 500;
+  color: var(--tg-theme-link-color, #646cff);
+  text-decoration: inherit;
 }
 a:hover {
-    color: var(--tg-theme-link-color, #535bf2);
+  color: var(--tg-theme-link-color, #535bf2);
 }
 
 .main-button {
-    width: 100%;
-    background: linear-gradient(45deg, #3366ff, #6633ff);
-    color: white;
-    border: none;
-    border-radius: 0.75rem;
-    padding: 0.8rem;
-    font-size: 1.1rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    box-shadow: 0 0 15px rgba(102, 51, 255, 0.5);
-    text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+  width: 100%;
+  background: linear-gradient(45deg, #3366ff, #6633ff);
+  color: white;
+  border: none;
+  border-radius: 0.75rem;
+  padding: 0.8rem;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 0 15px rgba(102, 51, 255, 0.5);
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
 }
 
 .main-button:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 0 20px rgba(102, 51, 255, 0.7);
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px rgba(102, 51, 255, 0.7);
 }
 
 .main-button:disabled {
-    background: linear-gradient(45deg, #666699, #9999cc);
-    cursor: not-allowed;
-    opacity: 0.7;
+  background: linear-gradient(45deg, #666699, #9999cc);
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .main-button.claiming {
-    background: linear-gradient(45deg, #666699, #9999cc);
+  background: linear-gradient(45deg, #666699, #9999cc);
 }
 
 .main-button.claimed {
-    background: linear-gradient(45deg, #33cc66, #33ccaa);
-    animation: pulse 2s;
+  background: linear-gradient(45deg, #33cc66, #33ccaa);
+  animation: pulse 2s;
 }
 
 @font-face {
-    font-family: 'Tiny5';
-    src: url('./fonts/Tiny5-SolidRegular.woff2') format('woff2');
-    font-style: normal;
-    font-weight: 400;
-    font-display: fallback;
+  font-family: 'Tiny5';
+  src: url('./fonts/Tiny5-SolidRegular.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400;
+  font-display: fallback;
 }
 
 @font-face {
-    font-family: 'Tiny5';
-    src: url('./fonts/Tiny5-SolidBold.woff2') format('woff2');
-    font-style: normal;
-    font-weight: 400;
-    font-display: fallback;
+  font-family: 'Tiny5';
+  src: url('./fonts/Tiny5-SolidBold.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400;
+  font-display: fallback;
 }

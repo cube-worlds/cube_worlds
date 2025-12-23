@@ -9,50 +9,50 @@ import { defineConfig } from 'vite'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-    resolve: {
-        alias: {
-            '@': fileURLToPath(new URL('./src', import.meta.url)),
-        },
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
-    plugins: [
-        vue(),
-        AutoImport({
-            resolvers: [ElementPlusResolver()],
+  },
+  plugins: [
+    vue(),
+    AutoImport({
+      resolvers: [ElementPlusResolver()],
+    }),
+    Components({
+      resolvers: [ElementPlusResolver()],
+    }),
+  ],
+  optimizeDeps: {
+    esbuildOptions: {
+      // Node.js global to browser globalThis
+      define: {
+        global: 'globalThis',
+      },
+      // Enable esbuild polyfill plugins
+      plugins: [
+        NodeGlobalsPolyfillPlugin({
+          buffer: true,
         }),
-        Components({
-            resolvers: [ElementPlusResolver()],
-        }),
+      ],
+    },
+    include: ['vue', 'vue-router', 'pinia'],
+  },
+  build: {
+    rollupOptions: {
+      plugins: [rollupNodePolyFill()],
+    },
+    target: 'esnext',
+    outDir: 'dist',
+    assetsDir: 'assets',
+    sourcemap: true,
+  },
+  server: {
+    allowedHosts: [
+      'cubeworlds.club',
+      'dominant-annually-lobster.ngrok-free.app',
     ],
-    optimizeDeps: {
-        esbuildOptions: {
-            // Node.js global to browser globalThis
-            define: {
-                global: 'globalThis',
-            },
-            // Enable esbuild polyfill plugins
-            plugins: [
-                NodeGlobalsPolyfillPlugin({
-                    buffer: true,
-                }),
-            ],
-        },
-        include: ['vue', 'vue-router', 'pinia'],
-    },
-    build: {
-        rollupOptions: {
-            plugins: [rollupNodePolyFill()],
-        },
-        target: 'esnext',
-        outDir: 'dist',
-        assetsDir: 'assets',
-        sourcemap: true,
-    },
-    server: {
-        allowedHosts: [
-            'cubeworlds.club',
-            'dominant-annually-lobster.ngrok-free.app',
-        ],
-        port: 5173,
-        host: true,
-    },
+    port: 5173,
+    host: true,
+  },
 })

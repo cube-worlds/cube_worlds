@@ -11,16 +11,16 @@ import 'element-plus/dist/index.css'
 import './style.css'
 
 const router = createRouter({
-    history: createWebHistory(),
-    routes: vueRoutes,
+  history: createWebHistory(),
+  routes: vueRoutes,
 })
 
 const pinia = createPinia()
 
 createApp(App)
-    .use(LoadingPlugin)
-    .use(fluent)
-    .use(pinia)
-    .use(router)
-    .use(ElementPlus, { size: 'default', zIndex: 3000, locale: ruLocale })
-    .mount('#app')
+  .use(LoadingPlugin)
+  .use(fluent)
+  .use(pinia)
+  .use(router)
+  .use(ElementPlus, { size: 'default', zIndex: 3000, locale: ruLocale })
+  .mount('#app')

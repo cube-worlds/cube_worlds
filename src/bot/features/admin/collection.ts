@@ -12,28 +12,28 @@ const composer = new Composer<Context>()
 const feature = composer.chatType('private').filter(isAdmin)
 
 feature.command(
-    'collection',
-    logHandle('command-collection'),
-    chatAction('upload_document'),
-    async (ctx) => {
-        if (config.COLLECTION_ADDRESS) {
-            return ctx.reply('Collection already deployed!')
-        }
-        const wallet = await openWallet(config.MNEMONICS!.split(' '))
-        const collectionData = {
-            ownerAddress: wallet.contract.address,
-            royaltyPercent: 0.49,
-            royaltyAddress: wallet.contract.address,
-            nextItemIndex: 0,
-            collectionContentUrl: '',
-            commonContentUrl: '',
-        }
-        const collection = new NftCollection(collectionData)
-        const seqno = await collection.deploy(wallet)
-        ctx.logger.info(`Collection will be deployed at: ${collection.address}`)
-        await waitSeqno(seqno, wallet)
-        await ctx.reply(`Collection deployed: ${collection.address}`)
-    },
+  'collection',
+  logHandle('command-collection'),
+  chatAction('upload_document'),
+  async (ctx) => {
+    if (config.COLLECTION_ADDRESS) {
+      return ctx.reply('Collection already deployed!')
+    }
+    const wallet = await openWallet(config.MNEMONICS!.split(' '))
+    const collectionData = {
+      ownerAddress: wallet.contract.address,
+      royaltyPercent: 0.49,
+      royaltyAddress: wallet.contract.address,
+      nextItemIndex: 0,
+      collectionContentUrl: '',
+      commonContentUrl: '',
+    }
+    const collection = new NftCollection(collectionData)
+    const seqno = await collection.deploy(wallet)
+    ctx.logger.info(`Collection will be deployed at: ${collection.address}`)
+    await waitSeqno(seqno, wallet)
+    await ctx.reply(`Collection deployed: ${collection.address}`)
+  },
 )
 
 export { composer as collectionFeature }

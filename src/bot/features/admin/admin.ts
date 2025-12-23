@@ -10,10 +10,10 @@ const composer = new Composer<Context>()
 const feature = composer.chatType('private').filter(isAdmin)
 
 feature.command(
-    'setcommands',
-    logHandle('command-setcommands'),
-    chatAction('typing'),
-    setCommandsHandler,
+  'setcommands',
+  logHandle('command-setcommands'),
+  chatAction('typing'),
+  setCommandsHandler,
 )
 
 export { composer as adminFeature }

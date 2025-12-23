@@ -6,7 +6,7 @@ const faqItems = faq
 </script>
 
 <template>
-    <div id="app">
-        <Accordion :items="faqItems" />
-    </div>
+  <div id="app">
+    <Accordion :items="faqItems" />
+  </div>
 </template>

@@ -9,8 +9,8 @@ const composer = new Composer<Context>()
 const feature = composer.chatType('private').filter(isAdmin)
 
 feature.command('stats', logHandle('command-stats'), async (ctx) => {
-    const stats = await userStats()
-    return ctx.reply(`All: ${stats.all}
+  const stats = await userStats()
+  return ctx.reply(`All: ${stats.all}
 With wallet: ${stats.notMinted}
 NFT minted: ${stats.minted}
 

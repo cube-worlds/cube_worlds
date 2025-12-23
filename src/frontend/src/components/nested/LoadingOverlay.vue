@@ -6,12 +6,9 @@ const visible = inject('loadingVisible') as Ref<boolean>
 </script>
 
 <template>
-    <div
-        v-show="visible"
-        class="loading-container"
-    >
-        <div class="loading-bar" />
-    </div>
+  <div v-show="visible" class="loading-container">
+    <div class="loading-bar" />
+  </div>
 </template>
 
 <style scoped>

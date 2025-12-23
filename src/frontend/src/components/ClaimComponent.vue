@@ -18,165 +18,157 @@ const nextClaimAmount = ref(0)
 const totalClaimed = ref(0)
 
 const isButtonDisabled = computed(() => {
-    return isClaiming.value
-        || justClaimed.value
-        || (Date.now() - lastClaimTime.value < 10000)
+  return (
+    isClaiming.value ||
+    justClaimed.value ||
+    Date.now() - lastClaimTime.value < 10000
+  )
 })
 
 const formattedNextClaimDate = computed(() => {
-    if (!nextClaimDate.value)
-        return 'Loading...'
+  if (!nextClaimDate.value) return 'Loading...'
 
-    try {
-        const date = new Date(nextClaimDate.value)
-        return date.toLocaleString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-        })
-    } catch {
-        return 'Unknown'
-    }
+  try {
+    const date = new Date(nextClaimDate.value)
+    return date.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  } catch {
+    return 'Unknown'
+  }
 })
 
 async function fetchClaimStatus() {
-    try {
-        const walletAddress = userStore.wallet?.account.address
-        if (!walletAddress)
-            return
+  try {
+    const walletAddress = userStore.wallet?.account.address
+    if (!walletAddress) return
 
-        const response = await fetch(`/api/claim?walletAddress=${walletAddress}`)
-        const data = await response.json()
+    const response = await fetch(`/api/claim?walletAddress=${walletAddress}`)
+    const data = await response.json()
 
-        if (data.error) {
-            console.error('Error fetching claim status:', data.error)
-            return
-        }
-
-        claimProgress.value = Math.min((data.nextClaimAmount / 80) * 100, 100) // 80 is max claim amount (8 hours * 10 CUBE)
-        nextClaimDate.value = data.nextClaimDate
-        nextClaimAmount.value = data.nextClaimAmount
-        totalClaimed.value = data.totalClaimed
-    } catch (error) {
-        console.error('Error fetching claim status:', error)
+    if (data.error) {
+      console.error('Error fetching claim status:', data.error)
+      return
     }
+
+    claimProgress.value = Math.min((data.nextClaimAmount / 80) * 100, 100) // 80 is max claim amount (8 hours * 10 CUBE)
+    nextClaimDate.value = data.nextClaimDate
+    nextClaimAmount.value = data.nextClaimAmount
+    totalClaimed.value = data.totalClaimed
+  } catch (error) {
+    console.error('Error fetching claim status:', error)
+  }
 }
 
 async function claimCubes() {
-    if (isButtonDisabled.value)
-        return
+  if (isButtonDisabled.value) return
 
-    const walletAddress = userStore.wallet?.account.address
-    if (!walletAddress) {
-        console.error('No wallet connected')
-        return
-    }
+  const walletAddress = userStore.wallet?.account.address
+  if (!walletAddress) {
+    console.error('No wallet connected')
+    return
+  }
 
-    isClaiming.value = true
+  isClaiming.value = true
 
-    try {
+  try {
     // Sign message for claim
-        const message = `Claim ${nextClaimAmount.value} CUBE at ${new Date().toISOString()}`
-        // const signature = await userStore.wallet?.connectItems?.tonProof?.signMessage({
-        //   message
-        // })
+    const message = `Claim ${nextClaimAmount.value} CUBE at ${new Date().toISOString()}`
+    // const signature = await userStore.wallet?.connectItems?.tonProof?.signMessage({
+    //   message
+    // })
 
-        // if (!signature) {
-        //   throw new Error('Failed to sign message')
-        // }
+    // if (!signature) {
+    //   throw new Error('Failed to sign message')
+    // }
 
-        const response = await fetch('/api/claim', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                walletAddress,
-                // signature,
-                message,
-            }),
-        })
+    const response = await fetch('/api/claim', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        walletAddress,
+        // signature,
+        message,
+      }),
+    })
 
-        const data = await response.json()
+    const data = await response.json()
 
-        if (data.error) {
-            throw new Error(data.error)
-        }
-
-        claimProgress.value = 0
-        nextClaimDate.value = data.nextClaimDate
-        nextClaimAmount.value = 0
-        totalClaimed.value = data.totalClaimed
-
-        justClaimed.value = true
-        lastClaimTime.value = Date.now()
-
-        setTimeout(() => {
-            justClaimed.value = false
-        }, 3000)
-    } catch (error) {
-        console.error('Error claiming cubes:', error)
-    } finally {
-        isClaiming.value = false
+    if (data.error) {
+      throw new Error(data.error)
     }
+
+    claimProgress.value = 0
+    nextClaimDate.value = data.nextClaimDate
+    nextClaimAmount.value = 0
+    totalClaimed.value = data.totalClaimed
+
+    justClaimed.value = true
+    lastClaimTime.value = Date.now()
+
+    setTimeout(() => {
+      justClaimed.value = false
+    }, 3000)
+  } catch (error) {
+    console.error('Error claiming cubes:', error)
+  } finally {
+    isClaiming.value = false
+  }
 }
 
 onMounted(() => {
-    fetchClaimStatus()
+  fetchClaimStatus()
 
-    // Update the progress every minute
-    setInterval(() => {
-        fetchClaimStatus()
-    }, 60000)
+  // Update the progress every minute
+  setInterval(() => {
+    fetchClaimStatus()
+  }, 60000)
 })
 </script>
 
 <template>
-    <div class="claim-container">
-        <h1 class="claim-title">
-            Daily Claim
-        </h1>
+  <div class="claim-container">
+    <h1 class="claim-title">Daily Claim</h1>
 
-        <div class="progress-container">
-            <div class="progress-bar">
-                <div
-                    class="progress-fill"
-                    :style="{ width: `${claimProgress}%` }"
-                />
-                <div class="progress-stars">
-                    <div
-                        v-for="i in 5"
-                        :key="i"
-                        class="progress-star"
-                        :class="{ active: claimProgress >= i * 20 }"
-                    />
-                </div>
-            </div>
-            <div class="progress-text">
-                {{ Math.floor(claimProgress) }}/100
-            </div>
+    <div class="progress-container">
+      <div class="progress-bar">
+        <div class="progress-fill" :style="{ width: `${claimProgress}%` }" />
+        <div class="progress-stars">
+          <div
+            v-for="i in 5"
+            :key="i"
+            class="progress-star"
+            :class="{ active: claimProgress >= i * 20 }"
+          />
         </div>
-
-        <div class="next-claim">
-            <div class="claim-time">
-                Next full claim: {{ formattedNextClaimDate }}
-            </div>
-        </div>
-
-        <button
-            class="main-button"
-            :disabled="isButtonDisabled"
-            :class="{ claiming: isClaiming, claimed: justClaimed }"
-            @click="claimCubes"
-        >
-            <span v-if="justClaimed">Claimed!</span>
-            <span v-else-if="isClaiming">
-                <div class="spinner" />
-            </span>
-            <span v-else>Claim $CUBE</span>
-        </button>
+      </div>
+      <div class="progress-text">{{ Math.floor(claimProgress) }}/100</div>
     </div>
+
+    <div class="next-claim">
+      <div class="claim-time">
+        Next full claim: {{ formattedNextClaimDate }}
+      </div>
+    </div>
+
+    <button
+      class="main-button"
+      :disabled="isButtonDisabled"
+      :class="{ claiming: isClaiming, claimed: justClaimed }"
+      @click="claimCubes"
+    >
+      <span v-if="justClaimed">Claimed!</span>
+      <span v-else-if="isClaiming">
+        <div class="spinner" />
+      </span>
+      <span v-else>Claim $CUBE</span>
+    </button>
+  </div>
 </template>
 
 <style scoped>
@@ -280,7 +272,8 @@ onMounted(() => {
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
   }
   50% {

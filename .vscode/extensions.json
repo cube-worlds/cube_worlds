@@ -1,7 +1,7 @@
 {
-    "recommendations": [
-        "dbaeumer.vscode-eslint",
-        "macabeus.vscode-fluent",
-        "mikestead.dotenv"
-    ]
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "macabeus.vscode-fluent",
+    "mikestead.dotenv"
+  ]
 }

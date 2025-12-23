@@ -1,28 +1,19 @@
 {
-    "typescript.tsdk": "src/frontend/node_modules/typescript/lib",
-    "[typescript]": {
-        "editor.defaultFormatter": "dbaeumer.vscode-eslint",
-        "editor.formatOnSave": true
-    },
-    "[javascript]": {
-        "editor.defaultFormatter": "dbaeumer.vscode-eslint",
-        "editor.formatOnSave": true
-    },
-    "[vue]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
-        "editor.formatOnSave": true
-    },
-    "vetur.format.enable": false,
-    "editor.codeActionsOnSave": {
-        "source.fixAll.eslint": "always",
-        "source.fixAll.stylelint": "always"
-    },
-    "editor.wordWrap": "wordWrapColumn",
-    "editor.wordWrapColumn": 120,
-    "editor.wrappingIndent": "indent",
-    "eslint.validate": [
-        "javascript",
-        "typescript",
-        "vue"
-    ]
+  "typescript.tsdk": "src/frontend/node_modules/typescript/lib",
+  "[vue]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "vetur.format.enable": false,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "always"
+  },
+  "editor.wordWrap": "wordWrapColumn",
+  "editor.wordWrapColumn": 120,
+  "editor.wrappingIndent": "indent",
+  "eslint.validate": ["javascript", "typescript", "vue"]
 }

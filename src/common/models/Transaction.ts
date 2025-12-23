@@ -2,43 +2,43 @@ import type { DocumentType } from '@typegoose/typegoose'
 import { getModelForClass, modelOptions, prop } from '@typegoose/typegoose'
 
 @modelOptions({
-    schemaOptions: { timestamps: false },
-    options: { customName: 'tx' },
+  schemaOptions: { timestamps: false },
+  options: { customName: 'tx' },
 })
 export class Transaction {
-    @prop({ type: Number, required: true, index: true })
-    utime!: number
+  @prop({ type: Number, required: true, index: true })
+  utime!: number
 
-    @prop({ type: Number, required: true })
-    lt!: number
+  @prop({ type: Number, required: true })
+  lt!: number
 
-    @prop({ type: String, required: true })
-    address!: string
+  @prop({ type: String, required: true })
+  address!: string
 
-    @prop({ type: Number, required: true })
-    coins!: number
+  @prop({ type: Number, required: true })
+  coins!: number
 
-    @prop({ type: Number })
-    ton?: number
+  @prop({ type: Number })
+  ton?: number
 
-    @prop({ type: String, required: true })
-    hash!: string
+  @prop({ type: String, required: true })
+  hash!: string
 
-    @prop({ type: Boolean, required: false })
-    accepted?: boolean
+  @prop({ type: Boolean, required: false })
+  accepted?: boolean
 }
 
 export const TransactionModel = getModelForClass(Transaction)
 
 export async function getLastestTransaction() {
-    return TransactionModel.findOne().sort({ utime: -1 })
+  return TransactionModel.findOne().sort({ utime: -1 })
 }
 
 export async function findTransaction(
-    lt: number,
-    hash: string,
+  lt: number,
+  hash: string,
 ): Promise<DocumentType<Transaction> | null> {
-    return TransactionModel.findOne({ lt, hash })
+  return TransactionModel.findOne({ lt, hash })
 }
 
 /**

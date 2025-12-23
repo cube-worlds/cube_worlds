@@ -1,23 +1,23 @@
 <script setup lang="ts">
 import { menuRoutes } from '@/routes'
 
-const menu = menuRoutes.filter(r => r.showInMenu)
+const menu = menuRoutes.filter((r) => r.showInMenu)
 </script>
 
 <template>
-    <div class="cosmic-menu">
-        <div class="menu-links">
-            <router-link
-                v-for="item in menu"
-                :key="item.path"
-                :to="item.path"
-                class="menu-link"
-                active-class="active"
-            >
-                {{ item.emoji }}
-            </router-link>
-        </div>
+  <div class="cosmic-menu">
+    <div class="menu-links">
+      <router-link
+        v-for="item in menu"
+        :key="item.path"
+        :to="item.path"
+        class="menu-link"
+        active-class="active"
+      >
+        {{ item.emoji }}
+      </router-link>
     </div>
+  </div>
 </template>
 
 <style lang="css" scoped>
@@ -54,7 +54,7 @@ const menu = menuRoutes.filter(r => r.showInMenu)
 }
 
 .menu-link::after {
-  content: "";
+  content: '';
   position: absolute;
   bottom: 0;
   left: 20%;

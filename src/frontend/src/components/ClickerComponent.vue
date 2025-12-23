@@ -9,146 +9,117 @@ const { $t } = useFluent()
 const userStore = useUserStore()
 
 onMounted(async () => {
-    disableZoom()
+  disableZoom()
 })
 
 onUnmounted(() => {
-    restoreZoom()
+  restoreZoom()
 })
 
 const { impactOccurred } = useHapticFeedback()
 
 const count = ref(0)
-const messages: Ref<{ id: number, x: number, y: number, value: number }[]> = ref([])
+const messages: Ref<{ id: number; x: number; y: number; value: number }[]> =
+  ref([])
 
 function tap(value: number, event: MouseEvent) {
-    const impacts = ['light', 'medium', 'heavy', 'rigid', 'soft'] as const
-    const randomImpact = impacts[Math.floor(Math.random() * impacts.length)]
-    impactOccurred?.(randomImpact)
+  const impacts = ['light', 'medium', 'heavy', 'rigid', 'soft'] as const
+  const randomImpact = impacts[Math.floor(Math.random() * impacts.length)]
+  impactOccurred?.(randomImpact)
 
-    const multiplier = randomImpact === 'light' ? 1 : impacts.indexOf(randomImpact) + 1
-    const add = value * multiplier
-    count.value += add
+  const multiplier =
+    randomImpact === 'light' ? 1 : impacts.indexOf(randomImpact) + 1
+  const add = value * multiplier
+  count.value += add
 
-    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
-    const message = {
-        id: Date.now(),
-        x: event.clientX - rect.left,
-        y: event.clientY - rect.top,
-        value: add,
-    }
-    messages.value.push(message)
+  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
+  const message = {
+    id: Date.now(),
+    x: event.clientX - rect.left,
+    y: event.clientY - rect.top,
+    value: add,
+  }
+  messages.value.push(message)
 
-    setTimeout(() => {
-        messages.value = messages.value.filter(m => m.id !== message.id)
-    }, 1000)
+  setTimeout(() => {
+    messages.value = messages.value.filter((m) => m.id !== message.id)
+  }, 1000)
 
-    if (count.value > 300) {
-        showAlert()
-    }
+  if (count.value > 300) {
+    showAlert()
+  }
 }
 
 const popup = usePopup()
 
 async function showAlert() {
-    if (!popup.showPopup)
-        return
-    const result = await popup.showPopup({
-        title: $t('clicker-no-title'),
-        message: $t('clicker-no'),
-        buttons: [
-            { id: 'share', text: 'Share' },
-            { id: 'close', text: 'Close' },
-        ],
-    })
+  if (!popup.showPopup) return
+  const result = await popup.showPopup({
+    title: $t('clicker-no-title'),
+    message: $t('clicker-no'),
+    buttons: [
+      { id: 'share', text: 'Share' },
+      { id: 'close', text: 'Close' },
+    ],
+  })
 
-    if (result === 'share') {
-        const text = $t('clicker-share-text')
-        const user = userStore.user
-        const startParam = user?.id ? `?startapp=ref_${user.id}` : ''
-        const url = `https://t.me/cube_worlds_bot/clicker${startParam}`
-        const shareLink = `https://t.me/share/url?url=${encodeURIComponent(
-            url,
-        )}&text=${encodeURIComponent(text)}`
-        window.open(shareLink)
-    }
+  if (result === 'share') {
+    const text = $t('clicker-share-text')
+    const user = userStore.user
+    const startParam = user?.id ? `?startapp=ref_${user.id}` : ''
+    const url = `https://t.me/cube_worlds_bot/clicker${startParam}`
+    const shareLink = `https://t.me/share/url?url=${encodeURIComponent(
+      url,
+    )}&text=${encodeURIComponent(text)}`
+    window.open(shareLink)
+  }
 }
 
 function disableZoom() {
-    const meta = document.createElement('meta')
-    meta.name = 'viewport'
-    meta.content
-        = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'
-    document.head.appendChild(meta)
+  const meta = document.createElement('meta')
+  meta.name = 'viewport'
+  meta.content =
+    'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'
+  document.head.appendChild(meta)
 }
 
 function restoreZoom() {
-    const meta = document.querySelector('meta[name="viewport"]')
-    if (meta) {
-        document.head.removeChild(meta)
-    }
+  const meta = document.querySelector('meta[name="viewport"]')
+  if (meta) {
+    document.head.removeChild(meta)
+  }
 }
 </script>
 
 <template>
-    <h1>{{ $t("clicker-title") }}</h1>
-    <div class="card">
-        <div class="cube-container">
-            <div class="cube">
-                <div
-                    class="front"
-                    @click="(event) => tap(1, event)"
-                >
-                    CUBE
-                </div>
-                <div
-                    class="back"
-                    @click="(event) => tap(2, event)"
-                >
-                    WORLDS
-                </div>
-                <div
-                    class="right"
-                    @click="(event) => tap(1, event)"
-                >
-                    PROJECT
-                </div>
-                <div
-                    class="left"
-                    @click="(event) => tap(5, event)"
-                >
-                    RPG GAME
-                </div>
-                <div
-                    class="top"
-                    @click="(event) => tap(4, event)"
-                >
-                    TELEGRAM
-                </div>
-                <div
-                    class="bottom"
-                    @click="(event) => tap(3, event)"
-                >
-                    TON
-                </div>
-            </div>
+  <h1>{{ $t('clicker-title') }}</h1>
+  <div class="card">
+    <div class="cube-container">
+      <div class="cube">
+        <div class="front" @click="(event) => tap(1, event)">CUBE</div>
+        <div class="back" @click="(event) => tap(2, event)">WORLDS</div>
+        <div class="right" @click="(event) => tap(1, event)">PROJECT</div>
+        <div class="left" @click="(event) => tap(5, event)">RPG GAME</div>
+        <div class="top" @click="(event) => tap(4, event)">TELEGRAM</div>
+        <div class="bottom" @click="(event) => tap(3, event)">TON</div>
+      </div>
 
-            <transition-group
-                name="float-message"
-                tag="div"
-                class="message-container"
-            >
-                <div
-                    v-for="message in messages"
-                    :key="message.id"
-                    class="message"
-                    :style="{ left: `${message.x}px`, top: `${message.y}px` }"
-                >
-                    +{{ message.value }}
-                </div>
-            </transition-group>
+      <transition-group
+        name="float-message"
+        tag="div"
+        class="message-container"
+      >
+        <div
+          v-for="message in messages"
+          :key="message.id"
+          class="message"
+          :style="{ left: `${message.x}px`, top: `${message.y}px` }"
+        >
+          +{{ message.value }}
         </div>
+      </transition-group>
     </div>
+  </div>
 </template>
 
 <style scoped>
@@ -271,7 +242,9 @@ h1 {
 
 .float-message-enter-active,
 .float-message-leave-active {
-  transition: opacity 0.5s ease, transform 0.5s ease;
+  transition:
+    opacity 0.5s ease,
+    transform 0.5s ease;
 }
 
 .float-message-enter-from,
