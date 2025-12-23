@@ -39,7 +39,7 @@ export const menuRoutes: MenuRoute[] = [
     component: ExchangeComponent,
   },
   {
-    path: '/satoshi',
+    path: '/mining',
     name: 'SatoshiMiningPage',
     emoji: '⛏️',
     showInMenu: true,
@@ -49,7 +49,7 @@ export const menuRoutes: MenuRoute[] = [
     path: '/cnft',
     name: 'CNFTPage',
     emoji: '🎨',
-    showInMenu: true,
+    showInMenu: false,
     component: CNFTComponent,
   },
 
