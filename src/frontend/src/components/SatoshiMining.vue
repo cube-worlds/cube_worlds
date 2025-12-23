@@ -16,6 +16,7 @@ const tonweb = new TonWeb(provider)
 const miningData = ref<any>(null)
 const jettonData = ref<any>(null)
 const timeText = ref('00:00')
+const isLoading = ref(false)
 
 function fromNano(n: number | bigint | string) {
     return TonWeb.utils.fromNano(n.toString())
@@ -32,6 +33,14 @@ const formattedSubsidy = computed(() =>
         ? `${fromNano(miningData.value.subsidy)} $SATOSHI`
         : '…',
 )
+
+const isMiningDisabled = computed(() => {
+    if (isLoading.value)
+        return true
+    if (!miningData.value)
+        return true
+    return miningData.value.probability < 10
+})
 
 const reward = computed(() => {
     const data = miningData.value
@@ -68,6 +77,8 @@ const rights = computed(() =>
 )
 
 async function submitMining() {
+    if (isMiningDisabled.value)
+        return
     const ui = tonConnectUI?.value
     if (!ui)
         return
@@ -172,14 +183,15 @@ onMounted(() => {
 
             <button
                 class="main-button"
+                :disabled="isMiningDisabled"
                 @click="submitMining"
             >
                 Press F
             </button>
 
             <p class="desc">
-                By pressing F you get ~{{ miningData?.probability ?? "…" }}% chance to mine
-                {{ reward }} $SATOSHI (costs 0.06 TON)
+                By pressing F you get <b>~{{ miningData?.probability ?? "…" }}%</b> chance to mine
+                <b>{{ reward }} $SATOSHI</b> (costs 0.06 TON)
             </p>
         </div>
 
