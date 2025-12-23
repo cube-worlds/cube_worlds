@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { commaSeparatedNumber } from '#root/common/helpers/numbers.ts'
-import { removeMiddle } from '#root/common/helpers/text'
 import { onMounted, ref } from 'vue'
 import { useRetry } from '../composables/useRetry'
 
@@ -77,8 +76,10 @@ onMounted(async () => {
               :href="`https://tonviewer.com/${item.wallet}`"
               target="_blank"
               rel="noopener noreferrer"
+              class="wallet-link"
+              :title="item.wallet"
             >
-              {{ removeMiddle(item.wallet, 10) }}
+              {{ item.wallet }}
             </a>
           </div>
         </div>
@@ -127,8 +128,10 @@ h1 {
 
 .left {
   display: flex;
-  gap: 8px;
+  gap: 0.5rem;
   align-items: center;
+  flex: 1 1 0; /* allow wallet to shrink */
+  min-width: 0; /* key for ellipsis inside flex */
 }
 
 .index {
@@ -138,9 +141,23 @@ h1 {
 }
 
 .wallet {
-  font-size: 12px;
+  font-size: 13px;
   opacity: 0.85;
-  word-break: break-all;
+  min-width: 0; /* important for flex shrink */
+  overflow: hidden; /* hide overflowing content */
+  text-overflow: ellipsis;
+  white-space: nowrap; /* prevent line break */
+}
+
+.wallet-link {
+  display: inline-block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.75rem;
+  opacity: 0.85;
+  vertical-align: middle;
 }
 
 .right {
