@@ -11,6 +11,7 @@ const skip = ref(0)
 const totalWallets = ref<number | null>(null)
 const loading = ref(false)
 const error = ref<string | null>(null)
+const isDev = import.meta.env.VITE_ENV === 'development'
 
 async function fetchTotals() {
   const r = await retry(() => fetch('/api/users/balances'))
@@ -73,7 +74,7 @@ onMounted(async () => {
           <div class="index">#{{ i + 1 }}</div>
           <div class="wallet">
             <a
-              :href="`https://tonviewer.com/${item.wallet}`"
+              :href="`https://${isDev ? 'testnet.' : ''}tonviewer.com/${item.wallet}`"
               target="_blank"
               rel="noopener noreferrer"
               class="wallet-link"
