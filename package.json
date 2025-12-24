@@ -14,7 +14,7 @@
     "npm": ">=8.0.0"
   },
   "scripts": {
-    "dev": "tsc-watch --onSuccess \"tsx ./src/main.ts\"",
+    "dev": "tsx watch src/main.ts",
     "tunnel": "ngrok http --domain dominant-annually-lobster.ngrok-free.app 3000",
     "xtunnel": "xtunnel http 3000",
     "build:bot": "tsc --noEmit false",

@@ -1,4 +1,5 @@
 import type { Bot } from '#root/bot/index'
+import fs from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { logger, loggerOptions } from '#root/logger'
@@ -49,11 +50,12 @@ export async function createServer(bot: Bot) {
         return reply.status(404).send({ error: 'API route not found' })
       }
       const url = req.raw.url || '/'
-      const html = await vite.transformIndexHtml(
-        url,
-        '<!DOCTYPE html><html><head></head><body></body></html>',
+      const indexHtml = await fs.readFile(
+        path.join(frontendPath, 'index.html'),
+        'utf-8',
       )
-      return reply.type('text/html').send(html)
+      const html = await vite.transformIndexHtml(url, indexHtml)
+      reply.type('text/html').send(html)
     })
   } else {
     await server.register(fastifyStatic, {
