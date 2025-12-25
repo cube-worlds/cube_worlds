@@ -11,6 +11,7 @@ import { createServer as createViteServer } from 'vite'
 import authHandler from './backend/auth-handler'
 import balancesHandler from './backend/balances-handler'
 import captchaHandler from './backend/captcha'
+import claimHandler from './backend/claim-handler'
 import leaderboardHandler from './backend/leaderboard-handler'
 import nftHandler from './backend/nft-handler'
 import setWalletHandler from './backend/set-wallet-handler'
@@ -30,6 +31,7 @@ export async function createServer(bot: Bot) {
 
   await server.register(balancesHandler, { prefix: '/api/users' })
   await server.register(leaderboardHandler, { prefix: '/api/users' })
+  await server.register(claimHandler, { prefix: '/api/users' })
 
   const __filename = fileURLToPath(import.meta.url)
   const __dirname = path.dirname(__filename)
