@@ -6,6 +6,8 @@
 
 Cube Worlds Game Project source code.
 
+See `ARCHITECTURE.md` for a short system overview.
+
 ## Usage
 
 Follow these steps to set up and run bot locally:
