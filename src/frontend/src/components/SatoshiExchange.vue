@@ -2,7 +2,7 @@
 import type { TonConnectUI } from '@tonconnect/ui'
 import { commaSeparatedNumber } from '#root/common/helpers/numbers.ts'
 import TonWeb from 'tonweb'
-import { computed, inject, onMounted, ref } from 'vue'
+import { computed, inject, onMounted, ref, watch } from 'vue'
 import { useRetry } from '../composables/useRetry'
 import { useUserStore } from '../stores/userStore'
 
@@ -11,6 +11,13 @@ const tonConnectUI = inject('tonConnectUI') as
   | undefined
 const userStore = useUserStore()
 const { retry } = useRetry()
+const isAuthorized = computed(() => Boolean(userStore.initData && userStore.user))
+const isWalletConnected = computed(() =>
+  Boolean(userStore.wallet?.account?.address),
+)
+const canShowExchangeData = computed(
+  () => isAuthorized.value && isWalletConnected.value,
+)
 
 const minUserBalance = 1000
 
@@ -48,6 +55,7 @@ const formattedSatoshiReceived = computed(() =>
 )
 
 const actionDisabled = computed(() => {
+  if (!canShowExchangeData.value) return true
   if (!satoshiReceived.value || satoshiReceived.value < 1) return true
   if (userBalanceNum.value < minUserBalance) return true
   if (selectedAmount.value < minUserBalance) return true
@@ -99,19 +107,36 @@ async function fetchSatoshiWalletBalance() {
 }
 
 onMounted(async () => {
-  await Promise.all([fetchSumAll(), fetchSatoshiWalletBalance()])
+  watch(
+    () => [isAuthorized.value, isWalletConnected.value],
+    async ([authorized, walletConnected]) => {
+      if (!authorized || !walletConnected) {
+        sumAll.value = null
+        commonSatoshiRaw.value = null
+        return
+      }
 
-  if (userBalanceNum.value >= minUserBalance) {
-    selectedAmount.value = Math.min(
-      userBalanceNum.value,
-      Math.max(minUserBalance, Math.floor(userBalanceNum.value / 2)),
-    )
-  }
+      await Promise.all([fetchSumAll(), fetchSatoshiWalletBalance()])
+
+      if (userBalanceNum.value >= minUserBalance) {
+        selectedAmount.value = Math.min(
+          userBalanceNum.value,
+          Math.max(minUserBalance, Math.floor(userBalanceNum.value / 2)),
+        )
+      }
+    },
+    { immediate: true },
+  )
 })
 
 async function doChange() {
   error.value = null
   txResult.value = null
+
+  if (!isAuthorized.value) {
+    error.value = 'Profile authorization is still in progress'
+    return
+  }
 
   const ui = tonConnectUI?.value
   if (!ui) {
@@ -153,6 +178,10 @@ async function doChange() {
     sending.value = false
   }
 }
+
+function openWalletModal() {
+  tonConnectUI?.value?.openModal()
+}
 </script>
 
 <template>
@@ -169,42 +198,59 @@ async function doChange() {
 
       <h1>Exchange $CUBE to $SATOSHI</h1>
 
-      <div v-if="userBalanceNum < minUserBalance" class="warn">
-        Your balance is below {{ minUserBalance }} $CUBE — exchange unavailable
+      <div v-if="!isAuthorized" class="gate">
+        <div class="gate-title">Authorizing profile...</div>
+        <div class="gate-sub">Exchange details will appear in a moment.</div>
       </div>
 
-      <div v-else class="slider-block">
-        <div class="slider-container">
-          <input
-            v-model.number="selectedAmount"
-            type="range"
-            :min="minUserBalance"
-            :max="userBalanceNum"
-            step="1"
-            class="fancy-slider"
-          />
+      <div v-else-if="!isWalletConnected" class="gate">
+        <div class="gate-title">Connect wallet to unlock exchange</div>
+        <div class="gate-sub">
+          Limited mode: personal balance and exchange calculation are hidden.
         </div>
-        <div class="slider-values">
-          <span>{{ formattedSelectedAmount }} $CUBE</span>
-        </div>
-      </div>
-
-      <div class="stat">
-        <span>You'll receive</span>
-        <span class="amount-value">
-          ≈ {{ formattedSatoshiReceived }} $SATOSHI
-        </span>
-      </div>
-
-      <div class="actions">
-        <button
-          :disabled="actionDisabled"
-          class="main-button"
-          @click="doChange"
-        >
-          Exchange Now
+        <button class="connect-button" @click="openWalletModal">
+          Connect wallet
         </button>
       </div>
+
+      <template v-else>
+        <div v-if="userBalanceNum < minUserBalance" class="warn">
+          Your balance is below {{ minUserBalance }} $CUBE — exchange unavailable
+        </div>
+
+        <div v-else class="slider-block">
+          <div class="slider-container">
+            <input
+              v-model.number="selectedAmount"
+              type="range"
+              :min="minUserBalance"
+              :max="userBalanceNum"
+              step="1"
+              class="fancy-slider"
+            />
+          </div>
+          <div class="slider-values">
+            <span>{{ formattedSelectedAmount }} $CUBE</span>
+          </div>
+        </div>
+
+        <div class="stat">
+          <span>You'll receive</span>
+          <span class="amount-value">
+            ≈ {{ formattedSatoshiReceived }} $SATOSHI
+          </span>
+        </div>
+
+        <div class="actions">
+          <button
+            :disabled="actionDisabled"
+            class="main-button"
+            @click="doChange"
+          >
+            Exchange Now
+          </button>
+        </div>
+      </template>
 
       <div v-if="txResult" class="tx-result">
         {{ txResult }}
@@ -289,6 +335,38 @@ async function doChange() {
   margin-bottom: 12px;
   font-size: 13px;
   border: 1px solid rgba(255, 100, 100, 0.2);
+}
+
+.gate {
+  margin: 8px 0 14px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  text-align: center;
+}
+
+.gate-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.gate-sub {
+  margin-top: 6px;
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.connect-button {
+  margin-top: 10px;
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  padding: 11px 14px;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 700;
+  background: linear-gradient(90deg, #4e8cff, #7aa2ff);
 }
 
 .slider-block {
