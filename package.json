@@ -31,7 +31,7 @@
     "start:force": "tsx ./src/main.ts",
     "typecheck": "tsc",
     "test": "npm run test:backend",
-    "test:backend": "node --import tsx --test $(find src/backend -name '*.test.ts')"
+    "test:backend": "NODE_ENV=test node --import tsx --test $(find src/backend -name '*.test.ts')"
   },
   "dependencies": {
     "@fastify/middie": "^9.1.0",

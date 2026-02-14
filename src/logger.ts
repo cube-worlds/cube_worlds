@@ -1,5 +1,14 @@
-import { config } from '#root/config'
+import process from 'node:process'
+import { config as realConfig } from '#root/config'
 import { pino } from 'pino'
+
+const config =
+  process.env.NODE_ENV === 'test'
+    ? ({
+        LOG_LEVEL: 'silent',
+        isDev: true,
+      } as const)
+    : realConfig
 
 export const loggerOptions = {
   level: config.LOG_LEVEL,
