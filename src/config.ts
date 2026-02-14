@@ -60,4 +60,17 @@ function createConfigFromEnvironment(environment: NodeJS.ProcessEnv) {
 
 export type Config = ReturnType<typeof createConfigFromEnvironment>
 
-export const config = createConfigFromEnvironment(process.env)
+let _config: Config | null = null
+
+function getConfig(): Config {
+  if (!_config) {
+    _config = createConfigFromEnvironment(process.env)
+  }
+  return _config
+}
+
+export const config: Config = new Proxy({} as Config, {
+  get(_, prop) {
+    return getConfig()[prop as keyof Config]
+  },
+})
