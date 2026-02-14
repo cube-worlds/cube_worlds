@@ -2,12 +2,10 @@ name: Main
 
 on:
   push:
-    branches: [main]
   pull_request:
-    branches: [main]
 
 jobs:
-  build-and-test:
+  quality:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -22,3 +20,17 @@ jobs:
       - run: npm --prefix src/frontend ci
       - run: npm run lint
       - run: npm run typecheck
+
+  backend-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20.x]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: npm ci
+      - run: npm run test:backend
