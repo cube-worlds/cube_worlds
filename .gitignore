@@ -140,3 +140,4 @@ data/
 # Ignore SQLite database
 *.db
 *.db-journal
+.claude

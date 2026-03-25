@@ -1,38 +1,70 @@
-# Codex Project Guide
+# Agent Project Guide
 
 ## Project Summary
-Cube Worlds is a Telegram bot plus a Vue 3 web frontend for an NFT game. The backend is TypeScript (Node 18+), using grammy for the bot, Fastify/Hono for HTTP, and MongoDB via Mongoose. The frontend is a Vite + Vue 3 app under `src/frontend`.
 
-See `ARCHITECTURE.md` for a concise system overview.
+Cube Worlds is a Telegram Mini App game on the TON blockchain. Three main parts: a Telegram bot (Grammy), a Fastify API backend, and a Vue 3 frontend (Vite). Data stored in MongoDB via Typegoose.
+
+See `CLAUDE.md` for comprehensive project context. See `ARCHITECTURE.md` for system overview.
 
 ## Repository Layout
-- `src/main.ts`: bot entrypoint (ts-node/tsx dev).
-- `src/bot/`: bot logic (handlers, commands, menus).
-- `src/backend/`: backend services and data access.
-- `src/server.ts`: HTTP server integration.
-- `src/frontend/`: Vue 3 web app (own `package.json`).
-- `data/`, `locales/`: content assets and i18n resources.
+
+- `src/main.ts` — Bot entrypoint: MongoDB connect → bot init → server start → subscription start
+- `src/bot/` — Bot logic: features (commands), middlewares, helpers
+- `src/backend/handlers/` — Fastify route handlers (auth, claim, nft, leaderboard, balances)
+- `src/server.ts` — HTTP server: webhooks, static files, API routes under `/api/`
+- `src/common/models/` — Typegoose models: User, Balance, Claim, CNFT, Transaction, Vote
+- `src/common/helpers/` — Shared utils: TON blockchain, IPFS, image generation, telegram
+- `src/config.ts` — Environment config via znv (lazy singleton proxy)
+- `src/subscription.ts` — TON transaction monitoring service
+- `src/frontend/` — Vue 3 web app (separate `package.json`)
+- `locales/` — i18n translation files (Fluent .ftl)
+- `data/` — Static assets (NFT images, fonts)
 
 ## Environment
-- Node >= 18, npm >= 8.
-- `.env` is required. Copy from `.env.example` and fill in tokens/keys.
-- MongoDB connection string is required (`MONGO`).
+
+- Node >= 18, npm >= 8
+- `.env` required — copy from `.env.example`
+- MongoDB connection string required (`MONGO`)
+- Key external services: Telegram Bot API, TON blockchain, Pinata (IPFS)
+- Optional: OpenAI, Stability AI, Telemetree
 
 ## Common Commands
-- `npm install` (root) installs backend deps.
-- `npm --prefix src/frontend install` installs frontend deps.
-- `npm run dev` runs backend in watch mode.
-- `npm --prefix src/frontend run dev` runs frontend in Vite dev server.
-- `npm run build:all` builds backend and frontend.
-- `npm run lint` runs ESLint.
-- `npm run format` runs Prettier.
-- `npm run typecheck` runs TypeScript.
+
+```bash
+npm install && npm --prefix src/frontend install   # Install all deps
+npm run dev                                         # Backend watch mode
+npm --prefix src/frontend run dev                   # Frontend dev server (port 5173)
+npm run build:all                                   # Build backend + frontend
+npm run lint                                        # ESLint
+npm run format                                      # Prettier
+npm run typecheck                                   # TypeScript check
+npm run test:backend                                # Run backend tests (Node.js test runner)
+```
 
 ## Notes for Agents
-- This repo is ESM (`"type": "module"`). Keep imports ESM-compatible.
-- Prefer editing TypeScript sources under `src/` and avoid touching `build/` unless explicitly asked.
-- Keep `src/frontend` changes isolated to that subtree (it is its own package).
-- When changing runtime behavior, check both bot entry (`src/main.ts`) and server integration (`src/server.ts`).
+
+- This repo is **ESM** (`"type": "module"`). All imports must be ESM-compatible.
+- Path aliases: `#root/*` → `./build/src/*` (backend), `@/*` → `./src/*` (frontend).
+- Prefer editing TypeScript sources under `src/`. Never touch `build/`.
+- Frontend (`src/frontend/`) is its own package — keep changes isolated there.
+- When changing runtime behavior, check both `src/main.ts` and `src/server.ts`.
+- Typegoose uses decorators — `experimentalDecorators` and `emitDecoratorMetadata` are required.
+- Code style: no semicolons, single quotes, 2-space indent (Prettier enforced).
 
 ## Testing
-- No dedicated test runner is configured. Use `npm run lint` and `npm run typecheck` as safety checks.
+
+- **Runner:** Node.js built-in test module (`node --test`)
+- **Command:** `npm run test:backend`
+- **Tested handlers:** auth, claim, set-wallet, balances, leaderboard
+- **Untested:** nft-handler
+- Always run `npm run lint && npm run typecheck` as safety checks after changes.
+
+## Known TODOs
+
+- `src/bot/features/play.ts:41` — Save conversation to DB for story game persistence
+- `src/common/helpers/telegram.ts:114` — Complete user activity tracking logic
+- `src/bot/features/admin/queue.ts:244` — Re-enable sendNewPlaces notification
+
+## Future Development
+
+See `docs/FUTURE_DEVELOPMENT.md` for a prioritized list of improvements and new feature ideas.
