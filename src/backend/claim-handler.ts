@@ -38,7 +38,7 @@ function createDefaultDependencies(): ClaimHandlerDependencies {
       if (!botToken) {
         throw new Error('BOT_TOKEN is not configured')
       }
-      const expiresIn = 60 * 60 * 24 * 7
+      const expiresIn = 60 * 60 * 24
       validate(initData, botToken, { expiresIn })
     },
     parseInitData: parse,

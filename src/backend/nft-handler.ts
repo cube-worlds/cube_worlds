@@ -64,34 +64,50 @@ async function nftHandler(fastify: FastifyInstance) {
     }
   })
 
-  fastify.get('/:address', async (request: any, _reply: any) => {
+  fastify.get('/:address', async (request: any, reply: any) => {
     const { address } = request.params
     if (!address) {
-      return { error: 'No address provided' }
+      return reply.status(400).send({ error: 'No address provided' })
     }
-    const nft = await getCNFTByWallet(address)
+    try {
+      const nft = await getCNFTByWallet(address)
+      if (!nft) {
+        return reply.status(404).send({ error: 'NFT not found' })
+      }
+      return toJSON(nft)
+    } catch {
+      return reply.status(400).send({ error: 'Invalid address format' })
+    }
+  })
+
+  fastify.get('/:index.json', async (request: any, reply: any) => {
+    const { index } = request.params
+    const parsedIndex = Number(index)
+    if (!Number.isInteger(parsedIndex) || parsedIndex < 0) {
+      return reply.status(400).send({ error: 'Invalid index' })
+    }
+    const nft = await getCNFTByIndex(parsedIndex)
     if (!nft) {
-      return { error: "NFT doesn't exists" }
+      return reply.status(404).send({ error: 'NFT not found' })
     }
     return toJSON(nft)
   })
 
-  fastify.get('/:index.json', async (request: any, _reply: any) => {
-    const { index } = request.params
-    if (!index) {
-      return { error: 'No index provided' }
-    }
-    const nft = await getCNFTByIndex(index)
-    if (!nft) {
-      return { error: "NFT doesn't exists" }
-    }
-    return toJSON(nft)
-  })
+  const validImageTypes = new Set(
+    Object.keys(CNFTImageType).map((k) => k.toLowerCase()),
+  )
 
   fastify.get('/:image-:color.webp', async (request: any, reply: any) => {
     const { image, color } = request.params
     if (!image || !color) {
-      return { error: 'No correct image/color provided!' }
+      return reply.status(400).send({ error: 'Invalid image/color parameters' })
+    }
+    if (!validImageTypes.has(image.toLowerCase())) {
+      return reply.status(400).send({ error: 'Invalid image type' })
+    }
+    const parsedColor = Number(color)
+    if (!Number.isInteger(parsedColor) || parsedColor < 0 || parsedColor > 10) {
+      return reply.status(400).send({ error: 'Invalid color value' })
     }
     const capitalizedImage = image.charAt(0).toUpperCase() + image.slice(1)
     const typedImage = capitalizedImage as keyof typeof CNFTImageType
@@ -99,7 +115,7 @@ async function nftHandler(fastify: FastifyInstance) {
     const imageName = nftImage(type)
     logger.info(capitalizedImage, typedImage, type, imageName)
     const data = await sharp(`./src/backend/nft/${imageName}.png`)
-      .flatten({ background: cnftHexColor(Number(color)) })
+      .flatten({ background: cnftHexColor(parsedColor) })
       .webp({ nearLossless: true, quality: 100 })
       .toBuffer()
     reply.header('Content-Type', 'image/webp')

@@ -1,4 +1,5 @@
 import type { Context } from '#root/bot/context'
+import { generateCaptchaToken } from '#root/backend/captcha'
 import { logHandle } from '#root/common/helpers/logging'
 import { generateRandomString } from '#root/common/helpers/random'
 import {
@@ -57,10 +58,12 @@ feature.command('dice', logHandle('command-dice'), async (ctx) => {
   // }
   if (ctx.dbuser.suspicionDices >= 105) {
     await ctx.dbuser.save()
+    const enemies = ctx.dbuser.suspicionDices - 100
+    const captchaToken = generateCaptchaToken(ctx.dbuser.id, enemies - 1)
     return ctx.reply(ctx.t('dice.captcha_title'), {
       reply_markup: new InlineKeyboard().webApp(
         ctx.t('dice.captcha_button'),
-        `${config.WEB_APP_URL}/captcha/?user_id=${ctx.dbuser.id}&enemies=${ctx.dbuser.suspicionDices - 100}`,
+        `${config.WEB_APP_URL}/captcha/?user_id=${ctx.dbuser.id}&enemies=${enemies}&token=${encodeURIComponent(captchaToken)}`,
       ),
     })
   }

@@ -1,123 +1,49 @@
-# Claude Code Project Guide
+# Cube Worlds
+Telegram Mini App game on TON blockchain. CUBE points via daily claims/dice/referrals → NFT minting. Grammy bot + Fastify API + Vue 3 frontend + MongoDB/Typegoose.
 
-## Project Summary
-
-Cube Worlds is a Telegram Mini App game built around NFTs on the TON blockchain. It consists of three main parts: a Telegram bot (Grammy), a backend API (Fastify), and a Vue 3 frontend (Vite). Data is stored in MongoDB via Typegoose.
-
-## Repository Layout
-
-```
-src/
-  main.ts              # Bot entrypoint: MongoDB connect, bot init, server start
-  server.ts            # Fastify HTTP server: webhooks, static files, API routes
-  config.ts            # Environment config via znv (lazy singleton proxy)
-  logger.ts            # Pino logger (silent in test mode)
-  subscription.ts      # TON transaction monitoring service
-  bot/
-    index.ts           # Bot creation, middleware chain, feature registration
-    features/          # Bot command handlers (start, mint, dice, play, admin/*)
-    helpers/           # Bot-specific utilities (keyboards, session, context)
-    middlewares/       # Grammy middlewares (i18n, user attach, session)
-  backend/
-    handlers/          # Fastify route handlers (auth, claim, nft, leaderboard, balances)
-    *.test.ts          # Backend tests (Node.js built-in test runner)
-  common/
-    models/            # Typegoose models: User, Balance, Claim, CNFT, Transaction, Vote
-    helpers/           # Shared utilities: ton.ts, ipfs.ts, generation.ts, telegram.ts
-  frontend/            # Separate npm package (Vue 3 + Vite)
-    src/
-      views/           # Vue components (Claim, Leaderboard, Exchange, Mining, Clicker, CNFT, FAQ)
-      router/          # Vue Router config
-      stores/          # Pinia stores (userStore)
-      services/        # API service wrappers (auth, wallet)
-locales/               # i18n translation files (Fluent .ftl format)
-data/                  # Static assets (NFT images, fonts)
-```
-
-## Tech Stack
-
-- **Runtime:** Node.js 18+, TypeScript, ESM modules
-- **Bot:** Grammy 1.40 (Telegram Bot API)
-- **HTTP:** Fastify 5.7
-- **Database:** MongoDB via Mongoose 8 + Typegoose 12
-- **Frontend:** Vue 3.5, Vite 7, Pinia, Element Plus, Vue Router
-- **Blockchain:** TON (@ton/core, @ton/ton, TonConnect SDK, TonWeb)
-- **External APIs:** Pinata (IPFS), OpenAI, Stability AI, Telemetree
-- **Testing:** Node.js built-in test runner (`node --test`)
-
-## Key Commands
-
+## Commands
 ```bash
-npm install && npm --prefix src/frontend install   # Install all deps
-npm run dev                                         # Backend watch mode (tsx)
-npm --prefix src/frontend run dev                   # Frontend dev server (port 5173)
-npm run build:all                                   # Build backend (tsc) + frontend (vite)
-npm run lint                                        # ESLint
-npm run format                                      # Prettier
-npm run typecheck                                   # TypeScript check
-npm run test:backend                                # Run backend tests
+npm install && npm --prefix src/frontend install
+npm run dev                                      # Backend watch (tsx)
+npm --prefix src/frontend run dev                # Frontend dev (port 5173)
+npm run build:all                                # Backend (tsc) + frontend (vite)
+npm run lint && npm run typecheck && npm run test:backend  # all quality checks
+NODE_ENV=test node --import tsx --test src/backend/auth-handler.test.ts  # single test file
 ```
 
-## Conventions
+## Critical Gotchas
+- **Tests use Node.js built-in test runner** (`node --test`), not Jest/Vitest
+- **Captcha** (`src/frontend/captcha/`) is standalone HTML/JS — NOT a Vue component
+- **`folderPath()`** from `src/common/helpers/files.ts` for all file path ops — sanitizes usernames, checks against `./data/`
+- **Claim locking**: in-process promise chain (`claimLocks` Map) — single-process only
+- **Path aliases**: `#root/*` → `./build/src/*` (backend), `@/*` → `./src/*` (frontend)
+- **ESM only**, no CommonJS. No semicolons, single quotes, 2-space indent.
 
-- **ESM only** — no CommonJS `require()`. Use `import` everywhere.
-- **Path alias:** `#root/*` maps to `./build/src/*` (backend). `@/*` maps to `./src/*` (frontend).
-- **Separate packages:** Frontend has its own `package.json` under `src/frontend/`.
-- **Don't touch `build/`** — it's generated output from `tsc`.
-- **Typegoose decorators** require `experimentalDecorators` and `emitDecoratorMetadata`.
-- **No semicolons**, single quotes, 2-space indent (Prettier config).
+## Handler Pattern (DI)
+```
+export interface FooHandlerDependencies { findUser: (id) => Promise<User | null> }
+function createDefaultDependencies(): FooHandlerDependencies { /* prod deps */ }
+export function buildFooHandler(deps = createDefaultDependencies()) {
+  return async function(fastify) { /* register routes */ }
+}
+export default buildFooHandler()
+// Tests: buildFooHandler({ findUser: mockFn })
+```
+See `auth-handler.test.ts` for reference.
 
-## Data Models
+## Auth
+All authenticated endpoints validate Telegram's `initData` string (HMAC + 24h expiry) → extract `user.id` → lookup in MongoDB.
 
-| Model | Purpose | Key Fields |
-|-------|---------|------------|
-| User | Telegram user profile + game state | id, wallet, votes, state, minted, referalId |
-| Balance | Balance change history | userId, amount (bigint), type (enum), createdAt |
-| Claim | Daily claim rewards with streaks | user (ref), streakDays, lastClaimDate, totalClaimed |
-| CNFT | Compressed NFT metadata | index, userId, wallet, votes, type, color, minted |
-| Transaction | TON transaction records | utime, lt, address, coins, hash, accepted |
-| Vote | Referral tracking | giver, receiver, quantity |
+## Bot middleware order
+`autoRetry → updateLogger → autoChatAction → hydrate → session → slapReaction → i18n → attachUser → queueMenu → [features]`
 
-## API Endpoints (all under `/api/`)
+## Game mechanics
+- `addPoints()` uses `$inc` + logs to Balance model
+- Daily claim: 60s cooldown, 10-day streak, 100 base × multiplier
+- Dice: 3× series → NFT mint priority. 105+ suspicion → DOOM captcha
+- CNFT type by vote count: Whale(>1M), Diamond(>500K), Coin(>100K), Knight(referrals), Dice(dice winner), Common
 
-| Method | Path | Purpose |
-|--------|------|---------|
-| POST | /api/auth/login | Authenticate via Telegram initData |
-| POST | /api/auth/set-wallet | Store user's TON wallet |
-| POST | /api/captcha | Bot captcha verification |
-| GET | /api/nft/:index | NFT metadata + image serving |
-| GET | /api/users/balance | User balance query |
-| GET | /api/users/leaderboard | Ranked leaderboard |
-| POST | /api/users/claim | Daily reward claim |
-
-## Bot Features
-
-Core commands: `/start`, `/mint`, `/dice`, `/balance`, `/whales`, `/webapp`
-Admin commands: `/stats`, `/queue`, `/play`, `/topup`, `/collection`, `/parameters`
-
-## Architecture Notes
-
-- Bot startup flow: `main.ts` → connect MongoDB → create bot → create server → start subscription → start bot
-- Auth uses Telegram's `initData` signature validation (7-day expiry)
-- Transaction monitoring polls TON blockchain for incoming wallet transactions
-- NFT minting pipeline: select image → AI generation (Stability) → IPFS upload (Pinata) → on-chain mint
-- Claim system: 60s cooldown, 10-day max streak, 100 base reward with multiplier
-
-## Current State & Known Issues
-
-- **TODOs in code:**
-  - `src/bot/features/play.ts:41` — Story game lacks conversation persistence in DB
-  - `src/common/helpers/telegram.ts:114` — User activity tracking logic incomplete
-  - `src/bot/features/admin/queue.ts:244` — `sendNewPlaces` notification commented out
-- **Test coverage:** Auth, claim, wallet, balances, leaderboard handlers tested. NFT handler untested.
-- **Error handling:** NFT handler returns plain objects without proper HTTP status codes.
-- **Hidden routes:** `/cnft`, `/faq`, `/clicker` exist but are not shown in navigation menu.
-
-## When Making Changes
-
-- **Backend handler changes:** Check corresponding test file, run `npm run test:backend`
-- **Model changes:** Check all handlers and helpers that reference the model
-- **Frontend changes:** Stay within `src/frontend/` subtree
-- **Config changes:** Update both `src/config.ts` and `.env.example`
-- **Bot feature changes:** Check `src/bot/index.ts` for feature registration order
-- Always run `npm run lint` and `npm run typecheck` before considering work done
+## Security
+- Captcha: HMAC-SHA256 signed tokens (BOT_TOKEN as secret). No secrets client-side.
+- Leaderboard pagination: limit 1–100, skip ≥ 0.
+- Random strings: `node:crypto.randomBytes`.

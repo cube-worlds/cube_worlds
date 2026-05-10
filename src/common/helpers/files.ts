@@ -2,8 +2,16 @@ import { Buffer } from 'node:buffer'
 import fs from 'node:fs'
 import path from 'node:path'
 
+function sanitizeFilename(name: string): string {
+  return name.replaceAll(/[^\w-]/g, '_')
+}
+
 export function folderPath(username: string): string {
-  const fp = `./data/${username}/`
+  const safeName = sanitizeFilename(username)
+  const fp = path.resolve('./data', safeName)
+  if (!fp.startsWith(path.resolve('./data'))) {
+    throw new Error('Invalid username for path')
+  }
   if (!fs.existsSync(fp)) {
     fs.mkdirSync(fp, { recursive: true })
   }
@@ -16,7 +24,8 @@ export function saveImage(
   content: Buffer,
 ): string {
   const fp = folderPath(username)
-  const filePath = path.join(fp, fileName)
+  const safeFileName = path.basename(fileName)
+  const filePath = path.join(fp, safeFileName)
   fs.writeFileSync(filePath, content)
   return filePath
 }

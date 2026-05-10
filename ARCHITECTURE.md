@@ -1,33 +1,98 @@
 # Architecture Overview
 
 ## System Shape
-- Telegram bot runs on Node.js (TypeScript, ESM) and uses grammy for updates.
-- HTTP server layer is built with Fastify/Hono for bot webhooks, web app hosting, and APIs.
-- Data is stored in MongoDB via Mongoose.
-- Frontend is a Vue 3 + Vite app under `src/frontend`.
+
+```
+┌─────────────────┐     ┌──────────────────┐     ┌───────────────┐
+│  Telegram Bot   │     │  Fastify Server  │     │  Vue 3 App    │
+│  (Grammy)       │────▶│  (API + Static)  │◀────│  (Vite)       │
+│  src/bot/       │     │  src/server.ts   │     │  src/frontend/ │
+└────────┬────────┘     └────────┬─────────┘     └───────────────┘
+         │                       │
+         │              ┌────────┴─────────┐
+         │              │     MongoDB      │
+         └─────────────▶│  (Typegoose)     │
+                        │  src/common/     │
+                        └────────┬─────────┘
+                                 │
+                        ┌────────┴─────────┐
+                        │  TON Blockchain  │
+                        │  (subscription)  │
+                        └──────────────────┘
+```
+
+- **Telegram bot** runs on Node.js (TypeScript, ESM) using Grammy for updates.
+- **HTTP server** is Fastify with `@fastify/middie` (for Vite middleware in dev mode).
+- **Data** is stored in MongoDB via Mongoose/Typegoose with decorator-based schemas.
+- **Frontend** is a Vue 3 + Vite app under `src/frontend` (separate `package.json`).
+- **Captcha** is a standalone DOOM-style HTML/JS game under `src/frontend/captcha/` (not Vue).
+
+## Startup Flow
+
+`src/main.ts` orchestrates startup in order:
+1. Connect to MongoDB
+2. Create bot instance (register middlewares and features)
+3. Initialize default balance records if empty
+4. Create Fastify HTTP server (register all API handlers)
+5. Register shutdown handlers (SIGINT/SIGTERM)
+6. Start TON transaction subscription service
+7. Start bot (polling mode in dev, webhook in prod)
 
 ## Key Runtime Flows
-- Bot startup: `src/main.ts` wires configuration, bot instance, and server startup.
-- Bot logic: `src/bot/` handles commands, menus, and message flows.
-- Backend services: `src/backend/` contains data access and business logic.
-- Server: `src/server.ts` exposes webhook endpoints, static content, and API routes.
-- Frontend: `src/frontend/src` is the web UI; it talks to backend APIs and TON-related services.
+
+### User Onboarding
+`/start` command → `findOrCreateUser()` → referral check → prompt to set wallet
+
+### Daily Claim
+Frontend POST `/api/users/claim` → validate initData → per-user lock → find/create Claim → calculate streak multiplier → `addPoints()` → return new balance
+
+### Dice Game
+`/dice` command → cooldown check → suspicion tracking → if suspicious: DOOM captcha with HMAC token → else: roll two dice → series detection → `addPoints()`
+
+### NFT Minting (Admin)
+`/queue` → select user → choose/upload image → Stability AI generation → ChatGPT description → Pinata IPFS upload → on-chain TON NFT mint → mark user as minted
+
+### Transaction Monitoring
+`src/subscription.ts` → polls TON blockchain → detects incoming payments → matches wallet to user → credits points (donation) or processes SATOSHI exchange
 
 ## Configuration
+
 - `.env` is required for runtime secrets and service endpoints.
-- Core config lives in `src/config.ts`; environment values are loaded via `dotenv`.
+- Core config lives in `src/config.ts` using `znv` with Zod schemas.
+- Config uses a lazy proxy singleton — first property access triggers initialization.
+- In test mode (`NODE_ENV=test`), logger is silent and config uses fake values.
 
 ## Integration Points
-- Telegram Bot API via grammy.
-- TON/tonconnect for blockchain interactions.
-- Pinata for NFT/IPFS storage.
-- Optional OpenAI and Stability APIs when enabled by keys.
 
-## Build and Dev
-- Backend: `npm run dev` (tsx watch) and `npm run build:bot` (tsc).
-- Frontend: `npm --prefix src/frontend run dev` and `npm --prefix src/frontend run build`.
+- **Telegram Bot API** via Grammy (polling or webhook).
+- **TON blockchain** via @ton/ton for wallet operations, transaction monitoring, NFT minting.
+- **TonConnect** for wallet connection in the frontend.
+- **Pinata** for IPFS storage of NFT metadata and images.
+- **Stability AI** for image-to-image generation (pixel-art style NFT artwork).
+- **OpenAI** for ChatGPT-powered interactive story game.
+- **Telemetree** for analytics (config present but integration minimal).
+
+## Build and Deployment
+
+- **Dev:** `npm run dev` (tsx watch mode) + `npm --prefix src/frontend run dev` (Vite HMR)
+- **Build:** `npm run build:all` → tsc for backend, vite for frontend
+- **Production:** Docker (Node 20 slim), runs on port 80, nginx reverse proxy
+- **Dev server:** Fastify serves Vite as middleware via `@fastify/middie`
+- **Prod server:** Fastify serves built frontend as static files via `@fastify/static`
+
+## Security Architecture
+
+- **Auth:** All authenticated endpoints validate Telegram `initData` signatures (24-hour expiry).
+- **Captcha:** HMAC-SHA256 tokens signed with BOT_TOKEN. Generated server-side, verified server-side. Client only passes the token through.
+- **Input validation:** NFT image types whitelisted, colors bounded (0-10), indexes validated as non-negative integers, addresses wrapped in try-catch.
+- **Path safety:** File operations sanitize usernames and verify resolved paths stay within `./data/`.
+- **Pagination:** Leaderboard queries bounded (limit: 1-100).
+- **Claim locking:** In-process promise chain prevents concurrent double-claims per user (single-instance only).
 
 ## Conventions
-- ESM-only imports.
+
+- ESM-only imports (no CommonJS).
+- Type imports sorted before value imports (perfectionist/sort-imports).
 - Keep frontend and backend dependencies isolated (separate `package.json`).
+- Backend handlers use dependency injection pattern for testability.
 - Avoid editing generated output under `build/`.

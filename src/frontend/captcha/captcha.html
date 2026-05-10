@@ -435,14 +435,9 @@
         }
       });
 
-      function encryptNumber(key, number) {
-        let data = number.toString().padStart(16, "0");
-        let encryptedData = "";
-        for (let i = 0; i < data.length; i++) {
-          let charCode = data.charCodeAt(i) ^ key.charCodeAt(i % key.length);
-          encryptedData += String.fromCharCode(charCode);
-        }
-        return btoa(encryptedData);
+      function getUrlParam(name) {
+        var params = new URLSearchParams(document.location.search);
+        return params.get(name) || "";
       }
 
       function endGame() {
@@ -455,11 +450,10 @@
         if (timer_game) {
           clearTimeout(timer_game);
         }
-        const user_id = parseInt(
-          document.location.href.split("user_id=")[1].split("&")[0]
-        );
+        var user_id = getUrlParam("user_id");
+        var token = getUrlParam("token");
         fetch(
-          `/api/captcha/check?userId=${user_id}&count=${encryptNumber("jsdIUbvFtZgdKlq", max_kills - 1)}`
+          "/api/captcha/check?userId=" + encodeURIComponent(user_id) + "&token=" + encodeURIComponent(token)
         )
           .then((response) => {
             if (!response.ok) {
