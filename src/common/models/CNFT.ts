@@ -97,42 +97,86 @@ export async function getLastestCNFTWithType(type: CNFTImageType) {
   return CNFTModel.findOne({ type }).sort({ index: -1 })
 }
 
-export async function addCNFT(
-  userId: number,
-  address: Address,
-  votes: bigint,
-  referrals: number,
-  minted: boolean,
-  diceWinner: boolean,
-): Promise<DocumentType<CNFT>> {
-  const existsUserCNFT = await CNFTModel.findOne({ userId })
-  if (existsUserCNFT) {
-    throw new Error(`(${existsUserCNFT.index}) User ${userId} already exists`)
-  }
-  const wallet = address.toString({ bounceable: false })
-  const existsCNFT = await CNFTModel.findOne({ wallet })
-  if (existsCNFT) {
-    throw new Error(`(${existsCNFT.index}) Wallet ${wallet} already exists`)
-  }
-  const latestCNFT = await getLastestCNFT()
-  const latestIndex = latestCNFT?.index ?? -1
-  const index = latestIndex + 1
-
-  const type = pickCNFTType(votes, referrals, diceWinner)
-  const cnftWithType = await getLastestCNFTWithType(type)
-  const color = pickNextColor(cnftWithType?.color)
-  return CNFTModel.create({
-    index,
-    userId,
-    wallet,
-    votes,
-    referrals,
-    minted,
-    diceWinner,
-    type,
-    color,
-  })
+export interface ExistingCNFTRef {
+  index: number
 }
+
+export interface CNFTCreateInput {
+  index: number
+  userId: number
+  wallet: string
+  votes: bigint
+  referrals: number
+  minted: boolean
+  diceWinner: boolean
+  type: CNFTImageType
+  color: number
+}
+
+export interface CNFTHelperDependencies {
+  findByUserId: (userId: number) => Promise<ExistingCNFTRef | null>
+  findByWallet: (wallet: string) => Promise<ExistingCNFTRef | null>
+  findLatest: () => Promise<{ index: number } | null>
+  findLatestByType: (type: CNFTImageType) => Promise<{ color: number } | null>
+  createCNFT: (input: CNFTCreateInput) => Promise<DocumentType<CNFT>>
+}
+
+function createDefaultCNFTDependencies(): CNFTHelperDependencies {
+  return {
+    findByUserId: (userId) => CNFTModel.findOne({ userId }),
+    findByWallet: (wallet) => CNFTModel.findOne({ wallet }),
+    findLatest: getLastestCNFT,
+    findLatestByType: getLastestCNFTWithType,
+    createCNFT: (input) => CNFTModel.create(input),
+  }
+}
+
+export function buildCNFTHelpers(
+  dependencies: CNFTHelperDependencies = createDefaultCNFTDependencies(),
+) {
+  return {
+    addCNFT: async (
+      userId: number,
+      address: Address,
+      votes: bigint,
+      referrals: number,
+      minted: boolean,
+      diceWinner: boolean,
+    ): Promise<DocumentType<CNFT>> => {
+      const existsUserCNFT = await dependencies.findByUserId(userId)
+      if (existsUserCNFT) {
+        throw new Error(`(${existsUserCNFT.index}) User ${userId} already exists`)
+      }
+      const wallet = address.toString({ bounceable: false })
+      const existsCNFT = await dependencies.findByWallet(wallet)
+      if (existsCNFT) {
+        throw new Error(`(${existsCNFT.index}) Wallet ${wallet} already exists`)
+      }
+      const latestCNFT = await dependencies.findLatest()
+      const latestIndex = latestCNFT?.index ?? -1
+      const index = latestIndex + 1
+
+      const type = pickCNFTType(votes, referrals, diceWinner)
+      const cnftWithType = await dependencies.findLatestByType(type)
+      const color = pickNextColor(cnftWithType?.color)
+      return dependencies.createCNFT({
+        index,
+        userId,
+        wallet,
+        votes,
+        referrals,
+        minted,
+        diceWinner,
+        type,
+        color,
+      })
+    },
+  }
+}
+
+const defaultCNFTHelpers = buildCNFTHelpers()
+
+export const addCNFT = defaultCNFTHelpers.addCNFT
 
 export function getAllCNFTs() {
   return CNFTModel.find()

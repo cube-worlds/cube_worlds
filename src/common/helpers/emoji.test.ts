@@ -1,7 +1,7 @@
 /* eslint-disable test/no-import-node-test */
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { toEmoji } from '#root/common/helpers/emoji'
+import { getRandomCoolEmoji, toEmoji } from '#root/common/helpers/emoji'
 
 // 10 has its own dedicated single-character emoji
 
@@ -38,4 +38,35 @@ test('toEmoji concatenates keycap emojis for multi-digit numbers', () => {
 test('toEmoji handles negative numbers by prefixing the literal "-"', () => {
   // The minus sign is not in the replace map, so it stays unchanged.
   assert.equal(toEmoji(-3), '-3️⃣')
+})
+
+// getRandomCoolEmoji — wraps a fixed palette behind Math.random()
+
+test('getRandomCoolEmoji returns a ReactionTypeEmoji shape', () => {
+  const result = getRandomCoolEmoji()
+  assert.equal(result.type, 'emoji')
+  assert.equal(typeof result.emoji, 'string')
+  assert.ok(result.emoji.length > 0)
+})
+
+test('getRandomCoolEmoji returns first palette entry when Math.random returns 0', () => {
+  const originalRandom = Math.random
+  Math.random = () => 0
+  try {
+    // Math.floor(0 * 15) = 0 → first entry of the palette
+    assert.deepEqual(getRandomCoolEmoji(), { type: 'emoji', emoji: '👍' })
+  } finally {
+    Math.random = originalRandom
+  }
+})
+
+test('getRandomCoolEmoji returns last palette entry when Math.random returns ~0.999', () => {
+  const originalRandom = Math.random
+  // Math.floor(0.9999 * 15) = 14 → last entry of the palette
+  Math.random = () => 0.9999
+  try {
+    assert.deepEqual(getRandomCoolEmoji(), { type: 'emoji', emoji: '🤗' })
+  } finally {
+    Math.random = originalRandom
+  }
 })

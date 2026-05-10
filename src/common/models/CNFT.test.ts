@@ -1,12 +1,19 @@
 /* eslint-disable test/no-import-node-test */
+import type {
+  CNFTCreateInput,
+  CNFTHelperDependencies,
+  ExistingCNFTRef,
+} from '#root/common/models/CNFT'
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
+  buildCNFTHelpers,
   cnftHexColor,
   CNFTImageType,
   pickCNFTType,
   pickNextColor,
 } from '#root/common/models/CNFT'
+import { Address } from '@ton/core'
 
 // pickCNFTType — diceWinner takes precedence over everything else
 
@@ -99,4 +106,151 @@ test('pickNextColor: matches cnftHexColor input convention', () => {
     const hex = cnftHexColor(next)
     assert.match(hex, /^#[0-9A-F]{6}$/)
   }
+})
+
+// buildCNFTHelpers.addCNFT — the heavier branchy path
+
+const ADDRESS_RAW = 'EQAvDfWFG0oYX19jwNDNBBL1rKNT9XfaGP9HyTb5nb2Eml6y'
+
+function parseAddress() {
+  return Address.parse(ADDRESS_RAW)
+}
+
+function stubDeps(
+  overrides: Partial<CNFTHelperDependencies> = {},
+): CNFTHelperDependencies {
+  return {
+    findByUserId: async () => null,
+    findByWallet: async () => null,
+    findLatest: async () => null,
+    findLatestByType: async () => null,
+    createCNFT: async (input) =>
+      input as unknown as Awaited<ReturnType<CNFTHelperDependencies['createCNFT']>>,
+    ...overrides,
+  }
+}
+
+test('addCNFT throws when the user already owns a CNFT', async () => {
+  const { addCNFT } = buildCNFTHelpers(stubDeps({
+    findByUserId: async () => ({ index: 17 } as ExistingCNFTRef),
+  }))
+
+  await assert.rejects(
+    () => addCNFT(1001, parseAddress(), 0n, 0, false, false),
+    /\(17\) User 1001 already exists/,
+  )
+})
+
+test('addCNFT throws when the wallet is already minted to a different user', async () => {
+  const { addCNFT } = buildCNFTHelpers(stubDeps({
+    findByWallet: async () => ({ index: 42 } as ExistingCNFTRef),
+  }))
+
+  await assert.rejects(
+    () => addCNFT(1001, parseAddress(), 0n, 0, false, false),
+    /\(42\) Wallet .* already exists/,
+  )
+})
+
+test('addCNFT assigns next index from the latest CNFT', async () => {
+  const created: CNFTCreateInput[] = []
+  const { addCNFT } = buildCNFTHelpers(stubDeps({
+    findLatest: async () => ({ index: 99 }),
+    createCNFT: async (input) => {
+      created.push(input)
+      return input as unknown as Awaited<
+        ReturnType<CNFTHelperDependencies['createCNFT']>
+      >
+    },
+  }))
+
+  await addCNFT(1001, parseAddress(), 0n, 0, false, false)
+
+  assert.equal(created.length, 1)
+  assert.equal(created[0].index, 100)
+})
+
+test('addCNFT assigns index 0 when no prior CNFT exists', async () => {
+  const created: CNFTCreateInput[] = []
+  const { addCNFT } = buildCNFTHelpers(stubDeps({
+    findLatest: async () => null,
+    createCNFT: async (input) => {
+      created.push(input)
+      return input as unknown as Awaited<
+        ReturnType<CNFTHelperDependencies['createCNFT']>
+      >
+    },
+  }))
+
+  await addCNFT(1001, parseAddress(), 0n, 0, false, false)
+
+  assert.equal(created[0].index, 0)
+})
+
+test('addCNFT picks CNFT type from votes/referrals/diceWinner', async () => {
+  const created: CNFTCreateInput[] = []
+  const { addCNFT } = buildCNFTHelpers(stubDeps({
+    createCNFT: async (input) => {
+      created.push(input)
+      return input as unknown as Awaited<
+        ReturnType<CNFTHelperDependencies['createCNFT']>
+      >
+    },
+  }))
+
+  await addCNFT(1, parseAddress(), 2_000_000n, 0, false, false)
+  await addCNFT(2, parseAddress(), 0n, 5, false, false)
+  await addCNFT(3, parseAddress(), 0n, 0, false, true)
+  await addCNFT(4, parseAddress(), 0n, 0, false, false)
+
+  assert.equal(created[0].type, CNFTImageType.Whale)
+  assert.equal(created[1].type, CNFTImageType.Knight)
+  assert.equal(created[2].type, CNFTImageType.Dice)
+  assert.equal(created[3].type, CNFTImageType.Common)
+})
+
+test('addCNFT increments color from the latest CNFT of the same type', async () => {
+  const created: CNFTCreateInput[] = []
+  const { addCNFT } = buildCNFTHelpers(stubDeps({
+    findLatestByType: async (type) => {
+      if (type === CNFTImageType.Knight) return { color: 4 }
+      return null
+    },
+    createCNFT: async (input) => {
+      created.push(input)
+      return input as unknown as Awaited<
+        ReturnType<CNFTHelperDependencies['createCNFT']>
+      >
+    },
+  }))
+
+  await addCNFT(1, parseAddress(), 0n, 1, false, false)
+  await addCNFT(2, parseAddress(), 0n, 0, false, false)
+
+  assert.equal(created[0].color, 5)
+  assert.equal(created[1].color, 0)
+})
+
+test('addCNFT forwards all fields and uses the non-bounceable wallet form', async () => {
+  const created: CNFTCreateInput[] = []
+  const address = parseAddress()
+  const { addCNFT } = buildCNFTHelpers(stubDeps({
+    createCNFT: async (input) => {
+      created.push(input)
+      return input as unknown as Awaited<
+        ReturnType<CNFTHelperDependencies['createCNFT']>
+      >
+    },
+  }))
+
+  await addCNFT(1001, address, 750_000n, 3, true, false)
+
+  assert.equal(created[0].userId, 1001)
+  assert.equal(created[0].wallet, address.toString({ bounceable: false }))
+  assert.equal(created[0].votes, 750_000n)
+  assert.equal(created[0].referrals, 3)
+  assert.equal(created[0].minted, true)
+  assert.equal(created[0].diceWinner, false)
+  // votes > 500_000 → Diamond
+  assert.equal(created[0].type, CNFTImageType.Diamond)
 })
