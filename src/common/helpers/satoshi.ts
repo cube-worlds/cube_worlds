@@ -1,4 +1,4 @@
-import type TonWeb from 'tonweb'
+import { tonClient } from '#root/common/helpers/ton'
 import { Address } from '@ton/core'
 import { useRetry } from '../../frontend/src/composables/useRetry'
 import { countAllBalances } from '../models/User'
@@ -28,14 +28,13 @@ export function getSatoshiJettonMasterAddress(isDev: boolean): {
 }
 
 export async function convertCubeToSatoshi(
-  tonweb: TonWeb,
   isDev: boolean,
   cubes: number,
 ): Promise<number> {
-  const satoshiWalletAddress = getSatoshiWalletAddress(isDev).address.toString()
+  const satoshiWalletAddress = getSatoshiWalletAddress(isDev).address
   const { retry } = useRetry()
   const res = await retry(
-    () => tonweb.provider.call2(satoshiWalletAddress, 'get_wallet_data'),
+    () => tonClient.runMethod(satoshiWalletAddress, 'get_wallet_data'),
     3,
     500,
   )
@@ -43,7 +42,7 @@ export async function convertCubeToSatoshi(
     throw new Error('Failed to fetch total SATOSHI supply')
   }
   const allCubes = await countAllBalances()
-  const allSatoshi = res[0]
+  const allSatoshi = Number(res.stack.readBigNumber())
   const r = (cubes / allCubes) * allSatoshi
   return Math.floor(Number.isFinite(r) ? r : 0)
 }

@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import type { TonConnectUI } from '@tonconnect/ui'
 import { commaSeparatedNumber } from '#root/common/helpers/numbers.ts'
-import TonWeb from 'tonweb'
+import { beginCell, fromNano } from '@ton/core'
 import { computed, inject, onMounted, ref, watch } from 'vue'
 import { useRetry } from '../composables/useRetry'
+import { readNum, runGetMethod } from '../services/toncenter'
 import { useUserStore } from '../stores/userStore'
 
 const tonConnectUI = inject('tonConnectUI') as
@@ -66,12 +67,6 @@ const actionDisabled = computed(() => {
 const SUM_API = '/api/users/balances'
 
 const isDev = import.meta.env.VITE_ENV === 'development'
-const rpcAddress = isDev
-  ? 'https://testnet.toncenter.com/api/v2/jsonRPC'
-  : 'https://toncenter.com/api/v2/jsonRPC'
-
-const provider = new TonWeb.HttpProvider(rpcAddress)
-const tonweb = new TonWeb(provider)
 
 const cubeAddress = isDev
   ? '0QC4sEG_VQ4QawHnr77mqJhC98cpoyI-0gXuwR76Ff2kT4eI'
@@ -94,16 +89,14 @@ async function fetchSumAll() {
 
 async function fetchSatoshiWalletBalance() {
   const res = await retry(() =>
-    tonweb.provider.call2(satoshiWalletAddress, 'get_wallet_data'),
+    runGetMethod(satoshiWalletAddress, 'get_wallet_data'),
   )
-  if (!res) {
+  if (!res || res.length === 0) {
     error.value = 'Failed to fetch total SATOSHI supply'
     commonSatoshiRaw.value = null
     return
   }
-  commonSatoshiRaw.value = toNumberSafe(
-    TonWeb.utils.fromNano(String(res[0] ?? 0)),
-  )
+  commonSatoshiRaw.value = toNumberSafe(fromNano(readNum(res[0])))
 }
 
 onMounted(async () => {
@@ -152,13 +145,12 @@ async function doChange() {
 
   sending.value = true
   try {
-    const cell = new TonWeb.boc.Cell()
-    cell.bits.writeUint(0, 32)
-    cell.bits.writeString(`s:${String(selectedAmount.value)}`)
-
-    const payload = btoa(
-      String.fromCharCode(...new Uint8Array(await cell.toBoc())),
-    )
+    const payload = beginCell()
+      .storeUint(0, 32)
+      .storeStringTail(`s:${String(selectedAmount.value)}`)
+      .endCell()
+      .toBoc()
+      .toString('base64')
 
     await ui.sendTransaction({
       validUntil: Math.floor(Date.now() / 1000) + 120,

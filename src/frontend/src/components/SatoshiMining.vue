@@ -1,26 +1,20 @@
 <script setup lang="ts">
 import type { TonConnectUI } from '@tonconnect/ui'
 import type { Ref } from 'vue'
-import TonWeb from 'tonweb'
+import { beginCell, fromNano } from '@ton/core'
 import { computed, inject, onMounted, ref } from 'vue'
 import { useRetry } from '../composables/useRetry'
+import { readCell, readNum, runGetMethod } from '../services/toncenter'
 
 const tonConnectUI = inject<Ref<TonConnectUI | null>>('tonConnectUI')
 const { retry } = useRetry()
 
 const contractAddress = 'EQCkdx5PSWjj-Bt0X-DRCfNev6ra1NVv9qqcu-W2-SaToSHI'
 
-const provider = new TonWeb.HttpProvider('https://toncenter.com/api/v2/jsonRPC')
-const tonweb = new TonWeb(provider)
-
 const miningData = ref<any>(null)
 const jettonData = ref<any>(null)
 const timeText = ref('00:00')
 const isLoading = ref(false)
-
-function fromNano(n: number | bigint | string) {
-  return TonWeb.utils.fromNano(n.toString())
-}
 
 function formatNumber(num: number | string) {
   return new Intl.NumberFormat('en-US', {
@@ -86,12 +80,12 @@ async function submitMining() {
     ui.openModal()
     return
   }
-  const cell = new TonWeb.boc.Cell()
-  cell.bits.writeUint(0, 32)
-  cell.bits.writeString('F')
-  const payload = btoa(
-    String.fromCharCode(...new Uint8Array(await cell.toBoc())),
-  )
+  const payload = beginCell()
+    .storeUint(0, 32)
+    .storeStringTail('F')
+    .endCell()
+    .toBoc()
+    .toString('base64')
   await ui.sendTransaction({
     validUntil: Math.floor(Date.now() / 1000) + 120,
     messages: [
@@ -106,35 +100,32 @@ async function submitMining() {
 
 async function fetchJetton() {
   const res = await retry(() =>
-    tonweb.provider.call2(contractAddress, 'get_jetton_data'),
+    runGetMethod(contractAddress, 'get_jetton_data'),
   )
-  if (!res) {
+  if (!res || res.length < 3) {
     jettonData.value = null
     return
   }
+  const adminCell = readCell(res[2])
+  const adminAddr = adminCell.beginParse().loadMaybeAddress()
   jettonData.value = {
-    total_supply: res[0],
-    // mintable: result[1],
-    admin_address: res[2],
-    // content: result[3],
-    // wallet_code: result[4],
+    total_supply: readNum(res[0]).toString(),
+    admin_address: adminAddr === null ? null : adminAddr.toRawString(),
   }
 }
 
 async function fetchMining() {
-  const res = await retry(() =>
-    tonweb.provider.call2(contractAddress, 'get_mining_data'),
-  )
-  if (!res) {
+  const res = await retry(() => runGetMethod(contractAddress, 'get_mining_data'))
+  if (!res || res.length < 5) {
     miningData.value = null
     return
   }
   miningData.value = {
-    last_block: Number.parseInt(res[0]),
-    last_block_time: Number.parseInt(res[1]),
-    attempts: Number.parseInt(res[2]),
-    subsidy: res[3],
-    probability: Number.parseInt(res[4]),
+    last_block: Number(readNum(res[0])),
+    last_block_time: Number(readNum(res[1])),
+    attempts: Number(readNum(res[2])),
+    subsidy: readNum(res[3]).toString(),
+    probability: Number(readNum(res[4])),
   }
 }
 

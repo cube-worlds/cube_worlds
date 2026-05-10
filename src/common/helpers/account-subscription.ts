@@ -1,72 +1,58 @@
-import type TonWeb from 'tonweb'
+import type { Transaction } from '@ton/core'
 import { sleep } from '#root/common/helpers/time'
+import { tonClient } from '#root/common/helpers/ton'
 import { logger } from '#root/logger'
+import { Address } from '@ton/core'
+
+const COUNT = 10
+const POLL_INTERVAL_MS = 30 * 1000
 
 export class AccountSubscription {
-  tonweb: TonWeb
+  accountAddress: Address
 
-  accountAddress: any
+  startTime: number
 
-  startTime: any
-
-  onTransaction: any
+  onTransaction: (tx: Transaction) => Promise<void>
 
   constructor(
-    tonweb: any,
-    accountAddress: any,
-    startTime: any,
-    onTransaction: any,
+    accountAddress: string,
+    startTime: number,
+    onTransaction: (tx: Transaction) => Promise<void>,
   ) {
-    this.tonweb = tonweb
-    this.accountAddress = accountAddress
-    this.startTime = startTime // start unixtime (stored in your database), transactions made earlier will be discarded.
+    this.accountAddress = Address.parse(accountAddress)
+    // start unixtime (stored in your database), transactions made earlier will be discarded.
+    this.startTime = startTime
     this.onTransaction = onTransaction
   }
 
   async start() {
-    const getTransactions = async (
-      time: undefined,
-      offsetTransactionLT: undefined,
-      offsetTransactionHash: undefined,
+    const fetchOnce = async (
+      time: number | undefined,
+      offsetLt: string | undefined,
+      offsetHash: string | undefined,
       retryCount: number,
-    ) => {
-      const COUNT = 10
-
-      if (offsetTransactionLT) {
+    ): Promise<number | undefined> => {
+      if (offsetLt) {
         logger.debug(
-          `Get ${COUNT} transactions before transaction ${offsetTransactionLT}:${offsetTransactionHash}`,
+          `Get ${COUNT} transactions before transaction ${offsetLt}:${offsetHash}`,
         )
-      } else {
-        // logger.debug(`Get last ${COUNT} transactions`)
       }
 
-      // TON transaction has composite ID: account address (on which the transaction took place) + transaction LT (logical time) + transaction hash.
-      // So TxID = address+LT+hash, these three parameters uniquely identify the transaction.
-      // In our case, we are monitoring one wallet and the address is `accountAddress`.
-
-      let transactions
+      let transactions: Transaction[]
 
       try {
-        transactions = await this.tonweb.provider.getTransactions(
-          this.accountAddress,
-          COUNT,
-          offsetTransactionLT,
-          offsetTransactionHash,
-          undefined,
-          true,
-        )
+        transactions = await tonClient.getTransactions(this.accountAddress, {
+          limit: COUNT,
+          lt: offsetLt,
+          hash: offsetHash,
+          archival: true,
+        })
       } catch (error) {
         logger.error(error)
-        // if an API error occurs, try again
-        retryCount += 1
-        if (retryCount < 10) {
-          await sleep(retryCount * 1000)
-          return getTransactions(
-            time,
-            offsetTransactionLT,
-            offsetTransactionHash,
-            retryCount,
-          )
+        const nextRetry = retryCount + 1
+        if (nextRetry < 10) {
+          await sleep(nextRetry * 1000)
+          return fetchOnce(time, offsetLt, offsetHash, nextRetry)
         }
         return 0
       }
@@ -74,30 +60,31 @@ export class AccountSubscription {
       logger.debug(`Got ${transactions.length} transactions`)
 
       if (transactions.length === 0) {
-        // If you use your own API instance make sure the code contains this fix https://github.com/toncenter/ton-http-api/commit/a40a31c62388f122b7b7f3da7c5a6f706f3d2405
-        // If you use public toncenter.com then everything is OK.
         return time
       }
 
-      if (!time) time = transactions[0].utime
+      let cursorTime = time
+      if (cursorTime === undefined) cursorTime = transactions[0].now
 
       for (const tx of transactions) {
-        if (tx.utime < this.startTime) {
-          return time
+        if (tx.now < this.startTime) {
+          return cursorTime
         }
-
         await this.onTransaction(tx)
       }
 
       if (transactions.length === 1) {
-        return time
+        return cursorTime
       }
 
-      const lastTx = transactions.at(-1)
-      return getTransactions(
-        time,
-        lastTx.transaction_id.lt,
-        lastTx.transaction_id.hash,
+      const lastTx = transactions[transactions.length - 1]
+      if (!lastTx) {
+        return cursorTime
+      }
+      return fetchOnce(
+        cursorTime,
+        lastTx.lt.toString(),
+        lastTx.hash().toString('base64'),
         0,
       )
     }
@@ -109,9 +96,9 @@ export class AccountSubscription {
       isProcessing = true
 
       try {
-        const result = await getTransactions(undefined, undefined, undefined, 0)
+        const result = await fetchOnce(undefined, undefined, undefined, 0)
         if ((result ?? 0) > 0) {
-          this.startTime = result // store in your database
+          this.startTime = result as number
         }
       } catch (error) {
         logger.error(error)
@@ -120,7 +107,7 @@ export class AccountSubscription {
       isProcessing = false
     }
 
-    setInterval(tick, 30 * 1000) // poll every 30 seconds
+    setInterval(tick, POLL_INTERVAL_MS)
     await tick()
   }
 }
