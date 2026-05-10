@@ -41,7 +41,7 @@ interface VerifiedToken {
   reason?: string
 }
 
-function verifyCaptchaToken(
+export function verifyCaptchaToken(
   userId: number,
   token: string,
   expectedKills: number,
