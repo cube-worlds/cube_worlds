@@ -1,5 +1,11 @@
 import type { Context } from '#root/bot/context'
 import { generateCaptchaToken } from '#root/backend/captcha'
+import {
+  evaluateCaptchaTrigger,
+  processDiceRoll,
+  shouldIncrementSuspicion,
+  shouldTriggerMint,
+} from '#root/bot/features/dice-logic'
 import { logHandle } from '#root/common/helpers/logging'
 import { generateRandomString } from '#root/common/helpers/random'
 import {
@@ -42,12 +48,7 @@ feature.command('dice', logHandle('command-dice'), async (ctx) => {
   if (!ctx.dbuser.suspicionDices) {
     ctx.dbuser.suspicionDices = 0
   }
-  const lastDicedTime = ctx.dbuser.dicedAt.getTime()
-  const suspicionTime = waitMinutes * 3
-  const compareDateForCaptcha = new Date(
-    lastDicedTime + suspicionTime * 60 * 1000,
-  )
-  if (compareDateForCaptcha > now) {
+  if (shouldIncrementSuspicion(ctx.dbuser.dicedAt, now, waitMinutes)) {
     ctx.dbuser.suspicionDices += 1
     logger.info(
       `${ctx.dbuser.id} has ${ctx.dbuser.suspicionDices} suspicion dices`,
@@ -56,16 +57,16 @@ feature.command('dice', logHandle('command-dice'), async (ctx) => {
   //  else {
   //   ctx.dbuser.suspicionDices = 0;
   // }
-  if (ctx.dbuser.suspicionDices >= 105) {
-    const enemies = ctx.dbuser.suspicionDices - 100
-    const issued = generateCaptchaToken(ctx.dbuser.id, enemies - 1)
+  const captcha = evaluateCaptchaTrigger(ctx.dbuser.suspicionDices)
+  if (captcha.trigger) {
+    const issued = generateCaptchaToken(ctx.dbuser.id, captcha.expectedKills)
     ctx.dbuser.captchaNonce = issued.nonce
     ctx.dbuser.captchaIssuedAt = issued.issuedAt
     await ctx.dbuser.save()
     return ctx.reply(ctx.t('dice.captcha_title'), {
       reply_markup: new InlineKeyboard().webApp(
         ctx.t('dice.captcha_button'),
-        `${config.WEB_APP_URL}/captcha/?user_id=${ctx.dbuser.id}&enemies=${enemies}&token=${encodeURIComponent(issued.token)}`,
+        `${config.WEB_APP_URL}/captcha/?user_id=${ctx.dbuser.id}&enemies=${captcha.enemies}&token=${encodeURIComponent(issued.token)}`,
       ),
     })
   }
@@ -101,30 +102,21 @@ feature.callbackQuery(
     const result = await Promise.all([dice1, dice2])
     const value1 = result[0].dice.value
     const value2 = result[1].dice.value
-    const isRecurred = value1 === value2
-    if (isRecurred) {
-      if (!ctx.dbuser.diceSeries) {
-        ctx.dbuser.diceSeries = 1
-      }
-      if (ctx.dbuser.diceSeriesNumber === value1) {
-        ctx.dbuser.diceSeries = (ctx.dbuser.diceSeries ?? 0) + 1
-      } else {
-        ctx.dbuser.diceSeries = 1
-        ctx.dbuser.diceSeriesNumber = value1
-      }
-    } else {
-      ctx.dbuser.diceSeries = undefined
-      ctx.dbuser.diceSeriesNumber = undefined
-    }
+    const rolled = processDiceRoll(
+      {
+        diceSeries: ctx.dbuser.diceSeries,
+        diceSeriesNumber: ctx.dbuser.diceSeriesNumber,
+      },
+      value1,
+      value2,
+    )
+    ctx.dbuser.diceSeries = rolled.diceSeries
+    ctx.dbuser.diceSeriesNumber = rolled.diceSeriesNumber
 
-    const diceSeries = ctx.dbuser.diceSeries ?? 0
-    const diceSeriesNumber = ctx.dbuser.diceSeriesNumber ?? 0
+    const diceSeries = rolled.diceSeries ?? 0
+    const diceSeriesNumber = rolled.diceSeriesNumber ?? 0
     const username = ctx.dbuser.name ?? 'undefined'
-
-    let score = value1 + value2
-    if (diceSeries > 1) {
-      score *= diceSeries
-    }
+    const score = rolled.score
 
     ctx.dbuser.dicedAt = new Date()
     await ctx.dbuser.save()
@@ -132,7 +124,7 @@ feature.callbackQuery(
 
     sleep(3000)
       .then(async () => {
-        if (!ctx.dbuser.minted && diceSeries === 3) {
+        if (shouldTriggerMint({ minted: ctx.dbuser.minted, diceSeries })) {
           ctx.dbuser.diceWinner = true
           await ctx.dbuser.save()
           await ctx.reply(
