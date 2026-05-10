@@ -29,6 +29,23 @@ export function cnftHexColor(colorNumber: number): string {
   return colors[colorNumber % colors.length]
 }
 
+export function pickCNFTType(
+  votes: bigint,
+  referrals: number,
+  diceWinner: boolean,
+): CNFTImageType {
+  if (diceWinner) return CNFTImageType.Dice
+  if (votes > 1_000_000n) return CNFTImageType.Whale
+  if (votes > 500_000n) return CNFTImageType.Diamond
+  if (votes > 100_000n) return CNFTImageType.Coin
+  if (referrals > 0) return CNFTImageType.Knight
+  return CNFTImageType.Common
+}
+
+export function pickNextColor(latestColorForType: number | undefined): number {
+  return ((latestColorForType ?? -1) + 1) % colors.length
+}
+
 @modelOptions({ schemaOptions: { timestamps: false } })
 export class CNFT {
   @prop({ type: Number, required: true, index: true, unique: true })
@@ -101,23 +118,9 @@ export async function addCNFT(
   const latestIndex = latestCNFT?.index ?? -1
   const index = latestIndex + 1
 
-  let type: CNFTImageType = CNFTImageType.Common
-  if (diceWinner) {
-    type = CNFTImageType.Dice
-  } else if (votes > BigInt(1_000_000)) {
-    type = CNFTImageType.Whale
-  } else if (votes > BigInt(500_000)) {
-    type = CNFTImageType.Diamond
-  } else if (votes > BigInt(100_000)) {
-    type = CNFTImageType.Coin
-  } else if (referrals > 0) {
-    type = CNFTImageType.Knight
-  }
-
+  const type = pickCNFTType(votes, referrals, diceWinner)
   const cnftWithType = await getLastestCNFTWithType(type)
-  const latestColor = cnftWithType?.color ?? -1
-  const currentColor = latestColor + 1
-  const color = currentColor % colors.length
+  const color = pickNextColor(cnftWithType?.color)
   return CNFTModel.create({
     index,
     userId,
