@@ -1,12 +1,17 @@
 /* eslint-disable test/no-import-node-test */
-import type { PlaceInLineSenderDependencies } from '#root/common/helpers/telegram'
+import type {
+  PlaceInLineSenderDependencies,
+  TelegramSendersDependencies,
+} from '#root/common/helpers/telegram'
 import type { UserDoc } from '#root/common/models/User'
+import type { ReactionType } from '@grammyjs/types'
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
   buildInviteUrl,
   buildPlaceInLineSender,
   buildShareLink,
+  buildTelegramSenders,
   findAdminIndex,
   pickEnvChannels,
   pickEnvChats,
@@ -311,4 +316,286 @@ test('sendPlaceInLine logs "Points <votes> for user <id>" on send', async () => 
   await send(api, user.id, true)
 
   assert.deepEqual(h.infoLogs, ['Points 999 for user 555'])
+})
+
+// buildTelegramSenders — DI-tested send-* family (admins, NFT preview, groups, channels, queue)
+
+interface SendersHarness {
+  messages: { chatId: number | string, text: string }[]
+  photos: { chatId: number | string, photo: string, options: Record<string, unknown> }[]
+  reactions: { chatId: number | string, messageId: number, reactions: ReactionType[] }[]
+  mediaGroups: { chatId: number | string, media: unknown[], options: Record<string, unknown> }[]
+  translations: { lang: string, key: string, vars?: Record<string, unknown> }[]
+  errors: unknown[]
+  emojiQueue: { type: 'emoji', emoji: string }[]
+}
+
+function makeSendersHarness(
+  overrides: Partial<TelegramSendersDependencies> = {},
+) {
+  const h: SendersHarness = {
+    messages: [],
+    photos: [],
+    reactions: [],
+    mediaGroups: [],
+    translations: [],
+    errors: [],
+    emojiQueue: [
+      { type: 'emoji', emoji: '🔥' },
+      { type: 'emoji', emoji: '🎉' },
+      { type: 'emoji', emoji: '👍' },
+      { type: 'emoji', emoji: '🤩' },
+    ],
+  }
+
+  const deps: TelegramSendersDependencies = {
+    admins: [111, 222, 333],
+    chats: { ru: '@chat_ru', en: '@chat_en' },
+    channels: { ru: '@ch_ru', en: '@ch_en' },
+    translate: (lang, key, vars) => {
+      h.translations.push({ lang, key, vars: vars as Record<string, unknown> | undefined })
+      return vars ? `[${lang}:${key}|${JSON.stringify(vars)}]` : `[${lang}:${key}]`
+    },
+    randomEmoji: () => (h.emojiQueue.shift() ?? { type: 'emoji', emoji: '👍' }) as never,
+    ipfsLink: (hash) => `https://ipfs/${hash}`,
+    findMinted: async () => [],
+    findQueue: async () => [],
+    sendPlaceInLine: async () => false,
+    errorLog: (err) => { h.errors.push(err) },
+    ...overrides,
+  }
+
+  const senders = buildTelegramSenders(deps)
+  const api = {
+    sendMessage: async (chatId: number | string, text: string) => {
+      h.messages.push({ chatId, text })
+      return {} as never
+    },
+    sendPhoto: async (chatId: number | string, photo: string, options: Record<string, unknown>) => {
+      h.photos.push({ chatId, photo, options })
+      return {
+        chat: { id: typeof chatId === 'number' ? chatId : -1001 },
+        message_id: 7000 + h.photos.length,
+      } as never
+    },
+    setMessageReaction: async (
+      chatId: number | string,
+      messageId: number,
+      reactions: ReactionType[],
+    ) => {
+      h.reactions.push({ chatId, messageId, reactions })
+      return true as never
+    },
+    sendMediaGroup: async (
+      chatId: number | string,
+      media: readonly unknown[],
+      options: Record<string, unknown>,
+    ) => {
+      h.mediaGroups.push({ chatId, media: [...media], options })
+      return [] as never
+    },
+  }
+
+  return { senders, api, h }
+}
+
+// sendMessageToAdmins
+
+test('sendMessageToAdmins fans out the message to every admin in order', async () => {
+  const { senders, api, h } = makeSendersHarness({ admins: [111, 222, 333] })
+
+  await senders.sendMessageToAdmins(api, 'pong')
+
+  assert.deepEqual(
+    h.messages.map((m) => m.chatId),
+    [111, 222, 333],
+  )
+  assert.ok(h.messages.every((m) => m.text === 'pong'))
+})
+
+test('sendMessageToAdmins is a no-op when admins list is empty', async () => {
+  const { senders, api, h } = makeSendersHarness({ admins: [] })
+
+  await senders.sendMessageToAdmins(api, 'noone')
+
+  assert.equal(h.messages.length, 0)
+})
+
+// sendPreviewNFT
+
+test('sendPreviewNFT uses 🎲 emoji on both slots for dice winners and the dice copy key', async () => {
+  const { senders, api, h } = makeSendersHarness()
+
+  await senders.sendPreviewNFT(api, '@chat', 'en', 'QmHash', 'https://gem/1', 42, true)
+
+  const captionKeys = h.translations.map((t) => t.key)
+  assert.ok(captionKeys.includes('queue.new_nft_dice'))
+  assert.ok(!captionKeys.includes('queue.new_nft'))
+
+  const caption = h.translations.find((t) => t.key === 'queue.new_nft_dice')
+  assert.ok(caption)
+  assert.equal((caption.vars as Record<string, string>).emoji1, '🎲')
+  assert.equal((caption.vars as Record<string, string>).emoji2, '🎲')
+  assert.equal((caption.vars as Record<string, number>).number, 42)
+})
+
+test('sendPreviewNFT uses random cool emojis for non-dice winners and the standard copy key', async () => {
+  const { senders, api, h } = makeSendersHarness()
+
+  await senders.sendPreviewNFT(api, '@chat', 'en', 'QmHash', 'https://gem/1', 7, false)
+
+  const caption = h.translations.find((t) => t.key === 'queue.new_nft')
+  assert.ok(caption)
+  // First two queued emojis are consumed for emoji1 + emoji2
+  assert.equal((caption.vars as Record<string, string>).emoji1, '🔥')
+  assert.equal((caption.vars as Record<string, string>).emoji2, '🎉')
+})
+
+test('sendPreviewNFT posts to the chat with the IPFS gateway link as the photo source', async () => {
+  const { senders, api, h } = makeSendersHarness()
+
+  await senders.sendPreviewNFT(api, '@chat', 'en', 'QmABC', 'https://gem/3', 3, false)
+
+  assert.equal(h.photos.length, 1)
+  assert.equal(h.photos[0].chatId, '@chat')
+  assert.equal(h.photos[0].photo, 'https://ipfs/QmABC')
+  assert.equal(h.photos[0].options.parse_mode, 'HTML')
+})
+
+test('sendPreviewNFT appends UTM params to the inline button url', async () => {
+  const { senders, api, h } = makeSendersHarness()
+
+  await senders.sendPreviewNFT(api, '@chat', 'en', 'QmHash', 'https://gem/9', 9, false)
+
+  const keyboard = (h.photos[0].options.reply_markup as { inline_keyboard: { url: string }[][] })
+    .inline_keyboard
+  assert.equal(
+    keyboard[0][0].url,
+    'https://gem/9?utm_campaign=cubeworlds&utm_source=inline&utm_medium=nft',
+  )
+})
+
+// sendToGroupsNewNFT
+
+test('sendToGroupsNewNFT posts to every configured chat and reacts on each result', async () => {
+  const { senders, api, h } = makeSendersHarness({
+    chats: { ru: '@ru_chat', en: '@en_chat' },
+  })
+
+  await senders.sendToGroupsNewNFT(api, 'QmIMG', 1, 'https://gem/1', false)
+
+  assert.deepEqual(
+    h.photos.map((p) => p.chatId),
+    ['@ru_chat', '@en_chat'],
+  )
+  assert.equal(h.reactions.length, 2)
+  // Reactions use freshly-drawn emojis from the queue (after the 4 used for captions)
+  assert.equal(h.reactions[0].reactions.length, 1)
+})
+
+test('sendToGroupsNewNFT catches errors and notifies admins instead of throwing', async () => {
+  const { senders, api, h } = makeSendersHarness({
+    chats: { ru: '@ru', en: '@en' },
+    admins: [42],
+  })
+  // Force sendPhoto to blow up
+  api.sendPhoto = async () => {
+    throw new Error('telegram is down')
+  }
+
+  // Should NOT throw
+  await senders.sendToGroupsNewNFT(api, 'QmX', 1, 'https://gem/1', false)
+
+  assert.equal(h.errors.length, 1)
+  // Admin notification went out
+  assert.equal(h.messages.length, 1)
+  assert.equal(h.messages[0].chatId, 42)
+  assert.match(h.messages[0].text, /Error message new NFT to chat: Error: telegram is down/)
+})
+
+// sendPostToChannels
+
+test('sendPostToChannels is a no-op when fewer than 9 minted users exist', async () => {
+  const { senders, api, h } = makeSendersHarness({
+    findMinted: async () => Array.from({ length: 8 }, (_, i) => ({ nftImage: `h${i}`, nftUrl: `u${i}`, name: `n${i}` })),
+  })
+
+  await senders.sendPostToChannels(api)
+
+  assert.equal(h.mediaGroups.length, 0)
+})
+
+test('sendPostToChannels is a no-op when count is not a multiple of 9', async () => {
+  const { senders, api, h } = makeSendersHarness({
+    findMinted: async () => Array.from({ length: 13 }, (_, i) => ({ nftImage: `h${i}`, nftUrl: `u${i}`, name: `n${i}` })),
+  })
+
+  await senders.sendPostToChannels(api)
+
+  assert.equal(h.mediaGroups.length, 0)
+})
+
+test('sendPostToChannels posts a 9-photo media group to every channel when count is a multiple of 9', async () => {
+  const { senders, api, h } = makeSendersHarness({
+    channels: { ru: '@ch_ru', en: '@ch_en' },
+    findMinted: async () =>
+      Array.from({ length: 18 }, (_, i) => ({
+        nftImage: `hash_${i}`,
+        nftUrl: `https://gem/${i}`,
+        name: `Cube #${i}`,
+      })),
+  })
+
+  await senders.sendPostToChannels(api)
+
+  assert.equal(h.mediaGroups.length, 2)
+  assert.deepEqual(
+    h.mediaGroups.map((m) => m.chatId),
+    ['@ch_ru', '@ch_en'],
+  )
+  // Posts the first 9 (slice(0, 9)) reversed
+  assert.equal(h.mediaGroups[0].media.length, 9)
+  // disable_notification is forwarded
+  assert.equal(h.mediaGroups[0].options.disable_notification, true)
+})
+
+test('sendPostToChannels tolerates missing nftImage/nftUrl/name on minted users', async () => {
+  const { senders, api, h } = makeSendersHarness({
+    findMinted: async () => Array.from({ length: 9 }, () => ({})),
+  })
+
+  await senders.sendPostToChannels(api)
+
+  // Doesn't throw; produces 9 media items with empty strings interpolated
+  assert.equal(h.mediaGroups.length, 2)
+  assert.equal(h.mediaGroups[0].media.length, 9)
+})
+
+// sendNewPlaces
+
+test('sendNewPlaces calls sendPlaceInLine(api, id, false) for every queued user', async () => {
+  const calls: { userId: number, sendAnyway: boolean | undefined }[] = []
+  const queued = [{ id: 1 }, { id: 2 }, { id: 3 }] as unknown as UserDoc[]
+  const { senders, api } = makeSendersHarness({
+    findQueue: async () => queued,
+    sendPlaceInLine: async (_api, userId, sendAnyway) => {
+      calls.push({ userId, sendAnyway })
+      return false
+    },
+  })
+
+  await senders.sendNewPlaces(api)
+
+  assert.deepEqual(calls, [
+    { userId: 1, sendAnyway: false },
+    { userId: 2, sendAnyway: false },
+    { userId: 3, sendAnyway: false },
+  ])
+})
+
+test('sendNewPlaces is a no-op when the queue is empty', async () => {
+  const { senders, api } = makeSendersHarness({ findQueue: async () => [] })
+
+  // Doesn't throw, doesn't call sendPlaceInLine
+  await senders.sendNewPlaces(api)
 })

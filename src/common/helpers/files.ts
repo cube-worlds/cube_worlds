@@ -71,17 +71,28 @@ export function buildJsonFilename(
   return `${safeUsername}_${adminIndex}.json`
 }
 
+export interface SaveImageFromUrlDependencies {
+  fetch: (url: string) => Promise<{ arrayBuffer: () => Promise<ArrayBuffer> }>
+  saveImage: (username: string, fileName: string, content: Buffer) => string
+}
+
+const defaultSaveImageFromUrlDependencies: SaveImageFromUrlDependencies = {
+  fetch: (url) => fetch(url),
+  saveImage,
+}
+
 export async function saveImageFromUrl(
   imageURL: string,
   adminIndex: number,
   username: string,
   original: boolean,
+  deps: SaveImageFromUrlDependencies = defaultSaveImageFromUrlDependencies,
 ): Promise<string> {
-  const image = await fetch(imageURL)
+  const image = await deps.fetch(imageURL)
   const arrayBuffer = await image.arrayBuffer()
   const buffer = Buffer.from(arrayBuffer)
   const newFileName = buildImageFilename(imageURL, adminIndex, username, original)
-  return saveImage(username, newFileName, buffer)
+  return deps.saveImage(username, newFileName, buffer)
 }
 
 export function saveJSON(

@@ -1,5 +1,6 @@
 import type { UserDoc } from '#root/common/models/User'
 import type { TranslationVariables } from '@grammyjs/i18n'
+import type { ReactionTypeEmoji } from '@grammyjs/types'
 import type { Api, RawApi } from 'grammy'
 import { i18n } from '#root/common/i18n'
 import {
@@ -73,12 +74,6 @@ export function getCubeChannel(lang: string): string {
 
 export function adminIndex(userId: number): number {
   return findAdminIndex(userId, config.BOT_ADMINS)
-}
-
-export async function sendMessageToAdmins(api: Api<RawApi>, message: string) {
-  for (const adminId of config.BOT_ADMINS) {
-    await api.sendMessage(adminId, message)
-  }
 }
 
 export function inviteTelegramUrl(userId: number) {
@@ -166,104 +161,179 @@ ${deps.translate(user.language, 'speedup.variants', {
 
 export const sendPlaceInLine = buildPlaceInLineSender()
 
-export async function sendNewPlaces(api: Api<RawApi>) {
-  // TODO: update logic to get only who not active too long and update this property
-  const users = await findQueue()
+type SendPhotoApi = Pick<Api<RawApi>, 'sendPhoto'>
+type SendMessageApi = Pick<Api<RawApi>, 'sendMessage'>
+type ReactionApi = Pick<Api<RawApi>, 'setMessageReaction'>
+type MediaGroupApi = Pick<Api<RawApi>, 'sendMediaGroup'>
 
-  for (const user of users) {
-    await sendPlaceInLine(api, user.id, false)
+interface MintedSnapshot {
+  nftImage?: string | null
+  nftUrl?: string | null
+  name?: string | null
+}
+
+export interface TelegramSendersDependencies {
+  admins: readonly number[]
+  chats: Languages
+  channels: Languages
+  translate: (
+    lang: string,
+    key: string,
+    vars?: TranslationVariables<string>,
+  ) => string
+  randomEmoji: () => ReactionTypeEmoji
+  ipfsLink: (hash: string) => string
+  findMinted: () => Promise<MintedSnapshot[]>
+  findQueue: () => Promise<UserDoc[]>
+  sendPlaceInLine: (
+    api: SendMessageApi,
+    userId: number,
+    sendAnyway?: boolean,
+  ) => Promise<boolean>
+  errorLog: (error: unknown) => void
+}
+
+function createDefaultTelegramSendersDependencies(): TelegramSendersDependencies {
+  return {
+    get admins() {
+      return config.BOT_ADMINS
+    },
+    get chats() {
+      return getCubeChats()
+    },
+    get channels() {
+      return getCubeChannels()
+    },
+    translate: (lang, key, vars) => i18n.t(lang, key, vars),
+    randomEmoji: getRandomCoolEmoji,
+    ipfsLink: linkToIPFSGateway,
+    findMinted: () => findMintedWithDate() as unknown as Promise<MintedSnapshot[]>,
+    findQueue,
+    sendPlaceInLine: (api, userId, sendAnyway) =>
+      sendPlaceInLine(api as Api<RawApi>, userId, sendAnyway),
+    errorLog: (err) => logger.error(err),
   }
 }
 
-export async function sendPreviewNFT(
-  api: Api<RawApi>,
-  chat: string | number,
-  lang: string,
-  ipfsImageHash: string,
-  nftUrl: string,
-  nftNumber: number,
-  diceWinner: boolean,
+export function buildTelegramSenders(
+  deps: TelegramSendersDependencies = createDefaultTelegramSendersDependencies(),
 ) {
-  const collection = 'cubeworlds'
-  const collectionLink = `<a href="https://getgems.io/${collection}?utm_campaign=${collection}&utm_source=inline&utm_medium=collection">Cube Worlds</a>`
-  const emoji1 = diceWinner ? '🎲' : getRandomCoolEmoji().emoji
-  const emoji2 = diceWinner ? '🎲' : getRandomCoolEmoji().emoji
-  const caption = i18n.t(
-    lang,
-    `queue.${diceWinner ? `new_nft_dice` : `new_nft`}`,
-    {
-      emoji1,
-      emoji2,
-      number: nftNumber,
-      collectionLink,
-    },
-  )
-  const linkTitle = i18n.t(lang, 'queue.new_nft_button')
+  async function sendMessageToAdmins(api: SendMessageApi, message: string) {
+    for (const adminId of deps.admins) {
+      await api.sendMessage(adminId, message)
+    }
+  }
 
-  return api.sendPhoto(chat, linkToIPFSGateway(ipfsImageHash), {
-    caption,
-    parse_mode: 'HTML',
-    reply_markup: {
-      inline_keyboard: [
-        [
-          {
-            text: linkTitle,
-            url: `${nftUrl}?utm_campaign=${collection}&utm_source=inline&utm_medium=nft`,
-          },
+  async function sendPreviewNFT(
+    api: SendPhotoApi,
+    chat: string | number,
+    lang: string,
+    ipfsImageHash: string,
+    nftUrl: string,
+    nftNumber: number,
+    diceWinner: boolean,
+  ) {
+    const collection = 'cubeworlds'
+    const collectionLink = `<a href="https://getgems.io/${collection}?utm_campaign=${collection}&utm_source=inline&utm_medium=collection">Cube Worlds</a>`
+    const emoji1 = diceWinner ? '🎲' : deps.randomEmoji().emoji
+    const emoji2 = diceWinner ? '🎲' : deps.randomEmoji().emoji
+    const caption = deps.translate(
+      lang,
+      `queue.${diceWinner ? `new_nft_dice` : `new_nft`}`,
+      {
+        emoji1,
+        emoji2,
+        number: nftNumber,
+        collectionLink,
+      },
+    )
+    const linkTitle = deps.translate(lang, 'queue.new_nft_button')
+
+    return api.sendPhoto(chat, deps.ipfsLink(ipfsImageHash), {
+      caption,
+      parse_mode: 'HTML',
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: linkTitle,
+              url: `${nftUrl}?utm_campaign=${collection}&utm_source=inline&utm_medium=nft`,
+            },
+          ],
         ],
-      ],
-    },
-  })
-}
+      },
+    })
+  }
 
-export async function sendToGroupsNewNFT(
-  api: Api<RawApi>,
-  ipfsImageHash: string,
-  nftNumber: number,
-  nftUrl: string,
-  diceWinner: boolean,
-) {
-  try {
-    const chats = getCubeChats()
+  async function sendToGroupsNewNFT(
+    api: SendPhotoApi & ReactionApi & SendMessageApi,
+    ipfsImageHash: string,
+    nftNumber: number,
+    nftUrl: string,
+    diceWinner: boolean,
+  ) {
+    try {
+      for (const [lang, chat] of Object.entries(deps.chats)) {
+        const result = await sendPreviewNFT(
+          api,
+          chat,
+          lang,
+          ipfsImageHash,
+          nftUrl,
+          nftNumber,
+          diceWinner,
+        )
 
-    for (const [lang, chat] of Object.entries(chats)) {
-      const result = await sendPreviewNFT(
-        api,
-        chat,
-        lang,
-        ipfsImageHash,
-        nftUrl,
-        nftNumber,
-        diceWinner,
+        await api.setMessageReaction(result.chat.id, result.message_id, [
+          deps.randomEmoji(),
+        ])
+      }
+    } catch (error) {
+      deps.errorLog(error)
+      await sendMessageToAdmins(api, `Error message new NFT to chat: ${error}`)
+    }
+  }
+
+  async function sendPostToChannels(api: MediaGroupApi) {
+    const allMinted = await deps.findMinted()
+    const imagesCount = 9
+    if (allMinted.length >= imagesCount && allMinted.length % imagesCount === 0) {
+      const shortList = allMinted.slice(0, imagesCount)
+      const images = shortList.reverse().map((u) =>
+        InputMediaBuilder.photo(deps.ipfsLink(u.nftImage ?? ''), {
+          caption: `@cube_worlds_bot | <a href="${u.nftUrl ?? ''}">${u.name ?? ''}</a>`,
+          parse_mode: 'HTML',
+        }),
       )
 
-      await api.setMessageReaction(result.chat.id, result.message_id, [
-        getRandomCoolEmoji(),
-      ])
+      for (const [_lang, channel] of Object.entries(deps.channels)) {
+        await api.sendMediaGroup(channel, images, {
+          disable_notification: true,
+        })
+      }
     }
-  } catch (error) {
-    logger.error(error)
-    await sendMessageToAdmins(api, `Error message new NFT to chat: ${error}`)
+  }
+
+  async function sendNewPlaces(api: SendMessageApi) {
+    const users = await deps.findQueue()
+    for (const user of users) {
+      await deps.sendPlaceInLine(api, user.id, false)
+    }
+  }
+
+  return {
+    sendMessageToAdmins,
+    sendPreviewNFT,
+    sendToGroupsNewNFT,
+    sendPostToChannels,
+    sendNewPlaces,
   }
 }
 
-export async function sendPostToChannels(api: Api<RawApi>) {
-  const channels = getCubeChannels()
-  const allMinted = await findMintedWithDate()
-  const imagesCount = 9
-  if (allMinted.length >= imagesCount && allMinted.length % imagesCount === 0) {
-    const shortList = allMinted.slice(0, imagesCount)
-    const images = shortList.reverse().map((u) =>
-      InputMediaBuilder.photo(linkToIPFSGateway(u.nftImage ?? ''), {
-        caption: `@cube_worlds_bot | <a href="${u.nftUrl ?? ''}">${u.name ?? ''}</a>`,
-        parse_mode: 'HTML',
-      }),
-    )
+const defaultTelegramSenders = buildTelegramSenders()
 
-    for (const [_lang, channel] of Object.entries(channels)) {
-      await api.sendMediaGroup(channel, images, {
-        disable_notification: true,
-      })
-    }
-  }
-}
+export const sendMessageToAdmins = defaultTelegramSenders.sendMessageToAdmins
+export const sendPreviewNFT = defaultTelegramSenders.sendPreviewNFT
+export const sendToGroupsNewNFT = defaultTelegramSenders.sendToGroupsNewNFT
+export const sendPostToChannels = defaultTelegramSenders.sendPostToChannels
+export const sendNewPlaces = defaultTelegramSenders.sendNewPlaces

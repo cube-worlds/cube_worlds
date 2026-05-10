@@ -10,32 +10,41 @@ const config =
       } as const)
     : realConfig
 
-export const loggerOptions = {
-  level: config.LOG_LEVEL,
-  transport: {
-    targets: [
-      ...(config.isDev
-        ? [
-            {
-              target: 'pino-pretty',
-              level: config.LOG_LEVEL,
-              options: {
-                ignore: 'pid,hostname',
-                colorize: true,
-                translateTime: true,
-              },
-            },
-          ]
-        : [
-            {
-              target: 'pino/file',
-              level: config.LOG_LEVEL,
-              options: {},
-            },
-          ]),
-    ],
-  },
+export interface LoggerConfig {
+  LOG_LEVEL: string
+  isDev: boolean
 }
+
+export function buildLoggerOptions(cfg: LoggerConfig) {
+  return {
+    level: cfg.LOG_LEVEL,
+    transport: {
+      targets: [
+        ...(cfg.isDev
+          ? [
+              {
+                target: 'pino-pretty',
+                level: cfg.LOG_LEVEL,
+                options: {
+                  ignore: 'pid,hostname',
+                  colorize: true,
+                  translateTime: true,
+                },
+              },
+            ]
+          : [
+              {
+                target: 'pino/file',
+                level: cfg.LOG_LEVEL,
+                options: {},
+              },
+            ]),
+      ],
+    },
+  }
+}
+
+export const loggerOptions = buildLoggerOptions(config)
 
 export const logger = pino(loggerOptions)
 
