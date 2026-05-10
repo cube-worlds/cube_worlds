@@ -2,6 +2,7 @@
 import type { SetWalletHandlerDependencies } from '#root/backend/set-wallet-handler'
 import type { InitData } from '@telegram-apps/init-data-node'
 import assert from 'node:assert/strict'
+import process from 'node:process'
 import test from 'node:test'
 import { buildSetWalletHandler } from '#root/backend/set-wallet-handler'
 import fastify from 'fastify'
@@ -217,4 +218,57 @@ test('POST /api/auth/set-wallet updates wallet and saves user', async (t) => {
   assert.equal(body.message, 'Wallet updated successfully')
   assert.equal(ctx.user.wallet, 'EQ_BOUNCEABLE_ADDRESS')
   assert.equal(ctx.user.saveCalls, 1)
+})
+
+// Cover the default dependency factory: the production validateInitData
+// closure reads BOT_TOKEN and forwards to @telegram-apps/init-data-node.
+
+test('default validateInitData refuses to run without BOT_TOKEN', async (t) => {
+  const savedToken = process.env.BOT_TOKEN
+  delete process.env.BOT_TOKEN
+
+  const app = fastify()
+  await app.register(buildSetWalletHandler(), { prefix: '/api/auth' })
+  t.after(async () => {
+    await app.close()
+    if (savedToken === undefined) delete process.env.BOT_TOKEN
+    else process.env.BOT_TOKEN = savedToken
+  })
+
+  const response = await app.inject({
+    method: 'POST',
+    url: '/api/auth/set-wallet',
+    payload: { initData: 'anything', wallet: 'EQ_x' },
+  })
+
+  assert.equal(response.statusCode, 200)
+  assert.equal(response.json().error, 'BOT_TOKEN is not configured')
+})
+
+test('default validateInitData rejects unsigned initData via @telegram-apps validator', async (t) => {
+  const savedToken = process.env.BOT_TOKEN
+  process.env.BOT_TOKEN = 'test-bot-token-for-set-wallet-suite'
+
+  const app = fastify()
+  await app.register(buildSetWalletHandler(), { prefix: '/api/auth' })
+  t.after(async () => {
+    await app.close()
+    if (savedToken === undefined) delete process.env.BOT_TOKEN
+    else process.env.BOT_TOKEN = savedToken
+  })
+
+  const response = await app.inject({
+    method: 'POST',
+    url: '/api/auth/set-wallet',
+    payload: { initData: 'not-a-real-signed-payload', wallet: 'EQ_x' },
+  })
+
+  // The validator throws → caught and surfaced as { error }. We don't
+  // assert on the exact message (it's owned by the upstream library), only
+  // that we hit the catch branch with a non-empty error string.
+  assert.equal(response.statusCode, 200)
+  const body = response.json()
+  assert.equal(typeof body.error, 'string')
+  assert.notEqual(body.error, '')
+  assert.notEqual(body.error, 'BOT_TOKEN is not configured')
 })
