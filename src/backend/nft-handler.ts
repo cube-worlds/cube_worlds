@@ -17,7 +17,7 @@ export interface NftHandlerDependencies {
   info: (...args: unknown[]) => void
 }
 
-function nftImage(type: CNFTImageType) {
+export function nftImage(type: CNFTImageType) {
   if (type === CNFTImageType.Dice) {
     return 'dice'
   }
@@ -36,7 +36,7 @@ function nftImage(type: CNFTImageType) {
   return 'common'
 }
 
-function toJSON(nft: NftData) {
+export function toJSON(nft: NftData) {
   return {
     name: `Cube Worlds Citizen #${nft.index}`,
     description: 'Thank you for your participation in the Cube Worlds Project!',

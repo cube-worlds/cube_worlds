@@ -3,7 +3,7 @@ import type { NftData, NftHandlerDependencies } from '#root/backend/nft-handler'
 import assert from 'node:assert/strict'
 import { Buffer } from 'node:buffer'
 import { test } from 'node:test'
-import { buildNftHandler } from '#root/backend/nft-handler'
+import { buildNftHandler, nftImage, toJSON } from '#root/backend/nft-handler'
 import { CNFTImageType } from '#root/common/models/CNFT'
 import fastify from 'fastify'
 
@@ -206,4 +206,63 @@ test('GET /:image-:color.webp accepts color boundaries 0 and 10', async () => {
     assert.equal(res.statusCode, 200)
     assert.deepEqual(h.renderCalls, [{ imageName: 'whale', color }])
   }
+})
+
+// nftImage — CNFTImageType → image basename mapping
+
+test('nftImage maps every CNFTImageType to its lowercase image name', () => {
+  assert.equal(nftImage(CNFTImageType.Dice), 'dice')
+  assert.equal(nftImage(CNFTImageType.Whale), 'whale')
+  assert.equal(nftImage(CNFTImageType.Diamond), 'diamond')
+  assert.equal(nftImage(CNFTImageType.Coin), 'coin')
+  assert.equal(nftImage(CNFTImageType.Knight), 'knight')
+  assert.equal(nftImage(CNFTImageType.Common), 'common')
+})
+
+test('nftImage falls back to "common" for unknown values', () => {
+  // Belt-and-braces: an enum value that drops through every check
+  assert.equal(nftImage('SomethingNew' as CNFTImageType), 'common')
+})
+
+// toJSON — NFT metadata shape (TON NFT spec)
+
+test('toJSON produces the documented metadata shape', () => {
+  const json = toJSON({ index: 7, type: CNFTImageType.Whale, color: 3 })
+  assert.equal(json.name, 'Cube Worlds Citizen #7')
+  assert.equal(
+    json.description,
+    'Thank you for your participation in the Cube Worlds Project!',
+  )
+  assert.equal(
+    json.image,
+    'https://cubeworlds.club/api/nft/whale-3.webp',
+  )
+  assert.deepEqual(json.attributes, [
+    { trait_type: 'Type', value: CNFTImageType.Whale },
+    { trait_type: 'Color', value: 3 },
+  ])
+  assert.deepEqual(json.buttons, [
+    { label: 'Explore Cube Worlds', uri: 'https://t.me/cube_worlds_bot' },
+  ])
+})
+
+test('toJSON image url lowercases the type name', () => {
+  // Type values are PascalCase but the static image filenames are lowercase.
+  // This was a regression-prone spot before the lowercase() was added.
+  for (const type of [
+    CNFTImageType.Dice,
+    CNFTImageType.Whale,
+    CNFTImageType.Diamond,
+    CNFTImageType.Coin,
+    CNFTImageType.Knight,
+    CNFTImageType.Common,
+  ]) {
+    const json = toJSON({ index: 0, type, color: 0 })
+    assert.match(json.image, /\/[a-z]+-0\.webp$/)
+  }
+})
+
+test('toJSON includes index in the name verbatim (no formatting)', () => {
+  assert.equal(toJSON({ index: 0, type: CNFTImageType.Common, color: 0 }).name, 'Cube Worlds Citizen #0')
+  assert.equal(toJSON({ index: 9999, type: CNFTImageType.Common, color: 0 }).name, 'Cube Worlds Citizen #9999')
 })

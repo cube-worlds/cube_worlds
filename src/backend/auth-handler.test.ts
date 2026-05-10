@@ -134,6 +134,80 @@ test('POST /api/auth/login returns validation error for missing telegram user id
   assert.equal(response.json().error, 'Invalid telegram user id')
 })
 
+test('POST /api/auth/login surfaces validateInitData errors via the catch branch', async (t) => {
+  const ctx = await createAuthTestContext({
+    validateInitData: () => {
+      throw new Error('Invalid initData signature')
+    },
+  })
+  t.after(async () => {
+    await ctx.app.close()
+  })
+
+  const response = await ctx.app.inject({
+    method: 'POST',
+    url: '/api/auth/login',
+    payload: { initData: 'tampered' },
+  })
+  assert.equal(response.statusCode, 200)
+  assert.equal(response.json().error, 'Invalid initData signature')
+})
+
+test('POST /api/auth/login logs referral error when referrer is the same user', async (t) => {
+  const ctx = await createAuthTestContext()
+  t.after(async () => {
+    await ctx.app.close()
+  })
+
+  const response = await ctx.app.inject({
+    method: 'POST',
+    url: '/api/auth/login',
+    payload: { initData: 'signed-payload', referId: '1001' },
+  })
+
+  const body = response.json()
+  assert.equal(body.id, 1001)
+  // referrer was self → not assigned, error logged
+  assert.equal(body.referalId, undefined)
+  assert.deepEqual(ctx.errorLogs, ['Referrer not found or same as user'])
+  assert.deepEqual(ctx.infoLogs, [])
+})
+
+test('POST /api/auth/login logs referral error when referrer does not exist', async (t) => {
+  const ctx = await createAuthTestContext()
+  t.after(async () => {
+    await ctx.app.close()
+  })
+
+  const response = await ctx.app.inject({
+    method: 'POST',
+    url: '/api/auth/login',
+    payload: { initData: 'signed-payload', referId: '99999' },
+  })
+
+  assert.equal(response.json().referalId, undefined)
+  assert.deepEqual(ctx.errorLogs, ['Referrer not found or same as user'])
+})
+
+test('POST /api/auth/login skips referral when user already has a wallet', async (t) => {
+  const ctx = await createAuthTestContext()
+  ctx.users.get(1001)!.wallet = 'EQAlreadyOnboarded'
+  t.after(async () => {
+    await ctx.app.close()
+  })
+
+  const response = await ctx.app.inject({
+    method: 'POST',
+    url: '/api/auth/login',
+    payload: { initData: 'signed-payload', referId: '2002' },
+  })
+
+  assert.equal(response.json().referalId, undefined)
+  // No referral path taken at all → neither info nor error logged
+  assert.deepEqual(ctx.infoLogs, [])
+  assert.deepEqual(ctx.errorLogs, [])
+})
+
 test('POST /api/auth/login assigns referral when eligible', async (t) => {
   const mainUser = createStubUser({ id: 1001, referalId: undefined, wallet: undefined })
   const receiver = createStubUser({ id: 7777 })

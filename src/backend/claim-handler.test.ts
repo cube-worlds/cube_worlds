@@ -164,6 +164,77 @@ test('POST /api/users/claim does not add points when claimed amount is zero', as
   assert.equal(ctx.addPointsCalls.length, 0)
 })
 
+test('POST /api/users/claim/status returns validation error for empty initData', async (t) => {
+  const ctx = await createTestContext()
+  t.after(async () => {
+    await ctx.app.close()
+  })
+
+  const response = await ctx.app.inject({
+    method: 'POST',
+    url: '/api/users/claim/status',
+    payload: {},
+  })
+  const body = response.json()
+
+  assert.equal(response.statusCode, 200)
+  assert.equal(body.error, 'No initData provided')
+})
+
+test('POST /api/users/claim surfaces validateInitData errors', async (t) => {
+  const ctx = await createTestContext({
+    validateInitData: () => {
+      throw new Error('Invalid initData signature')
+    },
+  })
+  t.after(async () => {
+    await ctx.app.close()
+  })
+
+  const response = await ctx.app.inject({
+    method: 'POST',
+    url: '/api/users/claim',
+    payload: { initData: 'tampered' },
+  })
+  const body = response.json()
+  assert.equal(response.statusCode, 200)
+  assert.equal(body.error, 'Invalid initData signature')
+  assert.equal(ctx.addPointsCalls.length, 0)
+})
+
+test('POST /api/users/claim/status returns "Invalid telegram user id" when parsed payload has no user', async (t) => {
+  const ctx = await createTestContext({
+    parseInitData: () => ({}) as InitData,
+  })
+  t.after(async () => {
+    await ctx.app.close()
+  })
+
+  const response = await ctx.app.inject({
+    method: 'POST',
+    url: '/api/users/claim/status',
+    payload: { initData: 'signed-but-no-user' },
+  })
+  assert.equal(response.json().error, 'Invalid telegram user id')
+})
+
+test('POST /api/users/claim returns "User not found in database" for unknown user id', async (t) => {
+  const ctx = await createTestContext({
+    findUserById: async () => null,
+  })
+  t.after(async () => {
+    await ctx.app.close()
+  })
+
+  const response = await ctx.app.inject({
+    method: 'POST',
+    url: '/api/users/claim',
+    payload: { initData: 'signed-telegram-payload' },
+  })
+  assert.equal(response.json().error, 'User not found in database')
+  assert.equal(ctx.addPointsCalls.length, 0)
+})
+
 test('POST /api/users/claim blocks concurrent double claim attempts for same user', async (t) => {
   let claimAvailable = true
   const ctx = await createTestContext({
