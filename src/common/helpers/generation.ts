@@ -1,6 +1,6 @@
 import { Buffer } from 'node:buffer'
 import fs from 'node:fs'
-import { folderPath } from '#root/common/helpers/files'
+import { sanitizeFilename, userFilePath } from '#root/common/helpers/files'
 import { config } from '#root/config'
 import { logger } from '#root/logger'
 import FormData from 'form-data'
@@ -118,8 +118,10 @@ export async function generate(
   const artifact = generationResponse.artifacts[0]
   if ('finishReason' in artifact) {
     if (artifact.finishReason === 'SUCCESS') {
-      const dir = folderPath(username)
-      const fp = `${dir}/${username}_${adminIndex}.png`
+      const fp = userFilePath(
+        username,
+        `${sanitizeFilename(username)}_${adminIndex}.png`,
+      )
       fs.writeFileSync(fp, Buffer.from(artifact.base64, 'base64'))
       return fp
     }

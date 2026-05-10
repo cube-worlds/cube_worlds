@@ -2,18 +2,40 @@ import { Buffer } from 'node:buffer'
 import fs from 'node:fs'
 import path from 'node:path'
 
-function sanitizeFilename(name: string): string {
-  return name.replaceAll(/[^\w-]/g, '_')
+const DATA_ROOT = path.resolve('./data')
+const SAFE_COMPONENT = /^[\w.-]+$/
+
+export function sanitizeFilename(name: string): string {
+  const cleaned = name.replaceAll(/[^\w.-]/g, '_')
+  return cleaned.length === 0 ? '_' : cleaned
 }
 
 export function folderPath(username: string): string {
   const safeName = sanitizeFilename(username)
-  const fp = path.resolve('./data', safeName)
-  if (!fp.startsWith(path.resolve('./data'))) {
+  const fp = path.resolve(DATA_ROOT, safeName)
+  if (path.dirname(fp) !== DATA_ROOT) {
     throw new Error('Invalid username for path')
   }
   if (!fs.existsSync(fp)) {
     fs.mkdirSync(fp, { recursive: true })
+  }
+  return fp
+}
+
+/**
+ * Build an absolute path inside the user's data folder, sanitizing both the
+ * username and the filename. Throws if the resolved path would escape the
+ * user's folder. All file writes for user-derived data must go through this.
+ */
+export function userFilePath(username: string, filename: string): string {
+  const dir = folderPath(username)
+  const safeFile = sanitizeFilename(path.basename(filename))
+  if (!SAFE_COMPONENT.test(safeFile)) {
+    throw new Error('Invalid filename')
+  }
+  const fp = path.resolve(dir, safeFile)
+  if (path.dirname(fp) !== dir) {
+    throw new Error('Resolved path escapes user folder')
   }
   return fp
 }
@@ -23,9 +45,7 @@ export function saveImage(
   fileName: string,
   content: Buffer,
 ): string {
-  const fp = folderPath(username)
-  const safeFileName = path.basename(fileName)
-  const filePath = path.join(fp, safeFileName)
+  const filePath = userFilePath(username, fileName)
   fs.writeFileSync(filePath, content)
   return filePath
 }
@@ -41,8 +61,10 @@ export async function saveImageFromUrl(
   const buffer = Buffer.from(arrayBuffer)
   const imageFileName =
     imageURL.slice((imageURL.lastIndexOf('/') ?? 0) + 1) ?? ''
-  const fileExtension = imageFileName.split('.').pop()
-  const newFileName = `${original ? 'ava_' : ''}${username}_${adminIndex}.${fileExtension}`
+  const rawExtension = imageFileName.split('.').pop() ?? ''
+  const safeExtension = sanitizeFilename(rawExtension).slice(0, 8) || 'bin'
+  const safeUsername = sanitizeFilename(username)
+  const newFileName = `${original ? 'ava_' : ''}${safeUsername}_${adminIndex}.${safeExtension}`
   return saveImage(username, newFileName, buffer)
 }
 
@@ -51,9 +73,10 @@ export function saveJSON(
   username: string,
   json: object,
 ): string {
-  const jsonPath = path.join(
-    folderPath(username),
-    `${username}_${adminIndex}.json`,
+  const safeUsername = sanitizeFilename(username)
+  const jsonPath = userFilePath(
+    username,
+    `${safeUsername}_${adminIndex}.json`,
   )
   fs.writeFileSync(jsonPath, JSON.stringify(json))
   return jsonPath
