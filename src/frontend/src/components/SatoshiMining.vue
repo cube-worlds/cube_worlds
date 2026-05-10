@@ -64,12 +64,7 @@ const formattedSupply = computed(() => {
   return `${formatNumber(supply)} (${percent.toFixed(2)}%)`
 })
 
-const rights = computed(() =>
-  jettonData.value?.admin_address ===
-  '0:0000000000000000000000000000000000000000000000000000000000000000'
-    ? '✅'
-    : '❌',
-)
+const rights = computed(() => (jettonData.value?.admin_address === null ? '✅' : '❌'))
 
 async function submitMining() {
   if (isMiningDisabled.value) return
