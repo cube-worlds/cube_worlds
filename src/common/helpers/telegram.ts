@@ -14,9 +14,32 @@ import { getRandomCoolEmoji } from './emoji'
 import { linkToIPFSGateway } from './ipfs'
 import { commaSeparatedNumber } from './numbers'
 
-interface Languages {
+export interface Languages {
   ru: string
   en: string
+}
+
+export function pickLangValue(lang: string, langMap: Languages): string {
+  return lang === 'ru' ? langMap.ru : langMap.en
+}
+
+export function findAdminIndex(
+  userId: number,
+  admins: readonly number[],
+): number {
+  const index = admins.indexOf(userId)
+  if (index < 0) {
+    throw new Error('Not admin')
+  }
+  return index
+}
+
+export function buildInviteUrl(botName: string, userId: number): string {
+  return `https://t.me/${botName}?start=${userId}`
+}
+
+export function buildShareLink(inviteUrl: string, text: string): string {
+  return `https://t.me/share/url?url=${encodeURI(inviteUrl)}&text=${encodeURIComponent(text)}`
 }
 
 function getCubeChats(): Languages {
@@ -32,26 +55,15 @@ function getCubeChannels(): Languages {
 }
 
 export function getCubeChat(lang: string): string {
-  const chats = getCubeChats()
-  if (lang === 'ru') {
-    return chats.ru
-  }
-  return chats.en
+  return pickLangValue(lang, getCubeChats())
 }
 
 export function getCubeChannel(lang: string): string {
-  const channels = getCubeChannels()
-  if (lang === 'ru') {
-    return channels.ru
-  }
-  return channels.en
+  return pickLangValue(lang, getCubeChannels())
 }
 
 export function adminIndex(userId: number): number {
-  if (!config.BOT_ADMINS.includes(userId)) {
-    throw new Error('Not admin')
-  }
-  return config.BOT_ADMINS.indexOf(userId)
+  return findAdminIndex(userId, config.BOT_ADMINS)
 }
 
 export async function sendMessageToAdmins(api: Api<RawApi>, message: string) {
@@ -61,12 +73,11 @@ export async function sendMessageToAdmins(api: Api<RawApi>, message: string) {
 }
 
 export function inviteTelegramUrl(userId: number) {
-  return `https://t.me/${config.BOT_NAME}?start=${userId}`
+  return buildInviteUrl(config.BOT_NAME, userId)
 }
 
 export function shareTelegramLink(userId: number, text: string): string {
-  const url = inviteTelegramUrl(userId)
-  return `https://t.me/share/url?url=${encodeURI(url)}&text=${encodeURIComponent(text)}`
+  return buildShareLink(inviteTelegramUrl(userId), text)
 }
 
 export async function sendPlaceInLine(

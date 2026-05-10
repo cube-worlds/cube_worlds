@@ -50,6 +50,27 @@ export function saveImage(
   return filePath
 }
 
+export function buildImageFilename(
+  imageURL: string,
+  adminIndex: number,
+  username: string,
+  original: boolean,
+): string {
+  const imageFileName = imageURL.slice(imageURL.lastIndexOf('/') + 1)
+  const rawExtension = imageFileName.split('.').pop() ?? ''
+  const safeExtension = sanitizeFilename(rawExtension).slice(0, 8) || 'bin'
+  const safeUsername = sanitizeFilename(username)
+  return `${original ? 'ava_' : ''}${safeUsername}_${adminIndex}.${safeExtension}`
+}
+
+export function buildJsonFilename(
+  adminIndex: number,
+  username: string,
+): string {
+  const safeUsername = sanitizeFilename(username)
+  return `${safeUsername}_${adminIndex}.json`
+}
+
 export async function saveImageFromUrl(
   imageURL: string,
   adminIndex: number,
@@ -59,12 +80,7 @@ export async function saveImageFromUrl(
   const image = await fetch(imageURL)
   const arrayBuffer = await image.arrayBuffer()
   const buffer = Buffer.from(arrayBuffer)
-  const imageFileName =
-    imageURL.slice((imageURL.lastIndexOf('/') ?? 0) + 1) ?? ''
-  const rawExtension = imageFileName.split('.').pop() ?? ''
-  const safeExtension = sanitizeFilename(rawExtension).slice(0, 8) || 'bin'
-  const safeUsername = sanitizeFilename(username)
-  const newFileName = `${original ? 'ava_' : ''}${safeUsername}_${adminIndex}.${safeExtension}`
+  const newFileName = buildImageFilename(imageURL, adminIndex, username, original)
   return saveImage(username, newFileName, buffer)
 }
 
@@ -73,11 +89,7 @@ export function saveJSON(
   username: string,
   json: object,
 ): string {
-  const safeUsername = sanitizeFilename(username)
-  const jsonPath = userFilePath(
-    username,
-    `${safeUsername}_${adminIndex}.json`,
-  )
+  const jsonPath = userFilePath(username, buildJsonFilename(adminIndex, username))
   fs.writeFileSync(jsonPath, JSON.stringify(json))
   return jsonPath
 }

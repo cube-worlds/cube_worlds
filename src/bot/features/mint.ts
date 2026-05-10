@@ -1,5 +1,6 @@
 import type { Context } from '#root/bot/context'
 import type { ChatFullInfo } from 'grammy/types'
+import { isSubscribedStatus } from '#root/bot/features/mint-logic'
 import { logHandle } from '#root/common/helpers/logging'
 import { getUserProfilePhoto } from '#root/common/helpers/photo'
 import {
@@ -56,8 +57,7 @@ async function isUserSubscribed(
 ): Promise<boolean> {
   try {
     const subscriber = await ctx.api.getChatMember(channel, ctx.dbuser.id)
-    const validStatuses = ['creator', 'administrator', 'member']
-    return validStatuses.includes(subscriber.status)
+    return isSubscribedStatus(subscriber.status)
   } catch (error) {
     logger.error(`Check subscription error: ${error}`)
     return true
