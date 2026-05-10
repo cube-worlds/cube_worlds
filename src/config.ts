@@ -19,6 +19,12 @@ function createConfigFromEnvironment(environment: NodeJS.ProcessEnv) {
     BOT_TOKEN: z.string(),
     BOT_NAME: z.string().default('cube_worlds_bot'),
     BOT_WEBHOOK: z.string().default(''),
+    BOT_WEBHOOK_SECRET: z
+      .string()
+      .regex(/^[\w-]+$/, 'BOT_WEBHOOK_SECRET must be alphanumeric (with _-)')
+      .min(16)
+      .max(256)
+      .default(''),
     BOT_SERVER_HOST: z.string().default('0.0.0.0'),
     BOT_SERVER_PORT: port().default(80),
     BOT_ALLOWED_UPDATES: z
@@ -49,6 +55,11 @@ function createConfigFromEnvironment(environment: NodeJS.ProcessEnv) {
       .parse(config.BOT_WEBHOOK, {
         path: ['BOT_WEBHOOK'],
       })
+    if (!config.BOT_WEBHOOK_SECRET) {
+      throw new Error(
+        'BOT_WEBHOOK_SECRET is required in webhook mode (16-256 chars, [A-Za-z0-9_-])',
+      )
+    }
   }
 
   return {

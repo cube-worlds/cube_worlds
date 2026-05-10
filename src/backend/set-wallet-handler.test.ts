@@ -59,6 +59,7 @@ async function createSetWalletTestContext(
       if (id !== 1001) return null
       return toResolvedUser(user)
     },
+    findUserByWallet: async () => null,
     parseWalletAddress: (wallet: string) => createParsedAddress(wallet),
     ...overrides,
   }
@@ -134,6 +135,62 @@ test('POST /api/auth/set-wallet validates wallet format', async (t) => {
 
   assert.equal(response.statusCode, 200)
   assert.equal(response.json().error, 'Invalid wallet address')
+})
+
+test('POST /api/auth/set-wallet rejects wallet linked to another user', async (t) => {
+  const otherUser = createStubUser({ id: 2002, wallet: 'EQ_BOUNCEABLE_ADDRESS' })
+  const ctx = await createSetWalletTestContext({
+    parseWalletAddress: () => createParsedAddress('EQ_BOUNCEABLE_ADDRESS'),
+    findUserByWallet: async () => toResolvedUser(otherUser),
+  })
+  t.after(async () => {
+    await ctx.app.close()
+  })
+
+  const response = await ctx.app.inject({
+    method: 'POST',
+    url: '/api/auth/set-wallet',
+    payload: {
+      initData: 'signed',
+      wallet: 'EQ_BOUNCEABLE_ADDRESS',
+    },
+  })
+
+  assert.equal(response.statusCode, 200)
+  assert.equal(
+    response.json().error,
+    'Wallet already linked to another account',
+  )
+  assert.equal(ctx.user.wallet, undefined)
+  assert.equal(ctx.user.saveCalls, 0)
+})
+
+test('POST /api/auth/set-wallet allows the same user to re-set their wallet', async (t) => {
+  const ctx = await createSetWalletTestContext({
+    parseWalletAddress: () => createParsedAddress('EQ_BOUNCEABLE_ADDRESS'),
+    findUserByWallet: async () =>
+      toResolvedUser({
+        id: 1001,
+        wallet: 'EQ_BOUNCEABLE_ADDRESS',
+        saveCalls: 0,
+        save: async () => {},
+      }),
+  })
+  t.after(async () => {
+    await ctx.app.close()
+  })
+
+  const response = await ctx.app.inject({
+    method: 'POST',
+    url: '/api/auth/set-wallet',
+    payload: {
+      initData: 'signed',
+      wallet: 'EQ_BOUNCEABLE_ADDRESS',
+    },
+  })
+
+  assert.equal(response.statusCode, 200)
+  assert.equal(response.json().wallet, 'EQ_BOUNCEABLE_ADDRESS')
 })
 
 test('POST /api/auth/set-wallet updates wallet and saves user', async (t) => {

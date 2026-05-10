@@ -79,10 +79,11 @@ export async function createServer(bot: Bot) {
 
   if (config.BOT_MODE === 'webhook') {
     server.post(
-      `/${bot.token}`,
+      '/telegram/webhook',
       webhookCallback(bot, 'fastify', {
         onTimeout: 'throw',
         timeoutMilliseconds: 10_000,
+        secretToken: config.BOT_WEBHOOK_SECRET,
       }),
     )
   }

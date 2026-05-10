@@ -1,7 +1,7 @@
 import type { InitData } from '@telegram-apps/init-data-node'
 import type { FastifyInstance } from 'fastify'
 import process from 'node:process'
-import { findUserById } from '#root/common/models/User'
+import { findUserById, findUserByWallet } from '#root/common/models/User'
 import { parse, validate } from '@telegram-apps/init-data-node'
 import { Address } from '@ton/core'
 
@@ -17,6 +17,7 @@ export interface SetWalletHandlerDependencies {
   validateInitData: (initData: string) => void
   parseInitData: (initData: string) => InitData
   findUserById: (id: number) => Promise<ExistingUser | null>
+  findUserByWallet: (wallet: string) => Promise<ExistingUser | null>
   parseWalletAddress: (wallet: string) => ParsedAddress
 }
 
@@ -32,6 +33,7 @@ function createDefaultDependencies(): SetWalletHandlerDependencies {
     },
     parseInitData: parse,
     findUserById,
+    findUserByWallet,
     parseWalletAddress: Address.parse,
   }
 }
@@ -67,7 +69,13 @@ export function buildSetWalletHandler(
           return { error: 'Invalid wallet address' }
         }
 
-        user.wallet = address.toString({ bounceable: true })
+        const bounceable = address.toString({ bounceable: true })
+        const existingOwner = await dependencies.findUserByWallet(bounceable)
+        if (existingOwner && existingOwner.id !== user.id) {
+          return { error: 'Wallet already linked to another account' }
+        }
+
+        user.wallet = bounceable
         await user.save()
 
         return {

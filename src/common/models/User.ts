@@ -56,6 +56,12 @@ export class User extends TimeStamps {
   @prop({ type: Number })
   suspicionDices?: number
 
+  @prop({ type: String })
+  captchaNonce?: string
+
+  @prop({ type: Date })
+  captchaIssuedAt?: Date
+
   // for dice callback query
   @prop({ type: String })
   diceKey?: string
@@ -77,7 +83,7 @@ export class User extends TimeStamps {
   @prop({ type: String })
   avatar?: string
 
-  @prop({ type: String })
+  @prop({ type: String, index: { unique: true, sparse: true } })
   wallet?: string
 
   @prop({ type: Number })
@@ -172,6 +178,12 @@ export async function findUserById(
   id: number,
 ): Promise<DocumentType<User> | null> {
   return UserModel.findOne({ id })
+}
+
+export async function findUserByWallet(
+  wallet: string,
+): Promise<DocumentType<User> | null> {
+  return UserModel.findOne({ wallet })
 }
 
 export async function findUserByName(

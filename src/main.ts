@@ -45,6 +45,7 @@ try {
 
     await bot.api.setWebhook(config.BOT_WEBHOOK, {
       allowed_updates: config.BOT_ALLOWED_UPDATES,
+      secret_token: config.BOT_WEBHOOK_SECRET,
     })
   } else if (config.BOT_MODE === 'polling') {
     await server.listen({

@@ -1,49 +1,84 @@
 import type { FastifyInstance } from 'fastify'
 import { Buffer } from 'node:buffer'
-import { createHmac, timingSafeEqual } from 'node:crypto'
+import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 import process from 'node:process'
 import { i18n } from '#root/common/i18n'
 import { findUserById } from '#root/common/models/User'
 import { logger } from '#root/logger'
 
+const MIN_DWELL_MS = 20_000
+const MAX_AGE_MS = 10 * 60 * 1000
+
+interface IssuedToken {
+  token: string
+  nonce: string
+  issuedAt: Date
+}
+
 /**
- * Generate HMAC-signed captcha token for a user.
- * Called server-side when building the captcha URL.
+ * Generate a one-time captcha token bound to a freshly minted nonce and
+ * issuance timestamp. Caller must persist `nonce` and `issuedAt` on the user
+ * so verifyCaptchaToken can match them later.
  */
 export function generateCaptchaToken(
   userId: number,
   expectedKills: number,
-): string {
+): IssuedToken {
   const secret = process.env.BOT_TOKEN ?? ''
-  const payload = `captcha:${userId}:${expectedKills}`
+  const nonce = randomBytes(16).toString('hex')
+  const issuedAtMs = Date.now()
+  const payload = `captcha:${userId}:${expectedKills}:${nonce}:${issuedAtMs}`
   const hmac = createHmac('sha256', secret).update(payload).digest('hex')
-  return `${expectedKills}:${hmac}`
+  return {
+    token: `${expectedKills}:${nonce}:${issuedAtMs}:${hmac}`,
+    nonce,
+    issuedAt: new Date(issuedAtMs),
+  }
+}
+
+interface VerifiedToken {
+  ok: boolean
+  reason?: string
 }
 
 function verifyCaptchaToken(
   userId: number,
   token: string,
   expectedKills: number,
-): boolean {
+  storedNonce: string | undefined,
+  storedIssuedAt: Date | undefined,
+  now: number = Date.now(),
+): VerifiedToken {
   const secret = process.env.BOT_TOKEN ?? ''
-  if (!secret) return false
+  if (!secret) return { ok: false, reason: 'no_secret' }
+  if (!storedNonce || !storedIssuedAt) return { ok: false, reason: 'no_pending_captcha' }
 
   const parts = token.split(':')
-  if (parts.length !== 2) return false
+  if (parts.length !== 4) return { ok: false, reason: 'bad_format' }
 
-  const [killsStr, providedHmac] = parts
-  if (Number(killsStr) !== expectedKills) return false
+  const [killsStr, nonce, issuedAtStr, providedHmac] = parts
+  if (Number(killsStr) !== expectedKills) return { ok: false, reason: 'kills_mismatch' }
+  if (nonce !== storedNonce) return { ok: false, reason: 'nonce_mismatch' }
 
-  const payload = `captcha:${userId}:${expectedKills}`
+  const issuedAt = Number(issuedAtStr)
+  if (!Number.isInteger(issuedAt)) return { ok: false, reason: 'bad_timestamp' }
+  if (issuedAt !== storedIssuedAt.getTime()) return { ok: false, reason: 'timestamp_mismatch' }
+
+  const age = now - issuedAt
+  if (age < MIN_DWELL_MS) return { ok: false, reason: 'too_fast' }
+  if (age > MAX_AGE_MS) return { ok: false, reason: 'expired' }
+
+  const payload = `captcha:${userId}:${expectedKills}:${nonce}:${issuedAt}`
   const expectedHmac = createHmac('sha256', secret).update(payload).digest('hex')
 
   try {
-    return timingSafeEqual(
+    const match = timingSafeEqual(
       Buffer.from(providedHmac, 'hex'),
       Buffer.from(expectedHmac, 'hex'),
     )
+    return match ? { ok: true } : { ok: false, reason: 'hmac_mismatch' }
   } catch {
-    return false
+    return { ok: false, reason: 'hmac_error' }
   }
 }
 
@@ -63,7 +98,17 @@ async function captchaHandler(fastify: FastifyInstance, options: any) {
     if (!user || !user.suspicionDices) return { result: false }
 
     const expectedKills = user.suspicionDices - 101
-    if (!verifyCaptchaToken(parsedUserId, token, expectedKills)) {
+    const verification = verifyCaptchaToken(
+      parsedUserId,
+      token,
+      expectedKills,
+      user.captchaNonce,
+      user.captchaIssuedAt,
+    )
+    if (!verification.ok) {
+      logger.info(
+        `Captcha rejected for ${user.id}: ${verification.reason}`,
+      )
       return { result: false }
     }
 
@@ -71,6 +116,8 @@ async function captchaHandler(fastify: FastifyInstance, options: any) {
       `Solved captcha from ${user.id} with ${user.suspicionDices} suspicion dices`,
     )
     user.suspicionDices = 0
+    user.captchaNonce = undefined
+    user.captchaIssuedAt = undefined
     await user.save()
     await options.bot.api.sendMessage(
       parsedUserId,
