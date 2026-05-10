@@ -141,3 +141,4 @@ data/
 *.db
 *.db-journal
 .claude
+coverage.lcov

@@ -1,8 +1,14 @@
 /* eslint-disable test/no-import-node-test */
+import type { CaptchaHandlerDependencies, CaptchaUser } from '#root/backend/captcha'
 import assert from 'node:assert/strict'
 import process from 'node:process'
 import { before, test } from 'node:test'
-import { generateCaptchaToken, verifyCaptchaToken } from '#root/backend/captcha'
+import {
+  buildCaptchaHandler,
+  generateCaptchaToken,
+  verifyCaptchaToken,
+} from '#root/backend/captcha'
+import fastify from 'fastify'
 
 const USER_ID = 12345
 const EXPECTED_KILLS = 7
@@ -283,4 +289,178 @@ test('generateCaptchaToken issues distinct nonces across calls', () => {
   const a = generateCaptchaToken(USER_ID, EXPECTED_KILLS)
   const b = generateCaptchaToken(USER_ID, EXPECTED_KILLS)
   assert.notEqual(a.nonce, b.nonce)
+})
+
+// GET /check endpoint
+
+interface FakeUserState {
+  id: number
+  language: string
+  suspicionDices?: number
+  captchaNonce?: string
+  captchaIssuedAt?: Date
+  saveCalls: number
+}
+
+interface HandlerHarness {
+  app: ReturnType<typeof fastify>
+  user: FakeUserState | null
+  sendMessageCalls: { userId: number, text: string }[]
+  infoCalls: string[]
+  translateCalls: { language: string, key: string }[]
+}
+
+function makeHarness(initialUser: FakeUserState | null): HandlerHarness {
+  const harness: HandlerHarness = {
+    app: fastify(),
+    user: initialUser,
+    sendMessageCalls: [],
+    infoCalls: [],
+    translateCalls: [],
+  }
+
+  const deps: CaptchaHandlerDependencies = {
+    findUserById: async (id) => {
+      if (!harness.user || harness.user.id !== id) return null
+      const state = harness.user
+      const captchaUser: CaptchaUser = {
+        get id() { return state.id },
+        get language() { return state.language },
+        get suspicionDices() { return state.suspicionDices },
+        set suspicionDices(value) { state.suspicionDices = value },
+        get captchaNonce() { return state.captchaNonce },
+        set captchaNonce(value) { state.captchaNonce = value },
+        get captchaIssuedAt() { return state.captchaIssuedAt },
+        set captchaIssuedAt(value) { state.captchaIssuedAt = value },
+        save: async () => {
+          state.saveCalls += 1
+        },
+      }
+      return captchaUser
+    },
+    sendMessage: async (userId, text) => {
+      harness.sendMessageCalls.push({ userId, text })
+    },
+    translate: (language, key) => {
+      harness.translateCalls.push({ language, key })
+      return `[${language}:${key}]`
+    },
+    info: (msg) => {
+      harness.infoCalls.push(msg)
+    },
+  }
+
+  void harness.app.register(buildCaptchaHandler(deps))
+  return harness
+}
+
+test('GET /check rejects when userId query param is missing', async () => {
+  const h = makeHarness(null)
+  const res = await h.app.inject({ method: 'GET', url: '/check?token=abc' })
+  assert.equal(res.statusCode, 200)
+  assert.deepEqual(res.json(), { result: false })
+})
+
+test('GET /check rejects non-numeric userId', async () => {
+  const h = makeHarness(null)
+  const res = await h.app.inject({ method: 'GET', url: '/check?userId=abc&token=tok' })
+  assert.deepEqual(res.json(), { result: false })
+})
+
+test('GET /check rejects zero or negative userId', async () => {
+  const h = makeHarness(null)
+  const res = await h.app.inject({ method: 'GET', url: '/check?userId=0&token=tok' })
+  assert.deepEqual(res.json(), { result: false })
+})
+
+test('GET /check rejects when token query param is missing', async () => {
+  const h = makeHarness(null)
+  const res = await h.app.inject({ method: 'GET', url: `/check?userId=${USER_ID}` })
+  assert.deepEqual(res.json(), { result: false })
+})
+
+test('GET /check returns false when user not found', async () => {
+  const h = makeHarness(null)
+  const res = await h.app.inject({
+    method: 'GET',
+    url: `/check?userId=${USER_ID}&token=anything`,
+  })
+  assert.deepEqual(res.json(), { result: false })
+  assert.equal(h.sendMessageCalls.length, 0)
+})
+
+test('GET /check returns false when user has no suspicionDices', async () => {
+  const h = makeHarness({
+    id: USER_ID,
+    language: 'en',
+    suspicionDices: 0,
+    saveCalls: 0,
+  })
+  const res = await h.app.inject({
+    method: 'GET',
+    url: `/check?userId=${USER_ID}&token=anything`,
+  })
+  assert.deepEqual(res.json(), { result: false })
+  assert.equal(h.user!.saveCalls, 0)
+  assert.equal(h.sendMessageCalls.length, 0)
+})
+
+test('GET /check rejects an invalid token and logs the rejection reason', async () => {
+  const h = makeHarness({
+    id: USER_ID,
+    language: 'en',
+    suspicionDices: 108, // expectedKills = 7
+    captchaNonce: 'a'.repeat(32),
+    captchaIssuedAt: new Date(Date.now() - 30_000),
+    saveCalls: 0,
+  })
+  const res = await h.app.inject({
+    method: 'GET',
+    url: `/check?userId=${USER_ID}&token=garbage:token:format`,
+  })
+  assert.deepEqual(res.json(), { result: false })
+  assert.equal(h.user!.saveCalls, 0)
+  assert.equal(h.sendMessageCalls.length, 0)
+  assert.equal(h.infoCalls.length, 1)
+  assert.match(h.infoCalls[0], /^Captcha rejected for /)
+})
+
+test('GET /check happy path: clears suspicion, persists, sends translated message', async () => {
+  const originalNow = Date.now
+  try {
+    const baseNow = 1_700_000_000_000
+    Date.now = () => baseNow
+    const minted = generateCaptchaToken(USER_ID, 7)
+
+    const h = makeHarness({
+      id: USER_ID,
+      language: 'ru',
+      suspicionDices: 108,
+      captchaNonce: minted.nonce,
+      captchaIssuedAt: minted.issuedAt,
+      saveCalls: 0,
+    })
+
+    Date.now = () => baseNow + MIN_DWELL_MS + 100
+
+    const res = await h.app.inject({
+      method: 'GET',
+      url: `/check?userId=${USER_ID}&token=${encodeURIComponent(minted.token)}`,
+    })
+    assert.deepEqual(res.json(), { result: true })
+    assert.equal(h.user!.saveCalls, 1)
+    assert.equal(h.user!.suspicionDices, 0)
+    assert.equal(h.user!.captchaNonce, undefined)
+    assert.equal(h.user!.captchaIssuedAt, undefined)
+    assert.deepEqual(h.translateCalls, [
+      { language: 'ru', key: 'dice.captcha_solved' },
+    ])
+    assert.deepEqual(h.sendMessageCalls, [
+      { userId: USER_ID, text: '[ru:dice.captcha_solved]' },
+    ])
+    assert.equal(h.infoCalls.length, 1)
+    assert.match(h.infoCalls[0], /Solved captcha from /)
+  } finally {
+    Date.now = originalNow
+  }
 })

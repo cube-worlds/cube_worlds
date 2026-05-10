@@ -1,3 +1,4 @@
+import type { Bot } from '#root/bot/index'
 import type { FastifyInstance } from 'fastify'
 import { Buffer } from 'node:buffer'
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
@@ -82,49 +83,91 @@ export function verifyCaptchaToken(
   }
 }
 
-async function captchaHandler(fastify: FastifyInstance, options: any) {
-  fastify.get('/check', async (request, _reply) => {
-    const { userId, token } = request.query as any
-
-    const parsedUserId = Number(userId)
-    if (!Number.isInteger(parsedUserId) || parsedUserId <= 0) {
-      return { result: false }
-    }
-    if (!token || typeof token !== 'string') {
-      return { result: false }
-    }
-
-    const user = await findUserById(parsedUserId)
-    if (!user || !user.suspicionDices) return { result: false }
-
-    const expectedKills = user.suspicionDices - 101
-    const verification = verifyCaptchaToken(
-      parsedUserId,
-      token,
-      expectedKills,
-      user.captchaNonce,
-      user.captchaIssuedAt,
-    )
-    if (!verification.ok) {
-      logger.info(
-        `Captcha rejected for ${user.id}: ${verification.reason}`,
-      )
-      return { result: false }
-    }
-
-    logger.info(
-      `Solved captcha from ${user.id} with ${user.suspicionDices} suspicion dices`,
-    )
-    user.suspicionDices = 0
-    user.captchaNonce = undefined
-    user.captchaIssuedAt = undefined
-    await user.save()
-    await options.bot.api.sendMessage(
-      parsedUserId,
-      i18n.t(user.language, 'dice.captcha_solved'),
-    )
-    return { result: true }
-  })
+export interface CaptchaUser {
+  id: number
+  language: string
+  suspicionDices?: number
+  captchaNonce?: string
+  captchaIssuedAt?: Date
+  save: () => Promise<unknown>
 }
 
-export default captchaHandler
+export interface CaptchaHandlerDependencies {
+  findUserById: (id: number) => Promise<CaptchaUser | null>
+  sendMessage: (userId: number, text: string) => Promise<void>
+  translate: (language: string, key: string) => string
+  info: (message: string) => void
+}
+
+function createDefaultDependencies(
+  bot: Bot,
+): CaptchaHandlerDependencies {
+  return {
+    findUserById: findUserById as unknown as (
+      id: number
+    ) => Promise<CaptchaUser | null>,
+    sendMessage: async (userId, text) => {
+      await bot.api.sendMessage(userId, text)
+    },
+    translate: (language, key) => i18n.t(language, key),
+    info: (msg) => logger.info(msg),
+  }
+}
+
+export function buildCaptchaHandler(
+  dependencies: CaptchaHandlerDependencies,
+) {
+  return async function captchaHandler(fastify: FastifyInstance) {
+    fastify.get('/check', async (request) => {
+      const { userId, token } = request.query as {
+        userId?: unknown
+        token?: unknown
+      }
+
+      const parsedUserId = Number(userId)
+      if (!Number.isInteger(parsedUserId) || parsedUserId <= 0) {
+        return { result: false }
+      }
+      if (!token || typeof token !== 'string') {
+        return { result: false }
+      }
+
+      const user = await dependencies.findUserById(parsedUserId)
+      if (!user || !user.suspicionDices) return { result: false }
+
+      const expectedKills = user.suspicionDices - 101
+      const verification = verifyCaptchaToken(
+        parsedUserId,
+        token,
+        expectedKills,
+        user.captchaNonce,
+        user.captchaIssuedAt,
+      )
+      if (!verification.ok) {
+        dependencies.info(
+          `Captcha rejected for ${user.id}: ${verification.reason}`,
+        )
+        return { result: false }
+      }
+
+      dependencies.info(
+        `Solved captcha from ${user.id} with ${user.suspicionDices} suspicion dices`,
+      )
+      user.suspicionDices = 0
+      user.captchaNonce = undefined
+      user.captchaIssuedAt = undefined
+      await user.save()
+      await dependencies.sendMessage(
+        parsedUserId,
+        dependencies.translate(user.language, 'dice.captcha_solved'),
+      )
+      return { result: true }
+    })
+  }
+}
+
+export function captchaHandlerForBot(bot: Bot) {
+  return buildCaptchaHandler(createDefaultDependencies(bot))
+}
+
+export default captchaHandlerForBot

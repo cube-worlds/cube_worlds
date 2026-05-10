@@ -1,7 +1,7 @@
-export function tonToPoints(ton: number): bigint {
+export function tonToPoints(ton: number, now: Date = new Date()): bigint {
   const initialRate = 100_000
   const halvingStart = new Date(2024, 4, 15)
-  const currentDate = new Date()
+  const currentDate = now
 
   let halvings = 0
   if (currentDate > halvingStart) {

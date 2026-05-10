@@ -26,7 +26,7 @@ export async function createServer(bot: Bot) {
   await server.register(authHandler, { prefix: '/api/auth' })
   await server.register(setWalletHandler, { prefix: '/api/auth' })
 
-  await server.register(captchaHandler, { prefix: '/api/captcha', bot })
+  await server.register(captchaHandler(bot), { prefix: '/api/captcha' })
   await server.register(nftHandler, { prefix: '/api/nft' })
 
   await server.register(balancesHandler, { prefix: '/api/users' })
