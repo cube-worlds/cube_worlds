@@ -1,3 +1,4 @@
+import type { UserDoc } from '#root/common/models/User'
 import type { TranslationVariables } from '@grammyjs/i18n'
 import type { Api, RawApi } from 'grammy'
 import { i18n } from '#root/common/i18n'
@@ -42,16 +43,24 @@ export function buildShareLink(inviteUrl: string, text: string): string {
   return `https://t.me/share/url?url=${encodeURI(inviteUrl)}&text=${encodeURIComponent(text)}`
 }
 
-function getCubeChats(): Languages {
-  return config.isProd
+export function pickEnvChats(isProd: boolean): Languages {
+  return isProd
     ? { ru: '@cube_worlds_chat_ru', en: '@cube_worlds_chat' }
     : { ru: '@viz_cx', en: '@viz_cx' }
 }
 
-function getCubeChannels(): Languages {
-  return config.isProd
+export function pickEnvChannels(isProd: boolean): Languages {
+  return isProd
     ? { ru: '@cube_worlds_ru', en: '@cube_worlds' }
     : { ru: '@viz_blockchain', en: '@viz_blockchain' }
+}
+
+function getCubeChats(): Languages {
+  return pickEnvChats(config.isProd)
+}
+
+function getCubeChannels(): Languages {
+  return pickEnvChannels(config.isProd)
 }
 
 export function getCubeChat(lang: string): string {
@@ -80,46 +89,82 @@ export function shareTelegramLink(userId: number, text: string): string {
   return buildShareLink(inviteTelegramUrl(userId), text)
 }
 
-export async function sendPlaceInLine(
-  api: Api<RawApi>,
-  userId: number,
-  sendAnyway = true,
-): Promise<boolean> {
-  const user = await findUserById(userId)
-  if (!user) {
-    return false
-  }
-  const place = (await placeInLine(user.votes)) ?? 0
-  const lastSendedPlace = user.lastSendedPlace ?? Number.MAX_SAFE_INTEGER
-  const placeDecreased = place < lastSendedPlace
-  if (sendAnyway || placeDecreased) {
-    const inviteLink = inviteTelegramUrl(user.id)
-    const shareLink = shareTelegramLink(
-      user.id,
-      i18n.t(user.language, 'mint.share'),
-    )
-    const titleKey = `speedup.${user.minted ? 'title_minted' : 'title_not_minted'}`
-    const titleVariables: TranslationVariables<string> = {
-      points: commaSeparatedNumber(user.votes),
-    }
-    await api.sendMessage(
-      user.id,
-      `${i18n.t(user.language, titleKey, titleVariables)}
+export interface PlaceInLineSenderDependencies {
+  findUserById: (id: number) => Promise<UserDoc | null>
+  placeInLine: (votes: bigint) => Promise<number | null | undefined>
+  translate: (
+    lang: string,
+    key: string,
+    vars?: TranslationVariables<string>,
+  ) => string
+  info: (message: string) => void
+  buildInviteUrl: (userId: number) => string
+  buildShareLink: (userId: number, text: string) => string
+  collectionOwner: string
+}
 
-${i18n.t(user.language, 'speedup.variants', {
+function createDefaultPlaceInLineSenderDependencies(): PlaceInLineSenderDependencies {
+  return {
+    findUserById,
+    placeInLine,
+    translate: (lang, key, vars) => i18n.t(lang, key, vars),
+    info: (msg) => logger.info(msg),
+    buildInviteUrl: inviteTelegramUrl,
+    buildShareLink: shareTelegramLink,
+    get collectionOwner() {
+      return config.COLLECTION_OWNER
+    },
+  }
+}
+
+type PlaceInLineApi = Pick<Api<RawApi>, 'sendMessage'>
+
+export function buildPlaceInLineSender(
+  deps: PlaceInLineSenderDependencies = createDefaultPlaceInLineSenderDependencies(),
+) {
+  return async function sendPlaceInLine(
+    api: PlaceInLineApi,
+    userId: number,
+    sendAnyway = true,
+  ): Promise<boolean> {
+    const user = await deps.findUserById(userId)
+    if (!user) {
+      return false
+    }
+    const place = (await deps.placeInLine(user.votes)) ?? 0
+    const lastSendedPlace = user.lastSendedPlace ?? Number.MAX_SAFE_INTEGER
+    const placeDecreased = place < lastSendedPlace
+    if (sendAnyway || placeDecreased) {
+      const inviteLink = deps.buildInviteUrl(user.id)
+      const shareLink = deps.buildShareLink(
+        user.id,
+        deps.translate(user.language, 'mint.share'),
+      )
+      const titleKey = `speedup.${user.minted ? 'title_minted' : 'title_not_minted'}`
+      const titleVariables: TranslationVariables<string> = {
+        points: commaSeparatedNumber(user.votes),
+      }
+      await api.sendMessage(
+        user.id,
+        `${deps.translate(user.language, titleKey, titleVariables)}
+
+${deps.translate(user.language, 'speedup.variants', {
   shareLink,
   inviteLink,
-  collectionOwner: config.COLLECTION_OWNER,
+  collectionOwner: deps.collectionOwner,
 })}`,
-    )
+      )
 
-    user.lastSendedPlace = place
-    await user.save()
-    logger.info(`Points ${user.votes} for user ${user.id}`)
-    return true
+      user.lastSendedPlace = place
+      await user.save()
+      deps.info(`Points ${user.votes} for user ${user.id}`)
+      return true
+    }
+    return false
   }
-  return false
 }
+
+export const sendPlaceInLine = buildPlaceInLineSender()
 
 export async function sendNewPlaces(api: Api<RawApi>) {
   // TODO: update logic to get only who not active too long and update this property

@@ -7,100 +7,152 @@ import fetch from 'node-fetch'
 
 const PINATA_API_BASE = 'https://api.pinata.cloud'
 
-function pinataAuthHeaders(): Record<string, string> {
-  return {
-    pinata_api_key: config.PINATA_API_KEY,
-    pinata_secret_api_key: config.PINATA_API_SECRET,
-  }
-}
-
 interface PinResponse {
   IpfsHash: string
   PinSize: number
   Timestamp: string
 }
 
-async function pinFileToIPFS(
-  buffer: Buffer,
-  filename: string,
-): Promise<PinResponse> {
-  const form = new FormData()
-  form.append('file', buffer, { filename })
-  form.append('pinataMetadata', JSON.stringify({ name: filename }))
-
-  const response = await fetch(`${PINATA_API_BASE}/pinning/pinFileToIPFS`, {
-    method: 'POST',
-    headers: { ...form.getHeaders(), ...pinataAuthHeaders() },
-    body: form,
-  })
-  if (!response.ok) {
-    throw new Error(
-      `Pinata pinFileToIPFS failed: ${response.status} ${await response.text()}`,
-    )
-  }
-  return (await response.json()) as PinResponse
+interface MinimalResponse {
+  ok: boolean
+  status: number
+  text: () => Promise<string>
+  json: () => Promise<unknown>
 }
 
-export async function pinImageURLToIPFS(
-  adminIndex: number,
-  username: string,
-  imageURL: string,
-): Promise<string> {
-  const image = await fetch(imageURL)
-  const arrayBuffer = await image.arrayBuffer()
-  const buffer = Buffer.from(arrayBuffer)
-  const imageFileName =
-    imageURL.slice((imageURL.lastIndexOf('/') ?? 0) + 1) ?? ''
-  const fileExtension = imageFileName.split('.').pop()
-  const newFileName = `${username}_${adminIndex}.${fileExtension}`
-  saveImage(username, newFileName, buffer)
-
-  const response = await pinFileToIPFS(buffer, newFileName)
-  return response.IpfsHash
+export interface IPFSClientDependencies {
+  fetch: (
+    url: string,
+    init?: { method?: string, headers?: Record<string, string>, body?: unknown },
+  ) => Promise<MinimalResponse>
+  pinataAuthHeaders: () => Record<string, string>
+  saveImage: (username: string, filename: string, buffer: Buffer) => string
+  saveJSON: (adminIndex: number, username: string, json: object) => string
 }
 
-export async function pinJSONToIPFS(
-  adminIndex: number,
-  username: string,
-  json: object,
-): Promise<string> {
-  saveJSON(adminIndex, username, json)
-  const filename = `${username}_${adminIndex}.json`
-
-  const response = await fetch(`${PINATA_API_BASE}/pinning/pinJSONToIPFS`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...pinataAuthHeaders(),
-    },
-    body: JSON.stringify({
-      pinataContent: json,
-      pinataMetadata: { name: filename },
+function createDefaultIPFSDependencies(): IPFSClientDependencies {
+  return {
+    fetch: fetch as unknown as IPFSClientDependencies['fetch'],
+    pinataAuthHeaders: () => ({
+      pinata_api_key: config.PINATA_API_KEY,
+      pinata_secret_api_key: config.PINATA_API_SECRET,
     }),
-  })
-  if (!response.ok) {
-    throw new Error(
-      `Pinata pinJSONToIPFS failed: ${response.status} ${await response.text()}`,
-    )
+    saveImage,
+    saveJSON,
   }
-  const body = (await response.json()) as PinResponse
-  return body.IpfsHash
 }
 
-export async function unpin(hash: string): Promise<void> {
-  const response = await fetch(`${PINATA_API_BASE}/pinning/unpin/${hash}`, {
-    method: 'DELETE',
-    headers: pinataAuthHeaders(),
-  })
-  if (!response.ok) {
-    throw new Error(
-      `Pinata unpin failed: ${response.status} ${await response.text()}`,
-    )
-  }
+export function buildIPFSGatewayLink(
+  gateway: string,
+  gatewayKey: string,
+  hash: string,
+): string {
+  return `${gateway}/ipfs/${hash}?pinataGatewayToken=${gatewayKey}`
 }
+
+export function buildIPFSClient(
+  dependencies: IPFSClientDependencies = createDefaultIPFSDependencies(),
+) {
+  async function pinFileToIPFS(
+    buffer: Buffer,
+    filename: string,
+  ): Promise<PinResponse> {
+    const form = new FormData()
+    form.append('file', buffer, { filename })
+    form.append('pinataMetadata', JSON.stringify({ name: filename }))
+
+    const response = await dependencies.fetch(
+      `${PINATA_API_BASE}/pinning/pinFileToIPFS`,
+      {
+        method: 'POST',
+        headers: { ...form.getHeaders(), ...dependencies.pinataAuthHeaders() },
+        body: form,
+      },
+    )
+    if (!response.ok) {
+      throw new Error(
+        `Pinata pinFileToIPFS failed: ${response.status} ${await response.text()}`,
+      )
+    }
+    return (await response.json()) as PinResponse
+  }
+
+  async function pinImageURLToIPFS(
+    adminIndex: number,
+    username: string,
+    imageURL: string,
+  ): Promise<string> {
+    const image = await dependencies.fetch(imageURL)
+    const arrayBuffer = await (image as unknown as { arrayBuffer: () => Promise<ArrayBuffer> })
+      .arrayBuffer()
+    const buffer = Buffer.from(arrayBuffer)
+    const imageFileName =
+      imageURL.slice((imageURL.lastIndexOf('/') ?? 0) + 1) ?? ''
+    const fileExtension = imageFileName.split('.').pop()
+    const newFileName = `${username}_${adminIndex}.${fileExtension}`
+    dependencies.saveImage(username, newFileName, buffer)
+
+    const response = await pinFileToIPFS(buffer, newFileName)
+    return response.IpfsHash
+  }
+
+  async function pinJSONToIPFS(
+    adminIndex: number,
+    username: string,
+    json: object,
+  ): Promise<string> {
+    dependencies.saveJSON(adminIndex, username, json)
+    const filename = `${username}_${adminIndex}.json`
+
+    const response = await dependencies.fetch(
+      `${PINATA_API_BASE}/pinning/pinJSONToIPFS`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...dependencies.pinataAuthHeaders(),
+        },
+        body: JSON.stringify({
+          pinataContent: json,
+          pinataMetadata: { name: filename },
+        }),
+      },
+    )
+    if (!response.ok) {
+      throw new Error(
+        `Pinata pinJSONToIPFS failed: ${response.status} ${await response.text()}`,
+      )
+    }
+    const body = (await response.json()) as PinResponse
+    return body.IpfsHash
+  }
+
+  async function unpin(hash: string): Promise<void> {
+    const response = await dependencies.fetch(
+      `${PINATA_API_BASE}/pinning/unpin/${hash}`,
+      {
+        method: 'DELETE',
+        headers: dependencies.pinataAuthHeaders(),
+      },
+    )
+    if (!response.ok) {
+      throw new Error(
+        `Pinata unpin failed: ${response.status} ${await response.text()}`,
+      )
+    }
+  }
+
+  return { pinFileToIPFS, pinImageURLToIPFS, pinJSONToIPFS, unpin }
+}
+
+const defaultClient = buildIPFSClient()
+
+export const pinImageURLToIPFS = defaultClient.pinImageURLToIPFS
+export const pinJSONToIPFS = defaultClient.pinJSONToIPFS
+export const unpin = defaultClient.unpin
 
 export function linkToIPFSGateway(hash: string) {
-  return `${config.PINATA_GATEWAY}/ipfs/${hash}?pinataGatewayToken=${config.PINATA_GATEWAY_KEY}`
+  return buildIPFSGatewayLink(config.PINATA_GATEWAY, config.PINATA_GATEWAY_KEY, hash)
 }
 
 async function fetchFileFromIPFS(
