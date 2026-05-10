@@ -1,4 +1,5 @@
 import type { DocumentType, Ref } from '@typegoose/typegoose'
+import type { UserDoc } from './User'
 import { getModelForClass, modelOptions, prop } from '@typegoose/typegoose'
 import { TimeStamps } from '@typegoose/typegoose/lib/defaultClasses'
 import { User } from './User'
@@ -33,7 +34,7 @@ export class Claim extends TimeStamps {
 const ClaimModel = getModelForClass(Claim)
 
 export async function findOrCreateClaim(
-  user: DocumentType<User>,
+  user: UserDoc,
 ): Promise<DocumentType<Claim>> {
   const existingClaim = await ClaimModel.findOne({ user: user._id })
   if (existingClaim) {

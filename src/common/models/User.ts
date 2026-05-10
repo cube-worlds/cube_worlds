@@ -22,7 +22,7 @@ export enum UserState {
   Submited = 'Submited',
 }
 
-@modelOptions({ schemaOptions: { timestamps: true } })
+@modelOptions({ schemaOptions: { timestamps: true, id: false } })
 export class User extends TimeStamps {
   @prop({ type: Number, required: true, index: true, unique: true })
   id!: number
@@ -143,7 +143,11 @@ export class User extends TimeStamps {
 
 const UserModel = getModelForClass(User)
 
-export async function findOrCreateUser(id: number) {
+// typegoose 13's DocumentType always intersects DefaultIdVirtual ({ id: string }),
+// which collides with our Telegram numeric `id` field. Override at the type level.
+export type UserDoc = Omit<DocumentType<User>, 'id'> & { id: number }
+
+export async function findOrCreateUser(id: number): Promise<UserDoc | null> {
   const isEmptyRecords = (await countUserBalanceRecords(id)) === 0
   if (isEmptyRecords) {
     await addChangeBalanceRecord(id, BigInt(0), BalanceChangeType.Initial)
@@ -155,12 +159,12 @@ export async function findOrCreateUser(id: number) {
       upsert: true,
       new: true,
     },
-  )
+  ) as unknown as Promise<UserDoc | null>
 }
 
 export async function findUserByAddress(
   address: Address,
-): Promise<DocumentType<User> | null> {
+): Promise<UserDoc | null> {
   // EQ address
   const bounceableAddress = address.toString({ bounceable: true })
   // UQ address
@@ -169,33 +173,35 @@ export async function findUserByAddress(
     wallet: bounceableAddress,
   })
   if (user) {
-    return user
+    return user as unknown as UserDoc
   }
-  return UserModel.findOne({ wallet: nonBounceableAddress })
+  return UserModel.findOne({
+    wallet: nonBounceableAddress,
+  }) as unknown as Promise<UserDoc | null>
 }
 
 export async function findUserById(
   id: number,
-): Promise<DocumentType<User> | null> {
-  return UserModel.findOne({ id })
+): Promise<UserDoc | null> {
+  return UserModel.findOne({ id }) as unknown as Promise<UserDoc | null>
 }
 
 export async function findUserByWallet(
   wallet: string,
-): Promise<DocumentType<User> | null> {
-  return UserModel.findOne({ wallet })
+): Promise<UserDoc | null> {
+  return UserModel.findOne({ wallet }) as unknown as Promise<UserDoc | null>
 }
 
 export async function findUserByName(
   name: string,
-): Promise<DocumentType<User> | null> {
-  return UserModel.findOne({ name })
+): Promise<UserDoc | null> {
+  return UserModel.findOne({ name }) as unknown as Promise<UserDoc | null>
 }
 
-export function findQueue() {
-  return UserModel.find({ minted: false, state: UserState.Submited })
+export async function findQueue(): Promise<UserDoc[]> {
+  return (await UserModel.find({ minted: false, state: UserState.Submited })
     .sort({ diceWinner: -1, votes: -1 })
-    .limit(10)
+    .limit(10)) as unknown as UserDoc[]
 }
 
 export function findMintedWithDate() {
@@ -225,8 +231,10 @@ export function countAllLine(): Promise<number> {
   })
 }
 
-export function findAllByCreated() {
-  return UserModel.find({ wallet: { $exists: true } }).sort({ createdAt: 1 })
+export async function findAllByCreated(): Promise<UserDoc[]> {
+  return (await UserModel.find({ wallet: { $exists: true } }).sort({
+    createdAt: 1,
+  })) as unknown as UserDoc[]
 }
 
 export function findWhales(limit: number, skip: number = 0) {
@@ -328,7 +336,7 @@ export async function createInitialBalancesIfNotExists() {
   if ((await countAllBalanceRecords()) > 0) {
     return
   }
-  const users = await UserModel.find()
+  const users = (await UserModel.find()) as unknown as UserDoc[]
   await Promise.all(
     users.map((user) =>
       addChangeBalanceRecord(user.id, user.votes, BalanceChangeType.Initial),

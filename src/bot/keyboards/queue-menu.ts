@@ -1,6 +1,5 @@
 import type { Context } from '#root/bot/context'
-import type { User } from '#root/common/models/User'
-import type { DocumentType } from '@typegoose/typegoose'
+import type { User, UserDoc } from '#root/common/models/User'
 import { photoKeyboard } from '#root/bot/keyboards/photo'
 import { saveImageFromUrl } from '#root/common/helpers/files'
 import { linkToIPFSGateway } from '#root/common/helpers/ipfs'
@@ -26,7 +25,7 @@ Minted: ${user.minted ? '✅' : '❌'} ${user.nftUrl ? `[NFT](${user.nftUrl})` :
 
 export async function sendUserMetadata(
   context: Context,
-  selectedUser: DocumentType<User>,
+  selectedUser: UserDoc,
 ) {
   context.chatAction = 'upload_document'
 
