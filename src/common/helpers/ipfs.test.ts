@@ -54,6 +54,7 @@ interface Harness {
   responses: FakeResponse[]
   savedImages: { username: string, filename: string, buffer: Buffer }[]
   savedJsons: { adminIndex: number, username: string, json: object }[]
+  debugLogs: string[]
 }
 
 function makeClient(overrides: Partial<IPFSClientDependencies> = {}, responses: FakeResponse[] = []) {
@@ -62,6 +63,7 @@ function makeClient(overrides: Partial<IPFSClientDependencies> = {}, responses: 
     responses: [...responses],
     savedImages: [],
     savedJsons: [],
+    debugLogs: [],
   }
 
   const deps: IPFSClientDependencies = {
@@ -83,6 +85,8 @@ function makeClient(overrides: Partial<IPFSClientDependencies> = {}, responses: 
       h.savedJsons.push({ adminIndex, username, json })
       return `/tmp/${username}/${username}_${adminIndex}.json`
     },
+    warmGateways: () => ['https://gw-a.example/ipfs/', 'https://gw-b.example/ipfs/'],
+    debugLog: (message) => { h.debugLogs.push(message) },
     ...overrides,
   }
 
@@ -229,4 +233,78 @@ test('pinFileToIPFS throws when Pinata returns a non-OK response', async () => {
     () => client.pinFileToIPFS(Buffer.from([0]), 'x.bin'),
     /Pinata pinFileToIPFS failed: 401 Unauthorized/,
   )
+})
+
+// fetchFileFromIPFS — single-gateway GET with timeout signal
+
+test('fetchFileFromIPFS GETs <gateway><cid> and returns the bytes as a Buffer', async () => {
+  const { client, h } = makeClient({}, [okBytes([0xDE, 0xAD, 0xBE, 0xEF])])
+
+  const buffer = await client.fetchFileFromIPFS('QmCID', 'https://gw.example/ipfs/')
+
+  assert.deepEqual([...buffer], [0xDE, 0xAD, 0xBE, 0xEF])
+  assert.equal(h.calls.length, 1)
+  assert.equal(h.calls[0].url, 'https://gw.example/ipfs/QmCID')
+  // signal forwarded for AbortSignal.timeout(120_000)
+  const init = h.calls[0].init as { signal?: AbortSignal } | undefined
+  assert.ok(init?.signal instanceof AbortSignal)
+})
+
+test('fetchFileFromIPFS throws "HTTP error! Status:" on non-OK responses', async () => {
+  const { client } = makeClient({}, [fail(503, 'Service Unavailable')])
+
+  await assert.rejects(
+    () => client.fetchFileFromIPFS('QmCID', 'https://gw.example/ipfs/'),
+    /HTTP error! Status: 503/,
+  )
+})
+
+// warmIPFSHash — fire-and-forget fan-out across gateways
+
+test('warmIPFSHash fans out one fetch per gateway and logs each success', async () => {
+  // Two gateways from the default warmGateways stub → two queued OK responses
+  const { client, h } = makeClient({}, [
+    okBytes([1]),
+    okBytes([2]),
+  ])
+
+  client.warmIPFSHash('QmWarm')
+
+  // Synchronously fires both fetches without awaiting
+  assert.equal(h.calls.length, 2)
+  assert.equal(h.calls[0].url, 'https://gw-a.example/ipfs/QmWarm')
+  assert.equal(h.calls[1].url, 'https://gw-b.example/ipfs/QmWarm')
+
+  // Flush microtasks so the .then() handlers append to debugLogs
+  await new Promise<void>((resolve) => { setImmediate(resolve) })
+  await new Promise<void>((resolve) => { setImmediate(resolve) })
+
+  assert.equal(h.debugLogs.length, 2)
+  assert.match(h.debugLogs[0], /Gateway https:\/\/gw-a\.example\/ipfs\/ warmed/)
+  assert.match(h.debugLogs[1], /Gateway https:\/\/gw-b\.example\/ipfs\/ warmed/)
+})
+
+test('warmIPFSHash logs a NOT-warmed message when a gateway fails', async () => {
+  // First gateway 200, second 500
+  const { client, h } = makeClient({}, [
+    okBytes([1]),
+    fail(500, 'boom'),
+  ])
+
+  client.warmIPFSHash('QmMixed')
+
+  // Flush both the success and failure microtask chains
+  for (let i = 0; i < 5; i += 1) {
+    await new Promise<void>((resolve) => { setImmediate(resolve) })
+  }
+
+  assert.equal(h.debugLogs.length, 2)
+  assert.match(h.debugLogs[0], /Gateway https:\/\/gw-a\.example\/ipfs\/ warmed/)
+  assert.match(h.debugLogs[1], /Gateway https:\/\/gw-b\.example\/ipfs\/ NOT warmed: .*Status: 500/)
+})
+
+test('warmIPFSHash performs no fetches when warmGateways returns []', () => {
+  const { client, h } = makeClient({ warmGateways: () => [] }, [])
+  client.warmIPFSHash('QmEmpty')
+  assert.equal(h.calls.length, 0)
 })

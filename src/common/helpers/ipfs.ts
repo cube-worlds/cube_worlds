@@ -23,12 +23,27 @@ interface MinimalResponse {
 export interface IPFSClientDependencies {
   fetch: (
     url: string,
-    init?: { method?: string, headers?: Record<string, string>, body?: unknown },
+    init?: {
+      method?: string
+      headers?: Record<string, string>
+      body?: unknown
+      signal?: AbortSignal
+    },
   ) => Promise<MinimalResponse>
   pinataAuthHeaders: () => Record<string, string>
   saveImage: (username: string, filename: string, buffer: Buffer) => string
   saveJSON: (adminIndex: number, username: string, json: object) => string
+  warmGateways: () => string[]
+  debugLog: (message: string) => void
 }
+
+const DEFAULT_WARM_GATEWAYS = [
+  'https://ipfs.io/ipfs/',
+  'https://dweb.link/ipfs/',
+  'https://ipfs.eth.aragon.network/ipfs/',
+  'https://gateway.pinata.cloud/ipfs/',
+  'https://ipfs.eth.aragon.network/ipfs/',
+]
 
 function createDefaultIPFSDependencies(): IPFSClientDependencies {
   return {
@@ -39,6 +54,8 @@ function createDefaultIPFSDependencies(): IPFSClientDependencies {
     }),
     saveImage,
     saveJSON,
+    warmGateways: () => DEFAULT_WARM_GATEWAYS,
+    debugLog: (message) => logger.debug(message),
   }
 }
 
@@ -142,7 +159,31 @@ export function buildIPFSClient(
     }
   }
 
-  return { pinFileToIPFS, pinImageURLToIPFS, pinJSONToIPFS, unpin }
+  async function fetchFileFromIPFS(
+    cid: string,
+    gateway: string,
+  ): Promise<Buffer> {
+    const response = await dependencies.fetch(`${gateway}${cid}`, {
+      signal: AbortSignal.timeout(120_000),
+    })
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`)
+    }
+    const fileData = await (
+      response as unknown as { arrayBuffer: () => Promise<ArrayBuffer> }
+    ).arrayBuffer()
+    return Buffer.from(fileData)
+  }
+
+  function warmIPFSHash(hash: string) {
+    for (const gateway of dependencies.warmGateways()) {
+      fetchFileFromIPFS(hash, gateway)
+        .then(() => dependencies.debugLog(`Gateway ${gateway} warmed`))
+        .catch((error) => dependencies.debugLog(`Gateway ${gateway} NOT warmed: ${error}`))
+    }
+  }
+
+  return { pinFileToIPFS, pinImageURLToIPFS, pinJSONToIPFS, unpin, fetchFileFromIPFS, warmIPFSHash }
 }
 
 const defaultClient = buildIPFSClient()
@@ -150,38 +191,8 @@ const defaultClient = buildIPFSClient()
 export const pinImageURLToIPFS = defaultClient.pinImageURLToIPFS
 export const pinJSONToIPFS = defaultClient.pinJSONToIPFS
 export const unpin = defaultClient.unpin
+export const warmIPFSHash = defaultClient.warmIPFSHash
 
 export function linkToIPFSGateway(hash: string) {
   return buildIPFSGatewayLink(config.PINATA_GATEWAY, config.PINATA_GATEWAY_KEY, hash)
-}
-
-async function fetchFileFromIPFS(
-  cid: string,
-  gateway: string,
-): Promise<Buffer> {
-  const response = await fetch(`${gateway}${cid}`, {
-    signal: AbortSignal.timeout(120_000),
-  })
-  if (!response.ok) {
-    throw new Error(`HTTP error! Status: ${response.status}`)
-  }
-  const fileData = await response.arrayBuffer()
-  return Buffer.from(fileData)
-}
-
-export function warmIPFSHash(hash: string) {
-  // https://ipfs.github.io/public-gateway-checker/
-  const gateways = [
-    'https://ipfs.io/ipfs/',
-    'https://dweb.link/ipfs/',
-    'https://ipfs.eth.aragon.network/ipfs/',
-    'https://gateway.pinata.cloud/ipfs/',
-    'https://ipfs.eth.aragon.network/ipfs/',
-  ]
-
-  for (const gateway of gateways) {
-    fetchFileFromIPFS(hash, gateway)
-      .then(() => logger.debug(`Gateway ${gateway} warmed`))
-      .catch((error) => logger.debug(`Gateway ${gateway} NOT warmed: ${error}`))
-  }
 }

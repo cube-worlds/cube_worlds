@@ -8,6 +8,8 @@ import {
   CLAIM_COOLDOWN_MS,
   claimDaily,
   getClaimStatus,
+  hasNeverClaimed,
+  startOfUtcDay,
 } from '#root/common/models/Claim'
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000
@@ -278,6 +280,47 @@ test('claimDaily on a never-claimed user awards one cooldown worth × multiplier
   assert.equal(claim.totalClaimed, 0)
   assert.equal(claim.lastClaimAmount, 0)
   assert.ok(claim.fractionalCarry > 0.069 && claim.fractionalCarry < 0.070)
+})
+
+// hasNeverClaimed — branch coverage
+
+test('hasNeverClaimed is true only when every claim field is at its default', () => {
+  assert.equal(hasNeverClaimed(asDoc(makeClaim())), true)
+})
+
+test('hasNeverClaimed is false when lastClaimDate is set', () => {
+  const claim = makeClaim({ lastClaimDate: new Date('2025-06-01T00:00:00Z') })
+  assert.equal(hasNeverClaimed(asDoc(claim)), false)
+})
+
+test('hasNeverClaimed is false when streakDays is non-zero', () => {
+  assert.equal(hasNeverClaimed(asDoc(makeClaim({ streakDays: 1 }))), false)
+})
+
+test('hasNeverClaimed is false when totalClaimed is non-zero', () => {
+  assert.equal(hasNeverClaimed(asDoc(makeClaim({ totalClaimed: 1 }))), false)
+})
+
+test('hasNeverClaimed is false when fractionalCarry is non-zero', () => {
+  assert.equal(hasNeverClaimed(asDoc(makeClaim({ fractionalCarry: 0.1 }))), false)
+})
+
+// startOfUtcDay
+
+test('startOfUtcDay floors a mid-day timestamp to UTC midnight', () => {
+  const result = startOfUtcDay(new Date('2025-06-01T17:42:13.456Z'))
+  assert.equal(result.toISOString(), '2025-06-01T00:00:00.000Z')
+})
+
+test('startOfUtcDay is idempotent on a value already at UTC midnight', () => {
+  const midnight = new Date('2025-06-01T00:00:00.000Z')
+  assert.equal(startOfUtcDay(midnight).getTime(), midnight.getTime())
+})
+
+test('startOfUtcDay ignores local-timezone offsets — uses UTC components', () => {
+  // 23:30 in UTC on Jun 1 stays on Jun 1 even if local zone is +02:00 (Jun 2 local)
+  const result = startOfUtcDay(new Date('2025-06-01T23:30:00.000Z'))
+  assert.equal(result.toISOString(), '2025-06-01T00:00:00.000Z')
 })
 
 test('claimDaily after a long gap resets multiplier to 1', async () => {

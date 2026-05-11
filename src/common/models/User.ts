@@ -259,78 +259,126 @@ export function countUsers(minted: boolean) {
   return UserModel.countDocuments({ minted, state: UserState.Submited })
 }
 
-export async function placeInLine(votes: bigint): Promise<number | undefined> {
-  const count = await UserModel.countDocuments({
-    minted: false,
-    state: UserState.Submited,
-    votes: { $gte: votes },
-  })
-  if (count === 0) {
-    return undefined
-  }
-  return count
+export interface UserOperationsDependencies {
+  countLineWhereVotesGte: (votes: bigint) => Promise<number>
+  countWhalesWhereVotesGte: (votes: bigint) => Promise<number>
+  incrementUserVotes: (
+    userId: number,
+    add: bigint,
+  ) => Promise<{ votes: bigint } | null>
+  addChangeBalanceRecord: (
+    userId: number,
+    amount: bigint,
+    reason: BalanceChangeType,
+  ) => Promise<{ amount: bigint }>
+  getAggregatedBalance: (userId: number) => Promise<bigint>
+  countAllUsers: () => Promise<number>
+  countMintedUsers: () => Promise<number>
+  countLineUsers: () => Promise<number>
+  countUsersUpdatedSince: (since: Date) => Promise<number>
+  now: () => number
+  infoLog: (message: string) => void
+  debugLog: (message: string) => void
+  errorLog: (message: string) => void
 }
 
-export async function placeInWhales(
-  votes: bigint,
-): Promise<number | undefined> {
-  const count = await UserModel.countDocuments({
-    votes: { $gte: votes },
-  })
-  if (count === 0) {
-    return undefined
+function createDefaultUserOperationsDependencies(): UserOperationsDependencies {
+  return {
+    countLineWhereVotesGte: (votes) =>
+      UserModel.countDocuments({
+        minted: false,
+        state: UserState.Submited,
+        votes: { $gte: votes },
+      }),
+    countWhalesWhereVotesGte: (votes) =>
+      UserModel.countDocuments({ votes: { $gte: votes } }),
+    incrementUserVotes: (userId, add) =>
+      UserModel.findOneAndUpdate(
+        { id: userId },
+        { $inc: { votes: add } },
+        { new: true },
+      ) as unknown as Promise<{ votes: bigint } | null>,
+    addChangeBalanceRecord,
+    getAggregatedBalance,
+    countAllUsers: () => UserModel.countDocuments(),
+    countMintedUsers: () => countUsers(true),
+    countLineUsers: () => countUsers(false),
+    countUsersUpdatedSince: (since) =>
+      UserModel.countDocuments({ updatedAt: { $gte: since } }),
+    now: () => Date.now(),
+    infoLog: (message) => logger.info(message),
+    debugLog: (message) => logger.debug(message),
+    errorLog: (message) => logger.error(message),
   }
-  return count
 }
 
-export async function addPoints(
-  userId: number,
-  add: bigint,
-  reason: BalanceChangeType,
-): Promise<bigint> {
-  try {
-    const updatedUser = await UserModel.findOneAndUpdate(
-      { id: userId },
-      { $inc: { votes: add } },
-      { new: true },
-    )
-    if (!updatedUser) {
-      throw new Error('User for addPoints not found')
+export function buildUserOperations(
+  deps: UserOperationsDependencies = createDefaultUserOperationsDependencies(),
+) {
+  async function placeInLine(votes: bigint): Promise<number | undefined> {
+    const count = await deps.countLineWhereVotesGte(votes)
+    if (count === 0) {
+      return undefined
     }
-
-    const newRecord = await addChangeBalanceRecord(userId, add, reason)
-    logger.debug(
-      `Add ${newRecord.amount} points to user ${userId}. Now ${await getAggregatedBalance(userId)}`,
-    )
-
-    logger.info(`Add ${add} points to ${userId}. Now ${updatedUser.votes}`)
-    return updatedUser.votes
-  } catch (error) {
-    logger.error(`!!! Can't add points ${add} to user ${userId}`)
-    throw error
+    return count
   }
+
+  async function placeInWhales(votes: bigint): Promise<number | undefined> {
+    const count = await deps.countWhalesWhereVotesGte(votes)
+    if (count === 0) {
+      return undefined
+    }
+    return count
+  }
+
+  async function addPoints(
+    userId: number,
+    add: bigint,
+    reason: BalanceChangeType,
+  ): Promise<bigint> {
+    try {
+      const updatedUser = await deps.incrementUserVotes(userId, add)
+      if (!updatedUser) {
+        throw new Error('User for addPoints not found')
+      }
+
+      const newRecord = await deps.addChangeBalanceRecord(userId, add, reason)
+      deps.debugLog(
+        `Add ${newRecord.amount} points to user ${userId}. Now ${await deps.getAggregatedBalance(userId)}`,
+      )
+
+      deps.infoLog(`Add ${add} points to ${userId}. Now ${updatedUser.votes}`)
+      return updatedUser.votes
+    } catch (error) {
+      deps.errorLog(`!!! Can't add points ${add} to user ${userId}`)
+      throw error
+    }
+  }
+
+  async function userStats() {
+    const all = await deps.countAllUsers()
+    const minted = await deps.countMintedUsers()
+    const notMinted = await deps.countLineUsers()
+    const now = deps.now()
+    const dayMs = 24 * 60 * 60 * 1000
+    const monthAgo = new Date(now - 30 * dayMs)
+    const weekAgo = new Date(now - 7 * dayMs)
+    const dayAgo = new Date(now - 1 * dayMs)
+    const month = await deps.countUsersUpdatedSince(monthAgo)
+    const week = await deps.countUsersUpdatedSince(weekAgo)
+    const day = await deps.countUsersUpdatedSince(dayAgo)
+    return { all, minted, notMinted, month, week, day }
+  }
+
+  return { placeInLine, placeInWhales, addPoints, userStats }
 }
 
-export async function userStats() {
-  const all = await UserModel.countDocuments()
-  const minted = await countUsers(true)
-  const notMinted = await countUsers(false)
-  const now = Date.now()
-  const dayMs = 24 * 60 * 60 * 1000
-  const monthAgo = new Date(now - 30 * dayMs)
-  const weekAgo = new Date(now - 7 * dayMs)
-  const dayAgo = new Date(now - 1 * dayMs)
-  const month = await UserModel.countDocuments({
-    updatedAt: { $gte: monthAgo },
-  })
-  const week = await UserModel.countDocuments({
-    updatedAt: { $gte: weekAgo },
-  })
-  const day = await UserModel.countDocuments({
-    updatedAt: { $gte: dayAgo },
-  })
-  return { all, minted, notMinted, month, week, day }
-}
+const defaultUserOps = buildUserOperations()
+
+export const placeInLine = defaultUserOps.placeInLine
+export const placeInWhales = defaultUserOps.placeInWhales
+export const addPoints = defaultUserOps.addPoints
+export const userStats = defaultUserOps.userStats
 
 export async function createInitialBalancesIfNotExists() {
   if ((await countAllBalanceRecords()) > 0) {

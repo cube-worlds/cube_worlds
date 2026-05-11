@@ -45,7 +45,7 @@ export async function findOrCreateClaim(
   return createdClaim.save() as Promise<DocumentType<Claim>>
 }
 
-function hasNeverClaimed(claim: DocumentType<Claim>): boolean {
+export function hasNeverClaimed(claim: DocumentType<Claim>): boolean {
   return (
     claim.lastClaimDate.getTime() <= 0
     && claim.streakDays === 0
@@ -54,7 +54,7 @@ function hasNeverClaimed(claim: DocumentType<Claim>): boolean {
   )
 }
 
-function startOfUtcDay(date: Date): Date {
+export function startOfUtcDay(date: Date): Date {
   return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()))
 }
 
