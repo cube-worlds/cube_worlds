@@ -30,16 +30,35 @@ export class Transaction {
 
 export const TransactionModel = getModelForClass(Transaction)
 
-export async function getLastestTransaction() {
-  return TransactionModel.findOne().sort({ utime: -1 })
+export interface TransactionHelperDependencies {
+  findLatestByUtime: () => Promise<DocumentType<Transaction> | null>
+  findByLtAndHash: (
+    lt: number,
+    hash: string,
+  ) => Promise<DocumentType<Transaction> | null>
 }
 
-export async function findTransaction(
-  lt: number,
-  hash: string,
-): Promise<DocumentType<Transaction> | null> {
-  return TransactionModel.findOne({ lt, hash })
+function createDefaultDependencies(): TransactionHelperDependencies {
+  return {
+    findLatestByUtime: () => TransactionModel.findOne().sort({ utime: -1 }),
+    findByLtAndHash: (lt, hash) => TransactionModel.findOne({ lt, hash }),
+  }
 }
+
+export function buildTransactionHelpers(
+  deps: TransactionHelperDependencies = createDefaultDependencies(),
+) {
+  return {
+    getLastestTransaction: () => deps.findLatestByUtime(),
+    findTransaction: (lt: number, hash: string) =>
+      deps.findByLtAndHash(lt, hash),
+  }
+}
+
+const defaultHelpers = buildTransactionHelpers()
+
+export const getLastestTransaction = defaultHelpers.getLastestTransaction
+export const findTransaction = defaultHelpers.findTransaction
 
 /**
 {

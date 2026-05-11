@@ -1,11 +1,34 @@
 import type { Transaction } from '@ton/core'
-import { sleep } from '#root/common/helpers/time'
-import { tonClient } from '#root/common/helpers/ton'
 import { logger } from '#root/logger'
 import { Address } from '@ton/core'
 
 const COUNT = 10
 const POLL_INTERVAL_MS = 30 * 1000
+
+export interface AccountSubscriptionDependencies {
+  getTransactions: (
+    address: Address,
+    options: {
+      limit: number
+      lt: string | undefined
+      hash: string | undefined
+      archival: boolean
+    },
+  ) => Promise<Transaction[]>
+  sleep: (ms: number) => Promise<void>
+  setInterval: (handler: () => void, ms: number) => unknown
+}
+
+async function createDefaultDependencies(): Promise<AccountSubscriptionDependencies> {
+  const { tonClient } = await import('#root/common/helpers/ton')
+  const { sleep } = await import('#root/common/helpers/time')
+  return {
+    getTransactions: (address, options) =>
+      tonClient.getTransactions(address, options),
+    sleep,
+    setInterval: (handler, ms) => setInterval(handler, ms),
+  }
+}
 
 export class AccountSubscription {
   accountAddress: Address
@@ -14,18 +37,26 @@ export class AccountSubscription {
 
   onTransaction: (tx: Transaction) => Promise<void>
 
+  deps: AccountSubscriptionDependencies | null
+
   constructor(
     accountAddress: string,
     startTime: number,
     onTransaction: (tx: Transaction) => Promise<void>,
+    deps?: AccountSubscriptionDependencies,
   ) {
     this.accountAddress = Address.parse(accountAddress)
     // start unixtime (stored in your database), transactions made earlier will be discarded.
     this.startTime = startTime
     this.onTransaction = onTransaction
+    this.deps = deps ?? null
   }
 
   async start() {
+    if (!this.deps) {
+      this.deps = await createDefaultDependencies()
+    }
+    const deps = this.deps
     const fetchOnce = async (
       time: number | undefined,
       offsetLt: string | undefined,
@@ -41,7 +72,7 @@ export class AccountSubscription {
       let transactions: Transaction[]
 
       try {
-        transactions = await tonClient.getTransactions(this.accountAddress, {
+        transactions = await deps.getTransactions(this.accountAddress, {
           limit: COUNT,
           lt: offsetLt,
           hash: offsetHash,
@@ -51,7 +82,7 @@ export class AccountSubscription {
         logger.error(error)
         const nextRetry = retryCount + 1
         if (nextRetry < 10) {
-          await sleep(nextRetry * 1000)
+          await deps.sleep(nextRetry * 1000)
           return fetchOnce(time, offsetLt, offsetHash, nextRetry)
         }
         return 0
@@ -107,7 +138,7 @@ export class AccountSubscription {
       isProcessing = false
     }
 
-    setInterval(tick, POLL_INTERVAL_MS)
+    deps.setInterval(tick, POLL_INTERVAL_MS)
     await tick()
   }
 }
