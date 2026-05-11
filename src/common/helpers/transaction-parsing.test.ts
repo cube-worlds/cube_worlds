@@ -116,3 +116,20 @@ test('parseInternalInMessage preserves the raw bigint value (no precision loss)'
   assert.ok(parsed)
   assert.equal(parsed.value, exotic)
 })
+
+test('parseInternalInMessage swallows body-parsing errors and returns text=undefined', () => {
+  // A body that throws when iterated as a slice exercises the try/catch fallback
+  // around the text-comment decode path.
+  const exploding = {
+    beginParse: () => {
+      throw new Error('boom')
+    },
+  } as unknown as Cell
+  const tx = makeTransaction(makeInternalInMessage(exploding))
+
+  const parsed = parseInternalInMessage(tx)
+
+  assert.ok(parsed)
+  assert.equal(parsed.text, undefined)
+  assert.equal(parsed.value, toNano('1'))
+})

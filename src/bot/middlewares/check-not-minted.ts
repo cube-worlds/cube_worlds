@@ -1,11 +1,20 @@
 import type { Context } from '#root/bot/context'
-import type { Api, Middleware, RawApi } from 'grammy'
+import type { Api, MiddlewareFn, RawApi } from 'grammy'
 import {
   inviteTelegramUrl,
   shareTelegramLink,
 } from '#root/common/helpers/telegram'
 import { i18n } from '#root/common/i18n'
 import { config } from '#root/config'
+
+export interface CheckNotMintedDependencies {
+  sendMintedMessage: (
+    api: Api<RawApi>,
+    userId: number,
+    userLocale: string,
+    nftUrl: string,
+  ) => Promise<unknown>
+}
 
 export async function sendMintedMessage(
   api: Api<RawApi>,
@@ -32,10 +41,12 @@ ${i18n.t(userLocale, 'speedup.variants', {
   )
 }
 
-export function checkNotMinted(): Middleware<Context> {
+export function buildCheckNotMinted(
+  deps: CheckNotMintedDependencies = { sendMintedMessage },
+): MiddlewareFn<Context> {
   return (ctx, next) => {
     if (ctx.dbuser.minted) {
-      return sendMintedMessage(
+      return deps.sendMintedMessage(
         ctx.api,
         ctx.dbuser.id,
         ctx.dbuser.language,
@@ -44,4 +55,8 @@ export function checkNotMinted(): Middleware<Context> {
     }
     return next()
   }
+}
+
+export function checkNotMinted(): MiddlewareFn<Context> {
+  return buildCheckNotMinted()
 }
