@@ -1,7 +1,6 @@
 import type { Context } from '#root/bot/context'
+import { buildResetCommandHandler } from '#root/bot/features/reset-handler'
 import { logHandle } from '#root/common/helpers/logging'
-import { voteScore } from '#root/common/helpers/votes'
-import { UserState } from '#root/common/models/User'
 import { Composer } from 'grammy'
 import { checkNotMinted } from '../middlewares/check-not-minted'
 
@@ -13,14 +12,7 @@ feature.command(
   'reset',
   checkNotMinted(),
   logHandle('command-reset'),
-  async (ctx) => {
-    ctx.dbuser.state = UserState.WaitNothing
-    if (!ctx.dbuser.votes) {
-      ctx.dbuser.votes = BigInt(await voteScore(ctx))
-    }
-    await ctx.dbuser.save()
-    await ctx.reply(ctx.t('reset'))
-  },
+  buildResetCommandHandler(),
 )
 
 export { composer as resetFeature }
