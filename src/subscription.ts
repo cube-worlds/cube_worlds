@@ -3,12 +3,10 @@ import type { Address, Transaction } from '@ton/core'
 import type { Api, Bot, RawApi } from 'grammy'
 import type { OpenedWallet } from './common/helpers/ton'
 import type { SubscriptionDependencies } from './subscription-core'
-import { AccountSubscription } from '#root/common/helpers/account-subscription'
 import { sendMessageToAdmins } from '#root/common/helpers/telegram'
 import { i18n } from '#root/common/i18n'
 import {
   findTransaction,
-  getLastestTransaction,
   TransactionModel,
 } from '#root/common/models/Transaction'
 import { addPoints, findUserByAddress } from '#root/common/models/User'
@@ -23,6 +21,7 @@ import {
 } from './common/helpers/satoshi'
 import { openWallet, tonClient } from './common/helpers/ton'
 import { processTransaction } from './subscription-core'
+import { buildStartProcessTransactions } from './subscription-start'
 
 export {
   INSUFFICIENT_CUBES_MESSAGE,
@@ -134,13 +133,6 @@ export class Subscription {
   }
 
   public async startProcessTransactions() {
-    const latestTrx = await getLastestTransaction()
-    const startTime = latestTrx?.utime ?? 0
-    const accountSubscription = new AccountSubscription(
-      config.COLLECTION_OWNER,
-      startTime,
-      this.onTransaction,
-    )
-    await accountSubscription.start()
+    await buildStartProcessTransactions()(this.onTransaction)
   }
 }

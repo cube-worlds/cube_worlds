@@ -1,4 +1,5 @@
 import type { Context } from '#root/bot/context'
+import { appendOwnRowIfMissing } from '#root/common/helpers/leaderboard-rows'
 import { logHandle } from '#root/common/helpers/logging'
 import { commaSeparatedNumber } from '#root/common/helpers/numbers'
 import { removeMiddle } from '#root/common/helpers/text'
@@ -19,22 +20,24 @@ feature.command('whales', logHandle('command-line'), async (ctx) => {
   const points = commaSeparatedNumber(await countAllBalances())
   const count = await countAllWallets()
   const whales = await findWhales(50)
-  const body = whales.map((v, index) => [
+  const initialBody = whales.map((v, index) => [
     String(index + 1),
     removeMiddle(v.wallet ?? 'undefined'),
     commaSeparatedNumber(v.votes),
   ])
-  if (!whales.some((v) => v.wallet === ctx.dbuser.wallet)) {
-    const place = await placeInWhales(ctx.dbuser.votes)
-    body.push(
-      ['...', '...', '...'],
-      [
+  const body = await appendOwnRowIfMissing({
+    body: initialBody,
+    topN: whales,
+    ownMatches: (v) => v.wallet === ctx.dbuser.wallet,
+    buildOwnRow: async () => {
+      const place = await placeInWhales(ctx.dbuser.votes)
+      return [
         String(place),
         removeMiddle(ctx.dbuser.wallet ?? 'undefined'),
         commaSeparatedNumber(ctx.dbuser.votes),
-      ],
-    )
-  }
+      ]
+    },
+  })
   const md = `${ctx.t('whales.count', { points, count })}
 \`\`\`\n${getMarkdownTable({
     table: {

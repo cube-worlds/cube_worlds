@@ -1,4 +1,5 @@
 import type { Context } from '#root/bot/context'
+import { appendOwnRowIfMissing } from '#root/common/helpers/leaderboard-rows'
 import { logHandle } from '#root/common/helpers/logging'
 import { commaSeparatedNumber } from '#root/common/helpers/numbers'
 import { removeMiddle } from '#root/common/helpers/text'
@@ -18,28 +19,29 @@ const feature = composer.chatType('private')
 feature.command('line', logHandle('command-line'), async (ctx) => {
   const count = await countAllLine()
   const line = await findLine(10)
-  const body = line.map((v, index) => [
+  const initialBody = line.map((v, index) => [
     String(index + 1) + (v.diceWinner ? ' (dice)' : ''),
     removeMiddle(v.name ?? 'undefined', 6),
     commaSeparatedNumber(v.votes),
   ])
-  if (
-    !ctx.dbuser.minted &&
-    ctx.dbuser.state === UserState.Submited &&
-    !line.some((v) => v.name === ctx.dbuser.name)
-  ) {
-    const place = await placeInLine(ctx.dbuser.votes)
-    if (place) {
-      body.push(
-        ['...', '...', '...'],
-        [
-          String(place),
-          removeMiddle(ctx.dbuser.name ?? 'undefined', 6),
-          commaSeparatedNumber(ctx.dbuser.votes),
-        ],
-      )
-    }
-  }
+  const shouldAppendOwn
+    = !ctx.dbuser.minted && ctx.dbuser.state === UserState.Submited
+  const body = shouldAppendOwn
+    ? await appendOwnRowIfMissing({
+        body: initialBody,
+        topN: line,
+        ownMatches: (v) => v.name === ctx.dbuser.name,
+        buildOwnRow: async () => {
+          const place = await placeInLine(ctx.dbuser.votes)
+          if (!place) return null
+          return [
+            String(place),
+            removeMiddle(ctx.dbuser.name ?? 'undefined', 6),
+            commaSeparatedNumber(ctx.dbuser.votes),
+          ]
+        },
+      })
+    : initialBody
   const md = `${ctx.t('line.count', { count })}
 \`\`\`\n${getMarkdownTable({
     table: {
