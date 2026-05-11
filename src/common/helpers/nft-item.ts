@@ -1,20 +1,16 @@
+import type { NFTMintParameters } from '#root/common/helpers/nft-mint-body'
 import type { OpenedWallet } from '#root/common/helpers/ton'
-import type { Cell } from '@ton/core'
-import { Buffer } from 'node:buffer'
 import { NftCollection } from '#root/common/helpers/nft-collection'
+import { createMintBody } from '#root/common/helpers/nft-mint-body'
 import { sleep } from '#root/common/helpers/time'
 import { openWallet, waitSeqno } from '#root/common/helpers/ton'
 import { config } from '#root/config'
 import { logger } from '#root/logger'
-import { Address, beginCell, internal, SendMode, toNano } from '@ton/core'
 
-export interface NFTMintParameters {
-  queryId: number
-  itemOwnerAddress: Address
-  itemIndex: number
-  amount: bigint
-  commonContentUrl: string
-}
+import { Address, internal, SendMode, toNano } from '@ton/core'
+
+export type { NFTMintParameters } from '#root/common/helpers/nft-mint-body'
+export { createMintBody } from '#root/common/helpers/nft-mint-body'
 
 export class NftItem {
   public async deployNFT(parameters: NFTMintParameters): Promise<string> {
@@ -56,28 +52,10 @@ export class NftItem {
         internal({
           value: toNano('0.026'),
           to: collectionAddress,
-          body: this.createMintBody(parameters),
+          body: createMintBody(parameters),
         }),
       ],
       sendMode: SendMode.IGNORE_ERRORS + SendMode.PAY_GAS_SEPARATELY,
     })
-  }
-
-  private createMintBody(parameters: NFTMintParameters): Cell {
-    const body = beginCell()
-    body.storeUint(1, 32)
-    body.storeUint(parameters.queryId || 0, 64)
-    body.storeUint(parameters.itemIndex, 64)
-    body.storeCoins(parameters.amount)
-
-    const nftItemContent = beginCell()
-    nftItemContent.storeAddress(parameters.itemOwnerAddress)
-
-    const uriContent = beginCell()
-    uriContent.storeBuffer(Buffer.from(parameters.commonContentUrl))
-    nftItemContent.storeRef(uriContent.endCell())
-
-    body.storeRef(nftItemContent.endCell())
-    return body.endCell()
   }
 }
