@@ -18,22 +18,33 @@ Help contributors and automation tools work effectively in this repo by providin
 - Type imports must come before value imports (`perfectionist/sort-imports`).
 - Use `folderPath()` from `src/common/helpers/files.ts` for any user-data file paths — it sanitizes filenames.
 - Never hardcode secrets client-side. Captcha uses HMAC tokens, not shared keys.
+- New routes/commands → use the DI handler pattern (see below).
 
 ## Key Entry Points
 - `src/main.ts` — Startup: MongoDB → bot → server → subscription → start
 - `src/server.ts` — Fastify server: handler registration with `/api/` prefixes
 - `src/bot/index.ts` — Bot middleware chain (order matters!) and feature registration
 - `src/config.ts` — Environment configuration (znv + zod, lazy proxy singleton)
-- `src/subscription.ts` — TON blockchain transaction poller
+- `src/subscription.ts` — TON blockchain transaction poller (wiring)
+- `src/subscription-core.ts` — `AccountSubscription` polling class
+- `src/subscription-start.ts` — DI-friendly startup builder
 - `src/frontend/src/router/index.ts` — Frontend routes (some have `showInMenu: false`)
 - `src/frontend/src/stores/userStore.ts` — Pinia store (wallet, user, balance, initData)
 
-## Handler Pattern
-Backend handlers use dependency injection for testability:
+## Handler / Command Pattern
+Backend handlers and bot commands use dependency injection for testability:
+
 ```
-Dependencies interface → createDefaultDependencies() → buildHandler(deps) → default export
+Dependencies interface → createDefaultDependencies() → buildHandler(deps) → composer wiring
 ```
+
 Tests inject mocks via `buildHandler({ mockFn })`. See `auth-handler.test.ts` for reference.
+
+When the production deps would import `#root/config` (e.g. via `is-admin.ts` or `ton.ts`), split the module:
+- `foo-handler.ts` — pure logic, no config-touching imports.
+- `foo.ts` — Composer wiring that imports the heavy bits and passes them in.
+
+Examples: `balance-handler.ts` + `balance.ts`, `transaction-handler.ts` + `admin/transaction.ts`.
 
 ## Data Models (src/common/models/)
 - **User** — Telegram user profile, wallet, votes (bigint), game state, minted status
@@ -60,16 +71,17 @@ Dice suspicion ≥105 → bot generates HMAC token via `generateCaptchaToken()` 
 - `npm run lint` — ESLint (@antfu/eslint-config)
 - `npm run typecheck` — TypeScript (tsc)
 - `npm run format` — Prettier
-- `npm run test:backend` — 16 tests across 5 handler files (Node.js test runner)
+- `npm run test:backend` — 455 tests across 50 files (Node.js test runner, ~6s)
+- `npm run test:coverage` — per-file line / branch / function coverage
 - `npm run build:all` — Build backend + frontend
 
 ## Before Finishing Any Change
 ```bash
-npm run lint && npm run typecheck && npm run test:backend
+npm run lint && npm run typecheck && npm run test:backend && npm --prefix src/frontend run build
 ```
 
 ## Further Reading
-- `CLAUDE.md` — Comprehensive project guide for AI agents
+- `CLAUDE.md` — Compact project guide for AI agents
 - `ARCHITECTURE.md` — System architecture with diagrams
 - `AGENTS.md` — Agent-specific orientation
 - `docs/FUTURE_DEVELOPMENT.md` — Prioritized improvements and feature ideas
