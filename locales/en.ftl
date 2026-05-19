@@ -20,14 +20,14 @@ line_command =
 whales_command =
     .description = 🐳 Whales
 
-unhandled = Unrecognized command. Try /mint
+unhandled = Unrecognized command. Open the mini app to continue.
 wrong = Something went wrong
 
 start = 🎮 Get ready for "<a href="https://teleg.notion.site/Immersive-Text-Based-Adventure-A-New-Era-of-Gaming-on-Telegram-TON-Blockchain-3a93687faa7b4595bfade11fc29eddca?pvs=4">Cube Worlds</a>", new adventure game awaits!
 
     🌟 Explore pixelated wonders, collect cube NFT heroes, and embark on thrilling quests.
 
-    💎 /mint your NFT character and get ready for the launch!
+    💎 Open the mini app to claim your NFT character and join the launch!
 
     🔥 Are you ready to become a Hero of the Cube Worlds?
 
