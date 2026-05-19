@@ -8,12 +8,14 @@ import {
   balanceFeature,
   collectionFeature,
   diceFeature,
+  helpFeature,
   languageFeature,
   lineFeature,
   mintFeature,
   parametersFeature,
   playFeature,
   queueFeature,
+  removedCommandsFeature,
   resetFeature,
   startFeature,
   statsFeature,
@@ -72,6 +74,7 @@ export function createBot(token: string, options: Options) {
 
   // Handlers
   protectedBot.use(startFeature)
+  protectedBot.use(helpFeature)
   protectedBot.use(resetFeature)
   protectedBot.use(mintFeature)
   protectedBot.use(diceFeature)
@@ -94,6 +97,9 @@ export function createBot(token: string, options: Options) {
   if (isMultipleLocales) {
     protectedBot.use(languageFeature)
   }
+
+  // catches deleted commands; must be after all kept features
+  protectedBot.use(removedCommandsFeature)
 
   // must be the last handler
   protectedBot.use(unhandledFeature)
