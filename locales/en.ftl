@@ -3,6 +3,16 @@ bot =
     .short_description = News: @cube_worlds | Chat: @cube_worlds_chat
     Collection: https://getgems.io/cubeworlds
 
+help_command =
+    .description = ❓ How to use the bot
+help =
+    .message = 👋 Welcome! This bot lives in the mini app.
+
+        Tap the app button next to the message field to open it.
+menu_button =
+    .label = Open the app
+removed_command =
+    .message = ⚠️ This command no longer exists. Open the mini app to continue.
 start_command =
     .description = 🚀 Start the bot
 language_command =
