@@ -98,3 +98,83 @@ test('buildStartProcessTransactions awaits subscription.start()', async () => {
   events.push('after-await')
   assert.deepEqual(events, ['start-begin', 'start-end', 'after-await'])
 })
+
+test('buildStartProcessTransactions propagates getLastestTransaction errors and never creates a subscription', async () => {
+  let createCalls = 0
+  const start = buildStartProcessTransactions({
+    getCollectionOwner: () => 'EQO',
+    getLastestTransaction: async () => { throw new Error('mongo down') },
+    createSubscription: () => {
+      createCalls += 1
+      return { start: async () => {} }
+    },
+  })
+
+  await assert.rejects(() => start(async () => {}), /mongo down/)
+  assert.equal(createCalls, 0)
+})
+
+test('buildStartProcessTransactions propagates createSubscription errors and never calls start', async () => {
+  const fake = makeFakeSubscription()
+  const start = buildStartProcessTransactions({
+    getCollectionOwner: () => 'EQO',
+    getLastestTransaction: async () => ({ utime: 1 }),
+    createSubscription: () => { throw new Error('bad address') },
+  })
+
+  await assert.rejects(() => start(async () => {}), /bad address/)
+  assert.equal(fake.startCalls, 0)
+})
+
+test('buildStartProcessTransactions surfaces subscription.start() rejections', async () => {
+  const start = buildStartProcessTransactions({
+    getCollectionOwner: () => 'EQO',
+    getLastestTransaction: async () => null,
+    createSubscription: () => ({
+      start: async () => { throw new Error('subscription crashed') },
+    }),
+  })
+
+  await assert.rejects(() => start(async () => {}), /subscription crashed/)
+})
+
+test('buildStartProcessTransactions passes utime=0 through verbatim (boundary)', async () => {
+  const created: number[] = []
+  const fake = makeFakeSubscription()
+  const start = buildStartProcessTransactions({
+    getCollectionOwner: () => 'EQO',
+    getLastestTransaction: async () => ({ utime: 0 }),
+    createSubscription: (_address, startTime) => {
+      created.push(startTime)
+      return fake.sub
+    },
+  })
+
+  await start(async () => {})
+  assert.deepEqual(created, [0])
+})
+
+test('buildStartProcessTransactions creates a fresh subscription on each call', async () => {
+  const startTimes: number[] = []
+  let txCallCount = 0
+  const utimes = [10, 20]
+  const fake = makeFakeSubscription()
+  const start = buildStartProcessTransactions({
+    getCollectionOwner: () => 'EQO',
+    getLastestTransaction: async () => {
+      const utime = utimes[txCallCount]
+      txCallCount += 1
+      return { utime }
+    },
+    createSubscription: (_address, startTime) => {
+      startTimes.push(startTime)
+      return fake.sub
+    },
+  })
+
+  await start(async () => {})
+  await start(async () => {})
+
+  assert.deepEqual(startTimes, [10, 20])
+  assert.equal(fake.startCalls, 2)
+})
