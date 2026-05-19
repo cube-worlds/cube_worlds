@@ -5,31 +5,24 @@ import {
   accountsFeature,
   addressesFeature,
   adminFeature,
-  balanceFeature,
   collectionFeature,
-  diceFeature,
   helpFeature,
-  languageFeature,
   lineFeature,
-  mintFeature,
   parametersFeature,
-  playFeature,
   queueFeature,
   removedCommandsFeature,
-  resetFeature,
   startFeature,
   statsFeature,
   topupFeature,
   transactionFeature,
   unhandledFeature,
-  webappFeature,
   whalesFeature,
 } from '#root/bot/features/index'
 import { errorHandler } from '#root/bot/handlers/index'
 import { queueMenu } from '#root/bot/keyboards/queue-menu'
 import attachUser from '#root/bot/middlewares/attach-user'
 import { updateLogger } from '#root/bot/middlewares/index'
-import { i18n, isMultipleLocales } from '#root/common/i18n'
+import { i18n } from '#root/common/i18n'
 import { config } from '#root/config'
 import { logger } from '#root/logger'
 import { autoChatAction } from '@grammyjs/auto-chat-action'
@@ -75,9 +68,6 @@ export function createBot(token: string, options: Options) {
   // Handlers
   protectedBot.use(startFeature)
   protectedBot.use(helpFeature)
-  protectedBot.use(resetFeature)
-  protectedBot.use(mintFeature)
-  protectedBot.use(diceFeature)
   protectedBot.use(queueFeature)
   protectedBot.use(parametersFeature)
   protectedBot.use(collectionFeature)
@@ -86,17 +76,10 @@ export function createBot(token: string, options: Options) {
   protectedBot.use(statsFeature)
   protectedBot.use(whalesFeature)
   protectedBot.use(lineFeature)
-  protectedBot.use(webappFeature)
   protectedBot.use(transactionFeature)
   protectedBot.use(addressesFeature)
-  protectedBot.use(playFeature)
-  protectedBot.use(balanceFeature)
   protectedBot.use(userFeature)
   protectedBot.use(accountsFeature)
-
-  if (isMultipleLocales) {
-    protectedBot.use(languageFeature)
-  }
 
   // catches deleted commands; must be after all kept features
   protectedBot.use(removedCommandsFeature)
