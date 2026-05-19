@@ -2,7 +2,7 @@
 import type { Context } from '#root/bot/context'
 import type { AttachUserDependencies } from '#root/bot/middlewares/attach-user'
 import type { UserDoc } from '#root/common/models/User'
-import type { InlineKeyboard, NextFunction } from 'grammy'
+import type { NextFunction } from 'grammy'
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { buildAttachUser } from '#root/bot/middlewares/attach-user'
@@ -36,13 +36,13 @@ interface CtxStub {
     setLocaleCalls: string[]
   }
   t: (key: string) => string
-  reply: (text: string, options: { reply_markup: InlineKeyboard }) => Promise<void>
-  replyCalls: { text: string, replyMarkup: InlineKeyboard }[]
+  reply: (text: string) => Promise<void>
+  replyCalls: string[]
 }
 
 function makeCtx(overrides: { from?: { id: number }, locale?: string } = {}): CtxStub {
   const setLocaleCalls: string[] = []
-  const replyCalls: { text: string, replyMarkup: InlineKeyboard }[] = []
+  const replyCalls: string[] = []
   return {
     from: overrides.from ?? { id: 7 },
     i18n: {
@@ -51,7 +51,7 @@ function makeCtx(overrides: { from?: { id: number }, locale?: string } = {}): Ct
       setLocaleCalls,
     },
     t: (key) => `t(${key})`,
-    reply: async (text, options) => { replyCalls.push({ text, replyMarkup: options.reply_markup }) },
+    reply: async (text) => { replyCalls.push(text) },
     replyCalls,
   }
 }
@@ -73,7 +73,6 @@ test('attachUser throws "No from field found" when ctx.from is missing', async (
       {
         findOrCreateUser: async () => makeUser() as unknown as UserDoc,
         supportedLocales: ['en'],
-        createKeyboard: () => ({} as InlineKeyboard),
       },
       ctx,
     ),
@@ -89,7 +88,6 @@ test('attachUser throws "User not found" when findOrCreateUser returns null', as
       {
         findOrCreateUser: async () => null,
         supportedLocales: ['en'],
-        createKeyboard: () => ({} as InlineKeyboard),
       },
       ctx,
     ),
@@ -97,20 +95,14 @@ test('attachUser throws "User not found" when findOrCreateUser returns null', as
   )
 })
 
-test('attachUser persists default-en when locale is unsupported and replies with keyboard', async () => {
+test('attachUser persists default-en when locale is unsupported and does not reply', async () => {
   const ctx = makeCtx({ from: { id: 7 }, locale: 'jp' })
   const user = makeUser()
-  const keyboard = {} as InlineKeyboard
-  const keyboardCalls: Context[] = []
 
   const { nextCalls } = await run(
     {
       findOrCreateUser: async () => user as unknown as UserDoc,
       supportedLocales: ['en', 'ru'],
-      createKeyboard: (c) => {
-        keyboardCalls.push(c)
-        return keyboard
-      },
     },
     ctx,
   )
@@ -119,28 +111,18 @@ test('attachUser persists default-en when locale is unsupported and replies with
   assert.equal(user.language, 'en')
   assert.equal(user.languageSelected, true)
   assert.equal(user.saveCalls, 1)
-  // Unsupported locale → reply with the language-select keyboard
-  assert.equal(ctx.replyCalls.length, 1)
-  assert.equal(ctx.replyCalls[0].text, 't(language.select)')
-  assert.equal(ctx.replyCalls[0].replyMarkup, keyboard)
-  assert.equal(keyboardCalls.length, 1)
-  // Final i18n locale is the one we just chose for the user
+  assert.equal(ctx.replyCalls.length, 0)
   assert.deepEqual(ctx.i18n.setLocaleCalls, ['en'])
 })
 
-test('attachUser accepts a supported locale without replying with the keyboard', async () => {
+test('attachUser accepts a supported locale', async () => {
   const ctx = makeCtx({ from: { id: 7 }, locale: 'ru' })
   const user = makeUser()
-  let createKeyboardCalls = 0
 
   await run(
     {
       findOrCreateUser: async () => user as unknown as UserDoc,
       supportedLocales: ['en', 'ru'],
-      createKeyboard: () => {
-        createKeyboardCalls += 1
-        return ({} as InlineKeyboard)
-      },
     },
     ctx,
   )
@@ -149,7 +131,6 @@ test('attachUser accepts a supported locale without replying with the keyboard',
   assert.equal(user.languageSelected, true)
   assert.equal(user.saveCalls, 1)
   assert.equal(ctx.replyCalls.length, 0)
-  assert.equal(createKeyboardCalls, 0)
   assert.deepEqual(ctx.i18n.setLocaleCalls, ['ru'])
 })
 
@@ -161,15 +142,12 @@ test('attachUser skips locale selection when user already has a language set', a
     {
       findOrCreateUser: async () => user as unknown as UserDoc,
       supportedLocales: ['en', 'ru'],
-      createKeyboard: () => ({} as InlineKeyboard),
     },
     ctx,
   )
 
-  // No save (since the locale block was skipped)
   assert.equal(user.saveCalls, 0)
   assert.equal(ctx.replyCalls.length, 0)
-  // setLocale still fires with the persisted language
   assert.deepEqual(ctx.i18n.setLocaleCalls, ['ru'])
 })
 
@@ -181,7 +159,6 @@ test('attachUser attaches the resolved user onto ctx.dbuser', async () => {
     {
       findOrCreateUser: async () => user as unknown as UserDoc,
       supportedLocales: ['en'],
-      createKeyboard: () => ({} as InlineKeyboard),
     },
     ctx,
   )
