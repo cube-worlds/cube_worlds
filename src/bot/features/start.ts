@@ -2,7 +2,6 @@ import type { Context } from '#root/bot/context'
 import type { UserDoc } from '#root/common/models/User'
 import { logHandle } from '#root/common/helpers/logging'
 import { findUserById } from '#root/common/models/User'
-import { config } from '#root/config'
 import { Composer } from 'grammy'
 
 const composer = new Composer<Context>()
@@ -36,29 +35,25 @@ export function buildCheckReferal(
   }
 }
 
-const checkReferal = buildCheckReferal()
+export interface StartCommandDependencies {
+  checkReferal: (ctx: Context) => Promise<unknown>
+}
 
-feature.command('start', logHandle('command-start'), async (ctx) => {
-  await ctx.reply(ctx.t('start'), {
-    link_preview_options: { is_disabled: true },
-    reply_markup: {
-      inline_keyboard: [
-        [
-          {
-            text: ctx.t('play.clicker'),
-            url: `https://t.me/${config.BOT_NAME}/clicker`,
-          },
-        ],
-        [
-          {
-            text: ctx.t('cnft.claim'),
-            web_app: { url: `${config.WEB_APP_URL}/cnft` },
-          },
-        ],
-      ],
-    },
-  })
-  await checkReferal(ctx)
-})
+export function buildStartCommandHandler(
+  deps: StartCommandDependencies = { checkReferal: buildCheckReferal() },
+) {
+  return async function startCommand(ctx: Context) {
+    await ctx.reply(ctx.t('start'), {
+      link_preview_options: { is_disabled: true },
+    })
+    await deps.checkReferal(ctx)
+  }
+}
+
+feature.command(
+  'start',
+  logHandle('command-start'),
+  buildStartCommandHandler(),
+)
 
 export { composer as startFeature }

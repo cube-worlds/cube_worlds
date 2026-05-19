@@ -3,7 +3,7 @@ import type { Context } from '#root/bot/context'
 import type { UserDoc } from '#root/common/models/User'
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { buildCheckReferal } from '#root/bot/features/start'
+import { buildCheckReferal, buildStartCommandHandler } from '#root/bot/features/start'
 
 interface UserStub {
   id: number
@@ -25,22 +25,33 @@ function makeUser(overrides: Partial<UserStub> = {}): UserStub {
   return stub
 }
 
+interface ReplyOptions {
+  link_preview_options?: { is_disabled?: boolean }
+  reply_markup?: unknown
+}
+
 interface CtxStub {
   match: string
   dbuser: UserStub
   t: (key: string) => string
-  reply: (text: string) => Promise<unknown>
+  reply: (text: string, options?: ReplyOptions) => Promise<unknown>
   replyCalls: string[]
+  replyOptions: Array<ReplyOptions | undefined>
 }
 
 function makeCtx(overrides: { match?: string, dbuser?: UserStub } = {}): CtxStub {
   const replyCalls: string[] = []
+  const replyOptions: Array<ReplyOptions | undefined> = []
   return {
     match: overrides.match ?? '',
     dbuser: overrides.dbuser ?? makeUser(),
     t: (key) => `t(${key})`,
-    reply: async (text) => { replyCalls.push(text) },
+    reply: async (text, options) => {
+      replyCalls.push(text)
+      replyOptions.push(options)
+    },
     replyCalls,
+    replyOptions,
   }
 }
 
@@ -115,4 +126,32 @@ test('checkReferal persists the referalId for a valid distinct receiver', async 
   assert.equal(ctx.dbuser.referalId, 42)
   assert.equal(ctx.dbuser.saveCalls, 1)
   assert.equal(ctx.replyCalls.length, 0)
+})
+
+test('/start handler replies with t(start) and no inline keyboard', async () => {
+  const ctx = makeCtx()
+  const handler = buildStartCommandHandler({ checkReferal: async () => {} })
+
+  await handler(ctx as unknown as Context)
+
+  assert.equal(ctx.replyCalls.length, 1)
+  assert.equal(ctx.replyCalls[0], 't(start)')
+  assert.equal(ctx.replyOptions[0]?.reply_markup, undefined)
+})
+
+test('/start handler invokes checkReferal after replying', async () => {
+  const order: string[] = []
+  const ctx = makeCtx()
+  const trackedReply = ctx.reply
+  ctx.reply = async (text, options) => {
+    order.push('reply')
+    return trackedReply(text, options)
+  }
+  const handler = buildStartCommandHandler({
+    checkReferal: async () => { order.push('checkReferal') },
+  })
+
+  await handler(ctx as unknown as Context)
+
+  assert.deepEqual(order, ['reply', 'checkReferal'])
 })
