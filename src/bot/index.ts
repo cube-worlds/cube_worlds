@@ -2,9 +2,6 @@ import type { Context, SessionData } from '#root/bot/context'
 import type { BotConfig, StorageAdapter } from 'grammy'
 import { createContextConstructor } from '#root/bot/context'
 import {
-  accountsFeature,
-  addressesFeature,
-  adminFeature,
   collectionFeature,
   helpFeature,
   lineFeature,
@@ -13,7 +10,6 @@ import {
   removedCommandsFeature,
   startFeature,
   statsFeature,
-  topupFeature,
   transactionFeature,
   unhandledFeature,
   whalesFeature,
@@ -71,15 +67,11 @@ export function createBot(token: string, options: Options) {
   protectedBot.use(queueFeature)
   protectedBot.use(parametersFeature)
   protectedBot.use(collectionFeature)
-  protectedBot.use(topupFeature)
-  protectedBot.use(adminFeature)
   protectedBot.use(statsFeature)
   protectedBot.use(whalesFeature)
   protectedBot.use(lineFeature)
   protectedBot.use(transactionFeature)
-  protectedBot.use(addressesFeature)
   protectedBot.use(userFeature)
-  protectedBot.use(accountsFeature)
 
   // catches deleted commands; must be after all kept features
   protectedBot.use(removedCommandsFeature)
