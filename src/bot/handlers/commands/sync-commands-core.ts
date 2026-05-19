@@ -19,7 +19,7 @@ export interface BotApiLike {
 export type TranslateFn = (locale: string, key: string) => string
 
 export interface SyncCommandsDependencies {
-  botAdmins: number[]
+  botAdmins: readonly number[]
   locales: readonly string[]
   defaultLocale: string
   translate: TranslateFn
