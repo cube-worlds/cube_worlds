@@ -1,6 +1,7 @@
 #!/usr/bin/env tsx
 /* eslint-disable antfu/no-top-level-await */
 import process from 'node:process'
+import { setMenuButton, syncBotCommands } from '#root/bot/handlers/commands/sync-commands'
 import { createBot } from '#root/bot/index'
 import { createInitialBalancesIfNotExists } from '#root/common/models/User'
 import { config } from '#root/config'
@@ -14,6 +15,14 @@ try {
   await mongoose.connect(config.MONGO)
   const bot = createBot(config.BOT_TOKEN, {})
   await createInitialBalancesIfNotExists()
+
+  try {
+    await syncBotCommands(bot.api)
+    await setMenuButton(bot.api)
+  } catch (error) {
+    logger.warn({ err: error }, 'Failed to sync bot commands or menu button')
+  }
+
   const server = await createServer(bot)
 
   async function shutdown() {

@@ -1,5 +1,6 @@
 /* eslint-disable test/no-import-node-test */
 import type { BotApiLike } from '#root/bot/handlers/commands/sync-commands-core'
+import type { BotCommandScope } from '@grammyjs/types'
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
@@ -11,7 +12,7 @@ import {
 
 interface SetMyCommandsCall {
   commands: Array<{ command: string, description: string }>
-  options?: { language_code?: string, scope?: { type: string, chat_id?: number } }
+  options?: { language_code?: string, scope?: BotCommandScope }
 }
 
 function makeApiStub() {
@@ -118,7 +119,13 @@ test('syncBotCommands pushes one per-admin command list with user + admin comman
     c => c.options?.scope?.type === 'chat',
   )
   assert.equal(chatCalls.length, 2)
-  assert.deepEqual(chatCalls.map(c => c.options!.scope!.chat_id), [111, 222])
+  assert.deepEqual(
+    chatCalls.map((c) => {
+      const scope = c.options!.scope!
+      return scope.type === 'chat' ? scope.chat_id : null
+    }),
+    [111, 222],
+  )
   chatCalls.forEach((c) => {
     const names = c.commands.map(cmd => cmd.command)
     assert.ok(names.includes('start'))

@@ -1,9 +1,9 @@
-import type { BotCommand, LanguageCode } from '@grammyjs/types'
+import type { BotCommand, BotCommandScope, LanguageCode } from '@grammyjs/types'
 
 export interface BotApiLike {
   setMyCommands: (
     commands: BotCommand[],
-    options?: { language_code?: LanguageCode, scope?: { type: string, chat_id?: number } },
+    options?: { language_code?: LanguageCode, scope?: BotCommandScope },
   ) => Promise<unknown>
   setMyDescription: (
     description: string,
@@ -13,7 +13,9 @@ export interface BotApiLike {
     short_description: string,
     options?: { language_code?: LanguageCode },
   ) => Promise<unknown>
-  setChatMenuButton: (options: { menu_button: unknown }) => Promise<unknown>
+  setChatMenuButton: (options: {
+    menu_button: { type: 'web_app', text: string, web_app: { url: string } }
+  }) => Promise<unknown>
 }
 
 export type TranslateFn = (locale: string, key: string) => string
