@@ -50,9 +50,9 @@ All other backend handlers have tests except the NFT handler and captcha handler
 - Metadata retrieval by index and address
 - Edge cases: missing index, invalid address format, non-existent NFT
 
-### 7. Story Game Persistence
-**Priority:** High | **Effort:** Medium
-The `/play` feature (ChatGPT-powered interactive story) has a TODO at `src/bot/features/play.ts:41` — conversation history is lost between sessions. Create a `Conversation` model to persist chat history and `conversationId`, allowing users to resume games.
+### 7. Decide Fate of Captcha Scaffolding
+**Priority:** Medium | **Effort:** Small
+The DOOM captcha (`src/backend/captcha.ts`, `src/frontend/captcha/`) and `User.suspicionDices` field are orphaned now that the dice command is gone. Either delete the endpoint + field + tests, or wire the flow into another anti-abuse path so it stops being dead code.
 
 ---
 
@@ -60,19 +60,19 @@ The `/play` feature (ChatGPT-powered interactive story) has a TODO at `src/bot/f
 
 ### 8. Re-enable NFT Mint Notifications
 **Priority:** High | **Effort:** Small
-`sendNewPlaces` is commented out in `src/bot/features/admin/queue.ts:244`. Review the notification logic and re-enable it so users get notified when their NFT is minted.
+`sendNewPlaces` is commented out in `src/bot/features/admin/queue.ts:245` (with the import also commented at line 35). Review the notification logic and re-enable it so users get notified when their NFT is minted.
 
 ### 9. Leaderboard Caching
 **Priority:** Medium | **Effort:** Small
 Leaderboard queries hit MongoDB on every request. Add a short TTL cache (Redis or in-memory with a 30-60 second expiry) to reduce database load, especially as user count grows.
 
-### 10. Complete User Activity Tracking
+### 10. User Activity Tracking
 **Priority:** Medium | **Effort:** Medium
-`src/common/helpers/telegram.ts:114` has incomplete logic for filtering inactive users. Implement proper activity tracking — store `lastActiveAt` on User model, query to find stale accounts, and use this for cleanup or re-engagement notifications.
+The User model has no `lastActiveAt` field, so there's no way to filter inactive users for cleanup or re-engagement. Add the field, update it from `attachUser` middleware, and expose it to admin queries (`/user`, leaderboard filters).
 
 ### 11. Expand FAQ Section
 **Priority:** Low | **Effort:** Small
-The FAQ component (`src/frontend/src/views/FAQComponent.vue`) loads basic accordion content from a JSON file. Add categories, search/filter functionality, and more comprehensive game documentation.
+The FAQ component (`src/frontend/src/components/FAQ.vue`) loads basic accordion content from a JSON file. Add categories, search/filter functionality, and more comprehensive game documentation.
 
 ### 12. Unhide Completed Features
 **Priority:** Medium | **Effort:** Small
@@ -92,10 +92,11 @@ Users can refer others but have no visibility into their referral network. Build
 
 ### 14. Achievement / Badge System
 **Priority:** Medium | **Effort:** Large
-Extend the CNFT type system (Dice, Whale, Diamond, Coin, Knight, Common) into a visible achievement system:
+Extend the CNFT type system (Whale, Diamond, Coin, Knight, Common — the `Dice` variant remains in the enum but is no longer awarded) into a visible achievement system:
 - Award badges for milestones (first claim, 10-day streak, 100K votes, etc.)
 - Display badges on user profiles and leaderboard
 - Tie some badges to special NFT artwork variants
+- Decide whether to retire or repurpose the `CNFTImageType.Dice` value
 
 ### 15. Push Notifications via Telegram
 **Priority:** Medium | **Effort:** Medium
@@ -118,7 +119,6 @@ Time-limited events to drive engagement:
 - Weekly challenges with bonus multipliers
 - Seasonal NFT collections (limited edition artwork)
 - Community goals (collective vote targets)
-- Tournament brackets for dice games
 
 ### 18. Analytics Dashboard (Admin)
 **Priority:** Medium | **Effort:** Medium
@@ -157,11 +157,10 @@ The current NFT image generation (`src/common/helpers/generation.ts`) uses Stabi
 ## Technical Debt
 
 ### 22. Add E2E Tests
-Currently only backend handler unit tests exist (16 tests). Add:
+Backend has 422 unit/integration tests across 53 files; everything else is gap. Add:
 - Frontend component tests (Vitest + Vue Test Utils)
 - E2E tests for critical flows (login → claim → check balance)
 - Bot command integration tests
-- NFT handler and captcha handler tests
 
 ### 23. Database Indexing Review
 Review MongoDB indexes for frequently queried fields. Currently `User.id` has a unique index. Candidates for additional indexes:

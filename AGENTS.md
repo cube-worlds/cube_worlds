@@ -2,9 +2,11 @@
 
 ## Project Summary
 
-Cube Worlds is a Telegram Mini App game on the TON blockchain. Users earn CUBE points via daily claims, dice games, and referrals. Top earners get NFTs minted. The app also supports CUBE-to-SATOSHI token exchange and mining.
+Cube Worlds is a Telegram Mini App game on the TON blockchain. Users earn CUBE points via daily claims and referrals; admins curate the queue of users whose AI-generated NFTs get minted. The app also supports CUBE-to-SATOSHI token exchange and an idle clicker.
 
 Three parts: Telegram bot (Grammy), Fastify API backend, Vue 3 frontend (Vite). MongoDB via Typegoose.
+
+The dice game and ChatGPT-powered story game (`/dice`, `/mint`, `/play`) were removed; the captcha endpoint and `suspicionDices` field remain as orphaned scaffolding from those flows.
 
 See `CLAUDE.md` for the compact context summary and `ARCHITECTURE.md` for the system diagram.
 
@@ -16,14 +18,32 @@ src/server.ts            — Fastify: registers all handlers under /api/ prefixe
 src/config.ts            — Env config (znv/zod, lazy proxy singleton)
 src/subscription.ts      — TON blockchain transaction poller (composer wiring)
 src/subscription-start.ts — Pure builder for the subscription startup logic (DI)
-src/subscription-core.ts — AccountSubscription class
+src/subscription-core.ts — Top-level subscription wiring
 src/bot/
   index.ts               — Middleware chain + feature registration (ORDER MATTERS)
-  callback-data/*.ts     — Typed callback-data packers (change-language, image-selection)
-  features/*.ts          — Bot commands. Each command splits into:
-                           foo.ts (composer wiring) + foo-handler.ts (pure DI factory)
-  middlewares/*.ts       — attach-user (loads User from DB), i18n, session
-  keyboards/*.ts         — Inline keyboards (photo, queue-menu, change-language)
+  context.ts             — Grammy Context + SessionData type definitions
+  callback-data/*.ts     — Typed callback-data packers (e.g. image-selection)
+  features/
+    start.ts             — /start (referral capture, wallet prompt)
+    help.ts              — /help (split into help-handler.ts + help.ts)
+    line.ts              — /line — leaderboard preview in chat
+    stats.ts             — /stats (split)
+    whales.ts            — /whales — top-vote ranking
+    removed-commands.ts  — Catches /dice /mint /play and points to the Mini App (split)
+    unhandled.ts         — Final fallback (split)
+    admin/
+      queue.ts           — /queue — admin NFT mint workflow
+      collection.ts      — /collection — admin browse minted CNFTs
+      parameters.ts      — /params — runtime tweaks
+      transaction.ts     — /tx — admin transaction inspection (split)
+      user.ts            — /user — admin user inspection (split)
+  filters/is-admin.ts    — Auth filter for admin-only commands
+  handlers/              — Error boundary + sync-commands runner
+  middlewares/
+    attach-user.ts       — Loads/creates User from DB
+    reaction.ts          — slapReaction (auto-react to messages)
+    update-logger.ts     — Dev-only update logging
+  keyboards/             — Inline keyboards (photo, queue-menu)
 src/backend/
   auth-handler.ts        — POST /api/auth/login (initData validation)
   set-wallet-handler.ts  — POST /api/auth/set-wallet (TON address)
@@ -31,13 +51,17 @@ src/backend/
   leaderboard-handler.ts — GET /api/users/leaderboard (paginated, bounded)
   balances-handler.ts    — GET /api/users/balances (aggregate stats)
   nft-handler.ts         — NFT metadata + image generation (input-validated)
-  captcha.ts             — HMAC-signed captcha verification + token generation
+  captcha.ts             — HMAC-signed captcha verification (no longer invoked by any feature; vestigial)
   *.test.ts              — Tests (Node.js test runner, DI-based mocking)
 src/common/
   models/                — User, Balance, Claim, CNFT, Transaction, Vote
-  helpers/               — ton, ipfs, generation, files, telegram, random, etc.
+  helpers/               — ton, ipfs, generation, files, telegram, random, satoshi, etc.
+  i18n.ts                — Fluent i18n middleware
 src/frontend/            — Vue 3 app (separate package.json)
-  captcha/               — Standalone DOOM captcha (HTML/JS, NOT Vue)
+  src/routes.ts          — Frontend route table (some entries have showInMenu: false)
+  src/components/        — Page-level components (ClaimComponent, FAQ, CNFT, etc.)
+  src/stores/userStore.ts — Pinia store (wallet, user, balance, initData)
+  captcha/               — Standalone DOOM captcha (HTML/JS, NOT Vue, currently unused)
 ```
 
 ## Key Patterns
@@ -65,8 +89,8 @@ See `balance-handler.ts` + `balance.ts` and `transaction-handler.ts` + `admin/tr
 ### Authentication
 Endpoints validate Telegram `initData` with BOT_TOKEN (24-hour expiry). Flow: client sends initData in body → server validates signature → extracts user ID → finds User in MongoDB.
 
-### Captcha Flow
-Dice game tracks suspicious rapid play. At 105+ suspicion points, bot sends a DOOM captcha URL with HMAC-signed token. Token generated in `dice.ts` via `generateCaptchaToken()`, passed through `captcha/script.js` → `captcha.html` iframe, verified in `GET /api/captcha/check`. No secrets exposed client-side.
+### Captcha Flow (vestigial)
+The HMAC-signed DOOM captcha is still wired end-to-end — `generateCaptchaToken()` in `src/backend/captcha.ts` mints tokens, `captcha/script.js` + `captcha.html` render the iframe, and `GET /api/captcha/check` verifies (`server.ts:29`). It was driven by the removed dice command, so nothing currently issues tokens or sets `User.suspicionDices`. Tests (`captcha.test.ts`) still exercise the token round-trip. Keep the auth invariants if you reuse it: no secrets client-side, BOT_TOKEN as HMAC key.
 
 ### Game Currency
 `User.votes` (bigint) is the central CUBE balance. Modified via `addPoints()` which atomically increments with `$inc` and logs to Balance model. All changes tracked with `BalanceChangeType` enum.
@@ -106,7 +130,7 @@ NODE_ENV=test node --import tsx --test src/backend/auth-handler.test.ts
 
 - **Runner:** Node.js built-in (`node --test`)
 - **Command:** `npm run test:backend`
-- **Current state:** 455 tests across 50 files, ~91.66% line / 95.01% branch / 74.72% function coverage
+- **Current state:** 422 tests across 53 files
 - **Pattern:** Use DI to inject mock dependencies. See `auth-handler.test.ts` for reference.
 - **Before finishing any change:**
   ```bash
@@ -115,9 +139,7 @@ NODE_ENV=test node --import tsx --test src/backend/auth-handler.test.ts
 
 ## Known TODOs
 
-- `src/bot/features/play.ts:41` — Save conversation history to DB for story game persistence
-- `src/common/helpers/telegram.ts:114` — Complete user activity tracking logic
-- `src/bot/features/admin/queue.ts:244` — Re-enable `sendNewPlaces` notification
+- `src/bot/features/admin/queue.ts:244` — Re-enable `sendNewPlaces` notification (currently commented out along with the import on line 35)
 
 ## Further Reading
 

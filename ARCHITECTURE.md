@@ -25,7 +25,7 @@
 - **HTTP server** is Fastify with `@fastify/middie` (for Vite middleware in dev mode).
 - **Data** is stored in MongoDB via Mongoose/Typegoose with decorator-based schemas.
 - **Frontend** is a Vue 3 + Vite app under `src/frontend` (separate `package.json`).
-- **Captcha** is a standalone DOOM-style HTML/JS game under `src/frontend/captcha/` (not Vue).
+- **Captcha** is a standalone DOOM-style HTML/JS game under `src/frontend/captcha/` (not Vue). The HMAC-verification endpoint at `/api/captcha/check` is still mounted, but no bot feature currently issues captcha tokens — it is vestigial scaffolding left over from the removed dice command.
 
 ## Startup Flow
 
@@ -46,11 +46,11 @@
 ### Daily Claim
 Frontend POST `/api/users/claim` → validate initData → per-user lock → find/create Claim → calculate streak multiplier → `addPoints()` → return new balance
 
-### Dice Game
-`/dice` command → cooldown check → suspicion tracking → if suspicious: DOOM captcha with HMAC token → else: roll two dice → series detection → `addPoints()`
-
 ### NFT Minting (Admin)
-`/queue` → select user → choose/upload image → Stability AI generation → ChatGPT description → Pinata IPFS upload → on-chain TON NFT mint → mark user as minted
+`/queue` → admin selects user from ranked queue → choose/upload image → Stability AI generation → ChatGPT description → Pinata IPFS upload → on-chain TON NFT mint → mark user as minted
+
+### Removed Slash Commands
+The dice (`/dice`), NFT-mint (`/mint`), and story (`/play`) commands were removed. `removed-commands.ts` is the last `message:text` handler before `unhandledFeature` and replies to any leftover slash command with a Mini App link.
 
 ### Transaction Monitoring
 `src/subscription.ts` → polls TON blockchain → detects incoming payments → matches wallet to user → credits points (donation) or processes SATOSHI exchange
@@ -69,7 +69,7 @@ Frontend POST `/api/users/claim` → validate initData → per-user lock → fin
 - **TonConnect** for wallet connection in the frontend.
 - **Pinata** for IPFS storage of NFT metadata and images.
 - **Stability AI** for image-to-image generation (pixel-art style NFT artwork).
-- **OpenAI** for ChatGPT-powered interactive story game.
+- **OpenAI** for ChatGPT-powered NFT description generation in the admin mint flow.
 - **Telemetree** for analytics (config present but integration minimal).
 
 ## Build and Deployment
@@ -83,7 +83,7 @@ Frontend POST `/api/users/claim` → validate initData → per-user lock → fin
 ## Security Architecture
 
 - **Auth:** All authenticated endpoints validate Telegram `initData` signatures (24-hour expiry).
-- **Captcha:** HMAC-SHA256 tokens signed with BOT_TOKEN. Generated server-side, verified server-side. Client only passes the token through.
+- **Captcha (vestigial):** HMAC-SHA256 tokens signed with BOT_TOKEN. Generation/verification helpers in `src/backend/captcha.ts` still mount under `/api/captcha`, but no live caller issues tokens after the dice command was removed. Keep the invariant if you reuse it: no client-side secrets.
 - **Input validation:** NFT image types whitelisted, colors bounded (0-10), indexes validated as non-negative integers, addresses wrapped in try-catch.
 - **Path safety:** File operations sanitize usernames and verify resolved paths stay within `./data/`.
 - **Pagination:** Leaderboard queries bounded (limit: 1-100).

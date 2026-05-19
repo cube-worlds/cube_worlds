@@ -28,7 +28,7 @@ Help contributors and automation tools work effectively in this repo by providin
 - `src/subscription.ts` — TON blockchain transaction poller (wiring)
 - `src/subscription-core.ts` — `AccountSubscription` polling class
 - `src/subscription-start.ts` — DI-friendly startup builder
-- `src/frontend/src/router/index.ts` — Frontend routes (some have `showInMenu: false`)
+- `src/frontend/src/routes.ts` — Frontend route table (some entries have `showInMenu: false`)
 - `src/frontend/src/stores/userStore.ts` — Pinia store (wallet, user, balance, initData)
 
 ## Handler / Command Pattern
@@ -44,13 +44,13 @@ When the production deps would import `#root/config` (e.g. via `is-admin.ts` or 
 - `foo-handler.ts` — pure logic, no config-touching imports.
 - `foo.ts` — Composer wiring that imports the heavy bits and passes them in.
 
-Examples: `balance-handler.ts` + `balance.ts`, `transaction-handler.ts` + `admin/transaction.ts`.
+Examples: `transaction-handler.ts` + `admin/transaction.ts`, `user-handler.ts` + `admin/user.ts`.
 
 ## Data Models (src/common/models/)
 - **User** — Telegram user profile, wallet, votes (bigint), game state, minted status
-- **Balance** — Change ledger with BalanceChangeType enum (Claim, Dice, Referral, Deposit, etc.)
+- **Balance** — Change ledger with BalanceChangeType enum (Initial, Deposit, Withdraw, Dice, Referral, Donation, Task, Claim, Trade — `Dice` and `Task` are legacy values still in the enum)
 - **Claim** — Daily streak tracking (60s cooldown, 10-day max, 100 base reward with multiplier)
-- **CNFT** — NFT metadata: type (Dice/Whale/Diamond/Coin/Knight/Common), color (0-10), index
+- **CNFT** — NFT metadata: type (Whale/Diamond/Coin/Knight/Common; the `Dice` variant remains in `CNFTImageType` but is no longer awarded), color (0-10), index
 - **Transaction** — TON transaction records (deduplication by lt + hash)
 - **Vote** — Referral relationship (giver → receiver)
 
@@ -64,14 +64,14 @@ Examples: `balance-handler.ts` + `balance.ts`, `transaction-handler.ts` + `admin
 - `POST /api/users/claim` — Daily reward claim (in-process lock per user)
 - `POST /api/users/claim/status` — Current claim status without claiming
 
-## Captcha Flow
-Dice suspicion ≥105 → bot generates HMAC token via `generateCaptchaToken()` → sends DOOM game URL with token → client passes token through iframe → `GET /api/captcha/check` verifies HMAC → resets suspicion.
+## Captcha Flow (vestigial)
+The DOOM-captcha endpoints and `generateCaptchaToken()` (HMAC over `BOT_TOKEN`) still live in `src/backend/captcha.ts` and are mounted at `/api/captcha`, but nothing currently calls them — the dice command that issued tokens was removed. `User.suspicionDices` remains on the model. If you reuse the flow: keep the HMAC secret server-side, do not expose `BOT_TOKEN` to the iframe.
 
 ## Useful Commands
 - `npm run lint` — ESLint (@antfu/eslint-config)
 - `npm run typecheck` — TypeScript (tsc)
 - `npm run format` — Prettier
-- `npm run test:backend` — 455 tests across 50 files (Node.js test runner, ~6s)
+- `npm run test:backend` — 422 tests across 53 files (Node.js test runner, ~5s)
 - `npm run test:coverage` — per-file line / branch / function coverage
 - `npm run build:all` — Build backend + frontend
 
