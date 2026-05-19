@@ -1,9 +1,9 @@
 import type { InitData } from '@telegram-apps/init-data-node'
 import type { FastifyInstance } from 'fastify'
 import process from 'node:process'
+import { parse, validate } from '@telegram-apps/init-data-node'
 import { findUserById } from '#root/common/models/User'
 import { logger } from '#root/logger'
-import { parse, validate } from '@telegram-apps/init-data-node'
 
 interface Body {
   initData: string

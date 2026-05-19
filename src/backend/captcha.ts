@@ -1,5 +1,5 @@
-import type { Bot } from '#root/bot/index'
 import type { FastifyInstance } from 'fastify'
+import type { Bot } from '#root/bot/index'
 import { Buffer } from 'node:buffer'
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 import process from 'node:process'

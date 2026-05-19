@@ -1,11 +1,11 @@
 import type { Context } from '#root/bot/context'
+import { chatAction } from '@grammyjs/auto-chat-action'
+import { Composer } from 'grammy'
 import { isAdmin } from '#root/bot/filters/is-admin'
 import { logHandle } from '#root/common/helpers/logging'
 import { NftCollection } from '#root/common/helpers/nft-collection'
 import { openWallet, waitSeqno } from '#root/common/helpers/ton'
 import { config } from '#root/config'
-import { chatAction } from '@grammyjs/auto-chat-action'
-import { Composer } from 'grammy'
 
 const composer = new Composer<Context>()
 

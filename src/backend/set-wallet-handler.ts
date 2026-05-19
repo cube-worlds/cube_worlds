@@ -1,9 +1,9 @@
 import type { InitData } from '@telegram-apps/init-data-node'
 import type { FastifyInstance } from 'fastify'
 import process from 'node:process'
-import { findUserById, findUserByWallet } from '#root/common/models/User'
 import { parse, validate } from '@telegram-apps/init-data-node'
 import { Address } from '@ton/core'
+import { findUserById, findUserByWallet } from '#root/common/models/User'
 
 interface Body {
   initData: string

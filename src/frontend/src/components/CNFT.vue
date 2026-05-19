@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import type { TonConnectUI } from '@tonconnect/ui'
 import type { Ref } from 'vue'
-import { sleep } from '#root/common/helpers/time'
 import { Address, beginCell, Cell } from '@ton/core'
 import { inject, onMounted, ref, watch } from 'vue'
 import { MainButton, useHapticFeedback, useMiniApp } from 'vue-tg'
+import { sleep } from '#root/common/helpers/time'
 import useLoadingAndError from '../composables/useLoadingAndError'
 import { useUserStore } from '../stores/userStore'
 

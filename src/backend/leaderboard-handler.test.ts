@@ -2,8 +2,8 @@
 import type { LeaderboardHandlerDependencies } from '#root/backend/leaderboard-handler'
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { buildLeaderboardHandler } from '#root/backend/leaderboard-handler'
 import fastify from 'fastify'
+import { buildLeaderboardHandler } from '#root/backend/leaderboard-handler'
 
 interface LeaderboardTestContext {
   app: ReturnType<typeof fastify>

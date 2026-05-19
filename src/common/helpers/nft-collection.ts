@@ -1,10 +1,6 @@
-import type { OpenedWallet } from '#root/common/helpers/ton'
 import type { StateInit } from '@ton/core'
+import type { OpenedWallet } from '#root/common/helpers/ton'
 import { Buffer } from 'node:buffer'
-import { sleep } from '#root/common/helpers/time'
-import { encodeOffChainContent, tonClient } from '#root/common/helpers/ton'
-import { config } from '#root/config'
-import { logger } from '#root/logger'
 import {
   Address,
   beginCell,
@@ -13,6 +9,10 @@ import {
   internal,
   SendMode,
 } from '@ton/core'
+import { sleep } from '#root/common/helpers/time'
+import { encodeOffChainContent, tonClient } from '#root/common/helpers/ton'
+import { config } from '#root/config'
+import { logger } from '#root/logger'
 
 export interface collectionData {
   ownerAddress: Address

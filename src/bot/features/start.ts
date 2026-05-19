@@ -1,8 +1,8 @@
 import type { Context } from '#root/bot/context'
 import type { UserDoc } from '#root/common/models/User'
+import { Composer } from 'grammy'
 import { logHandle } from '#root/common/helpers/logging'
 import { findUserById } from '#root/common/models/User'
-import { Composer } from 'grammy'
 
 const composer = new Composer<Context>()
 

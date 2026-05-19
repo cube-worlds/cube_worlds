@@ -1,10 +1,10 @@
 /* eslint-disable test/no-import-node-test */
-import type { AuthHandlerDependencies } from '#root/backend/auth-handler'
 import type { InitData } from '@telegram-apps/init-data-node'
+import type { AuthHandlerDependencies } from '#root/backend/auth-handler'
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { buildAuthHandler } from '#root/backend/auth-handler'
 import fastify from 'fastify'
+import { buildAuthHandler } from '#root/backend/auth-handler'
 
 type ResolvedUser = NonNullable<
   Awaited<ReturnType<AuthHandlerDependencies['findUserById']>>

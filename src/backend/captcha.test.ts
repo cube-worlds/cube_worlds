@@ -3,12 +3,12 @@ import type { CaptchaHandlerDependencies, CaptchaUser } from '#root/backend/capt
 import assert from 'node:assert/strict'
 import process from 'node:process'
 import { before, test } from 'node:test'
+import fastify from 'fastify'
 import {
   buildCaptchaHandler,
   generateCaptchaToken,
   verifyCaptchaToken,
 } from '#root/backend/captcha'
-import fastify from 'fastify'
 
 const USER_ID = 12345
 const EXPECTED_KILLS = 7

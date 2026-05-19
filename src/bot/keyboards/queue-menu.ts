@@ -1,5 +1,6 @@
 import type { Context } from '#root/bot/context'
 import type { User, UserDoc } from '#root/common/models/User'
+import { Menu } from '@grammyjs/menu'
 import { photoKeyboard } from '#root/bot/keyboards/photo'
 import { saveImageFromUrl } from '#root/common/helpers/files'
 import { linkToIPFSGateway } from '#root/common/helpers/ipfs'
@@ -9,7 +10,6 @@ import { i18n } from '#root/common/i18n'
 import { findQueue, findUserById, UserState } from '#root/common/models/User'
 import { config } from '#root/config'
 import { logger } from '#root/logger'
-import { Menu } from '@grammyjs/menu'
 
 export function photoCaption(user: User) {
   return `@[${user.name}](tg://user?id=${user.id})

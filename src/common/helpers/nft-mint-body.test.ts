@@ -2,8 +2,8 @@
 import assert from 'node:assert/strict'
 import { Buffer } from 'node:buffer'
 import { test } from 'node:test'
-import { createMintBody } from '#root/common/helpers/nft-mint-body'
 import { Address, toNano } from '@ton/core'
+import { createMintBody } from '#root/common/helpers/nft-mint-body'
 
 // Deterministic raw-form address (workchain 0, all-zero hash) — bypasses friendly-form checksum
 const OWNER = Address.parseRaw(`0:${'00'.repeat(32)}`)

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { TonConnectUI } from '@tonconnect/ui'
-import { useUserStore } from '#web/stores/userStore'
 import { computed, inject, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useUserStore } from '#web/stores/userStore'
 
 interface ClaimStatusResponse {
   hasNeverClaimed: boolean

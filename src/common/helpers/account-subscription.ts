@@ -1,6 +1,6 @@
 import type { Transaction } from '@ton/core'
-import { logger } from '#root/logger'
 import { Address } from '@ton/core'
+import { logger } from '#root/logger'
 
 const COUNT = 10
 const POLL_INTERVAL_MS = 30 * 1000

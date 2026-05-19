@@ -1,8 +1,8 @@
 /* eslint-disable test/no-import-node-test */
+import type { NextFunction } from 'grammy'
 import type { Context } from '#root/bot/context'
 import type { AttachUserDependencies } from '#root/bot/middlewares/attach-user'
 import type { UserDoc } from '#root/common/models/User'
-import type { NextFunction } from 'grammy'
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { buildAttachUser } from '#root/bot/middlewares/attach-user'

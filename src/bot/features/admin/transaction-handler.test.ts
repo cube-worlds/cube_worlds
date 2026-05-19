@@ -1,9 +1,9 @@
 /* eslint-disable test/no-import-node-test */
+import type { Api, RawApi } from 'grammy'
 import type { Context } from '#root/bot/context'
 import type { TransactionAcceptedTx } from '#root/bot/features/admin/transaction-handler'
 import type { Transaction } from '#root/common/models/Transaction'
 import type { UserDoc } from '#root/common/models/User'
-import type { Api, RawApi } from 'grammy'
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { buildTransactionCommandHandler } from '#root/bot/features/admin/transaction-handler'

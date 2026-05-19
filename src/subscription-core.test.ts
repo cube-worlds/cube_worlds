@@ -1,20 +1,20 @@
 /* eslint-disable test/no-import-node-test */
+import type { Address, Transaction } from '@ton/core'
 import type {
   SavedTransaction,
   SubscriptionDependencies,
   SubscriptionUser,
   TransactionRecord,
 } from '#root/subscription-core'
-import type { Address, Transaction } from '@ton/core'
 import assert from 'node:assert/strict'
 import { Buffer } from 'node:buffer'
 import test from 'node:test'
+import { beginCell, Cell, Address as TonAddress, toNano } from '@ton/core'
 import { BalanceChangeType } from '#root/common/models/Balance'
 import {
   INSUFFICIENT_CUBES_MESSAGE,
   processTransaction,
 } from '#root/subscription-core'
-import { beginCell, Cell, Address as TonAddress, toNano } from '@ton/core'
 
 const SENDER = TonAddress.parse(
   '0QC4sEG_VQ4QawHnr77mqJhC98cpoyI-0gXuwR76Ff2kT4eI',

@@ -1,6 +1,7 @@
 import type { InitData } from '@telegram-apps/init-data-node'
 import type { FastifyInstance } from 'fastify'
 import process from 'node:process'
+import { parse, validate } from '@telegram-apps/init-data-node'
 import { BalanceChangeType } from '#root/common/models/Balance'
 import {
   claimDaily,
@@ -8,7 +9,6 @@ import {
   getClaimStatus,
 } from '#root/common/models/Claim'
 import { addPoints, findUserById } from '#root/common/models/User'
-import { parse, validate } from '@telegram-apps/init-data-node'
 
 interface Body {
   initData: string

@@ -1,9 +1,11 @@
+import type { Address } from '@ton/core'
+import type { DocumentType } from '@typegoose/typegoose'
 import type {
   ClipGuidancePreset,
   SDSampler,
 } from '#root/common/helpers/generation'
-import type { Address } from '@ton/core'
-import type { DocumentType } from '@typegoose/typegoose'
+import { getModelForClass, modelOptions, prop } from '@typegoose/typegoose'
+import { TimeStamps } from '@typegoose/typegoose/lib/defaultClasses'
 import {
   addChangeBalanceRecord,
   BalanceChangeType,
@@ -12,8 +14,6 @@ import {
   getAggregatedBalance,
 } from '#root/common/models/Balance'
 import { logger } from '#root/logger'
-import { getModelForClass, modelOptions, prop } from '@typegoose/typegoose'
-import { TimeStamps } from '@typegoose/typegoose/lib/defaultClasses'
 
 export enum UserState {
   WaitNothing = 'WaitNothing',

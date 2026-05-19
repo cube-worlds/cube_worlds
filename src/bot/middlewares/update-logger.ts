@@ -1,5 +1,5 @@
-import type { Context } from '#root/bot/context'
 import type { MiddlewareFn } from 'grammy'
+import type { Context } from '#root/bot/context'
 import { performance } from 'node:perf_hooks'
 import { getUpdateInfo } from '#root/common/helpers/logging'
 

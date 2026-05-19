@@ -1,10 +1,10 @@
-import type { UserDoc } from '#root/common/models/User'
-import type { Logger } from '#root/logger'
 import type { AutoChatActionFlavor } from '@grammyjs/auto-chat-action'
 import type { HydrateFlavor } from '@grammyjs/hydrate'
 import type { I18nFlavor } from '@grammyjs/i18n'
 import type { Update, UserFromGetMe } from '@grammyjs/types'
 import type { Api, SessionFlavor } from 'grammy'
+import type { UserDoc } from '#root/common/models/User'
+import type { Logger } from '#root/logger'
 import { Context as DefaultContext } from 'grammy'
 
 export interface SessionData {

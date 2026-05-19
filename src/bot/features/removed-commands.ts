@@ -1,8 +1,8 @@
 import type { Context } from '#root/bot/context'
+import { Composer } from 'grammy'
 import { buildRemovedCommandsHandler } from '#root/bot/features/removed-commands-handler'
 import { logHandle } from '#root/common/helpers/logging'
 import { config } from '#root/config'
-import { Composer } from 'grammy'
 
 const composer = new Composer<Context>()
 

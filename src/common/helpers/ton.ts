@@ -2,8 +2,6 @@ import type { OpenedContract } from '@ton/core'
 import type { KeyPair } from '@ton/crypto'
 import type { Address } from '@ton/ton'
 import { Buffer } from 'node:buffer'
-import { sleep } from '#root/common/helpers/time'
-import { config } from '#root/config'
 import { mnemonicToPrivateKey } from '@ton/crypto'
 import {
   beginCell,
@@ -13,6 +11,8 @@ import {
   TonClient,
   WalletContractV4,
 } from '@ton/ton'
+import { sleep } from '#root/common/helpers/time'
+import { config } from '#root/config'
 
 const toncenterBaseEndpoint: string = config.TESTNET
   ? 'https://testnet.toncenter.com'

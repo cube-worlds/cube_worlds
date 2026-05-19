@@ -137,7 +137,7 @@ git commit -m "Add i18n keys for /help, removed-command fallback, and menu butto
 Create `src/bot/features/help-handler.test.ts`:
 
 ```ts
-/* eslint-disable test/no-import-node-test */
+ 
 import type { Context } from '#root/bot/context'
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
@@ -246,10 +246,10 @@ Create `src/bot/features/help.ts`:
 
 ```ts
 import type { Context } from '#root/bot/context'
+import { Composer } from 'grammy'
 import { buildHelpCommandHandler } from '#root/bot/features/help-handler'
 import { logHandle } from '#root/common/helpers/logging'
 import { config } from '#root/config'
-import { Composer } from 'grammy'
 
 const composer = new Composer<Context>()
 
@@ -295,7 +295,7 @@ The handler is intentionally identical in shape to the `/help` handler (same rep
 Create `src/bot/features/removed-commands-handler.test.ts`:
 
 ```ts
-/* eslint-disable test/no-import-node-test */
+ 
 import type { Context } from '#root/bot/context'
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
@@ -403,10 +403,10 @@ Create `src/bot/features/removed-commands.ts`:
 
 ```ts
 import type { Context } from '#root/bot/context'
+import { Composer } from 'grammy'
 import { buildRemovedCommandsHandler } from '#root/bot/features/removed-commands-handler'
 import { logHandle } from '#root/common/helpers/logging'
 import { config } from '#root/config'
-import { Composer } from 'grammy'
 
 const composer = new Composer<Context>()
 
@@ -456,7 +456,7 @@ This is the pure builder: it produces command payloads and calls the API stub. A
 Create `src/bot/handlers/commands/sync-commands-core.test.ts`:
 
 ```ts
-/* eslint-disable test/no-import-node-test */
+ 
 import type { BotApiLike } from '#root/bot/handlers/commands/sync-commands-core'
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
@@ -1090,9 +1090,9 @@ Full new contents:
 ```ts
 import type { Context } from '#root/bot/context'
 import type { UserDoc } from '#root/common/models/User'
+import { Composer } from 'grammy'
 import { logHandle } from '#root/common/helpers/logging'
 import { findUserById } from '#root/common/models/User'
-import { Composer } from 'grammy'
 
 const composer = new Composer<Context>()
 
@@ -1279,9 +1279,9 @@ With `language.ts` going away in a later task, the language-select keyboard rend
 Remove the `createKeyboard` dependency, the `createChangeLanguageKeyboard` import, and the `if (!localeSupported) { … }` branch. The resulting file:
 
 ```ts
+import type { NextFunction } from 'grammy'
 import type { Context } from '#root/bot/context'
 import type { UserDoc } from '#root/common/models/User'
-import type { NextFunction } from 'grammy'
 import { i18n } from '#root/common/i18n'
 import { findOrCreateUser } from '#root/common/models/User'
 

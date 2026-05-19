@@ -1,6 +1,6 @@
+import type { NextFunction } from 'grammy'
 import type { Context } from '#root/bot/context'
 import type { UserDoc } from '#root/common/models/User'
-import type { NextFunction } from 'grammy'
 import { i18n } from '#root/common/i18n'
 import { findOrCreateUser } from '#root/common/models/User'
 

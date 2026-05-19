@@ -1,8 +1,8 @@
 import type { FastifyInstance } from 'fastify'
 import type { Buffer } from 'node:buffer'
+import sharp from 'sharp'
 import { cnftHexColor, CNFTImageType, getCNFTByIndex, getCNFTByWallet } from '#root/common/models/CNFT'
 import { logger } from '#root/logger'
-import sharp from 'sharp'
 
 export interface NftData {
   index: number

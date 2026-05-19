@@ -1,5 +1,5 @@
-import type { Context } from '#root/bot/context'
 import type { ErrorHandler } from 'grammy'
+import type { Context } from '#root/bot/context'
 import { getUpdateInfo } from '#root/common/helpers/logging'
 
 export const errorHandler: ErrorHandler<Context> = (error) => {

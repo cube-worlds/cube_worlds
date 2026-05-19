@@ -1,6 +1,9 @@
+import type { PhotoSize } from '@grammyjs/types'
 import type { Context } from '#root/bot/context'
 import type { NFTMintParameters } from '#root/common/helpers/nft-item'
-import type { PhotoSize } from '@grammyjs/types'
+import { Address, toNano } from '@ton/core'
+import { ChatGPTAPI } from 'chatgpt'
+import { Composer, InputFile } from 'grammy'
 import { changeImageData } from '#root/bot/callback-data/image-selection'
 import { isAdmin } from '#root/bot/filters/is-admin'
 import { photoKeyboard, SelectImageButton } from '#root/bot/keyboards/photo'
@@ -35,9 +38,6 @@ import { sleep } from '#root/common/helpers/time'
 import { countUsers, findUserById } from '#root/common/models/User'
 import { config } from '#root/config'
 import { logger } from '#root/logger'
-import { Address, toNano } from '@ton/core'
-import { ChatGPTAPI } from 'chatgpt'
-import { Composer, InputFile } from 'grammy'
 
 const composer = new Composer<Context>()
 

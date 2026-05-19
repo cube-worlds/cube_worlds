@@ -1,4 +1,6 @@
 import type { Context } from '#root/bot/context'
+import { Composer } from 'grammy'
+import { getMarkdownTable } from 'markdown-table-ts'
 import { isAdmin } from '#root/bot/filters/is-admin'
 import { appendOwnRowIfMissing } from '#root/common/helpers/leaderboard-rows'
 import { logHandle } from '#root/common/helpers/logging'
@@ -10,8 +12,6 @@ import {
   placeInLine,
   UserState,
 } from '#root/common/models/User'
-import { Composer } from 'grammy'
-import { getMarkdownTable } from 'markdown-table-ts'
 
 const composer = new Composer<Context>()
 

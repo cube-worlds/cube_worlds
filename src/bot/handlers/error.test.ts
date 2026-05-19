@@ -1,6 +1,6 @@
 /* eslint-disable test/no-import-node-test */
-import type { Context } from '#root/bot/context'
 import type { BotError } from 'grammy'
+import type { Context } from '#root/bot/context'
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { errorHandler } from '#root/bot/handlers/error'

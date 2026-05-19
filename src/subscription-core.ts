@@ -1,8 +1,8 @@
 import type { Address, Transaction } from '@ton/core'
+import { fromNano } from '@ton/core'
 import { tonToPoints } from '#root/common/helpers/points'
 import { parseInternalInMessage } from '#root/common/helpers/transaction-parsing'
 import { BalanceChangeType } from '#root/common/models/Balance'
-import { fromNano } from '@ton/core'
 import { commaSeparatedNumber } from './common/helpers/numbers'
 
 export interface SubscriptionUser {

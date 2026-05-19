@@ -6,6 +6,7 @@ import type {
 } from '#root/common/models/CNFT'
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { Address } from '@ton/core'
 import {
   buildCNFTHelpers,
   cnftHexColor,
@@ -13,7 +14,6 @@ import {
   pickCNFTType,
   pickNextColor,
 } from '#root/common/models/CNFT'
-import { Address } from '@ton/core'
 
 // pickCNFTType — diceWinner takes precedence over everything else
 

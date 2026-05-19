@@ -1,5 +1,5 @@
-import type { AccountSubscription } from '#root/common/helpers/account-subscription'
 import type { Transaction } from '@ton/core'
+import type { AccountSubscription } from '#root/common/helpers/account-subscription'
 import { AccountSubscription as DefaultAccountSubscription } from '#root/common/helpers/account-subscription'
 import { getLastestTransaction } from '#root/common/models/Transaction'
 import { config } from '#root/config'

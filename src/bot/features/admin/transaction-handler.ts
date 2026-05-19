@@ -1,7 +1,8 @@
+import type { Api, RawApi } from 'grammy'
 import type { Context } from '#root/bot/context'
 import type { Transaction } from '#root/common/models/Transaction'
 import type { UserDoc } from '#root/common/models/User'
-import type { Api, RawApi } from 'grammy'
+import { fromNano } from '@ton/core'
 import { tonToPoints } from '#root/common/helpers/points'
 import {
   sendMessageToAdmins,
@@ -10,7 +11,6 @@ import {
 import { BalanceChangeType } from '#root/common/models/Balance'
 import { findTransaction } from '#root/common/models/Transaction'
 import { addPoints, findUserByName } from '#root/common/models/User'
-import { fromNano } from '@ton/core'
 
 export interface TransactionAcceptedTx {
   accepted?: boolean

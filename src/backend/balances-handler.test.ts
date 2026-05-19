@@ -2,8 +2,8 @@
 import type { BalancesHandlerDependencies } from '#root/backend/balances-handler'
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { buildBalancesHandler } from '#root/backend/balances-handler'
 import fastify from 'fastify'
+import { buildBalancesHandler } from '#root/backend/balances-handler'
 
 interface BalancesTestContext {
   app: ReturnType<typeof fastify>

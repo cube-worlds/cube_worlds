@@ -1,5 +1,5 @@
-import type { Context } from '#root/bot/context'
 import type { NextFunction } from 'grammy'
+import type { Context } from '#root/bot/context'
 
 export default async function slapReaction(ctx: Context, next: NextFunction) {
   if (!ctx.from && ctx.channelPost) {

@@ -1,5 +1,5 @@
-import type { Context } from '#root/bot/context'
 import type { PhotoSize } from '@grammyjs/types'
+import type { Context } from '#root/bot/context'
 import { logger } from '#root/logger'
 
 export async function getUserProfilePhoto(

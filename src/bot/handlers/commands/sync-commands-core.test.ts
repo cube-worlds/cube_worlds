@@ -1,6 +1,6 @@
 /* eslint-disable test/no-import-node-test */
-import type { BotApiLike } from '#root/bot/handlers/commands/sync-commands-core'
 import type { BotCommandScope } from '@grammyjs/types'
+import type { BotApiLike } from '#root/bot/handlers/commands/sync-commands-core'
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {

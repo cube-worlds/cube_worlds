@@ -1,10 +1,10 @@
 /* eslint-disable test/no-import-node-test */
+import type { ReactionType } from '@grammyjs/types'
 import type {
   PlaceInLineSenderDependencies,
   TelegramSendersDependencies,
 } from '#root/common/helpers/telegram'
 import type { UserDoc } from '#root/common/models/User'
-import type { ReactionType } from '@grammyjs/types'
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {

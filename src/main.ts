@@ -1,6 +1,8 @@
 #!/usr/bin/env tsx
 /* eslint-disable antfu/no-top-level-await */
 import process from 'node:process'
+import mongoose from 'mongoose'
+import { onShutdown } from 'node-graceful-shutdown'
 import { setMenuButton, syncBotCommands } from '#root/bot/handlers/commands/sync-commands'
 import { createBot } from '#root/bot/index'
 import { createInitialBalancesIfNotExists } from '#root/common/models/User'
@@ -8,8 +10,6 @@ import { config } from '#root/config'
 import { logger } from '#root/logger'
 import { createServer } from '#root/server'
 import { Subscription } from '#root/subscription'
-import mongoose from 'mongoose'
-import { onShutdown } from 'node-graceful-shutdown'
 
 try {
   await mongoose.connect(config.MONGO)

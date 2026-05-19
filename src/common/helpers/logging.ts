@@ -1,6 +1,6 @@
-import type { Context } from '#root/bot/context'
 import type { Update } from '@grammyjs/types'
 import type { MiddlewareFn } from 'grammy'
+import type { Context } from '#root/bot/context'
 
 export function getUpdateInfo(ctx: Context): Omit<Update, 'update_id'> {
   const { update_id, ...update } = ctx.update

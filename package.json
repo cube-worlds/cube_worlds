@@ -24,7 +24,7 @@
     "update:frontend": "cd src/frontend && npx npm-check-updates -u && npm install",
     "update:all": "npm run update:bot && npm run update:frontend",
     "prepare": "npx husky",
-    "lint": "eslint . --ignore-pattern .github/",
+    "lint": "eslint . --ignore-pattern .github/ --ignore-pattern docs/",
     "format": "prettier --write \"**/*.{ts,js,vue,json,css,scss,md}\"",
     "format:check": "prettier --check \"**/*.{ts,js,vue,json,css,scss,md}\"",
     "start": "tsc && tsx ./src/main.ts",
@@ -73,7 +73,7 @@
     "znv": "0.5.0"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^7.4.3",
+    "@antfu/eslint-config": "^9.0.0",
     "@types/node": "25.9.0",
     "eslint": "^10",
     "eslint-config-prettier": "^10.1.8",

@@ -1,8 +1,10 @@
-import type { Context } from '#root/bot/context'
 import type { Address, Transaction } from '@ton/core'
 import type { Api, Bot, RawApi } from 'grammy'
+import type { Context } from '#root/bot/context'
 import type { OpenedWallet } from './common/helpers/ton'
 import type { SubscriptionDependencies } from './subscription-core'
+import { beginCell, internal, SendMode, toNano } from '@ton/core'
+import { JettonMaster } from '@ton/ton'
 import { sendMessageToAdmins } from '#root/common/helpers/telegram'
 import { i18n } from '#root/common/i18n'
 import {
@@ -12,8 +14,6 @@ import {
 import { addPoints, findUserByAddress } from '#root/common/models/User'
 import { config } from '#root/config'
 import { logger } from '#root/logger'
-import { beginCell, internal, SendMode, toNano } from '@ton/core'
-import { JettonMaster } from '@ton/ton'
 import {
   convertCubeToSatoshi,
   getSatoshiJettonMasterAddress,

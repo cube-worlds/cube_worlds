@@ -1,8 +1,8 @@
 import type { Context } from '#root/bot/context'
+import { Composer } from 'grammy'
 import { buildStatsCommandHandler } from '#root/bot/features/stats-handler'
 import { isAdmin } from '#root/bot/filters/is-admin'
 import { logHandle } from '#root/common/helpers/logging'
-import { Composer } from 'grammy'
 
 const composer = new Composer<Context>()
 

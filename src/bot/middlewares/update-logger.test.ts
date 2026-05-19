@@ -1,6 +1,6 @@
 /* eslint-disable test/no-import-node-test */
-import type { Context } from '#root/bot/context'
 import type { NextFunction } from 'grammy'
+import type { Context } from '#root/bot/context'
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { updateLogger } from '#root/bot/middlewares/update-logger'

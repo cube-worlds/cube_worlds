@@ -1,5 +1,9 @@
-import type { Context, SessionData } from '#root/bot/context'
 import type { BotConfig, StorageAdapter } from 'grammy'
+import type { Context, SessionData } from '#root/bot/context'
+import { autoChatAction } from '@grammyjs/auto-chat-action'
+import { autoRetry } from '@grammyjs/auto-retry'
+import { hydrate } from '@grammyjs/hydrate'
+import { session, Bot as TelegramBot } from 'grammy'
 import { createContextConstructor } from '#root/bot/context'
 import {
   collectionFeature,
@@ -21,10 +25,6 @@ import { updateLogger } from '#root/bot/middlewares/index'
 import { i18n } from '#root/common/i18n'
 import { config } from '#root/config'
 import { logger } from '#root/logger'
-import { autoChatAction } from '@grammyjs/auto-chat-action'
-import { autoRetry } from '@grammyjs/auto-retry'
-import { hydrate } from '@grammyjs/hydrate'
-import { session, Bot as TelegramBot } from 'grammy'
 import { userFeature } from './features/admin/user'
 import slapReaction from './middlewares/reaction'
 

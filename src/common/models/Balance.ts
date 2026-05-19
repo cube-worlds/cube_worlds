@@ -1,5 +1,5 @@
-import { getEnumKeyByValue } from '#root/common/helpers/enum'
 import { getModelForClass, modelOptions, prop } from '@typegoose/typegoose'
+import { getEnumKeyByValue } from '#root/common/helpers/enum'
 
 export type BalanceChangeKeys = keyof typeof BalanceChangeType
 

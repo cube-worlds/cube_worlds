@@ -1,6 +1,6 @@
 /* eslint-disable test/no-import-node-test */
-import type { Claim } from '#root/common/models/Claim'
 import type { DocumentType } from '@typegoose/typegoose'
+import type { Claim } from '#root/common/models/Claim'
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {

@@ -1,6 +1,6 @@
 import process from 'node:process'
-import { config as realConfig } from '#root/config'
 import { pino } from 'pino'
+import { config as realConfig } from '#root/config'
 
 const config =
   process.env.NODE_ENV === 'test'

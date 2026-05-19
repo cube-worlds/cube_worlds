@@ -1,12 +1,12 @@
 /* eslint-disable test/no-import-node-test */
-import type { ClaimHandlerDependencies } from '#root/backend/claim-handler'
 import type { InitData } from '@telegram-apps/init-data-node'
+import type { ClaimHandlerDependencies } from '#root/backend/claim-handler'
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { setTimeout as delay } from 'node:timers/promises'
+import fastify from 'fastify'
 import { buildClaimHandler } from '#root/backend/claim-handler'
 import { BalanceChangeType } from '#root/common/models/Balance'
-import fastify from 'fastify'
 
 type ResolvedUser = NonNullable<
   Awaited<ReturnType<ClaimHandlerDependencies['findUserById']>>

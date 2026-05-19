@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import type { TonConnectUI } from '@tonconnect/ui'
-import { commaSeparatedNumber } from '#root/common/helpers/numbers.ts'
 import { beginCell, fromNano } from '@ton/core'
 import { computed, inject, onMounted, ref, watch } from 'vue'
+import { commaSeparatedNumber } from '#root/common/helpers/numbers.ts'
 import { useRetry } from '../composables/useRetry'
 import { readNum, runGetMethod } from '../services/toncenter'
 import { useUserStore } from '../stores/userStore'

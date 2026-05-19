@@ -1,5 +1,5 @@
-import { tonClient } from '#root/common/helpers/ton'
 import { Address } from '@ton/core'
+import { tonClient } from '#root/common/helpers/ton'
 import { useRetry } from '../../frontend/src/composables/useRetry'
 import { countAllBalances } from '../models/User'
 

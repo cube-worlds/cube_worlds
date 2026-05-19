@@ -1,6 +1,6 @@
 /* eslint-disable test/no-import-node-test */
-import type { Transaction } from '#root/common/models/Transaction'
 import type { DocumentType } from '@typegoose/typegoose'
+import type { Transaction } from '#root/common/models/Transaction'
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { buildTransactionHelpers } from '#root/common/models/Transaction'

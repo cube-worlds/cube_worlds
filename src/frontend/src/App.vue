@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import type { ConnectedWallet } from '@tonconnect/ui'
 import type { Ref } from 'vue'
-import { commaSeparatedNumber } from '#root/common/helpers/numbers'
 import { TonConnectUI } from '@tonconnect/ui'
 import { useFluent } from 'fluent-vue'
 import { computed, onMounted, provide, ref } from 'vue'
 import { ClosingConfirmation, ExpandedViewport, useMiniApp } from 'vue-tg'
+import { commaSeparatedNumber } from '#root/common/helpers/numbers'
 import MainMenu from './components/nested/MainMenu.vue'
 import { useAuth } from './composables/useAuth'
 import { useSetWallet } from './composables/useSetWallet'

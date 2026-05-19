@@ -2,8 +2,8 @@
 import type { Transaction } from '@ton/core'
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { parseInternalInMessage } from '#root/common/helpers/transaction-parsing'
 import { Address, beginCell, Cell, toNano } from '@ton/core'
+import { parseInternalInMessage } from '#root/common/helpers/transaction-parsing'
 
 const SAMPLE_ADDRESS = Address.parse(
   '0QC4sEG_VQ4QawHnr77mqJhC98cpoyI-0gXuwR76Ff2kT4eI',

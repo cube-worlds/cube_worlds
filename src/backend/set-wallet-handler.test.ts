@@ -1,11 +1,11 @@
 /* eslint-disable test/no-import-node-test */
-import type { SetWalletHandlerDependencies } from '#root/backend/set-wallet-handler'
 import type { InitData } from '@telegram-apps/init-data-node'
+import type { SetWalletHandlerDependencies } from '#root/backend/set-wallet-handler'
 import assert from 'node:assert/strict'
 import process from 'node:process'
 import test from 'node:test'
-import { buildSetWalletHandler } from '#root/backend/set-wallet-handler'
 import fastify from 'fastify'
+import { buildSetWalletHandler } from '#root/backend/set-wallet-handler'
 
 type ResolvedUser = NonNullable<
   Awaited<ReturnType<SetWalletHandlerDependencies['findUserById']>>

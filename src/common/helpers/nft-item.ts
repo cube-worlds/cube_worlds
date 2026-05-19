@@ -1,13 +1,13 @@
 import type { NFTMintParameters } from '#root/common/helpers/nft-mint-body'
 import type { OpenedWallet } from '#root/common/helpers/ton'
+import { Address, internal, SendMode, toNano } from '@ton/core'
 import { NftCollection } from '#root/common/helpers/nft-collection'
 import { createMintBody } from '#root/common/helpers/nft-mint-body'
 import { sleep } from '#root/common/helpers/time'
 import { openWallet, waitSeqno } from '#root/common/helpers/ton'
 import { config } from '#root/config'
-import { logger } from '#root/logger'
 
-import { Address, internal, SendMode, toNano } from '@ton/core'
+import { logger } from '#root/logger'
 
 export type { NFTMintParameters } from '#root/common/helpers/nft-mint-body'
 export { createMintBody } from '#root/common/helpers/nft-mint-body'

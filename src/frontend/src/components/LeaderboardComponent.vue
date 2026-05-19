@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { commaSeparatedNumber } from '#root/common/helpers/numbers.ts'
 import { computed, onMounted, ref } from 'vue'
+import { commaSeparatedNumber } from '#root/common/helpers/numbers.ts'
 import { useRetry } from '../composables/useRetry'
 
 const { retry } = useRetry()

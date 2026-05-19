@@ -3,9 +3,9 @@ import type { NftData, NftHandlerDependencies } from '#root/backend/nft-handler'
 import assert from 'node:assert/strict'
 import { Buffer } from 'node:buffer'
 import { test } from 'node:test'
+import fastify from 'fastify'
 import { buildNftHandler, nftImage, toJSON } from '#root/backend/nft-handler'
 import { CNFTImageType } from '#root/common/models/CNFT'
-import fastify from 'fastify'
 
 interface Harness {
   app: ReturnType<typeof fastify>

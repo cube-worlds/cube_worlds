@@ -1,4 +1,6 @@
 import type { Context } from '#root/bot/context'
+import { Composer } from 'grammy'
+import { getMarkdownTable } from 'markdown-table-ts'
 import { appendOwnRowIfMissing } from '#root/common/helpers/leaderboard-rows'
 import { logHandle } from '#root/common/helpers/logging'
 import { commaSeparatedNumber } from '#root/common/helpers/numbers'
@@ -9,8 +11,6 @@ import {
   findWhales,
   placeInWhales,
 } from '#root/common/models/User'
-import { Composer } from 'grammy'
-import { getMarkdownTable } from 'markdown-table-ts'
 
 const composer = new Composer<Context>()
 
