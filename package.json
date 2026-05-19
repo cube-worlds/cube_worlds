@@ -74,7 +74,7 @@
   },
   "devDependencies": {
     "@antfu/eslint-config": "^9.0.0",
-    "@types/node": "25.9.0",
+    "@types/node": "25.9.1",
     "eslint": "^10",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-vue": "^10.9.1",
