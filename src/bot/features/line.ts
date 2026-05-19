@@ -1,4 +1,5 @@
 import type { Context } from '#root/bot/context'
+import { isAdmin } from '#root/bot/filters/is-admin'
 import { appendOwnRowIfMissing } from '#root/common/helpers/leaderboard-rows'
 import { logHandle } from '#root/common/helpers/logging'
 import { commaSeparatedNumber } from '#root/common/helpers/numbers'
@@ -14,7 +15,7 @@ import { getMarkdownTable } from 'markdown-table-ts'
 
 const composer = new Composer<Context>()
 
-const feature = composer.chatType('private')
+const feature = composer.chatType('private').filter(isAdmin)
 
 feature.command('line', logHandle('command-line'), async (ctx) => {
   const count = await countAllLine()
