@@ -8,26 +8,6 @@ const composer = new Composer<Context>()
 
 const feature = composer.chatType('private').filter(isAdmin)
 
-feature.command(
-  'description',
-  logHandle('command-description'),
-  async (ctx) => {
-    const oldCustomDescription = ctx.dbuser.customDescription
-    const newCustomDescription = ctx.match.trim()
-    if (newCustomDescription) {
-      ctx.dbuser.customDescription = newCustomDescription
-      await ctx.dbuser.save()
-      await ctx.reply(
-        `<code>/description ${ctx.dbuser.customDescription}</code>`,
-      )
-      return
-    }
-    await ctx.reply(
-      `<code>/description</code> ${oldCustomDescription ?? 'about selected person'}`,
-    )
-  },
-)
-
 feature.command('positive', logHandle('command-positive'), async (ctx) => {
   const oldPositivePrompt = ctx.dbuser.positivePrompt
   const newPositivePrompt = ctx.match.trim()
