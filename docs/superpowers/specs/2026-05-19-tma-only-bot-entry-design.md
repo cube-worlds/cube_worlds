@@ -27,7 +27,7 @@ only in the per-admin command-menu scope):
 - `/transaction`
 - `/collection`
 - `/user`
-- `/parameters` and its siblings: `/positive`, `/negative`, `/strength`, `/scale`, `/steps`, `/preset`, `/sampler`
+- Image-gen parameter commands (all live in `parameters.ts`): `/positive`, `/negative`, `/strength`, `/scale`, `/steps`, `/preset`, `/sampler`. The `/description` command in the same file is deleted along with the others. (There is no `/parameters` command today; the file is named after the concept.)
 
 Everything else is deleted entirely (handler, helpers, tests, i18n keys, menu
 entry). Git history is the archive.
@@ -62,8 +62,8 @@ change there is no command to trigger it, so the bot must self-apply on boot.
   - `all_private_chats`: `[ /start, /help, /whales ]`.
   - `all_group_chats`: empty array (matches today).
   - `chat` scoped per admin in `config.BOT_ADMINS`: user list +
-    `[ /stats, /queue, /line, /transaction, /collection, /user, /parameters,
-    /positive, /negative, /strength, /scale, /steps, /preset, /sampler ]`.
+    `[ /stats, /queue, /line, /transaction, /collection, /user, /positive,
+    /negative, /strength, /scale, /steps, /preset, /sampler ]`.
 - Preserve the existing `setMyDescription` / `setMyShortDescription` per-locale
   fan-out inside the new helper.
 - `isMultipleLocales` branch for the menu disappears because `/language` is
@@ -126,12 +126,13 @@ and `whales_command.description` are kept (commands still exist).
   `unhandledFeature`; remove the `isMultipleLocales`/`languageFeature` block.
 - `src/bot/features/start.ts` — remove the inline keyboard from the `/start`
   reply. Keep `checkReferal` and its public surface.
-- Admin features (`stats.ts`, `line.ts`, `admin/queue.ts`,
-  `admin/transaction.ts`, `admin/collection.ts`, `admin/user.ts`,
-  `admin/parameters.ts`) — confirm each scopes to
-  `composer.chatType('private').filter(isAdmin)`. `whales.ts` keeps
+- Admin features (`stats.ts`, `admin/queue.ts`, `admin/transaction.ts`,
+  `admin/collection.ts`, `admin/user.ts`, `admin/parameters.ts`) — confirm each
+  scopes to `composer.chatType('private').filter(isAdmin)`. `line.ts` adds the
+  `isAdmin` filter (currently user-facing). `whales.ts` keeps
   `chatType('private')` without the `isAdmin` filter because it stays
-  user-facing.
+  user-facing. `admin/parameters.ts` also has its `feature.command('description',
+  ...)` block removed; the rest of the file stays.
 - `src/main.ts` — after bot start, call `syncBotCommands(bot.api)` and
   `setMenuButton(bot.api)` inside a try/catch that logs failures.
 
@@ -172,6 +173,18 @@ sources.
 - Backfilling HTTP admin endpoints to mirror the deleted bot capabilities.
 - Migrating dice / play / mint flows into the TMA — these are presumed already
   reachable from the mini app and are not the subject of this change.
+
+## Side effect: attach-user language picker
+
+`src/bot/middlewares/attach-user.ts` shows a language-select keyboard to users
+whose detected locale is not in `i18n.locales`. The keyboard's button-click
+callback handler lives inside `language.ts`, which is being deleted. After the
+delete, clicking the keyboard does nothing.
+
+Action: strip the keyboard prompt from `attach-user.ts`. The middleware still
+assigns `ctx.dbuser.language` (defaulting to `'en'` when unsupported), so the
+behavioural change is only that users no longer see a one-time picker. They
+can change their language inside the TMA.
 
 ## Risks
 
