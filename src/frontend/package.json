@@ -19,7 +19,7 @@
     "@ton/core": "^0.63.1",
     "@tonconnect/ui": "^2.4.1",
     "@vitejs/plugin-vue": "^6.0.4",
-    "axios": "^1.13.5",
+    "axios": "^1.16.1",
     "element-plus": "^2.13.2",
     "fluent-vue": "^3.8.1",
     "pinia": "^3.0.4",
@@ -32,9 +32,9 @@
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.28.6",
-    "@types/node": "^25.2.3",
+    "@types/node": "^25.7.0",
     "@types/telegram-web-app": "^9.1.1",
-    "eslint-plugin-vue": "^10.7.0",
+    "eslint-plugin-vue": "^10.9.1",
     "typescript": "^5.9.3",
     "vue-tg": "^0.9.0",
     "vue-tsc": "^3.2.4"
