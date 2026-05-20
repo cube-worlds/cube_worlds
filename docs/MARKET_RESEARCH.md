@@ -19,7 +19,7 @@ The four retention mechanics that actually worked in 2025–2026:
 | NFTs as *gameplay multipliers* (rentable ideally) | Fanton (1–3 TON entry, NFTs multiply score, non-holders rent from holders) | real secondary market |
 | Stars + Adsgram + jetton stack (free / casual / power) | OmiSoft 2026 mix, PropellerAds report | sustainable revenue line |
 
-Cube Worlds is well-positioned: TON-native, has CUBE points + SATOSHI on-chain jetton, AI-art CNFT mint, daily claim with streak, idle clicker (hidden), and a HMAC-captcha service still mounted but currently orphaned (the dice command it served was removed). Main miss: **the CNFT type tags don't affect gameplay**, no seasons, no clans, no Stars/Adsgram revenue, no Telegram Gifts.
+Cube Worlds is well-positioned: TON-native, has CUBE points + SATOSHI on-chain jetton, AI-art CNFT mint, daily claim with streak, and an idle clicker (hidden). Main miss: **the CNFT type tags don't affect gameplay**, no seasons, no clans, no Stars/Adsgram revenue, no Telegram Gifts, no anti-bot rail (the old DOOM captcha was deleted with the dice command).
 
 ---
 
@@ -144,7 +144,7 @@ The crude approaches (Telegram username, wallet address) fail trivially; serious
 - **BotBasher / Humanode-style proof-of-personhood** verification bots are the emerging standard ([Humanode](https://blog.humanode.io/how-to-make-your-telegram-mini-app-sybil-resistant-with-botbasher/)).
 - **Telegram-mandated TON Connect 2.0** since early 2025 (Tonkeeper, Telegram Wallet, MyTonWallet) gives a stronger primary identity than username alone, and EU age-verification flows are arriving as a side-channel signal ([Quill Audits](https://www.quillaudits.com/blog/web3-security/telegram-mini-apps-security), [Telegram Core](https://core.telegram.org/api/age-verification)).
 - **Stars/paid friction at entry** (e.g., Catizen Airdrop Pass at $2M revenue) is both monetization and Sybil filter.
-- **Behavioral monitoring + Proof-of-Humanity** is now considered mandatory for any reward-bearing app ([Aurum Law checklist](https://aurum.law/newsroom/Telegram-Mini-App-Telegram-Mini-App-Legal-Checklist-in-2025)). Cube Worlds has the HMAC-captcha service still mounted at `/api/captcha/check` (orphaned now that `/dice` was removed); re-wiring it to gate the claim and referral flows would be the lowest-effort path to behavioral defense.
+- **Behavioral monitoring + Proof-of-Humanity** is now considered mandatory for any reward-bearing app ([Aurum Law checklist](https://aurum.law/newsroom/Telegram-Mini-App-Telegram-Mini-App-Legal-Checklist-in-2025)). Cube Worlds has no anti-bot rail today — the old HMAC captcha was deleted with the dice command — so gating the claim and referral flows behind a fresh challenge (BotBasher, Humanode, or a Stars-priced unlock) is the lowest-effort behavioral defense to add next.
 
 ## 2.4 2025–2026 emerging trends
 
@@ -163,7 +163,6 @@ The crude approaches (Telegram username, wallet address) fail trivially; serious
 ## 3.1 What Cube Worlds already has that maps well
 
 - Daily claim w/ 10-day streak × multiplier → on-pattern for daily check-in
-- HMAC-SHA256 captcha service (`src/backend/captcha.ts`) → infrastructure is ready; just needs a new trigger after `/dice` was removed
 - AI-generated CNFT mint (Whale / Diamond / Coin / Knight / Common — `Dice` is a legacy enum value, no longer awarded) → unique identity layer no one else has
 - CUBE (off-chain points) + SATOSHI (real TON jetton with master address) + bot wallet sendJettonTransfer → token rails exist
 - Idle clicker (`/clicker`, hidden) → second loop ready to surface
@@ -202,8 +201,8 @@ Pure ROI work on stuff already built or almost built:
 ### Phase 3 — Revenue & sybil hardening (2–3 weeks)
 
 - **Adsgram rewarded ads.** "Watch ad to +25% next claim" button in the frontend. SDK is a script tag + server verify; pairs cleanly with existing `claim-handler` DI shape.
-- **Stars sinks.** Cosmetic upgrades on CNFT mint (Phase 2 already opens this), retry-mint, skip-cooldown, captcha-bypass token (limited per day to keep anti-bot intact).
-- **Sybil layer.** Behavioral score per account (claim variance, time-of-day entropy, referral-tree fanout shape). Telegram Premium accounts get a higher trust score automatically — Catizen reports 40% of Telegram Premium users are in their community, so this is also an organic acquisition signal. Re-wire the existing HMAC captcha (currently orphaned) to trigger from this score crossing a threshold.
+- **Stars sinks.** Cosmetic upgrades on CNFT mint (Phase 2 already opens this), retry-mint, skip-cooldown, an anti-bot-bypass token (limited per day so the gate still bites the farms).
+- **Sybil layer.** Behavioral score per account (claim variance, time-of-day entropy, referral-tree fanout shape). Telegram Premium accounts get a higher trust score automatically — Catizen reports 40% of Telegram Premium users are in their community, so this is also an organic acquisition signal. Build a fresh anti-bot challenge (the old HMAC captcha was deleted with the dice command) and fire it from `claim-handler.ts` once the score crosses a threshold.
 - **Distributed claim lock** (`docs/FUTURE_DEVELOPMENT.md#4`) before any of the above scales.
 
 ### Phase 4 — External liquidity (4–6 weeks, optional but high upside)

@@ -244,7 +244,7 @@ How specific titles wire these patterns together. Focus on what worked, what fai
 
 6. **Separate the speculation token from the gameplay token.** Either via dual-token (M2), bonded wrapper (M6), or permissioned/open split (M7). Trader pressure on the gameplay token destroys gameplay.
 
-7. **Faucets must throttle.** Per-user daily caps. Diminishing returns. Anti-bot via captcha (you already have this) and behavioral signals. Axie's collapse was 50% economics + 50% bot farms.
+7. **Faucets must throttle.** Per-user daily caps. Diminishing returns. Anti-bot via an interactive challenge or proof-of-personhood, paired with behavioral signals. Axie's collapse was 50% economics + 50% bot farms.
 
 8. **Stable-pegged in-game credits make new-player UX sane.** Fanton's TON-denominated economy. Sorare's ETH-denominated cards. Off The Grid's in-game USD credits. New players don't understand "100 CUBE = ???"; they understand "$0.50 entry".
 
@@ -358,7 +358,7 @@ Today CUBE is doing double duty as gameplay points AND the only convertible curr
 | **Volatility** | Stable-low (gameplay-driven) | Speculative (scarcity-driven) |
 | **Audience** | All players | Whales, collectors |
 
-**Concrete action**: Add a SATOSHI-denominated sink. The cleanest: **SATOSHI cosmetic NFTs**. Pay X SATOSHI → mint a rare cube skin / captcha theme (K9 cosmetic sink). Hits the cosmetic-sink principle, uses existing IPFS pipeline (`src/bot/features/admin/queue.ts`).
+**Concrete action**: Add a SATOSHI-denominated sink. The cleanest: **SATOSHI cosmetic NFTs**. Pay X SATOSHI → mint a rare cube skin or season-themed trait (K9 cosmetic sink). Hits the cosmetic-sink principle, uses existing IPFS pipeline (`src/bot/features/admin/queue.ts`).
 
 ### Priority 4 — Faucet throttling and transparency (~1 week)
 
@@ -366,7 +366,7 @@ Once sinks exist, audit and tighten the faucets.
 
 - **Per-user daily cap** on referral rewards. Today the admin mint flow (`src/bot/features/admin/queue.ts`) pays on mint; if mint volume spikes, referral inflation spikes. Add a 30-day rolling cap.
 - **Diminishing returns** on the clicker. Cap effective rewards-per-day per user (anti-bot) so refill purchases produce status / XP rather than unbounded CUBE.
-- **Behavioral anti-bot** beyond captcha. Track click velocity, claim time-of-day distribution, IP clustering. Demote suspicious accounts' rewards by 10× before raising captcha (silent mitigation). The orphaned `captcha.ts` HMAC scaffolding is the natural home — it just needs a new trigger.
+- **Behavioral anti-bot.** Track click velocity, claim time-of-day distribution, IP clustering. Demote suspicious accounts' rewards by 10× first (silent mitigation), then escalate to a hard challenge once a threshold is crossed. There is no captcha rail in the codebase today — the old DOOM/HMAC scaffolding was deleted with the dice command — so the challenge needs to be built fresh (BotBasher, Humanode, or a Stars-priced unlock).
 - **Public economy dashboard** at `/economy` route. Show daily CUBE minted, daily CUBE burned (sum of sinks), net emission, top 10 sinks by volume. One read-only Mongo aggregation. Mirrors Big Time / Splinterlands transparency reports.
 
 **Wiring**: Most logic centralizes in a new `economy-metrics-handler.ts`. Aggregation: `db.balances.aggregate([{$match:{createdAt:{$gte:weekAgo}}}, {$group:{_id:"$type", total:{$sum:"$amount"}}}])` — trivial query on existing data.

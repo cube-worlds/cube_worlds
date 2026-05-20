@@ -21,7 +21,6 @@
 - **$SATOSHI on-chain jetton** — real jetton master (`src/common/helpers/satoshi.ts`), CUBE→SATOSHI swap based on supply ratio.
 - **CNFT collection on TON** (admin-curated minting via `/queue`, Stability AI + Pinata IPFS, on-chain mint to `COLLECTION_ADDRESS`).
 - **Transaction subscription** (`src/subscription.ts` + `subscription-core.ts`) — polls TON for incoming payments and credits points.
-- **Vestigial DOOM captcha + `User.suspicionDices`** — orphaned from the removed dice command; reusable as an anti-bot rail if we want.
 - **Referral graph** — `Vote` model (giver → receiver).
 
 ### Hard requirements from the brief
@@ -186,7 +185,7 @@ Operator revenue mix, player cash-out paths, anti-Sybil layered defense, and Cat
 
 - **Operator gross at 100k DAU base case:** ~$7.3M/yr; net ~$5.1M after Apple/Google + Fragment leakage.
 - **Player cash-out paths:** $GOLD/$IRON → marketplace → $CUBE jetton → external DEX; PvP/clan wins paid in $CUBE jetton; season top-100 in USDT-TON; rare drops as tradable Equipment NFTs.
-- **Anti-Sybil engineering tasks** (specific to this codebase): soulbound first hero, on-chain castle gate, revive the orphaned HMAC captcha at `src/backend/captcha.ts`, 30-day referral cliff, 24h withdrawal cooldown, rename `suspicionDices` → `suspicionScore`.
+- **Anti-Sybil engineering tasks** (specific to this codebase): soulbound first hero, on-chain castle gate, build a new HMAC-token anti-bot rail (the old DOOM captcha was deleted with the dice command), 30-day referral cliff, 24h withdrawal cooldown, add a `suspicionScore` field on `User` driven by a behavioral monitor.
 - **Sustainability invariants enforced in code:** nightly net-deflation check on `Balance` model, multi-sig treasury wallet, no emission-funded payouts, burn-on-action exposed in UI, quarterly transparency report.
 
 ---
@@ -305,7 +304,7 @@ Each phase maps to existing repo structure. Effort estimates assume one full-tim
 1. **Token launch risk.** Every TGE in the 2024 cohort crashed -85% to -98%. Mitigation: do not launch CATI/HMSTR-style market token. Promote $CUBE quietly via gameplay; if external listing happens, do it after 18+ months of stable burns.
 2. **Apple/Google take rate.** Stars-on-mobile takes ~32% off the top. If desktop/web share is < 20% of revenue, treasury margin is hit hard. Mitigation: nudge users toward TonConnect (one-click via TON Pay SDK) with a price discount.
 3. **Telegram policy shifts.** Telegram throttled non-TON chains in 2025; could throttle game ToS terms in 2026. Mitigation: stay TON-pure; keep gameplay legal-grey-free (no gambling framing, no "guaranteed earnings" marketing).
-4. **Sybil scale.** If multi-account farms target the rewards pool, payout/user collapses. Mitigation: soulbound first hero, captcha rail, account-age weighting, withdrawal cooldown — see §5.3.
+4. **Sybil scale.** If multi-account farms target the rewards pool, payout/user collapses. Mitigation: soulbound first hero, a (still-to-be-built) behavioral anti-bot rail, account-age weighting, withdrawal cooldown — see §5.3.
 5. **Catizen's pivot pressure.** Catizen owns the publisher slot. We should not compete with them on storefront; we should be the ancient-world game on their hub. Open question: terms of being on Catizen Hub or Notcoin Games Hub?
 6. **PvP escrow contract audit.** This is the only contract that holds player funds. Must be audited (~$10k–$20k from CertiK / Trail of Bits Tact-fluent reviewers) before mainnet. Skipping this is the single highest financial risk in the plan.
 7. **Server-side combat resolver fairness.** Player can claim a result was rigged. Mitigation: commit-reveal seed pattern; publish daily seed hash; allow players to verify post-hoc.

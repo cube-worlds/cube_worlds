@@ -237,11 +237,11 @@ The TMA space has been wrecked by multi-account farming (X Empire delisted by OK
 
 1. **Soulbound first hero** — one per Telegram account. Sybil farms have to mint a real hero per account, which costs gas.
 2. **Castle NFT is on-chain** — same constraint, costs ~0.05 TON to mint per account.
-3. **Captcha rail (revived)** — wire the existing `src/backend/captcha.ts` HMAC captcha to high-suspicion accounts. The HMAC infrastructure is already in place (vestigial scaffolding from the removed dice command — see ARCHITECTURE.md).
+3. **Anti-bot rail (to build)** — the previous DOOM HMAC captcha at `src/backend/captcha.ts` and its `suspicionDices` field were deleted with the dice command. A new gate (BotBasher / Humanode proof-of-personhood, an interactive challenge, or a Stars-priced unlock) needs to be built and fired from `claim-handler.ts` once a behavioral score crosses a threshold.
 4. **Referral payout has a 30-day cliff** — referred user must remain active for 30 days before referral payout. Stops referral-mill bots.
 5. **Withdrawal cooldown** — 24h delay on $CUBE jetton withdrawal; gives detection time.
 6. **Telegram-account-age weighting** — accounts created in the last 7 days have reduced reward multipliers (already a standard pattern from the DOGS/Notcoin era).
-7. **Bot-account-rate metric** — flag accounts whose action patterns are too regular (existing `suspicionDices` field on User can be repurposed → rename to `suspicionScore`).
+7. **Bot-account-rate metric** — add a `suspicionScore` field on `User`, fed by a worker that watches claim variance, time-of-day entropy, and referral-fanout shape; rewards demoted when it crosses a threshold.
 
 ### 4.4 Catizen-style sustainability invariants
 
