@@ -12,10 +12,10 @@ Confirmed from code (citations in section 4):
 
 **Sources (faucets)**
 - `BalanceChangeType.Claim` — daily claim, 60s cooldown × 10-day streak × 100 base
-- `BalanceChangeType.Dice` — dice rolls, series bonuses
 - `BalanceChangeType.Referral` — invite bonuses on mint
 - `BalanceChangeType.Donation` — incoming TON deposits credited to CUBE balance
 - `BalanceChangeType.Initial` — bootstrap row for new users
+- `BalanceChangeType.Dice` / `Task` — **legacy values** still in the enum and on historical rows, but no longer produced (the `/dice` command was removed; no Task code path is wired today)
 
 **Sinks (drains)**
 - SATOSHI exchange (`subscription-core.ts:108`) — the **only** sink. Pro-rata: `(userCube / totalCube) * totalSatoshi`.
@@ -23,14 +23,14 @@ Confirmed from code (citations in section 4):
 **Token bookkeeping**
 - `User.votes: bigint` — denormalized balance (`User.ts:40`)
 - `Balance` collection — append-only ledger (`Balance.ts:29–41`), `getAggregatedBalance(userId)` is canonical
-- `BalanceChangeType` enum reserves `Deposit`, `Withdraw`, `Task`, `Trade` but they are **unused** today (`Balance.ts:6–17`)
+- `BalanceChangeType` enum reserves `Deposit`, `Withdraw`, `Trade` but they are **unused** today (`Balance.ts:6–17`)
 
 **On-chain side**
-- CUBE referenced as a TON jetton but **off-chain in practice** — DB-only points
+- CUBE referenced as a TON jetton but **off-chain in practice** — DB-only points (no jetton master address in `src/common/helpers/satoshi.ts`)
 - SATOSHI is a real TON jetton, transferred via `sendJettonTransfer()` from the bot wallet (`subscription-core.ts:35–80`)
 - Wallet binding: `set-wallet-handler.ts:44–91` (one bounceable address per user)
 
-**The structural problem**: 4 sources, 1 sink. Every successful Web3 game that survived its first year shipped 3+ sinks alongside any faucet. This document's Part 4 prescribes which sinks to add and in what order.
+**The structural problem**: 3 active sources, 1 sink. Every successful Web3 game that survived its first year shipped 3+ sinks alongside any faucet. This document's Part 4 prescribes which sinks to add and in what order. (See also [ANCIENT_WORLDS_PLAN.md](ANCIENT_WORLDS_PLAN.md) §3 for the resource-jetton sink layer.)
 
 ---
 
@@ -285,28 +285,28 @@ Mapped to existing files. Ordered by leverage-to-effort ratio.
 
 ### Priority 1 — Add 3 sinks to the existing CUBE economy (~3 weeks total)
 
-The single most impactful change. Cube Worlds today has 4 sources and 1 sink. Even one well-designed sink moves the economy materially; three creates real elasticity.
+The single most impactful change. Cube Worlds today has 3 active sources and 1 sink. Even one well-designed sink moves the economy materially; three creates real elasticity.
 
-#### 1a. **Dice energy refill** (sink K5) — ~3 days
-**Mechanic**: Dice has a per-day cooldown. Allow players to skip cooldown by spending CUBE — e.g., 500 CUBE = 1 extra roll, cost rising for the 2nd+ roll same day to throttle whales.
+#### 1a. **Clicker energy refill** (sink K5) — ~3 days
+**Mechanic**: The idle clicker (`src/frontend/src/views/Clicker.vue`, currently hidden via `showInMenu: false` in `routes.ts`) gates taps behind a regenerating energy bar. Allow players to skip the cooldown by spending CUBE — e.g., 500 CUBE = full refill, cost rising for the 2nd+ refill same day to throttle whales.
 
 **Wiring**:
 - New `BalanceChangeType.EnergyRefill = 9` in `src/common/models/Balance.ts:6–17`
 - New deps function on `UserOperationsDependencies` for negative-delta validation (only deduct if `getAggregatedBalance >= cost`).
-- Frontend: small "Roll again" button in dice view, costs displayed dynamically.
+- Frontend: small "Refill" button in clicker view, costs displayed dynamically.
 - Anti-spam: same in-process lock pattern as `claim-handler.ts` (per-user promise chain).
 
-**Why this first**: Repurposes infrastructure that already exists (`addPoints` with negative delta, `addChangeBalanceRecord`). Touches one new handler, no on-chain dependencies, immediate net deflation visible in `userStats()`.
+**Why this first**: Repurposes infrastructure that already exists (`addPoints` with negative delta, `addChangeBalanceRecord`). Touches one new handler, no on-chain dependencies, immediate net deflation visible in `userStats()`. Also unhides the clicker — a second core loop currently dormant.
 
 #### 1b. **Season Pass purchase** (sink K11 + utility U2) — ~1 week
-**Mechanic**: Time-boxed (4-week) access NFT. Costs N CUBE to mint. Grants: 2× claim multiplier, 1 free dice refill/day, exclusive captcha skin, season leaderboard inclusion. Burnable for cosmetic badge at end of season.
+**Mechanic**: Time-boxed (4-week) access NFT. Costs N CUBE to mint. Grants: 2× claim multiplier, exclusive AI-art prompt seed, season leaderboard inclusion. Burnable for cosmetic badge at end of season.
 
 **Wiring**:
 - New `SeasonPass` model alongside `User` and `Balance` (one row per user per season).
 - `BalanceChangeType.SeasonPass = 10`
 - Backend handler `season-pass-handler.ts` (DI pattern, similar to `claim-handler.ts`) — verifies balance, decrements, inserts row.
 - Frontend route alongside existing hidden `/clicker` and `/cnft`.
-- Multiplier injection in `claim-handler.ts:129` — read active season pass before computing reward.
+- Multiplier injection in `claim-handler.ts` — read active season pass before computing reward.
 
 **Why second**: This is the recurring sink. Each new season resets it. Provides natural marketing beats. Mirrors Pixels Flower Pass (highest-retention sink in their economy).
 
@@ -352,8 +352,8 @@ Today CUBE is doing double duty as gameplay points AND the only convertible curr
 
 | | CUBE (soft) | SATOSHI (premium) |
 |---|---|---|
-| **Source** | Claim, dice, referrals, donations | Pro-rata trade from CUBE; future: tournament prizes |
-| **Sink** | Dice refill, season pass, tournaments, withdrawal fee | None today — needs a sink |
+| **Source** | Claim, referrals, donations | Pro-rata trade from CUBE; future: tournament prizes |
+| **Sink** | Clicker refill, season pass, tournaments, withdrawal fee | None today — needs a sink |
 | **Supply** | Inflating | Capped (pre-minted pool) |
 | **Volatility** | Stable-low (gameplay-driven) | Speculative (scarcity-driven) |
 | **Audience** | All players | Whales, collectors |
@@ -364,9 +364,9 @@ Today CUBE is doing double duty as gameplay points AND the only convertible curr
 
 Once sinks exist, audit and tighten the faucets.
 
-- **Per-user daily cap** on referral rewards. Today `mint.ts:79` pays on mint; if mint volume spikes, referral inflation spikes. Add a 30-day rolling cap.
-- **Diminishing returns** on dice. Series-3 winners already get a big bonus; cap winners-per-day per user (anti-bot).
-- **Behavioral anti-bot** beyond captcha. Track click velocity, claim time-of-day distribution, IP clustering. Demote suspicious accounts' rewards by 10x before raising captcha (silent mitigation).
+- **Per-user daily cap** on referral rewards. Today the admin mint flow (`src/bot/features/admin/queue.ts`) pays on mint; if mint volume spikes, referral inflation spikes. Add a 30-day rolling cap.
+- **Diminishing returns** on the clicker. Cap effective rewards-per-day per user (anti-bot) so refill purchases produce status / XP rather than unbounded CUBE.
+- **Behavioral anti-bot** beyond captcha. Track click velocity, claim time-of-day distribution, IP clustering. Demote suspicious accounts' rewards by 10× before raising captcha (silent mitigation). The orphaned `captcha.ts` HMAC scaffolding is the natural home — it just needs a new trigger.
 - **Public economy dashboard** at `/economy` route. Show daily CUBE minted, daily CUBE burned (sum of sinks), net emission, top 10 sinks by volume. One read-only Mongo aggregation. Mirrors Big Time / Splinterlands transparency reports.
 
 **Wiring**: Most logic centralizes in a new `economy-metrics-handler.ts`. Aggregation: `db.balances.aggregate([{$match:{createdAt:{$gte:weekAgo}}}, {$group:{_id:"$type", total:{$sum:"$amount"}}}])` — trivial query on existing data.
@@ -378,7 +378,7 @@ Catizen's lesson (Part 2): the highest-revenue Telegram games use Stars (XTR) al
 **Recommendation**: Mirror every premium CUBE sink with a Stars-priced equivalent.
 - Season pass: 1000 CUBE OR 50 Stars
 - Tournament entry: 200 CUBE OR 10 Stars
-- Dice refill: 500 CUBE OR 5 Stars
+- Clicker refill: 500 CUBE OR 5 Stars
 
 Stars revenue accrues to the bot owner. Use it to fund the SATOSHI/CUBE prize pools — closes the loop without inflating CUBE supply.
 
@@ -405,11 +405,11 @@ A concrete sprint plan if you adopt this doc's recommendations:
 
 | Sprint | Focus | Files touched | Definition of done |
 |--------|-------|---------------|-------------------|
-| **Weeks 1–2** | Dice energy refill (1a) | `dice-handler.ts`, `Balance.ts` enum, frontend dice view | Net emission visible in `userStats()`; daily burns logged |
+| **Weeks 1–2** | Clicker energy refill (1a) | new `clicker-refill-handler.ts`, `Balance.ts` enum, `Clicker.vue` refill button, unhide route | Net emission visible in `userStats()`; daily burns logged |
 | **Weeks 3–4** | Season Pass (1b) | new `SeasonPass.ts`, new `season-pass-handler.ts`, `claim-handler.ts` multiplier, frontend `/season-pass` route | Season 1 live, first cohort owns passes, claim multiplier active |
 | **Weeks 5–6** | Tournament (1c) + economy dashboard (P4 partial) | new `Tournament.ts`, new `tournament-handler.ts`, new `economy-metrics-handler.ts`, frontend `/economy` page | Weekly tournament running, public burn/mint stats visible |
 | **Weeks 7–8** | CUBE jetton on-chain (P2) | Jetton minter contract, `subscription.ts` inbound, new `withdraw-cube-handler.ts` | First user successfully withdraws CUBE jetton; DEX listing optional |
-| **Weeks 9–10** | SATOSHI cosmetic sink (P3) + faucet throttling (P4) | `cosmetic-mint-handler.ts`, `mint.ts:79` referral cap, dice anti-bot heuristics | First SATOSHI burned; daily referral cap enforced |
+| **Weeks 9–10** | SATOSHI cosmetic sink (P3) + faucet throttling (P4) | `cosmetic-mint-handler.ts`, referral cap in `src/bot/features/admin/queue.ts`, behavioral anti-bot in `claim-handler.ts` | First SATOSHI burned; daily referral cap enforced |
 | **Weeks 11–12** | Stars rail (P5) | `stars-handler.ts` for season pass / tournament / refill | Non-wallet user can buy a season pass with Stars |
 
 Total: 12 weeks. Each sprint produces a shippable feature with measurable economic impact.

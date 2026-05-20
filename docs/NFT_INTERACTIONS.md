@@ -551,7 +551,7 @@ Ranked by implementation simplicity × retention/economic impact. Assumes limite
 | Cube Worlds CNFT today | Interaction present? |
 |---|---|
 | Mint (admin-curated AI art, once per user) | ✅ Pattern: minting |
-| 6 types (Whale / Diamond / Coin / Knight / Dice / Common) by vote count + behavior | ⚠️ Tagged but **inert** — no gameplay verbs use them |
+| 5 active types (Whale / Diamond / Coin / Knight / Common) by vote count + referrals; `Dice` remains in the enum on legacy rows but is no longer awarded | ⚠️ Tagged but **inert** — no gameplay verbs use them |
 | Stored as TON cNFTs (compressed), Pinata IPFS metadata | ✅ Infrastructure |
 | Tradable on Getgems? | ⚠️ Likely yes via TonConnect, but no in-app marketplace flow |
 | Any of: fusion / rental / staking / evolution / quests / passes / cosmetics? | ❌ None |
@@ -563,10 +563,10 @@ The CNFT is currently a **proof-of-mint trophy**. Every modern long-lived Web3 g
 Ranked by `(implementation simplicity × retention impact)` and mapped to existing code.
 
 ### 1. CNFT-as-gameplay-multiplier (~1 week)
-Already in the previous market-research plan. The fastest unlock. Add `getCnftMultiplier(type: CNFTImageType): number` next to the existing `pickCNFTType()` in `src/common/models/CNFT.ts:32–43` — pure type→multiplier table, no IO. Then a thin `getUserCnftMultiplier(userId)` wrapper in claim/dice flows looks up the user's CNFT via `getCNFTByWallet()` and applies the table. `addPoints()` consumes the multiplier. Zero new on-chain work; pure DB lookup. **This is the foundation everything else builds on** — without it, no other NFT verb has value. (Suggested table: Common 1.0×, Knight 1.1×, Coin 1.25×, Diamond 1.5×, Whale 2.0×, Dice 1.75×.)
+Already in the previous market-research plan. The fastest unlock. Add `getCnftMultiplier(type: CNFTImageType): number` next to the existing `pickCNFTType()` in `src/common/models/CNFT.ts:32–43` — pure type→multiplier table, no IO. Then a thin `getUserCnftMultiplier(userId)` wrapper in the claim flow (and any future clicker-reward / season-pass / tournament flow) looks up the user's CNFT via `getCNFTByWallet()` and applies the table. `addPoints()` consumes the multiplier. Zero new on-chain work; pure DB lookup. **This is the foundation everything else builds on** — without it, no other NFT verb has value. (Suggested table: Common 1.0×, Knight 1.1×, Coin 1.25×, Diamond 1.5×, Whale 2.0×. `Dice` is a legacy enum value still on past records — treat as baseline or migrate.)
 
 ### 2. Achievement SBTs (~1 week)
-Cheapest possible pattern. Mint a TON soulbound (TEP-62 with transfer disabled) for milestones: first claim, 10-day streak, 100K votes, first dice series, referral threshold. Each badge is a separate cNFT type — extends the existing `CNFT` model (`src/common/models/CNFT.ts`) with a `soulbound: boolean` flag and adds a `BadgeKind` enum. AI-art prompt can vary by milestone, reusing the existing Stability AI pipeline. Display on the leaderboard for instant social proof.
+Cheapest possible pattern. Mint a TON soulbound (TEP-62 with transfer disabled) for milestones: first claim, 10-day streak, 100K votes, first wallet-bind, referral threshold. Each badge is a separate cNFT type — extends the existing `CNFT` model (`src/common/models/CNFT.ts`) with a `soulbound: boolean` flag and adds a `BadgeKind` enum. AI-art prompt can vary by milestone, reusing the existing Stability AI pipeline. Display on the leaderboard for instant social proof.
 
 ### 3. Burn-to-upgrade fusion (~2 weeks)
 Critical sink. CNFTs are currently mint-once-per-user — needs to evolve into mint-many. Two design options:
@@ -577,7 +577,7 @@ Critical sink. CNFTs are currently mint-once-per-user — needs to evolve into m
 Either way, it's the single biggest sink mechanic in Web3 gaming.
 
 ### 4. CNFT rental (~2–3 weeks)
-Fanton's pattern, perfectly matched to Cube Worlds. Whale/Diamond/Coin holders can list their CNFT for rent (denominated in CUBE); a renter pays daily fee → during rental, *the renter's claim/dice gets the multiplier from §1*, owner banks the CUBE. Implementation: new `Rental` model linking `User` + `CNFT` + `expiresAt`; the multiplier lookup in `getCnftMultiplier(userId)` checks rentals as well as ownership. TON has no ERC-4907 equivalent — this is app-layer, which is actually fine and simpler.
+Fanton's pattern, perfectly matched to Cube Worlds. Whale/Diamond/Coin holders can list their CNFT for rent (denominated in CUBE); a renter pays daily fee → during rental, *the renter's claim (and future clicker / tournament) gets the multiplier from §1*, owner banks the CUBE. Implementation: new `Rental` model linking `User` + `CNFT` + `expiresAt`; the multiplier lookup in `getCnftMultiplier(userId)` checks rentals as well as ownership. TON has no ERC-4907 equivalent — this is app-layer, which is actually fine and simpler.
 
 ### 5. Access pass for seasons (~2 weeks)
 Catizen's Airdrop Pass made $2M as a single feature. A seasonal "Cube Pass" minted as a transferable NFT (Common type, season-themed art) sold in Telegram Stars. Pass holders get 2× claim, exclusive AI-art prompts, weekly bonus drops, and the right to a season-end commemorative SBT. New `SeasonPass` model linked to `User` + `Season`. Stars webhook handler on Fastify side; transfer pass NFT via existing TON pipeline.
@@ -595,7 +595,7 @@ Catizen's Airdrop Pass made $2M as a single feature. A seasonal "Cube Pass" mint
 
 The market-research plan's Phase 1 already proposed CNFT-as-multiplier. Pair it with achievement SBTs in the same PR — both touch the CNFT model, share the AI-art pipeline, and together unlock the value of every later pattern:
 
-1. `getCnftMultiplier(userId)` pure helper + wire into `claim-handler.ts` and `dice-logic.ts`.
+1. `getCnftMultiplier(userId)` pure helper + wire into `claim-handler.ts` (and re-use from any future clicker / season-pass / tournament reward path).
 2. `BadgeKind` enum on `CNFT.ts`; soulbound flag; mint badges from a small set of milestone events (already trackable via the `Balance` model's `BalanceChangeType` log).
 3. Frontend badge gallery on the user profile area.
 4. (Existing market-research items: unhide clicker, referral dashboard, mint notifications.)

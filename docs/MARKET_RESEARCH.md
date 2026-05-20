@@ -19,7 +19,7 @@ The four retention mechanics that actually worked in 2025–2026:
 | NFTs as *gameplay multipliers* (rentable ideally) | Fanton (1–3 TON entry, NFTs multiply score, non-holders rent from holders) | real secondary market |
 | Stars + Adsgram + jetton stack (free / casual / power) | OmiSoft 2026 mix, PropellerAds report | sustainable revenue line |
 
-Cube Worlds is well-positioned: TON-native, has CUBE jetton, AI-art CNFT mint, daily claim with streak, dice with anti-bot, idle clicker (hidden). Main miss: **the CNFT type tags don't affect gameplay**, no seasons, no clans, no Stars/Adsgram revenue, no Telegram Gifts.
+Cube Worlds is well-positioned: TON-native, has CUBE points + SATOSHI on-chain jetton, AI-art CNFT mint, daily claim with streak, idle clicker (hidden), and a HMAC-captcha service still mounted but currently orphaned (the dice command it served was removed). Main miss: **the CNFT type tags don't affect gameplay**, no seasons, no clans, no Stars/Adsgram revenue, no Telegram Gifts.
 
 ---
 
@@ -144,7 +144,7 @@ The crude approaches (Telegram username, wallet address) fail trivially; serious
 - **BotBasher / Humanode-style proof-of-personhood** verification bots are the emerging standard ([Humanode](https://blog.humanode.io/how-to-make-your-telegram-mini-app-sybil-resistant-with-botbasher/)).
 - **Telegram-mandated TON Connect 2.0** since early 2025 (Tonkeeper, Telegram Wallet, MyTonWallet) gives a stronger primary identity than username alone, and EU age-verification flows are arriving as a side-channel signal ([Quill Audits](https://www.quillaudits.com/blog/web3-security/telegram-mini-apps-security), [Telegram Core](https://core.telegram.org/api/age-verification)).
 - **Stars/paid friction at entry** (e.g., Catizen Airdrop Pass at $2M revenue) is both monetization and Sybil filter.
-- **Behavioral monitoring + Proof-of-Humanity** is now considered mandatory for any reward-bearing app ([Aurum Law checklist](https://aurum.law/newsroom/Telegram-Mini-App-Telegram-Mini-App-Legal-Checklist-in-2025)). Cube Worlds' existing suspicion+DOOM-captcha on the dice loop is on the right track but should extend to claim/referral.
+- **Behavioral monitoring + Proof-of-Humanity** is now considered mandatory for any reward-bearing app ([Aurum Law checklist](https://aurum.law/newsroom/Telegram-Mini-App-Telegram-Mini-App-Legal-Checklist-in-2025)). Cube Worlds has the HMAC-captcha service still mounted at `/api/captcha/check` (orphaned now that `/dice` was removed); re-wiring it to gate the claim and referral flows would be the lowest-effort path to behavioral defense.
 
 ## 2.4 2025–2026 emerging trends
 
@@ -163,9 +163,9 @@ The crude approaches (Telegram username, wallet address) fail trivially; serious
 ## 3.1 What Cube Worlds already has that maps well
 
 - Daily claim w/ 10-day streak × multiplier → on-pattern for daily check-in
-- Dice w/ suspicion + DOOM-captcha → anti-bot is ahead of most competitors
-- AI-generated CNFT mint (Whale / Diamond / Coin / Knight / Dice / Common) → unique identity layer no one else has
-- CUBE jetton + SATOSHI exchange → token rails exist
+- HMAC-SHA256 captcha service (`src/backend/captcha.ts`) → infrastructure is ready; just needs a new trigger after `/dice` was removed
+- AI-generated CNFT mint (Whale / Diamond / Coin / Knight / Common — `Dice` is a legacy enum value, no longer awarded) → unique identity layer no one else has
+- CUBE (off-chain points) + SATOSHI (real TON jetton with master address) + bot wallet sendJettonTransfer → token rails exist
 - Idle clicker (`/clicker`, hidden) → second loop ready to surface
 - TON-native, TonConnect, Pinata IPFS → infra correctly positioned
 
@@ -188,7 +188,7 @@ Pure ROI work on stuff already built or almost built:
 
 - **Surface the clicker.** Flip `showInMenu: true` for `/clicker` in `src/frontend/src/routes.ts`. Connect clicker output to `addPoints()` with a sane cap.
 - **Make CNFT type matter.** In `claim-handler.ts`, read the user's minted CNFT type and apply a multiplier:
-  - Whale: +20% claim, Diamond: +15%, Coin: +10%, Knight: +5% per active referral up to +25%, Dice: free re-roll daily, Common: baseline.
+  - Whale: +20% claim, Diamond: +15%, Coin: +10%, Knight: +5% per active referral up to +25%, Common: baseline. (`Dice` is a legacy enum value still on past records — treat as baseline or migrate.)
   - Add `getCnftMultiplier(userId)` as a pure helper alongside `claim-handler.ts` so it's testable.
 - **Referral dashboard** (already on `docs/FUTURE_DEVELOPMENT.md#13`). Surface number of active referrals + earnings — turns existing tree into a visible network.
 - **Re-enable mint notifications** (`docs/FUTURE_DEVELOPMENT.md#8`, `src/bot/features/admin/queue.ts`).
@@ -197,13 +197,13 @@ Pure ROI work on stuff already built or almost built:
 
 - **Add `Season` model.** Each season has `startsAt`, `endsAt`, `multiplier`, `theme`. Reset leaderboard view to per-season; keep all-time as a separate tab. Season end → mint a seasonal cosmetic CNFT trait (extends current CNFT type system).
 - **Battle pass.** Free tier earned via play; Premium tier purchased in **Telegram Stars** (Telegram's IAP). New Fastify route + Stars webhook. Premium = 2× claim multiplier for the season, exclusive CNFT trait, unlocked AI-art prompts.
-- **Clans keyed off Knight CNFTs.** Knight holders open a clan; others join (max N). Add `Clan` model linked to `User`. Weekly clan dice tournament (sum of members' dice rolls in the window) → top clan splits a CUBE pot. Reuses existing dice + balance machinery; no new game logic.
+- **Clans keyed off Knight CNFTs.** Knight holders open a clan; others join (max N). Add `Clan` model linked to `User`. Weekly clan claim-streak tournament (sum of members' claim totals or clicker output in the window) → top clan splits a CUBE pot. Reuses existing claim + balance machinery; no new game logic.
 
 ### Phase 3 — Revenue & sybil hardening (2–3 weeks)
 
 - **Adsgram rewarded ads.** "Watch ad to +25% next claim" button in the frontend. SDK is a script tag + server verify; pairs cleanly with existing `claim-handler` DI shape.
 - **Stars sinks.** Cosmetic upgrades on CNFT mint (Phase 2 already opens this), retry-mint, skip-cooldown, captcha-bypass token (limited per day to keep anti-bot intact).
-- **Sybil layer.** Behavioral score per account (claim variance, time-of-day entropy, referral-tree fanout shape). Telegram Premium accounts get a higher trust score automatically — Catizen reports 40% of Telegram Premium users are in their community, so this is also an organic acquisition signal. Combines with existing DOOM captcha thresholds.
+- **Sybil layer.** Behavioral score per account (claim variance, time-of-day entropy, referral-tree fanout shape). Telegram Premium accounts get a higher trust score automatically — Catizen reports 40% of Telegram Premium users are in their community, so this is also an organic acquisition signal. Re-wire the existing HMAC captcha (currently orphaned) to trigger from this score crossing a threshold.
 - **Distributed claim lock** (`docs/FUTURE_DEVELOPMENT.md#4`) before any of the above scales.
 
 ### Phase 4 — External liquidity (4–6 weeks, optional but high upside)
@@ -211,21 +211,21 @@ Pure ROI work on stuff already built or almost built:
 - **Telegram Gifts integration.** Weekly clan winner / season top 3 gets an actual TON-collectible Gift sent. Game pays in Stars (~much cheaper than TON), receives free user acquisition + virality. Underground Pepe and others have proven this model.
 - **CNFT marketplace listing.** Index CNFTs to Getgems and/or MRKT. Add a `transferCnft` flow so users can sell. The collection becomes liquid; mint→use→earn→upgrade becomes mint→use→**trade**→re-buy.
 - **Rentable CNFTs (Fanton model).** If marketplace lands, add a rental escrow so high-tier CNFT holders can lend multipliers to non-minters in exchange for a CUBE cut. Single best mechanic in TON gaming right now.
-- **In-bot AI companion.** Reuse existing OpenAI integration. Persistent narrator that remembers user history (`Conversation` model from `docs/FUTURE_DEVELOPMENT.md#7`) — comments on streaks, hints at lore, generates personalized claim flavor text. Cheap differentiation no big studio will bother with.
+- **In-bot AI companion.** Reuse existing OpenAI integration (currently only used for NFT description generation in the admin mint flow). Add a persistent narrator that remembers user history via a new `Conversation` model — comments on streaks, hints at lore, generates personalized claim flavor text. Cheap differentiation no big studio will bother with.
 
 ## 3.4 What to NOT do
 
 - **No new airdrop / TGE.** CUBE already exists. Bigger games crashed adding more supply. Use CUBE for sinks (Stars-equivalent purchases inside the app), not new emissions.
 - **No "Season 2" reskin of pure tapping.** Hamster's recovery attempt is failing for the same reason; don't repeat it.
 - **No Sui / non-TON bridge.** Telegram now mandates TON-exclusive for Mini Apps; you're correctly placed already.
-- **Don't gate everything on minting.** Keep a free, low-stakes path (claim + dice + clicker) so newcomers can play before they spend.
+- **Don't gate everything on minting.** Keep a free, low-stakes path (claim + clicker, plus future ad-supported and free-tier season-pass options) so newcomers can play before they spend.
 
 ## 3.5 Suggested first PR
 
 `Phase 1` is ~1 week of work and unblocks Phase 2/3:
 
-1. Unhide clicker route.
-2. Add `cnft-multiplier-helper.ts` (pure, testable, DI-style) and wire into `claim-handler.ts` + `dice-logic.ts`.
+1. Unhide clicker route (`showInMenu: true` in `src/frontend/src/routes.ts`).
+2. Add `cnft-multiplier-helper.ts` (pure, testable, DI-style) and wire into `claim-handler.ts` (clicker reward path can read the same helper once it exists).
 3. Add referral dashboard component to frontend.
 4. Re-enable `sendNewPlaces` in `src/bot/features/admin/queue.ts`.
 
