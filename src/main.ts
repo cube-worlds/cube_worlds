@@ -5,6 +5,7 @@ import mongoose from 'mongoose'
 import { onShutdown } from 'node-graceful-shutdown'
 import { setMenuButton, syncBotCommands } from '#root/bot/handlers/commands/sync-commands'
 import { createBot } from '#root/bot/index'
+import { ensureClaimUniquenessMigration } from '#root/common/models/Claim'
 import { createInitialBalancesIfNotExists } from '#root/common/models/User'
 import { config } from '#root/config'
 import { logger } from '#root/logger'
@@ -15,6 +16,12 @@ try {
   await mongoose.connect(config.MONGO)
   const bot = createBot(config.BOT_TOKEN, {})
   await createInitialBalancesIfNotExists()
+  const migration = await ensureClaimUniquenessMigration()
+  if (migration.duplicateGroups > 0) {
+    logger.info(
+      `Claim migration: merged ${migration.duplicateGroups} duplicate user group(s), removed ${migration.removedDocs} doc(s)`,
+    )
+  }
 
   try {
     await syncBotCommands(bot.api)

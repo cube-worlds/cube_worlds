@@ -1,6 +1,6 @@
 /* eslint-disable test/no-import-node-test */
 import type { DocumentType } from '@typegoose/typegoose'
-import type { Claim, ClaimPersist, ClaimUpdateFields } from '#root/common/models/Claim'
+import type { Claim, ClaimMergeCandidate, ClaimPersist, ClaimUpdateFields } from '#root/common/models/Claim'
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
@@ -9,6 +9,7 @@ import {
   claimDaily,
   getClaimStatus,
   hasNeverClaimed,
+  planClaimMerge,
   startOfUtcDay,
 } from '#root/common/models/Claim'
 
@@ -385,4 +386,101 @@ test('claimDaily snapshots lastClaimDate before mutating so concurrent calls can
   // Mutation only happens after persist confirms — so the filter value
   // was the pre-update timestamp, exactly what Mongo's CAS needs.
   assert.equal(claim.lastClaimDate, now)
+})
+
+// planClaimMerge — duplicate-claim migration planner
+
+test('planClaimMerge throws when given no claims', () => {
+  assert.throws(() => planClaimMerge([]), /requires at least one claim/)
+})
+
+test('planClaimMerge picks the most recent lastClaimDate as survivor', () => {
+  const stale: ClaimMergeCandidate = {
+    _id: 'orphan',
+    streakDays: 0,
+    lastClaimAmount: 0,
+    lastClaimDate: new Date(0),
+    totalClaimed: 0,
+    fractionalCarry: 0,
+  }
+  const active: ClaimMergeCandidate = {
+    _id: 'active',
+    streakDays: 4,
+    lastClaimAmount: 200,
+    lastClaimDate: new Date('2026-04-01T00:00:00Z'),
+    totalClaimed: 1500,
+    fractionalCarry: 0.2,
+  }
+  const plan = planClaimMerge([stale, active])
+  assert.equal(plan.survivorId, 'active')
+  assert.deepEqual(plan.removedIds, ['orphan'])
+  assert.equal(plan.mergedFields.streakDays, 4)
+  assert.equal(plan.mergedFields.lastClaimAmount, 200)
+  assert.equal(plan.mergedFields.totalClaimed, 1500)
+  assert.equal(plan.mergedFields.fractionalCarry, 0.2)
+})
+
+test('planClaimMerge sums totalClaimed across all dupes so credit is preserved', () => {
+  const a: ClaimMergeCandidate = {
+    _id: 'a',
+    streakDays: 2,
+    lastClaimAmount: 100,
+    lastClaimDate: new Date('2026-04-01T00:00:00Z'),
+    totalClaimed: 500,
+    fractionalCarry: 0.3,
+  }
+  const b: ClaimMergeCandidate = {
+    _id: 'b',
+    streakDays: 3,
+    lastClaimAmount: 50,
+    lastClaimDate: new Date('2026-03-30T00:00:00Z'),
+    totalClaimed: 200,
+    fractionalCarry: 0.4,
+  }
+  const plan = planClaimMerge([a, b])
+  assert.equal(plan.survivorId, 'a')
+  assert.equal(plan.mergedFields.totalClaimed, 700)
+  // streakDays is max across dupes — never lose progress
+  assert.equal(plan.mergedFields.streakDays, 3)
+  assert.equal(plan.mergedFields.fractionalCarry, 0.7)
+})
+
+test('planClaimMerge breaks lastClaimDate ties by highest totalClaimed', () => {
+  const same = new Date('2026-04-01T00:00:00Z')
+  const small: ClaimMergeCandidate = {
+    _id: 'small',
+    streakDays: 1,
+    lastClaimAmount: 10,
+    lastClaimDate: same,
+    totalClaimed: 100,
+    fractionalCarry: 0,
+  }
+  const big: ClaimMergeCandidate = {
+    _id: 'big',
+    streakDays: 1,
+    lastClaimAmount: 100,
+    lastClaimDate: same,
+    totalClaimed: 800,
+    fractionalCarry: 0,
+  }
+  const plan = planClaimMerge([small, big])
+  assert.equal(plan.survivorId, 'big')
+  assert.deepEqual(plan.removedIds, ['small'])
+})
+
+test('planClaimMerge on a singleton returns an empty removal list', () => {
+  const only: ClaimMergeCandidate = {
+    _id: 'only',
+    streakDays: 1,
+    lastClaimAmount: 50,
+    lastClaimDate: new Date('2026-04-01T00:00:00Z'),
+    totalClaimed: 50,
+    fractionalCarry: 0.1,
+  }
+  const plan = planClaimMerge([only])
+  assert.equal(plan.survivorId, 'only')
+  assert.deepEqual(plan.removedIds, [])
+  // Survivor's own fields are preserved unchanged
+  assert.equal(plan.mergedFields.totalClaimed, 50)
+  assert.equal(plan.mergedFields.streakDays, 1)
 })

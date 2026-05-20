@@ -1,4 +1,5 @@
 import type { DocumentType, Ref } from '@typegoose/typegoose'
+import type { Types } from 'mongoose'
 import type { UserDoc } from './User'
 import { getModelForClass, modelOptions, prop } from '@typegoose/typegoose'
 import { TimeStamps } from '@typegoose/typegoose/lib/defaultClasses'
@@ -12,7 +13,10 @@ const BASE_REWARD_PER_MS = DAILY_BASE_REWARD / ONE_DAY_MS
 
 @modelOptions({ schemaOptions: { timestamps: true } })
 export class Claim extends TimeStamps {
-  @prop({ ref: () => User, required: true })
+  // Unique per user — enforced by a Mongo index. Production deployments that
+  // existed before this constraint must run ensureClaimUniquenessMigration()
+  // first to dedupe; on fresh DBs Mongoose creates the index automatically.
+  @prop({ ref: () => User, required: true, unique: true, index: true })
   user!: Ref<User>
 
   @prop({ type: Number, required: true, default: 0 })
@@ -33,16 +37,39 @@ export class Claim extends TimeStamps {
 
 const ClaimModel = getModelForClass(Claim)
 
+export { ClaimModel }
+
+const CLAIM_DEFAULTS = {
+  streakDays: 0,
+  lastClaimAmount: 0,
+  lastClaimDate: new Date(0),
+  totalClaimed: 0,
+  fractionalCarry: 0,
+}
+
+// Atomic upsert: returns the existing Claim or creates a fresh one. With the
+// unique index on user, two concurrent first-claims will see exactly one
+// insert succeed; the loser receives E11000 and re-reads to fetch the winner.
 export async function findOrCreateClaim(
   user: UserDoc,
 ): Promise<DocumentType<Claim>> {
-  const existingClaim = await ClaimModel.findOne({ user: user._id })
-  if (existingClaim) {
-    return existingClaim as DocumentType<Claim>
+  try {
+    const claim = await ClaimModel.findOneAndUpdate(
+      { user: user._id },
+      { $setOnInsert: { user: user._id, ...CLAIM_DEFAULTS } },
+      { upsert: true, new: true, setDefaultsOnInsert: true },
+    )
+    if (claim) return claim as DocumentType<Claim>
+  } catch (err) {
+    if ((err as { code?: number }).code !== 11000) {
+      throw err
+    }
   }
-
-  const createdClaim = new ClaimModel({ user })
-  return createdClaim.save() as Promise<DocumentType<Claim>>
+  const existing = await ClaimModel.findOne({ user: user._id })
+  if (!existing) {
+    throw new Error('Claim record disappeared after duplicate-key recovery')
+  }
+  return existing as DocumentType<Claim>
 }
 
 export function hasNeverClaimed(claim: DocumentType<Claim>): boolean {
@@ -166,9 +193,8 @@ export type ClaimPersist = (
 // since we read it, the filter no longer matches and Mongo returns null —
 // telling the caller it lost the race. This is the single source of truth
 // for serializing concurrent claims across processes (no in-process lock
-// is needed). The first-claim window between findOrCreateClaim's findOne
-// and its save is still a small race; a unique index on Claim.user would
-// close it, but is intentionally out of scope here.
+// is needed). The first-claim window is closed by the unique index on
+// Claim.user plus ensureClaimUniquenessMigration().
 const persistClaimAtomic: ClaimPersist = async (claim, expectedLastClaimDate, update) => {
   const result = await ClaimModel.findOneAndUpdate(
     { _id: claim._id, lastClaimDate: expectedLastClaimDate },
@@ -217,4 +243,124 @@ export async function claimDaily(
     rawClaimAmount: Number(rawClaimAmount.toFixed(6)),
     streakDays: claimMultiplier,
   }
+}
+
+// --- Migration: enforce one Claim per user ---
+
+export interface ClaimMergeCandidate {
+  _id: unknown
+  streakDays: number
+  lastClaimAmount: number
+  lastClaimDate: Date
+  totalClaimed: number
+  fractionalCarry: number
+}
+
+export interface ClaimMergePlan {
+  survivorId: unknown
+  removedIds: unknown[]
+  mergedFields: {
+    streakDays: number
+    lastClaimAmount: number
+    lastClaimDate: Date
+    totalClaimed: number
+    fractionalCarry: number
+  }
+}
+
+// Pure: given every Claim doc for one user, decide which to keep and what
+// the consolidated fields should be. Survivor = most recent activity, ties
+// broken by highest totalClaimed. totalClaimed + fractionalCarry are summed
+// across all dupes (orphan first-claims contribute 0); streakDays takes the
+// max. Tests target this function directly.
+export function planClaimMerge(claims: ClaimMergeCandidate[]): ClaimMergePlan {
+  if (claims.length === 0) {
+    throw new Error('planClaimMerge requires at least one claim')
+  }
+  const sorted = [...claims].sort((a, b) => {
+    const dateDiff = b.lastClaimDate.getTime() - a.lastClaimDate.getTime()
+    if (dateDiff !== 0) return dateDiff
+    return b.totalClaimed - a.totalClaimed
+  })
+  const survivor = sorted[0]
+  const removed = sorted.slice(1)
+
+  const totalClaimed = claims.reduce((sum, c) => sum + (c.totalClaimed || 0), 0)
+  const fractionalCarry = Number(
+    claims.reduce((sum, c) => sum + (c.fractionalCarry || 0), 0).toFixed(6),
+  )
+  const streakDays = claims.reduce(
+    (max, c) => Math.max(max, c.streakDays || 0),
+    0,
+  )
+
+  return {
+    survivorId: survivor._id,
+    removedIds: removed.map((c) => c._id),
+    mergedFields: {
+      streakDays,
+      lastClaimAmount: survivor.lastClaimAmount,
+      lastClaimDate: survivor.lastClaimDate,
+      totalClaimed,
+      fractionalCarry,
+    },
+  }
+}
+
+interface DuplicateGroup {
+  _id: Types.ObjectId
+  count: number
+}
+
+// Idempotent. Safe to call on every startup: when there are no duplicates
+// and the index already exists, both steps short-circuit cheaply.
+export async function ensureClaimUniquenessMigration(): Promise<{
+  duplicateGroups: number
+  removedDocs: number
+}> {
+  const groups = await ClaimModel.aggregate<DuplicateGroup>([
+    { $group: { _id: '$user', count: { $sum: 1 } } },
+    { $match: { count: { $gt: 1 } } },
+  ])
+
+  let removedDocs = 0
+  for (const group of groups) {
+    const docs = await ClaimModel.find({ user: group._id })
+    if (docs.length < 2) continue
+    const plan = planClaimMerge(
+      docs.map((d) => ({
+        _id: d._id,
+        streakDays: d.streakDays,
+        lastClaimAmount: d.lastClaimAmount,
+        lastClaimDate: d.lastClaimDate,
+        totalClaimed: d.totalClaimed,
+        fractionalCarry: d.fractionalCarry,
+      })),
+    )
+    await ClaimModel.updateOne(
+      { _id: plan.survivorId },
+      { $set: plan.mergedFields },
+    )
+    if (plan.removedIds.length > 0) {
+      const result = await ClaimModel.deleteMany({
+        _id: { $in: plan.removedIds },
+      })
+      removedDocs += result.deletedCount ?? 0
+    }
+  }
+
+  // Replace any pre-existing non-unique `user` index with the unique one.
+  // Mongoose's startup auto-create may have failed silently if duplicates
+  // were present, so handle the upgrade explicitly here.
+  const indexes = await ClaimModel.collection.indexes()
+  const userIndex = indexes.find((idx) => {
+    const keys = Object.keys(idx.key)
+    return keys.length === 1 && keys[0] === 'user'
+  })
+  if (userIndex && !userIndex.unique && userIndex.name) {
+    await ClaimModel.collection.dropIndex(userIndex.name)
+  }
+  await ClaimModel.collection.createIndex({ user: 1 }, { unique: true })
+
+  return { duplicateGroups: groups.length, removedDocs }
 }
