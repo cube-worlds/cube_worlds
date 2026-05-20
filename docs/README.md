@@ -4,6 +4,13 @@ Research, design, and planning docs for the Cube Worlds Telegram Mini App.
 
 For system architecture and code structure, see [../ARCHITECTURE.md](../ARCHITECTURE.md) at the repo root.
 
+## Primary plan
+
+### [ANCIENT_WORLDS_PLAN.md](ANCIENT_WORLDS_PLAN.md) — Financial-first game plan
+Synthesis layer on top of the research trilogy. Lays out an ancient-world ARPG/4X (inspired by Diablo II / Lineage II / HOMM3) reshaped as a casual TMA with castles, PvP/PvE, an 8-hour activity window, multi-jetton resource economy, and existing CNFT as game pass. Includes 5-year financial projection, ARPU cohort model, Stars/TON dual-rail pricing, Phase A–F roadmap mapped to existing files.
+- **Start here** if you want the concrete plan.
+- Cites May 2026 Stars + TMA benchmarks.
+
 ## Research trilogy
 
 Three companion research documents cover the Web3 game design space and land in concrete, file-mapped recommendations for Cube Worlds. Read in order if you're new; jump to the relevant doc otherwise.
@@ -32,9 +39,9 @@ Numbered items spanning security hardening, critical fixes, feature improvements
 
 ```
 MARKET_RESEARCH ──┐
-                  ├── informs ──> FUTURE_DEVELOPMENT.md
+                  ├──> ANCIENT_WORLDS_PLAN ──> Phases A–F (build order)
 NFT_INTERACTIONS ─┤
-                  │
+                  ├──> FUTURE_DEVELOPMENT.md (short-term backlog)
 TOKEN_INTERACTIONS┘
 ```
 
