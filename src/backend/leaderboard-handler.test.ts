@@ -85,3 +85,34 @@ test('GET /api/users/leaderboard applies custom pagination values', async (t) =>
   assert.equal(response.statusCode, 200)
   assert.deepEqual(ctx.findWhalesCalls, [{ limit: 5, skip: 12 }])
 })
+
+test('GET /api/users/leaderboard rejects non-integer limit', async (t) => {
+  const ctx = await createLeaderboardTestContext()
+  t.after(async () => {
+    await ctx.app.close()
+  })
+
+  const response = await ctx.app.inject({
+    method: 'GET',
+    url: '/api/users/leaderboard?limit=abc',
+  })
+
+  assert.equal(response.statusCode, 200)
+  assert.deepEqual(response.json(), { error: 'Invalid pagination parameters' })
+  assert.equal(ctx.findWhalesCalls.length, 0)
+})
+
+test('GET /api/users/leaderboard clamps over-bound limit to 100', async (t) => {
+  const ctx = await createLeaderboardTestContext()
+  t.after(async () => {
+    await ctx.app.close()
+  })
+
+  const response = await ctx.app.inject({
+    method: 'GET',
+    url: '/api/users/leaderboard?limit=999&skip=-5',
+  })
+
+  assert.equal(response.statusCode, 200)
+  assert.deepEqual(ctx.findWhalesCalls, [{ limit: 100, skip: 0 }])
+})
