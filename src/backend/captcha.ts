@@ -118,51 +118,59 @@ export function buildCaptchaHandler(
   dependencies: CaptchaHandlerDependencies,
 ) {
   return async function captchaHandler(fastify: FastifyInstance) {
-    fastify.get('/check', async (request) => {
-      const { userId, token } = request.query as {
-        userId?: unknown
-        token?: unknown
-      }
+    fastify.get<{ Querystring: { userId: number, token: string } }>(
+      '/check',
+      {
+        schema: {
+          querystring: {
+            type: 'object',
+            required: ['userId', 'token'],
+            properties: {
+              userId: { type: 'integer', minimum: 1 },
+              token: { type: 'string', minLength: 1 },
+            },
+          },
+        },
+        // Preserve the public contract: any malformed input becomes
+        // { result: false } 200, not a 400 error envelope.
+        attachValidation: true,
+      },
+      async (request) => {
+        if (request.validationError) return { result: false }
+        const { userId: parsedUserId, token } = request.query
 
-      const parsedUserId = Number(userId)
-      if (!Number.isInteger(parsedUserId) || parsedUserId <= 0) {
-        return { result: false }
-      }
-      if (!token || typeof token !== 'string') {
-        return { result: false }
-      }
+        const user = await dependencies.findUserById(parsedUserId)
+        if (!user || !user.suspicionDices) return { result: false }
 
-      const user = await dependencies.findUserById(parsedUserId)
-      if (!user || !user.suspicionDices) return { result: false }
-
-      const expectedKills = user.suspicionDices - 101
-      const verification = verifyCaptchaToken(
-        parsedUserId,
-        token,
-        expectedKills,
-        user.captchaNonce,
-        user.captchaIssuedAt,
-      )
-      if (!verification.ok) {
-        dependencies.info(
-          `Captcha rejected for ${user.id}: ${verification.reason}`,
+        const expectedKills = user.suspicionDices - 101
+        const verification = verifyCaptchaToken(
+          parsedUserId,
+          token,
+          expectedKills,
+          user.captchaNonce,
+          user.captchaIssuedAt,
         )
-        return { result: false }
-      }
+        if (!verification.ok) {
+          dependencies.info(
+            `Captcha rejected for ${user.id}: ${verification.reason}`,
+          )
+          return { result: false }
+        }
 
-      dependencies.info(
-        `Solved captcha from ${user.id} with ${user.suspicionDices} suspicion dices`,
-      )
-      user.suspicionDices = 0
-      user.captchaNonce = undefined
-      user.captchaIssuedAt = undefined
-      await user.save()
-      await dependencies.sendMessage(
-        parsedUserId,
-        dependencies.translate(user.language, 'dice.captcha_solved'),
-      )
-      return { result: true }
-    })
+        dependencies.info(
+          `Solved captcha from ${user.id} with ${user.suspicionDices} suspicion dices`,
+        )
+        user.suspicionDices = 0
+        user.captchaNonce = undefined
+        user.captchaIssuedAt = undefined
+        await user.save()
+        await dependencies.sendMessage(
+          parsedUserId,
+          dependencies.translate(user.language, 'dice.captcha_solved'),
+        )
+        return { result: true }
+      },
+    )
   }
 }
 

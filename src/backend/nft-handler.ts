@@ -4,6 +4,8 @@ import sharp from 'sharp'
 import { cnftHexColor, CNFTImageType, getCNFTByIndex, getCNFTByWallet } from '#root/common/models/CNFT'
 import { logger } from '#root/logger'
 
+const VALID_IMAGE_NAMES = Object.keys(CNFTImageType).map((k) => k.toLowerCase())
+
 export interface NftData {
   index: number
   type: CNFTImageType
@@ -85,62 +87,102 @@ export function buildNftHandler(
       }
     })
 
-    fastify.get('/:address', async (request: any, reply: any) => {
-      const { address } = request.params
-      if (!address) {
-        return reply.status(400).send({ error: 'No address provided' })
-      }
-      try {
-        const nft = await dependencies.findByWallet(address)
+    fastify.get<{ Params: { address: string } }>(
+      '/:address',
+      {
+        schema: {
+          params: {
+            type: 'object',
+            required: ['address'],
+            properties: {
+              address: { type: 'string', minLength: 1 },
+            },
+          },
+        },
+      },
+      async (request, reply) => {
+        const { address } = request.params
+        try {
+          const nft = await dependencies.findByWallet(address)
+          if (!nft) {
+            return reply.status(404).send({ error: 'NFT not found' })
+          }
+          return toJSON(nft)
+        } catch {
+          return reply.status(400).send({ error: 'Invalid address format' })
+        }
+      },
+    )
+
+    fastify.get<{ Params: { index: string } }>(
+      '/:index.json',
+      {
+        schema: {
+          params: {
+            type: 'object',
+            required: ['index'],
+            properties: {
+              index: { type: 'string', pattern: '^[0-9]+$' },
+            },
+          },
+        },
+        attachValidation: true,
+      },
+      async (request, reply) => {
+        if (request.validationError) {
+          return reply.status(400).send({ error: 'Invalid index' })
+        }
+        const parsedIndex = Number(request.params.index)
+        const nft = await dependencies.findByIndex(parsedIndex)
         if (!nft) {
           return reply.status(404).send({ error: 'NFT not found' })
         }
         return toJSON(nft)
-      } catch {
-        return reply.status(400).send({ error: 'Invalid address format' })
-      }
-    })
-
-    fastify.get('/:index.json', async (request: any, reply: any) => {
-      const { index } = request.params
-      const parsedIndex = Number(index)
-      if (!Number.isInteger(parsedIndex) || parsedIndex < 0) {
-        return reply.status(400).send({ error: 'Invalid index' })
-      }
-      const nft = await dependencies.findByIndex(parsedIndex)
-      if (!nft) {
-        return reply.status(404).send({ error: 'NFT not found' })
-      }
-      return toJSON(nft)
-    })
-
-    const validImageTypes = new Set(
-      Object.keys(CNFTImageType).map((k) => k.toLowerCase()),
+      },
     )
 
-    fastify.get('/:image-:color.webp', async (request: any, reply: any) => {
-      const { image, color } = request.params
-      if (!image || !color) {
-        return reply.status(400).send({ error: 'Invalid image/color parameters' })
-      }
-      if (!validImageTypes.has(image.toLowerCase())) {
-        return reply.status(400).send({ error: 'Invalid image type' })
-      }
-      const parsedColor = Number(color)
-      if (!Number.isInteger(parsedColor) || parsedColor < 0 || parsedColor > 10) {
-        return reply.status(400).send({ error: 'Invalid color value' })
-      }
-      const capitalizedImage = image.charAt(0).toUpperCase() + image.slice(1)
-      const typedImage = capitalizedImage as keyof typeof CNFTImageType
-      const type = CNFTImageType[typedImage]
-      const imageName = nftImage(type)
-      dependencies.info(capitalizedImage, typedImage, type, imageName)
-      const data = await dependencies.renderImage(imageName, parsedColor)
-      reply.header('Content-Type', 'image/webp')
-      reply.header('Content-Length', data.length)
-      reply.type('image/webp')
-      reply.send(data)
-    })
+    fastify.get<{ Params: { image: string, color: string } }>(
+      '/:image-:color.webp',
+      {
+        schema: {
+          params: {
+            type: 'object',
+            required: ['image', 'color'],
+            properties: {
+              image: { type: 'string', enum: VALID_IMAGE_NAMES },
+              color: { type: 'string', pattern: '^(10|[0-9])$' },
+            },
+          },
+        },
+        attachValidation: true,
+      },
+      async (request, reply) => {
+        if (request.validationError) {
+          // Map AJV error to the legacy per-field error message so existing
+          // clients keep working. instancePath is "/image" or "/color".
+          const validation = (
+            request.validationError as { validation?: Array<{ instancePath?: string }> }
+          ).validation
+          const failed = validation?.[0]?.instancePath ?? ''
+          if (failed.includes('image')) {
+            return reply.status(400).send({ error: 'Invalid image type' })
+          }
+          return reply.status(400).send({ error: 'Invalid color value' })
+        }
+        const { image, color } = request.params
+        const parsedColor = Number(color)
+        const capitalizedImage = image.charAt(0).toUpperCase() + image.slice(1)
+        const typedImage = capitalizedImage as keyof typeof CNFTImageType
+        const type = CNFTImageType[typedImage]
+        const imageName = nftImage(type)
+        dependencies.info(capitalizedImage, typedImage, type, imageName)
+        const data = await dependencies.renderImage(imageName, parsedColor)
+        reply.header('Content-Type', 'image/webp')
+        reply.header('Content-Length', data.length)
+        reply.type('image/webp')
+        reply.send(data)
+      },
+    )
   }
 }
 
