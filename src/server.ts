@@ -31,7 +31,14 @@ const ROUTE_RATE_LIMITS: Record<string, { max: number, timeWindow: string }> = {
 }
 
 export async function createServer(bot: Bot) {
-  const server = fastify({ logger: loggerOptions, trustProxy: true })
+  // Bounded `trustProxy` — defaults to 1 hop in prod, 0 in dev. With
+  // `trustProxy: true` a client reaching the Node port directly could spoof
+  // X-Forwarded-For and defeat the per-IP rate limit; the bounded form only
+  // honors the N rightmost entries (i.e. the actual reverse proxies).
+  const server = fastify({
+    logger: loggerOptions,
+    trustProxy: config.TRUSTED_PROXY_HOPS,
+  })
 
   // Enable Express-style middleware in Fastify
   await server.register(middie)

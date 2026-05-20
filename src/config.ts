@@ -34,6 +34,18 @@ function createConfigFromEnvironment(environment: NodeJS.ProcessEnv) {
     BOT_ADMINS: z.array(z.number()).default([]),
     WEB_APP_URL: z.string().url(),
     ALLOWED_ORIGINS: z.array(z.string()).default([]),
+    // Number of proxy hops to trust for X-Forwarded-For. Set this to match
+    // your deployment: 1 for a single proxy (nginx, k8s ingress, Cloudflare
+    // alone), 2 for stacked proxies. Leaving it at 0 means every request's
+    // IP resolves to the immediate TCP peer, which makes per-IP rate limits
+    // global — but is the safe choice if no proxy is present.
+    TRUSTED_PROXY_HOPS: {
+      schema: z.number().int().min(0).max(10),
+      defaults: {
+        production: 1,
+        development: 0,
+      },
+    },
     COLLECTION_ADDRESS: z.string(),
     COLLECTION_OWNER: z.string(),
     MNEMONICS: z.string(),
