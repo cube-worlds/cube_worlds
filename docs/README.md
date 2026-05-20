@@ -6,9 +6,13 @@ For system architecture and code structure, see [../ARCHITECTURE.md](../ARCHITEC
 
 ## Primary plan
 
-### [ANCIENT_WORLDS_PLAN.md](ANCIENT_WORLDS_PLAN.md) — Financial-first game plan
-Synthesis layer on top of the research trilogy. Lays out an ancient-world ARPG/4X (inspired by Diablo II / Lineage II / HOMM3) reshaped as a casual TMA with castles, PvP/PvE, an 8-hour activity window, multi-jetton resource economy, and existing CNFT as game pass. Includes 5-year financial projection, ARPU cohort model, Stars/TON dual-rail pricing, Phase A–F roadmap mapped to existing files.
-- **Start here** if you want the concrete plan.
+### [ANCIENT_WORLDS_PLAN.md](ANCIENT_WORLDS_PLAN.md) — Game design, contracts, roadmap
+Synthesis layer on top of the research trilogy. Lays out an ancient-world ARPG/4X (inspired by Diablo II / Lineage II / HOMM3) reshaped as a casual TMA with castles, PvP/PvE, an 8-hour activity window, multi-jetton resource economy, and existing CNFT as game pass. Covers game loop, TON contract list, Phase A–F roadmap mapped to existing files, and risks.
+- **Start here** if you want the playable shape and build order.
+
+### [ECONOMY.md](ECONOMY.md) — Financial model & tokenomics
+The economy research extracted from the plan. 5-year revenue projection, ARPU cohort breakdown, Stars/TonConnect/Adsgram rail comparison, $CUBE + resource-jetton topology, sink discipline, operator + player earnings model, anti-Sybil layered defense, May 2026 reference numbers.
+- **Start here** if you want the financial model and tokenomics rules.
 - Cites May 2026 Stars + TMA benchmarks.
 
 ## Research trilogy
@@ -39,14 +43,16 @@ Numbered items spanning security hardening, critical fixes, feature improvements
 
 ```
 MARKET_RESEARCH ──┐
-                  ├──> ANCIENT_WORLDS_PLAN ──> Phases A–F (build order)
-NFT_INTERACTIONS ─┤
-                  ├──> FUTURE_DEVELOPMENT.md (short-term backlog)
-TOKEN_INTERACTIONS┘
+                  ├──> ECONOMY.md ────────┐
+TOKEN_INTERACTIONS┤                       ├──> ANCIENT_WORLDS_PLAN ──> Phases A–F (build order)
+NFT_INTERACTIONS ─┘                       │
+                                          └──> FUTURE_DEVELOPMENT.md (short-term backlog)
 ```
 
 - Strategy comes from MARKET_RESEARCH.
 - Mechanic choices come from NFT_INTERACTIONS + TOKEN_INTERACTIONS.
+- Financial model and tokenomics live in ECONOMY.
+- Game design + contracts + roadmap live in ANCIENT_WORLDS_PLAN.
 - Concrete sprint items live in FUTURE_DEVELOPMENT.
 
 The three research docs cross-link directly — opening any one surfaces the full set.
