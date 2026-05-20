@@ -342,7 +342,27 @@ export function buildUserOperations(
         throw new Error('User for addPoints not found')
       }
 
-      const newRecord = await deps.addChangeBalanceRecord(userId, add, reason)
+      let newRecord
+      try {
+        newRecord = await deps.addChangeBalanceRecord(userId, add, reason)
+      } catch (recordError) {
+        // The vote cache moved but the ledger didn't. Compensate by
+        // reversing the increment so Balance (truth) and User.votes (cache)
+        // stay aligned. If the revert itself fails, log loudly — the
+        // operator has to reconcile by replaying the missing audit entry.
+        try {
+          await deps.incrementUserVotes(userId, -add)
+          deps.errorLog(
+            `!!! addPoints reverted +${add} for ${userId} after audit write failed`,
+          )
+        } catch {
+          deps.errorLog(
+            `!!! addPoints unrecoverable drift for ${userId}: votes incremented by ${add} with no Balance row and revert failed`,
+          )
+        }
+        throw recordError
+      }
+
       deps.debugLog(
         `Add ${newRecord.amount} points to user ${userId}. Now ${await deps.getAggregatedBalance(userId)}`,
       )

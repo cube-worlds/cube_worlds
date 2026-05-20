@@ -139,13 +139,17 @@ test('addPoints logs error and rethrows when user is not found', async () => {
   assert.equal(balanceCalls.length, 0)
 })
 
-// addPoints — error path: addChangeBalanceRecord throws
+// addPoints — error path: addChangeBalanceRecord throws, revert succeeds
 
-test('addPoints logs error and propagates when balance-record write fails', async () => {
+test('addPoints reverts the vote increment when the balance-record write fails', async () => {
+  const incrementCalls: { userId: number, add: bigint }[] = []
   const errorLogs: string[] = []
   const ops = buildUserOperations({
     ...noopDeps(),
-    incrementUserVotes: async () => ({ votes: 100n }),
+    incrementUserVotes: async (userId, add) => {
+      incrementCalls.push({ userId, add })
+      return { votes: 100n }
+    },
     addChangeBalanceRecord: async () => {
       throw new Error('db down')
     },
@@ -156,8 +160,45 @@ test('addPoints logs error and propagates when balance-record write fails', asyn
     () => ops.addPoints(7, 5n, BalanceChangeType.Referral),
     /db down/,
   )
-  assert.equal(errorLogs.length, 1)
-  assert.match(errorLogs[0], /Can't add points 5 to user 7/)
+  // Forward increment then compensating decrement — Balance ledger and
+  // votes cache stay aligned after the audit-log write fails.
+  assert.deepEqual(incrementCalls, [
+    { userId: 7, add: 5n },
+    { userId: 7, add: -5n },
+  ])
+  assert.equal(errorLogs.length, 2)
+  assert.match(errorLogs[0], /reverted \+5 for 7 after audit write failed/)
+  assert.match(errorLogs[1], /Can't add points 5 to user 7/)
+})
+
+// addPoints — error path: balance-record write AND revert both fail
+
+test('addPoints logs unrecoverable drift when balance write AND revert fail', async () => {
+  let incrementCallCount = 0
+  const errorLogs: string[] = []
+  const ops = buildUserOperations({
+    ...noopDeps(),
+    incrementUserVotes: async () => {
+      incrementCallCount += 1
+      if (incrementCallCount === 1) {
+        return { votes: 100n }
+      }
+      throw new Error('revert failed')
+    },
+    addChangeBalanceRecord: async () => {
+      throw new Error('db down')
+    },
+    errorLog: (m) => { errorLogs.push(m) },
+  })
+
+  await assert.rejects(
+    () => ops.addPoints(7, 5n, BalanceChangeType.Referral),
+    /db down/,
+  )
+  assert.equal(incrementCallCount, 2)
+  assert.equal(errorLogs.length, 2)
+  assert.match(errorLogs[0], /unrecoverable drift for 7/)
+  assert.match(errorLogs[1], /Can't add points 5 to user 7/)
 })
 
 // userStats — date-window math
