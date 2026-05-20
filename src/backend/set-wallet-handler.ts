@@ -1,26 +1,37 @@
 import type { InitData } from '@telegram-apps/init-data-node'
 import type { FastifyInstance } from 'fastify'
+import type { VerifyProofInput, VerifyResult } from './ton-proof'
 import process from 'node:process'
 import { parse, validate } from '@telegram-apps/init-data-node'
-import { Address } from '@ton/core'
 import { findUserById, findUserByWallet } from '#root/common/models/User'
 import { logger } from '#root/logger'
 import { safeErrorResponse } from './safe-error'
+import { verifyProof as verifyProofImpl } from './ton-proof'
+
+interface ProofBody {
+  timestamp: number
+  domain: { lengthBytes: number, value: string }
+  payload: string
+  signature: string
+}
 
 interface Body {
   initData: string
-  wallet: string
+  address: string
+  publicKey: string
+  walletStateInit: string
+  proof: ProofBody
 }
 
 type ExistingUser = NonNullable<Awaited<ReturnType<typeof findUserById>>>
-type ParsedAddress = ReturnType<typeof Address.parse>
 
 export interface SetWalletHandlerDependencies {
   validateInitData: (initData: string) => void
   parseInitData: (initData: string) => InitData
   findUserById: (id: number) => Promise<ExistingUser | null>
   findUserByWallet: (wallet: string) => Promise<ExistingUser | null>
-  parseWalletAddress: (wallet: string) => ParsedAddress
+  verifyProof: (input: VerifyProofInput) => VerifyResult
+  getExpectedDomain: () => string
   logError: (message: string) => void
 }
 
@@ -37,9 +48,34 @@ function createDefaultDependencies(): SetWalletHandlerDependencies {
     parseInitData: parse,
     findUserById,
     findUserByWallet,
-    parseWalletAddress: Address.parse,
+    verifyProof: verifyProofImpl,
+    getExpectedDomain: () => {
+      const url = process.env.WEB_APP_URL
+      if (!url) {
+        throw new Error('WEB_APP_URL is not configured')
+      }
+      return new URL(url).host
+    },
     logError: logger.error.bind(logger),
   }
+}
+
+const PROOF_BODY_SCHEMA = {
+  type: 'object',
+  required: ['timestamp', 'domain', 'payload', 'signature'],
+  properties: {
+    timestamp: { type: 'integer', minimum: 0 },
+    domain: {
+      type: 'object',
+      required: ['lengthBytes', 'value'],
+      properties: {
+        lengthBytes: { type: 'integer', minimum: 0, maximum: 4096 },
+        value: { type: 'string', maxLength: 4096 },
+      },
+    },
+    payload: { type: 'string', maxLength: 512 },
+    signature: { type: 'string', maxLength: 512 },
+  },
 }
 
 export function buildSetWalletHandler(
@@ -54,22 +90,28 @@ export function buildSetWalletHandler(
             type: 'object',
             properties: {
               initData: { type: 'string', maxLength: 8192 },
-              wallet: { type: 'string', maxLength: 128 },
+              address: { type: 'string', maxLength: 128 },
+              publicKey: { type: 'string', maxLength: 128 },
+              walletStateInit: { type: 'string', maxLength: 16_384 },
+              proof: PROOF_BODY_SCHEMA,
             },
           },
         },
-        // Keep legacy { error } envelope: per-field missing checks stay
-        // handler-level; only ill-typed/oversized bodies hit AJV.
+        // Keep the legacy `{ error }` envelope: per-field missing checks stay
+        // in the handler; only ill-typed/oversized bodies hit AJV.
         attachValidation: true,
       },
       async (request) => {
         if (request.validationError) {
           return { error: 'Invalid request body' }
         }
-        const { initData, wallet } = request.body
+        const { initData, address, publicKey, walletStateInit, proof } = request.body
 
         if (!initData) return { error: 'No initData provided' }
-        if (!wallet) return { error: 'No wallet provided' }
+        if (!address) return { error: 'No wallet provided' }
+        if (!publicKey || !walletStateInit || !proof) {
+          return { error: 'Wallet proof required' }
+        }
 
         try {
           dependencies.validateInitData(initData)
@@ -85,14 +127,19 @@ export function buildSetWalletHandler(
             return { error: 'User not found in database' }
           }
 
-          let address: ParsedAddress
-          try {
-            address = dependencies.parseWalletAddress(wallet)
-          } catch {
-            return { error: 'Invalid wallet address' }
+          const verification = dependencies.verifyProof({
+            proof,
+            publicKey,
+            walletStateInit,
+            address,
+            expectedDomain: dependencies.getExpectedDomain(),
+            userId: tgUserId,
+          })
+          if (!verification.ok) {
+            return { error: 'Wallet proof invalid' }
           }
 
-          const bounceable = address.toString({ bounceable: true })
+          const bounceable = verification.boundAddress
           const existingOwner = await dependencies.findUserByWallet(bounceable)
           if (existingOwner && existingOwner.id !== user.id) {
             return { error: 'Wallet already linked to another account' }

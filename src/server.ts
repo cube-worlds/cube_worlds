@@ -18,11 +18,13 @@ import claimHandler from './backend/claim-handler'
 import leaderboardHandler from './backend/leaderboard-handler'
 import nftHandler from './backend/nft-handler'
 import setWalletHandler from './backend/set-wallet-handler'
+import walletNonceHandler from './backend/wallet-nonce-handler'
 import { config } from './config'
 
 const ROUTE_RATE_LIMITS: Record<string, { max: number, timeWindow: string }> = {
   '/api/auth/login': { max: 30, timeWindow: '1 minute' },
   '/api/auth/set-wallet': { max: 20, timeWindow: '1 minute' },
+  '/api/auth/wallet-nonce': { max: 20, timeWindow: '1 minute' },
   '/api/users/claim': { max: 12, timeWindow: '1 minute' },
   '/api/users/claim/status': { max: 30, timeWindow: '1 minute' },
   '/api/users/leaderboard': { max: 60, timeWindow: '1 minute' },
@@ -96,6 +98,7 @@ export async function createServer(bot: Bot) {
 
   await server.register(authHandler, { prefix: '/api/auth' })
   await server.register(setWalletHandler, { prefix: '/api/auth' })
+  await server.register(walletNonceHandler, { prefix: '/api/auth' })
 
   await server.register(captchaHandler(bot), { prefix: '/api/captcha' })
   await server.register(nftHandler, { prefix: '/api/nft' })

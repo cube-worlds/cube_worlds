@@ -37,6 +37,17 @@ For handlers whose default deps would transitively import `#root/config`, split 
 ## Auth
 All authenticated endpoints validate Telegram's `initData` string (HMAC + 24h expiry) → extract `user.id` → lookup in MongoDB.
 
+### Wallet binding (TON Connect ton_proof)
+`POST /api/auth/set-wallet` requires cryptographic proof the caller controls the wallet they want to bind. Flow:
+
+1. Frontend calls `POST /api/auth/wallet-nonce` with `initData` and receives `{ payload, validUntil }`. The payload is a stateless HMAC token (`<userId>:<expiresAtMs>:<rand>:<hmac(BOT_TOKEN)>`) with a 5-minute TTL.
+2. Frontend passes the payload to `TonConnectUI.setConnectRequestParameters({ state: 'ready', value: { tonProof: payload } })` before opening the wallet modal.
+3. On connect, the wallet returns `account.{address,publicKey,walletStateInit}` and `connectItems.tonProof` (a `TonProofItemReplySuccess`).
+4. Frontend POSTs to `/api/auth/set-wallet`: `{ initData, address, publicKey, walletStateInit, proof: { timestamp, domain, payload, signature } }`.
+5. Backend (`src/backend/ton-proof.ts → verifyProof`) checks: payload HMAC + expiry + userId match, wallet timestamp within ±5 min, domain equals host of `WEB_APP_URL`, address hash equals `Cell.fromBoc(walletStateInit)[0].hash()`, Ed25519 signature valid over the canonical TON Connect message.
+
+Each rebind requires a fresh nonce. The payload is bound to `userId`, so a stolen nonce can't be replayed against a different account.
+
 ## Bot middleware order
 `autoRetry → updateLogger (dev only) → autoChatAction → hydrate → session → slapReaction → i18n → attachUser → queueMenu → [features]`
 
