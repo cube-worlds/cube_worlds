@@ -33,6 +33,7 @@ function createConfigFromEnvironment(environment: NodeJS.ProcessEnv) {
     MONGO: z.string(),
     BOT_ADMINS: z.array(z.number()).default([]),
     WEB_APP_URL: z.string().url(),
+    ALLOWED_ORIGINS: z.array(z.string()).default([]),
     COLLECTION_ADDRESS: z.string(),
     COLLECTION_OWNER: z.string(),
     MNEMONICS: z.string(),

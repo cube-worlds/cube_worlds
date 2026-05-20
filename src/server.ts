@@ -2,7 +2,10 @@ import type { Bot } from '#root/bot/index'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import cors from '@fastify/cors'
+import helmet from '@fastify/helmet'
 import middie from '@fastify/middie'
+import rateLimit from '@fastify/rate-limit'
 import fastifyStatic from '@fastify/static'
 import fastify from 'fastify'
 import { webhookCallback } from 'grammy'
@@ -17,11 +20,72 @@ import nftHandler from './backend/nft-handler'
 import setWalletHandler from './backend/set-wallet-handler'
 import { config } from './config'
 
+const ROUTE_RATE_LIMITS: Record<string, { max: number, timeWindow: string }> = {
+  '/api/auth/login': { max: 30, timeWindow: '1 minute' },
+  '/api/auth/set-wallet': { max: 20, timeWindow: '1 minute' },
+  '/api/users/claim': { max: 12, timeWindow: '1 minute' },
+  '/api/users/claim/status': { max: 30, timeWindow: '1 minute' },
+  '/api/users/leaderboard': { max: 60, timeWindow: '1 minute' },
+  '/api/users/balances': { max: 60, timeWindow: '1 minute' },
+  '/api/captcha/check': { max: 10, timeWindow: '1 minute' },
+}
+
 export async function createServer(bot: Bot) {
-  const server = fastify({ logger: loggerOptions })
+  const server = fastify({ logger: loggerOptions, trustProxy: true })
 
   // Enable Express-style middleware in Fastify
   await server.register(middie)
+
+  // Security headers. CSP and frameguard are disabled so the Telegram WebView
+  // (and Telegram Web's iframe-based Mini App host) can load the frontend.
+  // Other defaults (X-Content-Type-Options, Strict-Transport-Security,
+  // Referrer-Policy, etc.) remain active.
+  await server.register(helmet, {
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    frameguard: false,
+  })
+
+  // CORS: in development reflect any origin so Vite/ngrok work out of the box.
+  // In production allow only WEB_APP_URL plus any ALLOWED_ORIGINS overrides.
+  const productionOrigins = new Set<string>([
+    new URL(config.WEB_APP_URL).origin,
+    ...config.ALLOWED_ORIGINS,
+  ])
+  await server.register(cors, {
+    origin: config.isDev
+      ? true
+      : (origin, cb) => {
+          if (!origin || productionOrigins.has(origin)) {
+            cb(null, true)
+            return
+          }
+          cb(new Error('Not allowed by CORS'), false)
+        },
+    credentials: false,
+    methods: ['GET', 'POST', 'OPTIONS'],
+  })
+
+  // Per-route rate limit overrides. Hook must be registered before
+  // @fastify/rate-limit so this onRoute fires first and sets `config.rateLimit`
+  // before the rate-limit plugin reads it.
+  server.addHook('onRoute', (routeOptions) => {
+    const override = ROUTE_RATE_LIMITS[routeOptions.url]
+    if (override) {
+      routeOptions.config = {
+        ...(routeOptions.config ?? {}),
+        rateLimit: override,
+      }
+    }
+  })
+
+  await server.register(rateLimit, {
+    global: true,
+    max: 300,
+    timeWindow: '1 minute',
+    allowList: (request) => !request.url.startsWith('/api/'),
+  })
 
   await server.register(authHandler, { prefix: '/api/auth' })
   await server.register(setWalletHandler, { prefix: '/api/auth' })
