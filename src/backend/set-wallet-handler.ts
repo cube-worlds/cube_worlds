@@ -42,51 +42,71 @@ export function buildSetWalletHandler(
   dependencies: SetWalletHandlerDependencies = createDefaultDependencies(),
 ) {
   return async function setWalletHandler(fastify: FastifyInstance) {
-    fastify.post<{ Body: Body }>('/set-wallet', async (request) => {
-      const { initData, wallet } = request.body
-
-      if (!initData) return { error: 'No initData provided' }
-      if (!wallet) return { error: 'No wallet provided' }
-
-      try {
-        dependencies.validateInitData(initData)
-        const parsedData = dependencies.parseInitData(initData)
-
-        const tgUserId = parsedData?.user?.id
-        if (!tgUserId) {
-          return { error: 'Invalid telegram user id' }
+    fastify.post<{ Body: Body }>(
+      '/set-wallet',
+      {
+        schema: {
+          body: {
+            type: 'object',
+            properties: {
+              initData: { type: 'string', maxLength: 8192 },
+              wallet: { type: 'string', maxLength: 128 },
+            },
+          },
+        },
+        // Keep legacy { error } envelope: per-field missing checks stay
+        // handler-level; only ill-typed/oversized bodies hit AJV.
+        attachValidation: true,
+      },
+      async (request) => {
+        if (request.validationError) {
+          return { error: 'Invalid request body' }
         }
+        const { initData, wallet } = request.body
 
-        const user = await dependencies.findUserById(tgUserId)
-        if (!user) {
-          return { error: 'User not found in database' }
-        }
+        if (!initData) return { error: 'No initData provided' }
+        if (!wallet) return { error: 'No wallet provided' }
 
-        let address: ParsedAddress
         try {
-          address = dependencies.parseWalletAddress(wallet)
-        } catch {
-          return { error: 'Invalid wallet address' }
-        }
+          dependencies.validateInitData(initData)
+          const parsedData = dependencies.parseInitData(initData)
 
-        const bounceable = address.toString({ bounceable: true })
-        const existingOwner = await dependencies.findUserByWallet(bounceable)
-        if (existingOwner && existingOwner.id !== user.id) {
-          return { error: 'Wallet already linked to another account' }
-        }
+          const tgUserId = parsedData?.user?.id
+          if (!tgUserId) {
+            return { error: 'Invalid telegram user id' }
+          }
 
-        user.wallet = bounceable
-        await user.save()
+          const user = await dependencies.findUserById(tgUserId)
+          if (!user) {
+            return { error: 'User not found in database' }
+          }
 
-        return {
-          id: user.id,
-          wallet: user.wallet,
-          message: 'Wallet updated successfully',
+          let address: ParsedAddress
+          try {
+            address = dependencies.parseWalletAddress(wallet)
+          } catch {
+            return { error: 'Invalid wallet address' }
+          }
+
+          const bounceable = address.toString({ bounceable: true })
+          const existingOwner = await dependencies.findUserByWallet(bounceable)
+          if (existingOwner && existingOwner.id !== user.id) {
+            return { error: 'Wallet already linked to another account' }
+          }
+
+          user.wallet = bounceable
+          await user.save()
+
+          return {
+            id: user.id,
+            wallet: user.wallet,
+            message: 'Wallet updated successfully',
+          }
+        } catch (err) {
+          return { error: (err as Error).message }
         }
-      } catch (err) {
-        return { error: (err as Error).message }
-      }
-    })
+      },
+    )
   }
 }
 

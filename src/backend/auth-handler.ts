@@ -41,46 +41,66 @@ export function buildAuthHandler(
   dependencies: AuthHandlerDependencies = createDefaultDependencies(),
 ) {
   return async function authHandler(fastify: FastifyInstance) {
-    fastify.post<{ Body: Body }>('/login', async (request) => {
-      const { initData, referId } = request.body
-      if (!initData) return { error: 'No initData or hash provided' }
-
-      try {
-        dependencies.validateInitData(initData)
-        const parsedData = dependencies.parseInitData(initData)
-
-        const tgUserId = parsedData?.user?.id
-        if (!tgUserId) {
-          return { error: 'Invalid telegram user id' }
+    fastify.post<{ Body: Body }>(
+      '/login',
+      {
+        schema: {
+          body: {
+            type: 'object',
+            properties: {
+              initData: { type: 'string', maxLength: 8192 },
+              referId: { type: 'string', maxLength: 64 },
+            },
+          },
+        },
+        // Keep legacy { error } envelope: missing initData stays a
+        // handler-level check; only ill-typed/oversized bodies hit AJV.
+        attachValidation: true,
+      },
+      async (request) => {
+        if (request.validationError) {
+          return { error: 'Invalid request body' }
         }
-        const user = await dependencies.findUserById(tgUserId)
-        if (!user) return { error: 'User not found' }
+        const { initData, referId } = request.body
+        if (!initData) return { error: 'No initData or hash provided' }
 
-        const userAlreadyInvited = user.wallet || user.referalId
-        if (referId && !userAlreadyInvited) {
-          const receiverId = Number(referId)
-          const receiver = await dependencies.findUserById(receiverId)
-          if (receiver && receiverId !== user.id) {
-            user.referalId = receiverId
-            await user.save()
-            dependencies.info('Referrer added successfully')
-          } else {
-            dependencies.error('Referrer not found or same as user')
+        try {
+          dependencies.validateInitData(initData)
+          const parsedData = dependencies.parseInitData(initData)
+
+          const tgUserId = parsedData?.user?.id
+          if (!tgUserId) {
+            return { error: 'Invalid telegram user id' }
           }
-        }
+          const user = await dependencies.findUserById(tgUserId)
+          if (!user) return { error: 'User not found' }
 
-        return {
-          id: user.id,
-          language: user.language,
-          wallet: user.wallet,
-          referalId: user.referalId,
-          balance: user.votes.toString(),
-          ip: request.ip,
+          const userAlreadyInvited = user.wallet || user.referalId
+          if (referId && !userAlreadyInvited) {
+            const receiverId = Number(referId)
+            const receiver = await dependencies.findUserById(receiverId)
+            if (receiver && receiverId !== user.id) {
+              user.referalId = receiverId
+              await user.save()
+              dependencies.info('Referrer added successfully')
+            } else {
+              dependencies.error('Referrer not found or same as user')
+            }
+          }
+
+          return {
+            id: user.id,
+            language: user.language,
+            wallet: user.wallet,
+            referalId: user.referalId,
+            balance: user.votes.toString(),
+            ip: request.ip,
+          }
+        } catch (error) {
+          return { error: (error as Error).message ?? 'Unknown error' }
         }
-      } catch (error) {
-        return { error: (error as Error).message ?? 'Unknown error' }
-      }
-    })
+      },
+    )
   }
 }
 

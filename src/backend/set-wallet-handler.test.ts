@@ -272,3 +272,35 @@ test('default validateInitData rejects unsigned initData via @telegram-apps vali
   assert.notEqual(body.error, '')
   assert.notEqual(body.error, 'BOT_TOKEN is not configured')
 })
+
+test('POST /api/auth/set-wallet rejects ill-typed wallet with validation error', async (t) => {
+  const ctx = await createSetWalletTestContext()
+  t.after(async () => {
+    await ctx.app.close()
+  })
+
+  const response = await ctx.app.inject({
+    method: 'POST',
+    url: '/api/auth/set-wallet',
+    payload: { initData: 'signed', wallet: { not: 'a string' } },
+  })
+
+  assert.equal(response.statusCode, 200)
+  assert.equal(response.json().error, 'Invalid request body')
+})
+
+test('POST /api/auth/set-wallet rejects oversized wallet', async (t) => {
+  const ctx = await createSetWalletTestContext()
+  t.after(async () => {
+    await ctx.app.close()
+  })
+
+  const response = await ctx.app.inject({
+    method: 'POST',
+    url: '/api/auth/set-wallet',
+    payload: { initData: 'signed', wallet: 'a'.repeat(129) },
+  })
+
+  assert.equal(response.statusCode, 200)
+  assert.equal(response.json().error, 'Invalid request body')
+})

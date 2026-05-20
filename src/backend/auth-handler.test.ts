@@ -246,3 +246,35 @@ test('POST /api/auth/login assigns referral when eligible', async (t) => {
   assert.equal(body.balance, '200')
   assert.equal(typeof body.ip, 'string')
 })
+
+test('POST /api/auth/login rejects ill-typed initData with validation error', async (t) => {
+  const ctx = await createAuthTestContext()
+  t.after(async () => {
+    await ctx.app.close()
+  })
+
+  const response = await ctx.app.inject({
+    method: 'POST',
+    url: '/api/auth/login',
+    payload: { initData: { not: 'a string' } },
+  })
+
+  assert.equal(response.statusCode, 200)
+  assert.equal(response.json().error, 'Invalid request body')
+})
+
+test('POST /api/auth/login rejects oversized initData', async (t) => {
+  const ctx = await createAuthTestContext()
+  t.after(async () => {
+    await ctx.app.close()
+  })
+
+  const response = await ctx.app.inject({
+    method: 'POST',
+    url: '/api/auth/login',
+    payload: { initData: 'a'.repeat(8193) },
+  })
+
+  assert.equal(response.statusCode, 200)
+  assert.equal(response.json().error, 'Invalid request body')
+})

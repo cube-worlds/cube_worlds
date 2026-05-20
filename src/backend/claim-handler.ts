@@ -68,61 +68,89 @@ async function findUserByInitData(
   return user
 }
 
+const claimBodySchema = {
+  schema: {
+    body: {
+      type: 'object',
+      properties: {
+        initData: { type: 'string', maxLength: 8192 },
+      },
+    },
+  },
+  // Keep legacy { error } envelope: missing initData stays a
+  // handler-level check; only ill-typed/oversized bodies hit AJV.
+  attachValidation: true,
+} as const
+
 export function buildClaimHandler(
   dependencies: ClaimHandlerDependencies = createDefaultDependencies(),
 ) {
   return async function claimHandler(fastify: FastifyInstance) {
-    fastify.post<{ Body: Body }>('/claim/status', async (request) => {
-      const { initData } = request.body
-      if (!initData) return { error: 'No initData provided' }
-
-      try {
-        const user = await findUserByInitData(initData, dependencies)
-        const claim = await dependencies.findOrCreateClaim(user)
-        const status = dependencies.getClaimStatus(claim)
-
-        return {
-          id: user.id,
-          ...status,
+    fastify.post<{ Body: Body }>(
+      '/claim/status',
+      claimBodySchema,
+      async (request) => {
+        if (request.validationError) {
+          return { error: 'Invalid request body' }
         }
-      } catch (err) {
-        return { error: (err as Error).message }
-      }
-    })
+        const { initData } = request.body
+        if (!initData) return { error: 'No initData provided' }
 
-    fastify.post<{ Body: Body }>('/claim', async (request) => {
-      const { initData } = request.body
-      if (!initData) return { error: 'No initData provided' }
+        try {
+          const user = await findUserByInitData(initData, dependencies)
+          const claim = await dependencies.findOrCreateClaim(user)
+          const status = dependencies.getClaimStatus(claim)
 
-      try {
-        const user = await findUserByInitData(initData, dependencies)
-        const claim = await dependencies.findOrCreateClaim(user)
-        const { claimedAmount, rawClaimAmount } = await dependencies.claimDaily(
-          claim,
-        )
+          return {
+            id: user.id,
+            ...status,
+          }
+        } catch (err) {
+          return { error: (err as Error).message }
+        }
+      },
+    )
 
-        let balance = user.votes
-        if (claimedAmount > 0) {
-          balance = await dependencies.addPoints(
-            user.id,
-            BigInt(claimedAmount),
-            BalanceChangeType.Claim,
+    fastify.post<{ Body: Body }>(
+      '/claim',
+      claimBodySchema,
+      async (request) => {
+        if (request.validationError) {
+          return { error: 'Invalid request body' }
+        }
+        const { initData } = request.body
+        if (!initData) return { error: 'No initData provided' }
+
+        try {
+          const user = await findUserByInitData(initData, dependencies)
+          const claim = await dependencies.findOrCreateClaim(user)
+          const { claimedAmount, rawClaimAmount } = await dependencies.claimDaily(
+            claim,
           )
-        }
-        const status = dependencies.getClaimStatus(claim)
 
-        return {
-          id: user.id,
-          message: `Claimed ${claimedAmount} $CUBE successfully`,
-          claimedAmount,
-          rawClaimAmount,
-          balance: balance.toString(),
-          ...status,
+          let balance = user.votes
+          if (claimedAmount > 0) {
+            balance = await dependencies.addPoints(
+              user.id,
+              BigInt(claimedAmount),
+              BalanceChangeType.Claim,
+            )
+          }
+          const status = dependencies.getClaimStatus(claim)
+
+          return {
+            id: user.id,
+            message: `Claimed ${claimedAmount} $CUBE successfully`,
+            claimedAmount,
+            rawClaimAmount,
+            balance: balance.toString(),
+            ...status,
+          }
+        } catch (err) {
+          return { error: (err as Error).message }
         }
-      } catch (err) {
-        return { error: (err as Error).message }
-      }
-    })
+      },
+    )
   }
 }
 

@@ -287,3 +287,35 @@ test('POST /api/users/claim blocks concurrent double claim attempts for same use
   assert.equal(ctx.addPointsCalls.length, 1)
   assert.equal(ctx.user.votes, BigInt(600))
 })
+
+test('POST /api/users/claim rejects ill-typed initData with validation error', async (t) => {
+  const ctx = await createTestContext()
+  t.after(async () => {
+    await ctx.app.close()
+  })
+
+  const response = await ctx.app.inject({
+    method: 'POST',
+    url: '/api/users/claim',
+    payload: { initData: { not: 'a string' } },
+  })
+
+  assert.equal(response.statusCode, 200)
+  assert.equal(response.json().error, 'Invalid request body')
+})
+
+test('POST /api/users/claim/status rejects oversized initData', async (t) => {
+  const ctx = await createTestContext()
+  t.after(async () => {
+    await ctx.app.close()
+  })
+
+  const response = await ctx.app.inject({
+    method: 'POST',
+    url: '/api/users/claim/status',
+    payload: { initData: 'a'.repeat(8193) },
+  })
+
+  assert.equal(response.statusCode, 200)
+  assert.equal(response.json().error, 'Invalid request body')
+})
