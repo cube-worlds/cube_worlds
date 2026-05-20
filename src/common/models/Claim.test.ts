@@ -1,6 +1,6 @@
 /* eslint-disable test/no-import-node-test */
 import type { DocumentType } from '@typegoose/typegoose'
-import type { Claim } from '#root/common/models/Claim'
+import type { Claim, ClaimPersist, ClaimUpdateFields } from '#root/common/models/Claim'
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
@@ -18,28 +18,35 @@ interface ClaimFixture extends Pick<
   Claim,
   'streakDays' | 'lastClaimAmount' | 'lastClaimDate' | 'totalClaimed' | 'fractionalCarry'
 > {
-  saveCalls: number
-  save: () => Promise<unknown>
+  persistCalls: Array<{ expectedLastClaimDate: Date, update: ClaimUpdateFields }>
 }
 
 function makeClaim(overrides: Partial<ClaimFixture> = {}): ClaimFixture {
-  const claim: ClaimFixture = {
+  return {
     streakDays: 0,
     lastClaimAmount: 0,
     lastClaimDate: new Date(0),
     totalClaimed: 0,
     fractionalCarry: 0,
-    saveCalls: 0,
-    save: async () => {
-      claim.saveCalls += 1
-    },
+    persistCalls: [],
     ...overrides,
   }
-  return claim
 }
 
 function asDoc(c: ClaimFixture): DocumentType<Claim> {
   return c as unknown as DocumentType<Claim>
+}
+
+// Default test persist: simulates an atomic CAS-success on the in-memory
+// fixture. Records the call and reports success.
+function makePersist(result: 'won' | 'lost' = 'won'): ClaimPersist {
+  return async (claim, expectedLastClaimDate, update) => {
+    ;(claim as unknown as ClaimFixture).persistCalls.push({
+      expectedLastClaimDate,
+      update,
+    })
+    return result === 'won'
+  }
 }
 
 // CLAIM_COOLDOWN_MS
@@ -236,10 +243,10 @@ test('claimDaily throws when claim is not yet available', async () => {
     totalClaimed: 100,
   })
   await assert.rejects(
-    () => claimDaily(asDoc(claim), new Date(last.getTime() + 30_000)),
+    () => claimDaily(asDoc(claim), new Date(last.getTime() + 30_000), makePersist()),
     /Claim is not available yet/,
   )
-  assert.equal(claim.saveCalls, 0)
+  assert.equal(claim.persistCalls.length, 0)
 })
 
 test('claimDaily persists, splits integer reward, and carries fractional remainder', async () => {
@@ -252,13 +259,14 @@ test('claimDaily persists, splits integer reward, and carries fractional remaind
   })
   // exactly 1 day later → multiplier = 2 (next-UTC-day bump)
   const now = new Date(last.getTime() + ONE_DAY_MS)
-  const result = await claimDaily(asDoc(claim), now)
+  const result = await claimDaily(asDoc(claim), now, makePersist())
 
   // raw = 0.4 + 1day_ms × (100/1day_ms) × 2 = 0.4 + 200 = 200.4
   assert.equal(result.claimedAmount, 200)
   assert.ok(Math.abs(result.rawClaimAmount - 200.4) < 1e-6)
   assert.equal(result.streakDays, 2)
-  assert.equal(claim.saveCalls, 1)
+  assert.equal(claim.persistCalls.length, 1)
+  assert.equal(claim.persistCalls[0].expectedLastClaimDate, last)
   assert.equal(claim.lastClaimAmount, 200)
   assert.equal(claim.lastClaimDate, now)
   assert.equal(claim.streakDays, 2)
@@ -269,13 +277,13 @@ test('claimDaily persists, splits integer reward, and carries fractional remaind
 test('claimDaily on a never-claimed user awards one cooldown worth × multiplier 1', async () => {
   const claim = makeClaim()
   const now = new Date('2025-06-01T00:00:00Z')
-  const result = await claimDaily(asDoc(claim), now)
+  const result = await claimDaily(asDoc(claim), now, makePersist())
 
   // raw = 0 + 60_000 × (100/ONE_DAY_MS) × 1 ≈ 0.069444
   // Math.floor → 0 claimed, fractional ≈ 0.069444 carried
   assert.equal(result.claimedAmount, 0)
   assert.ok(result.rawClaimAmount > 0.069 && result.rawClaimAmount < 0.070)
-  assert.equal(claim.saveCalls, 1)
+  assert.equal(claim.persistCalls.length, 1)
   assert.equal(claim.lastClaimDate, now)
   assert.equal(claim.totalClaimed, 0)
   assert.equal(claim.lastClaimAmount, 0)
@@ -332,10 +340,49 @@ test('claimDaily after a long gap resets multiplier to 1', async () => {
   })
   // 5 days later — streak broken, multiplier should be 1
   const now = new Date(last.getTime() + 5 * ONE_DAY_MS)
-  const result = await claimDaily(asDoc(claim), now)
+  const result = await claimDaily(asDoc(claim), now, makePersist())
 
   assert.equal(result.streakDays, 1)
   assert.equal(claim.streakDays, 1)
   // raw = 0 + 5day_ms × (100/1day_ms) × 1 = 500
   assert.equal(result.claimedAmount, 500)
+})
+
+// Atomic CAS — distributed-claim safety
+
+test('claimDaily throws and does not mutate when persist reports a lost race', async () => {
+  const last = new Date('2025-06-01T00:00:00Z')
+  const claim = makeClaim({
+    lastClaimDate: last,
+    streakDays: 3,
+    totalClaimed: 300,
+    lastClaimAmount: 100,
+    fractionalCarry: 0.25,
+  })
+  const now = new Date(last.getTime() + ONE_DAY_MS)
+
+  await assert.rejects(
+    () => claimDaily(asDoc(claim), now, makePersist('lost')),
+    /Claim is not available yet/,
+  )
+  assert.equal(claim.persistCalls.length, 1)
+  // In-memory doc must be untouched when CAS loses, so the caller's
+  // subsequent reads (e.g. balance, status) reflect the *real* DB state.
+  assert.equal(claim.lastClaimDate, last)
+  assert.equal(claim.streakDays, 3)
+  assert.equal(claim.totalClaimed, 300)
+  assert.equal(claim.lastClaimAmount, 100)
+  assert.equal(claim.fractionalCarry, 0.25)
+})
+
+test('claimDaily snapshots lastClaimDate before mutating so concurrent calls cannot poison the filter', async () => {
+  const last = new Date('2025-06-01T00:00:00Z')
+  const claim = makeClaim({ lastClaimDate: last, streakDays: 1, totalClaimed: 100 })
+  const now = new Date(last.getTime() + ONE_DAY_MS)
+
+  await claimDaily(asDoc(claim), now, makePersist())
+  assert.equal(claim.persistCalls[0].expectedLastClaimDate, last)
+  // Mutation only happens after persist confirms — so the filter value
+  // was the pre-update timestamp, exactly what Mongo's CAS needs.
+  assert.equal(claim.lastClaimDate, now)
 })

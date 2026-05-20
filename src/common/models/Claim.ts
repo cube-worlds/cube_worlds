@@ -148,9 +148,40 @@ export function getClaimStatus(
   }
 }
 
+export interface ClaimUpdateFields {
+  streakDays: number
+  lastClaimAmount: number
+  lastClaimDate: Date
+  fractionalCarry: number
+  totalClaimed: number
+}
+
+export type ClaimPersist = (
+  claim: DocumentType<Claim>,
+  expectedLastClaimDate: Date,
+  update: ClaimUpdateFields,
+) => Promise<boolean>
+
+// Compare-and-swap on lastClaimDate. If another process updated the claim
+// since we read it, the filter no longer matches and Mongo returns null —
+// telling the caller it lost the race. This is the single source of truth
+// for serializing concurrent claims across processes (no in-process lock
+// is needed). The first-claim window between findOrCreateClaim's findOne
+// and its save is still a small race; a unique index on Claim.user would
+// close it, but is intentionally out of scope here.
+const persistClaimAtomic: ClaimPersist = async (claim, expectedLastClaimDate, update) => {
+  const result = await ClaimModel.findOneAndUpdate(
+    { _id: claim._id, lastClaimDate: expectedLastClaimDate },
+    { $set: update },
+    { new: false },
+  )
+  return result !== null
+}
+
 export async function claimDaily(
   claim: DocumentType<Claim>,
   now: Date = new Date(),
+  persist: ClaimPersist = persistClaimAtomic,
 ) {
   if (!canClaimNow(claim, now)) {
     throw new Error('Claim is not available yet')
@@ -161,12 +192,25 @@ export async function claimDaily(
   const claimAmount = Math.floor(rawClaimAmount)
   const fractionalCarry = Number((rawClaimAmount - claimAmount).toFixed(6))
 
-  claim.streakDays = claimMultiplier
-  claim.lastClaimAmount = claimAmount
-  claim.lastClaimDate = now
-  claim.fractionalCarry = fractionalCarry
-  claim.totalClaimed += claimAmount
-  await claim.save()
+  const previousLastClaimDate = claim.lastClaimDate
+  const update: ClaimUpdateFields = {
+    streakDays: claimMultiplier,
+    lastClaimAmount: claimAmount,
+    lastClaimDate: now,
+    fractionalCarry,
+    totalClaimed: claim.totalClaimed + claimAmount,
+  }
+
+  const won = await persist(claim, previousLastClaimDate, update)
+  if (!won) {
+    throw new Error('Claim is not available yet')
+  }
+
+  claim.streakDays = update.streakDays
+  claim.lastClaimAmount = update.lastClaimAmount
+  claim.lastClaimDate = update.lastClaimDate
+  claim.fractionalCarry = update.fractionalCarry
+  claim.totalClaimed = update.totalClaimed
 
   return {
     claimedAmount: claimAmount,

@@ -236,14 +236,19 @@ test('POST /api/users/claim returns "User not found in database" for unknown use
 })
 
 test('POST /api/users/claim blocks concurrent double claim attempts for same user', async (t) => {
+  // Simulates the atomic CAS in claimDaily: the synchronous check-and-flip
+  // mirrors what Mongo's findOneAndUpdate({lastClaimDate}, $set) does in
+  // a single round trip. The async work (DB roundtrip latency) happens
+  // *after* the flip, so a parallel request entering during that window
+  // sees claimAvailable=false and is rejected.
   let claimAvailable = true
   const ctx = await createTestContext({
     claimDaily: async () => {
       if (!claimAvailable) {
         throw new Error('Claim is not available yet')
       }
-      await delay(30)
       claimAvailable = false
+      await delay(30)
       return {
         claimedAmount: 100,
         rawClaimAmount: 100,

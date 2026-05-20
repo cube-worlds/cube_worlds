@@ -50,25 +50,6 @@ function createDefaultDependencies(): ClaimHandlerDependencies {
   }
 }
 
-const claimLocks = new Map<number, Promise<unknown>>()
-
-async function withUserClaimLock<T>(
-  userId: number,
-  action: () => Promise<T>,
-): Promise<T> {
-  const currentLock = claimLocks.get(userId) ?? Promise.resolve()
-  const nextLock = currentLock.catch(() => undefined).then(action)
-
-  claimLocks.set(userId, nextLock)
-  try {
-    return await nextLock
-  } finally {
-    if (claimLocks.get(userId) === nextLock) {
-      claimLocks.delete(userId)
-    }
-  }
-}
-
 async function findUserByInitData(
   initData: string,
   dependencies: ClaimHandlerDependencies,
@@ -115,31 +96,29 @@ export function buildClaimHandler(
 
       try {
         const user = await findUserByInitData(initData, dependencies)
-        return await withUserClaimLock(user.id, async () => {
-          const claim = await dependencies.findOrCreateClaim(user)
-          const { claimedAmount, rawClaimAmount } = await dependencies.claimDaily(
-            claim,
+        const claim = await dependencies.findOrCreateClaim(user)
+        const { claimedAmount, rawClaimAmount } = await dependencies.claimDaily(
+          claim,
+        )
+
+        let balance = user.votes
+        if (claimedAmount > 0) {
+          balance = await dependencies.addPoints(
+            user.id,
+            BigInt(claimedAmount),
+            BalanceChangeType.Claim,
           )
+        }
+        const status = dependencies.getClaimStatus(claim)
 
-          let balance = user.votes
-          if (claimedAmount > 0) {
-            balance = await dependencies.addPoints(
-              user.id,
-              BigInt(claimedAmount),
-              BalanceChangeType.Claim,
-            )
-          }
-          const status = dependencies.getClaimStatus(claim)
-
-          return {
-            id: user.id,
-            message: `Claimed ${claimedAmount} $CUBE successfully`,
-            claimedAmount,
-            rawClaimAmount,
-            balance: balance.toString(),
-            ...status,
-          }
-        })
+        return {
+          id: user.id,
+          message: `Claimed ${claimedAmount} $CUBE successfully`,
+          claimedAmount,
+          rawClaimAmount,
+          balance: balance.toString(),
+          ...status,
+        }
       } catch (err) {
         return { error: (err as Error).message }
       }
