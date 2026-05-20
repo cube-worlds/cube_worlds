@@ -4,6 +4,7 @@ import process from 'node:process'
 import { parse, validate } from '@telegram-apps/init-data-node'
 import { findUserById } from '#root/common/models/User'
 import { logger } from '#root/logger'
+import { safeErrorResponse } from './safe-error'
 
 interface Body {
   initData: string
@@ -18,6 +19,7 @@ export interface AuthHandlerDependencies {
   findUserById: (id: number) => Promise<ExistingUser | null>
   info: (message: string) => void
   error: (message: string) => void
+  logError: (message: string) => void
 }
 
 function createDefaultDependencies(): AuthHandlerDependencies {
@@ -34,6 +36,7 @@ function createDefaultDependencies(): AuthHandlerDependencies {
     findUserById,
     info: logger.info.bind(logger),
     error: logger.error.bind(logger),
+    logError: logger.error.bind(logger),
   }
 }
 
@@ -96,8 +99,8 @@ export function buildAuthHandler(
             balance: user.votes.toString(),
             ip: request.ip,
           }
-        } catch (error) {
-          return { error: (error as Error).message ?? 'Unknown error' }
+        } catch (err) {
+          return safeErrorResponse(err, dependencies.logError)
         }
       },
     )

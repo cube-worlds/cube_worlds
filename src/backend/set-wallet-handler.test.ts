@@ -23,6 +23,7 @@ interface StubUser {
 interface SetWalletTestContext {
   app: ReturnType<typeof fastify>
   user: StubUser
+  unhandledErrorLogs: string[]
 }
 
 function toResolvedUser(user: StubUser): ResolvedUser {
@@ -52,6 +53,7 @@ async function createSetWalletTestContext(
   overrides: Partial<SetWalletHandlerDependencies> = {},
 ): Promise<SetWalletTestContext> {
   const user = createStubUser()
+  const unhandledErrorLogs: string[] = []
 
   const dependencies: SetWalletHandlerDependencies = {
     validateInitData: () => {},
@@ -62,6 +64,9 @@ async function createSetWalletTestContext(
     },
     findUserByWallet: async () => null,
     parseWalletAddress: (wallet: string) => createParsedAddress(wallet),
+    logError: (message) => {
+      unhandledErrorLogs.push(message)
+    },
     ...overrides,
   }
 
@@ -70,7 +75,7 @@ async function createSetWalletTestContext(
     prefix: '/api/auth',
   })
 
-  return { app, user }
+  return { app, user, unhandledErrorLogs }
 }
 
 test('POST /api/auth/set-wallet validates required fields', async (t) => {
@@ -242,7 +247,9 @@ test('default validateInitData refuses to run without BOT_TOKEN', async (t) => {
   })
 
   assert.equal(response.statusCode, 200)
-  assert.equal(response.json().error, 'BOT_TOKEN is not configured')
+  // The raw 'BOT_TOKEN is not configured' message is sanitized so the
+  // misconfiguration doesn't leak to the client.
+  assert.equal(response.json().error, 'Unable to process request')
 })
 
 test('default validateInitData rejects unsigned initData via @telegram-apps validator', async (t) => {
@@ -263,14 +270,10 @@ test('default validateInitData rejects unsigned initData via @telegram-apps vali
     payload: { initData: 'not-a-real-signed-payload', wallet: 'EQ_x' },
   })
 
-  // The validator throws → caught and surfaced as { error }. We don't
-  // assert on the exact message (it's owned by the upstream library), only
-  // that we hit the catch branch with a non-empty error string.
+  // The validator throws → caught and sanitized so the upstream library's
+  // raw message never reaches the client.
   assert.equal(response.statusCode, 200)
-  const body = response.json()
-  assert.equal(typeof body.error, 'string')
-  assert.notEqual(body.error, '')
-  assert.notEqual(body.error, 'BOT_TOKEN is not configured')
+  assert.equal(response.json().error, 'Unable to process request')
 })
 
 test('POST /api/auth/set-wallet rejects ill-typed wallet with validation error', async (t) => {

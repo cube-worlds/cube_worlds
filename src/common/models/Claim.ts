@@ -3,6 +3,7 @@ import type { Types } from 'mongoose'
 import type { UserDoc } from './User'
 import { getModelForClass, modelOptions, prop } from '@typegoose/typegoose'
 import { TimeStamps } from '@typegoose/typegoose/lib/defaultClasses'
+import { ClientError } from '#root/common/errors'
 import { User } from './User'
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000
@@ -210,7 +211,7 @@ export async function claimDaily(
   persist: ClaimPersist = persistClaimAtomic,
 ) {
   if (!canClaimNow(claim, now)) {
-    throw new Error('Claim is not available yet')
+    throw new ClientError('Claim is not available yet')
   }
 
   const claimMultiplier = getClaimMultiplier(claim, now)
@@ -229,7 +230,7 @@ export async function claimDaily(
 
   const won = await persist(claim, previousLastClaimDate, update)
   if (!won) {
-    throw new Error('Claim is not available yet')
+    throw new ClientError('Claim is not available yet')
   }
 
   claim.streakDays = update.streakDays

@@ -4,6 +4,8 @@ import process from 'node:process'
 import { parse, validate } from '@telegram-apps/init-data-node'
 import { Address } from '@ton/core'
 import { findUserById, findUserByWallet } from '#root/common/models/User'
+import { logger } from '#root/logger'
+import { safeErrorResponse } from './safe-error'
 
 interface Body {
   initData: string
@@ -19,6 +21,7 @@ export interface SetWalletHandlerDependencies {
   findUserById: (id: number) => Promise<ExistingUser | null>
   findUserByWallet: (wallet: string) => Promise<ExistingUser | null>
   parseWalletAddress: (wallet: string) => ParsedAddress
+  logError: (message: string) => void
 }
 
 function createDefaultDependencies(): SetWalletHandlerDependencies {
@@ -35,6 +38,7 @@ function createDefaultDependencies(): SetWalletHandlerDependencies {
     findUserById,
     findUserByWallet,
     parseWalletAddress: Address.parse,
+    logError: logger.error.bind(logger),
   }
 }
 
@@ -103,7 +107,7 @@ export function buildSetWalletHandler(
             message: 'Wallet updated successfully',
           }
         } catch (err) {
-          return { error: (err as Error).message }
+          return safeErrorResponse(err, dependencies.logError)
         }
       },
     )

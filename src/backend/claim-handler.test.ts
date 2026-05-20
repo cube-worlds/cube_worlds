@@ -6,6 +6,7 @@ import test from 'node:test'
 import { setTimeout as delay } from 'node:timers/promises'
 import fastify from 'fastify'
 import { buildClaimHandler } from '#root/backend/claim-handler'
+import { ClientError } from '#root/common/errors'
 import { BalanceChangeType } from '#root/common/models/Balance'
 
 type ResolvedUser = NonNullable<
@@ -26,6 +27,7 @@ interface TestContext {
     amount: bigint
     reason: BalanceChangeType
   }>
+  unhandledErrorLogs: string[]
 }
 
 async function createTestContext(
@@ -37,6 +39,7 @@ async function createTestContext(
   }
   const claim = {}
   const addPointsCalls: TestContext['addPointsCalls'] = []
+  const unhandledErrorLogs: string[] = []
 
   const dependencies: ClaimHandlerDependencies = {
     validateInitData: () => {},
@@ -62,13 +65,16 @@ async function createTestContext(
       user.votes += amount
       return user.votes
     },
+    logError: (message) => {
+      unhandledErrorLogs.push(message)
+    },
     ...overrides,
   }
 
   const app = fastify()
   await app.register(buildClaimHandler(dependencies), { prefix: '/api/users' })
 
-  return { app, user, addPointsCalls }
+  return { app, user, addPointsCalls, unhandledErrorLogs }
 }
 
 test('POST /api/users/claim returns validation error for empty initData', async (t) => {
@@ -181,7 +187,7 @@ test('POST /api/users/claim/status returns validation error for empty initData',
   assert.equal(body.error, 'No initData provided')
 })
 
-test('POST /api/users/claim surfaces validateInitData errors', async (t) => {
+test('POST /api/users/claim sanitizes unexpected validateInitData errors', async (t) => {
   const ctx = await createTestContext({
     validateInitData: () => {
       throw new Error('Invalid initData signature')
@@ -198,8 +204,10 @@ test('POST /api/users/claim surfaces validateInitData errors', async (t) => {
   })
   const body = response.json()
   assert.equal(response.statusCode, 200)
-  assert.equal(body.error, 'Invalid initData signature')
+  assert.equal(body.error, 'Unable to process request')
   assert.equal(ctx.addPointsCalls.length, 0)
+  assert.equal(ctx.unhandledErrorLogs.length, 1)
+  assert.match(ctx.unhandledErrorLogs[0], /Invalid initData signature/)
 })
 
 test('POST /api/users/claim/status returns "Invalid telegram user id" when parsed payload has no user', async (t) => {
@@ -245,7 +253,7 @@ test('POST /api/users/claim blocks concurrent double claim attempts for same use
   const ctx = await createTestContext({
     claimDaily: async () => {
       if (!claimAvailable) {
-        throw new Error('Claim is not available yet')
+        throw new ClientError('Claim is not available yet')
       }
       claimAvailable = false
       await delay(30)

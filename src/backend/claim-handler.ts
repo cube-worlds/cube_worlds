@@ -2,6 +2,7 @@ import type { InitData } from '@telegram-apps/init-data-node'
 import type { FastifyInstance } from 'fastify'
 import process from 'node:process'
 import { parse, validate } from '@telegram-apps/init-data-node'
+import { ClientError } from '#root/common/errors'
 import { BalanceChangeType } from '#root/common/models/Balance'
 import {
   claimDaily,
@@ -9,6 +10,8 @@ import {
   getClaimStatus,
 } from '#root/common/models/Claim'
 import { addPoints, findUserById } from '#root/common/models/User'
+import { logger } from '#root/logger'
+import { safeErrorResponse } from './safe-error'
 
 interface Body {
   initData: string
@@ -29,6 +32,7 @@ export interface ClaimHandlerDependencies {
     add: bigint,
     reason: BalanceChangeType,
   ) => Promise<bigint>
+  logError: (message: string) => void
 }
 
 function createDefaultDependencies(): ClaimHandlerDependencies {
@@ -47,6 +51,7 @@ function createDefaultDependencies(): ClaimHandlerDependencies {
     getClaimStatus,
     claimDaily,
     addPoints,
+    logError: logger.error.bind(logger),
   }
 }
 
@@ -58,12 +63,12 @@ async function findUserByInitData(
   const parsedData = dependencies.parseInitData(initData)
   const tgUserId = parsedData?.user?.id
   if (!tgUserId) {
-    throw new Error('Invalid telegram user id')
+    throw new ClientError('Invalid telegram user id')
   }
 
   const user = await dependencies.findUserById(tgUserId)
   if (!user) {
-    throw new Error('User not found in database')
+    throw new ClientError('User not found in database')
   }
   return user
 }
@@ -106,7 +111,7 @@ export function buildClaimHandler(
             ...status,
           }
         } catch (err) {
-          return { error: (err as Error).message }
+          return safeErrorResponse(err, dependencies.logError)
         }
       },
     )
@@ -147,7 +152,7 @@ export function buildClaimHandler(
             ...status,
           }
         } catch (err) {
-          return { error: (err as Error).message }
+          return safeErrorResponse(err, dependencies.logError)
         }
       },
     )

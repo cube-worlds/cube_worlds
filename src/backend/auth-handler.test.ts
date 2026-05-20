@@ -25,6 +25,7 @@ interface AuthTestContext {
   users: Map<number, StubUser>
   infoLogs: string[]
   errorLogs: string[]
+  unhandledErrorLogs: string[]
 }
 
 function toResolvedUser(user: StubUser): ResolvedUser {
@@ -54,6 +55,7 @@ async function createAuthTestContext(
   ])
   const infoLogs: string[] = []
   const errorLogs: string[] = []
+  const unhandledErrorLogs: string[] = []
 
   const dependencies: AuthHandlerDependencies = {
     validateInitData: () => {},
@@ -68,6 +70,9 @@ async function createAuthTestContext(
     error: (message: string) => {
       errorLogs.push(message)
     },
+    logError: (message: string) => {
+      unhandledErrorLogs.push(message)
+    },
     ...overrides,
   }
 
@@ -79,6 +84,7 @@ async function createAuthTestContext(
     users,
     infoLogs,
     errorLogs,
+    unhandledErrorLogs,
   }
 }
 
@@ -134,7 +140,7 @@ test('POST /api/auth/login returns validation error for missing telegram user id
   assert.equal(response.json().error, 'Invalid telegram user id')
 })
 
-test('POST /api/auth/login surfaces validateInitData errors via the catch branch', async (t) => {
+test('POST /api/auth/login sanitizes unexpected catch-branch errors', async (t) => {
   const ctx = await createAuthTestContext({
     validateInitData: () => {
       throw new Error('Invalid initData signature')
@@ -150,7 +156,9 @@ test('POST /api/auth/login surfaces validateInitData errors via the catch branch
     payload: { initData: 'tampered' },
   })
   assert.equal(response.statusCode, 200)
-  assert.equal(response.json().error, 'Invalid initData signature')
+  assert.equal(response.json().error, 'Unable to process request')
+  assert.equal(ctx.unhandledErrorLogs.length, 1)
+  assert.match(ctx.unhandledErrorLogs[0], /Invalid initData signature/)
 })
 
 test('POST /api/auth/login logs referral error when referrer is the same user', async (t) => {
