@@ -1,9 +1,8 @@
 import type { InitData } from '@telegram-apps/init-data-node'
 import type { FastifyInstance } from 'fastify'
-import process from 'node:process'
-import { parse, validate } from '@telegram-apps/init-data-node'
 import { findUserById } from '#root/common/models/User'
 import { logger } from '#root/logger'
+import { defaultParseInitData, defaultValidateInitData } from './init-data'
 import { safeErrorResponse } from './safe-error'
 
 interface Body {
@@ -24,15 +23,8 @@ export interface AuthHandlerDependencies {
 
 function createDefaultDependencies(): AuthHandlerDependencies {
   return {
-    validateInitData: (initData: string) => {
-      const botToken = process.env.BOT_TOKEN
-      if (!botToken) {
-        throw new Error('BOT_TOKEN is not configured')
-      }
-      const expiresIn = 60 * 60 * 24
-      validate(initData, botToken, { expiresIn })
-    },
-    parseInitData: parse,
+    validateInitData: defaultValidateInitData,
+    parseInitData: defaultParseInitData,
     findUserById,
     info: logger.info.bind(logger),
     error: logger.error.bind(logger),

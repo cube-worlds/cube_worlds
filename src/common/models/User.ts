@@ -17,8 +17,6 @@ import { logger } from '#root/logger'
 
 export enum UserState {
   WaitNothing = 'WaitNothing',
-  WaitDescription = 'WaitDescription',
-  WaitWallet = 'WaitWallet',
   Submited = 'Submited',
 }
 
@@ -41,30 +39,6 @@ export class User extends TimeStamps {
 
   @prop({ type: Number })
   referalId?: number
-
-  @prop({ type: Date, required: true, default: new Date(+0) })
-  dicedAt!: Date
-
-  @prop({ type: Number, min: 1, max: 6 })
-  diceSeriesNumber?: number
-
-  // how many times recurred
-  @prop({ type: Number })
-  diceSeries?: number
-
-  // for captcha purposes
-  @prop({ type: Number })
-  suspicionDices?: number
-
-  @prop({ type: String })
-  captchaNonce?: string
-
-  @prop({ type: Date })
-  captchaIssuedAt?: Date
-
-  // for dice callback query
-  @prop({ type: String })
-  diceKey?: string
 
   @prop({ type: String })
   name?: string

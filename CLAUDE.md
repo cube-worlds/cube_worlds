@@ -15,7 +15,6 @@ NODE_ENV=test node --import tsx --test src/backend/auth-handler.test.ts  # singl
 ## Critical Gotchas
 - **Tests use Node.js built-in test runner** (`node --test`), not Jest/Vitest
 - **`NODE_ENV=test` and config**: `src/config.ts` is a Proxy that throws on any property read in test mode. Tests must not transitively import `#root/config`. When a command needs `isAdmin` or `tonClient`, split the file into `foo-handler.ts` (pure, testable) + `foo.ts` (composer wiring that injects the heavy deps).
-- **Captcha** (`src/frontend/captcha/`) is standalone HTML/JS — NOT a Vue component
 - **`folderPath()`** from `src/common/helpers/files.ts` for all file path ops — sanitizes usernames, checks against `./data/`
 - **Claim locking**: in-process promise chain (`claimLocks` Map) — single-process only
 - **Path aliases**: `#root/*` → `./build/src/*` (backend), `@/*` → `./src/*` (frontend)
@@ -59,11 +58,7 @@ Active features (registered in `src/bot/index.ts`): start, help, queue (admin), 
 - CNFT type at mint time (`pickCNFTType` in `src/common/models/CNFT.ts`): Whale (>1M votes), Diamond (>500K), Coin (>100K), Knight (>0 referrals), Common. `Dice` is a legacy type still in the enum and on past records but no longer produced — the `/dice` command was removed and `diceWinner` is never set to true for new users.
 - `BalanceChangeType` enum (`src/common/models/Balance.ts`): Initial, Deposit, Withdraw, Dice, Referral, Donation, Task, Claim, Trade. `Dice` and `Task` are legacy values; new entries are Claim/Referral/Donation/Trade.
 
-## Captcha (orphaned but live)
-The DOOM captcha endpoint (`src/backend/captcha.ts`) and `suspicionDices` on `User` are remnants of the removed dice game. The endpoint still HMAC-verifies tokens, but nothing currently *generates* them — `generateCaptchaToken()` is no longer invoked from any feature. Leave it in place if you plan to re-wire to another suspicion source; otherwise it's dead code.
-
 ## Security
-- Captcha: HMAC-SHA256 signed tokens (BOT_TOKEN as secret). No secrets client-side.
 - Leaderboard pagination: limit 1–100, skip ≥ 0.
 - Random strings: `node:crypto.randomBytes`.
 

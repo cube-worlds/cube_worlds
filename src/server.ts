@@ -13,7 +13,6 @@ import { createServer as createViteServer } from 'vite'
 import { logger, loggerOptions } from '#root/logger'
 import authHandler from './backend/auth-handler'
 import balancesHandler from './backend/balances-handler'
-import captchaHandler from './backend/captcha'
 import claimHandler from './backend/claim-handler'
 import leaderboardHandler from './backend/leaderboard-handler'
 import nftHandler from './backend/nft-handler'
@@ -29,7 +28,6 @@ const ROUTE_RATE_LIMITS: Record<string, { max: number, timeWindow: string }> = {
   '/api/users/claim/status': { max: 30, timeWindow: '1 minute' },
   '/api/users/leaderboard': { max: 60, timeWindow: '1 minute' },
   '/api/users/balances': { max: 60, timeWindow: '1 minute' },
-  '/api/captcha/check': { max: 10, timeWindow: '1 minute' },
 }
 
 export async function createServer(bot: Bot) {
@@ -100,7 +98,6 @@ export async function createServer(bot: Bot) {
   await server.register(setWalletHandler, { prefix: '/api/auth' })
   await server.register(walletNonceHandler, { prefix: '/api/auth' })
 
-  await server.register(captchaHandler(bot), { prefix: '/api/captcha' })
   await server.register(nftHandler, { prefix: '/api/nft' })
 
   await server.register(balancesHandler, { prefix: '/api/users' })

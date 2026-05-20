@@ -2,9 +2,9 @@ import type { InitData } from '@telegram-apps/init-data-node'
 import type { FastifyInstance } from 'fastify'
 import type { VerifyProofInput, VerifyResult } from './ton-proof'
 import process from 'node:process'
-import { parse, validate } from '@telegram-apps/init-data-node'
 import { findUserById, findUserByWallet } from '#root/common/models/User'
 import { logger } from '#root/logger'
+import { defaultParseInitData, defaultValidateInitData } from './init-data'
 import { safeErrorResponse } from './safe-error'
 import { verifyProof as verifyProofImpl } from './ton-proof'
 
@@ -37,15 +37,8 @@ export interface SetWalletHandlerDependencies {
 
 function createDefaultDependencies(): SetWalletHandlerDependencies {
   return {
-    validateInitData: (initData: string) => {
-      const botToken = process.env.BOT_TOKEN
-      if (!botToken) {
-        throw new Error('BOT_TOKEN is not configured')
-      }
-      const expiresIn = 60 * 60 * 24
-      validate(initData, botToken, { expiresIn })
-    },
-    parseInitData: parse,
+    validateInitData: defaultValidateInitData,
+    parseInitData: defaultParseInitData,
     findUserById,
     findUserByWallet,
     verifyProof: verifyProofImpl,

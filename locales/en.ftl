@@ -50,11 +50,6 @@ speedup =
 
     👨‍👨‍👦‍👦 <a href="{$shareLink}">Invite friends</a> using link <code>{$inviteLink}</code>
 
-    🎲 Roll the dice using /dice every 5 minutes
-
-dice =
-    .captcha_solved = You successfully solved captcha and can roll the /dice again
-
 mint =
     .share = Mint your NFT character for absolutely free!
 
