@@ -1,6 +1,6 @@
 # Kamal deploy config for cube-worlds-bot — single Node container: grammY
 # Telegram bot (webhook mode) + Fastify HTTP server + Vue Mini App served at /.
-# Stateful: MongoDB (shared platform mongo, DB nft-bot) + 488M of per-NFT assets
+# Stateful: MongoDB (shared platform mongo, DB cube-worlds-bot) + 488M of per-NFT assets
 # on the host volume /srv/cube_worlds/data (mounted /usr/src/data).
 # Lift-and-shift of production main @ 8a53660 (apex cubeworlds.club, apex-only).
 # Build context is the repo root (Dockerfile builds src/frontend + runs via tsx).
@@ -32,7 +32,8 @@ proxy:
                                   # `kamal setup` will deadlock unless the boot-ordering is
                                   # solved first (see runbook §8 Phase C blocker).
 
-# MongoDB `nft-bot` lives in the shared platform mongo (not here). The 488M of
+# MongoDB DB `cube-worlds-bot` (renamed from legacy `nft-bot`) lives in the shared
+# platform mongo (not here). The 488M of
 # per-NFT generated assets (681 dirs of <id>.png/.json/.jpg) persist on this
 # host volume across deploys; pre-seeded from legacy in Phase C (/srv/<app> convention).
 volumes:
