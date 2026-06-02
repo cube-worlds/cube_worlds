@@ -1,4 +1,4 @@
-import { getModelForClass, modelOptions, prop } from '@typegoose/typegoose'
+import { getModelForClass, index, modelOptions, prop } from '@typegoose/typegoose'
 import { TimeStamps } from '@typegoose/typegoose/lib/defaultClasses'
 
 // Fixed CUBE pool per world per tick. This is the bounded faucet knob: total
@@ -18,6 +18,11 @@ export const WORLD_DEFS: WorldDef[] = [
   { worldId: 'storm-spire', name: 'Storm Spire' },
 ]
 
+// Compound unique index so a (tick, world) pair can only be seeded once and
+// concurrent seeders collide on E11000 rather than duplicating. Declared at
+// schema level so Mongoose surfaces creation errors through the normal boot
+// flow rather than swallowing them.
+@index({ tickId: 1, worldId: 1 }, { unique: true })
 @modelOptions({ schemaOptions: { timestamps: true } })
 export class World extends TimeStamps {
   @prop({ type: Number, required: true, index: true })
@@ -43,10 +48,6 @@ export class World extends TimeStamps {
 }
 
 const WorldModel = getModelForClass(World)
-
-// Compound unique index so a (tick, world) pair can only be seeded once and
-// concurrent seeders collide on E11000 rather than duplicating.
-WorldModel.collection.createIndex({ tickId: 1, worldId: 1 }, { unique: true }).catch(() => {})
 
 export { WorldModel }
 
