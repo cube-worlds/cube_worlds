@@ -59,6 +59,8 @@ function createConfigFromEnvironment(environment: NodeJS.ProcessEnv) {
     OPENAI_API_KEY: z.string(),
     TELEMETREE_API_KEY: z.string(),
     TELEMETREE_PROJECT_ID: z.string(),
+    XROCKET_API_KEY: z.string().default(''),
+    XROCKET_BASE_URL: z.string().url().default('https://pay.testnet.xrocket.exchange/api'),
   })
 
   if (config.BOT_MODE === 'webhook') {

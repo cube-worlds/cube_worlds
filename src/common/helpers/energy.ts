@@ -5,6 +5,10 @@ export const ENERGY_REGEN_INTERVAL_MS = (60 * 60 * 1000) / 10
 // CUBE sink: spend REFILL_CUBE_COST CUBE to gain REFILL_ENERGY_AMOUNT energy.
 export const REFILL_CUBE_COST = 500
 export const REFILL_ENERGY_AMOUNT = 30
+// USDT sink: buying one Energy pack grants ENERGY_PACK_AMOUNT energy (capped at
+// ENERGY_MAX) for ENERGY_PACK_PRICE_USDT. Tunable; see the economy tuning doc.
+export const ENERGY_PACK_AMOUNT = 120
+export const ENERGY_PACK_PRICE_USDT = 0.5
 
 export interface RegenResult {
   current: number
