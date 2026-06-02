@@ -4,6 +4,8 @@ import process from 'node:process'
 import mongoose from 'mongoose'
 import { onShutdown } from 'node-graceful-shutdown'
 import settlementRunner from '#root/backend/expedition-settlement'
+import reconciliationRunner from '#root/backend/wallet-reconciliation-runner'
+import { isMoneyRailEnabled } from '#root/backend/xrocket-client'
 import { setMenuButton, syncBotCommands } from '#root/bot/handlers/commands/sync-commands'
 import { createBot } from '#root/bot/index'
 import { currentTickId } from '#root/common/helpers/tick'
@@ -69,6 +71,24 @@ try {
     })()
   }, SETTLEMENT_INTERVAL_MS)
   settlementTimer.unref()
+
+  // Hourly reconciliation: compare local USDT ledger against xRocket custody and
+  // pause withdrawals on divergence. Only runs when the money rail is configured.
+  if (isMoneyRailEnabled()) {
+    const RECONCILIATION_INTERVAL_MS = 60 * 60 * 1000
+    const reconciliationTimer = setInterval(() => {
+      void (async () => {
+        try {
+          await reconciliationRunner.runOnce()
+        } catch (error) {
+          logger.error(error)
+        }
+      })()
+    }, RECONCILIATION_INTERVAL_MS)
+    reconciliationTimer.unref()
+    // Run once at boot so a divergence present at startup pauses immediately.
+    void reconciliationRunner.runOnce().catch(error => logger.error(error))
+  }
 
   if (config.BOT_MODE === 'webhook') {
     // to prevent receiving updates before the bot is ready
