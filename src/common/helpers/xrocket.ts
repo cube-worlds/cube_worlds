@@ -63,6 +63,18 @@ export interface AppInfo {
   feePercents: number
   balances: Array<{ currency: string, balance: number }>
 }
+export interface MultiChequeInput {
+  currency: string
+  chequePerUser: number
+  usersNumber: number
+  refProgram?: number
+  description?: string
+}
+export interface MultiChequeData {
+  id: number
+  link: string
+  state: string
+}
 interface ApiEnvelope<T> {
   success: boolean
   data?: T
@@ -75,6 +87,7 @@ export interface XRocketClient {
   withdrawal: (input: WithdrawalInput) => Promise<WithdrawalData>
   getWithdrawalFees: (currency: string) => Promise<WithdrawalFee[]>
   appInfo: () => Promise<AppInfo>
+  multiCheque: (input: MultiChequeInput) => Promise<MultiChequeData>
 }
 
 export function buildXRocketClient(deps: XRocketClientDependencies): XRocketClient {
@@ -105,5 +118,7 @@ export function buildXRocketClient(deps: XRocketClientDependencies): XRocketClie
     getWithdrawalFees: currency =>
       call<WithdrawalFee[]>('GET', `/app/withdrawal/fees?currency=${encodeURIComponent(currency)}`),
     appInfo: () => call<AppInfo>('GET', '/app/info'),
+    multiCheque: input =>
+      call<MultiChequeData>('POST', '/multi-cheque', { refProgram: 0, ...input }),
   }
 }

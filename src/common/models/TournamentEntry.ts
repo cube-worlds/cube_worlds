@@ -55,6 +55,13 @@ export function findEntries(weekId: number) {
   return TournamentEntryModel.find({ weekId })
 }
 
+// Settled-but-unpaid winners (payoutMicro > 0), for crash-safe payout replay.
+// Non-winning / bonus entries keep payoutMicro = 0 and are never selected, so
+// this scan stays bounded.
+export function findUnpaidWinners(limit = 1000) {
+  return TournamentEntryModel.find({ paid: false, payoutMicro: { $gt: 0n } }).limit(limit)
+}
+
 export async function setEntryResult(
   entryId: unknown,
   result: { scoreCube: bigint, rank: number, payoutMicro: bigint },

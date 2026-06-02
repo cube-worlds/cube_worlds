@@ -35,6 +35,7 @@ export function makeDeps(overrides: Partial<WalletHandlerDependencies> = {}) {
       withdrawal: async (i) => { calls.withdrawals.push(i); return { status: 'CREATED', txHash: null, txLink: null } },
       getWithdrawalFees: async () => [{ code: 'USDT', minWithdraw: 1, fees: [{ networkCode: 'TON', feeWithdraw: { fee: 0.1, currency: 'USDT' } }] }],
       appInfo: async () => ({ name: 'app', feePercents: 0, balances: [] }),
+      multiCheque: async () => ({ id: 1, link: 'https://t.me/cq/1', state: 'active' }),
     },
     logError: () => {},
     ...overrides,
