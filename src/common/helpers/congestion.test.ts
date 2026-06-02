@@ -75,3 +75,14 @@ test('shares below the floor are raised to FLOOR_PAYOUT', () => {
   const awards = settleWorld(5, commitments) // 0.5 each -> floors to 0 -> raised to 1
   assert.ok(awards.every((a) => a.award === FLOOR_PAYOUT))
 })
+
+test('a world of all-zero-weight commitments still floors each to FLOOR_PAYOUT', () => {
+  const awards = settleWorld(5000, [
+    { expeditionId: 'a', weight: 0, risk: 'safe', riskRoll: 0 },
+    { expeditionId: 'b', weight: 0, risk: 'greedy', riskRoll: 1 },
+  ])
+  assert.deepEqual(awards, [
+    { expeditionId: 'a', award: FLOOR_PAYOUT },
+    { expeditionId: 'b', award: FLOOR_PAYOUT },
+  ])
+})

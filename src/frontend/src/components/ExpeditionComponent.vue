@@ -169,12 +169,16 @@ onMounted(() => {
             class="toggle-btn"
             :class="{ active: risk === 'safe' }"
             @click="risk = 'safe'"
-          >Safe</button>
+          >
+            Safe
+          </button>
           <button
             class="toggle-btn"
             :class="{ active: risk === 'greedy' }"
             @click="risk = 'greedy'"
-          >Greedy</button>
+          >
+            Greedy
+          </button>
         </div>
 
         <!-- Expedition error -->
