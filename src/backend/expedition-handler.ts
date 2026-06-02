@@ -122,12 +122,22 @@ export function buildExpeditionHandler(
 
         const energyDoc = await deps.findOrCreateEnergy(user)
         // Spend energy first (atomic CAS). If this throws, nothing else ran.
+        // The CAS also serializes concurrent same-user requests: only one wins
+        // the spend, so the unguarded addPoints debit below cannot double-fire
+        // for a single user/tick and drive the CUBE balance negative.
         await deps.spendEnergy(energyDoc, EXPEDITION_ENERGY_COST)
 
         // Debit the optional CUBE boost (sink).
         if (cubeBoost > 0) {
           await deps.addPoints(user.id, -BigInt(cubeBoost), BalanceChangeType.Spend)
         }
+
+        // MVP ordering trade-off (intentional, non-transactional): energy — and
+        // the CUBE boost above — are already spent by the time createExpedition
+        // can hit the unique (userId, tickId) index and reject a duplicate with
+        // E11000. A user only triggers this by racing themselves; the cost is a
+        // forfeited energy/CUBE spend, never a double commitment. A transactional
+        // version is deferred to Plan 2 (reconciliation).
 
         const weight = commitmentWeight(EXPEDITION_ENERGY_COST, cubeBoost)
         try {
@@ -147,6 +157,9 @@ export function buildExpeditionHandler(
           throw err
         }
 
+        // Live crowd counters only — the settlement runner recomputes weights
+        // from the actual expedition docs, so a failed bump here at worst blips
+        // the current tick's displayed board and never skews payouts.
         await deps.addWorldCommitment(tickId, worldId, weight)
 
         return {

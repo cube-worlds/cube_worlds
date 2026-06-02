@@ -68,6 +68,8 @@ test('a CUBE weight-boost debits CUBE (Spend) and raises weight', async (t) => {
   assert.equal(body.weight, 36) // 30 + floor(600/100)
   assert.equal(calls.addPoints[0].add, -600n)
   assert.equal(calls.addPoints[0].reason, BalanceChangeType.Spend)
+  // the boosted weight (not the bare energy cost) must reach the crowd counter
+  assert.deepEqual(calls.commitments, [{ worldId: 'frostvault', weight: 36 }])
 })
 
 test('rejects a boost the user cannot afford', async (t) => {
