@@ -85,3 +85,27 @@ test('POST /balance errors for an unknown user', async (t) => {
   const res = await app.inject({ method: 'POST', url: '/api/wallet/balance', payload: { initData: 'x' } })
   assert.equal(res.json().error, 'User not found in database')
 })
+
+test('POST /buy-energy debits the pack price and grants energy', async (t) => {
+  const { deps, calls } = makeDeps()
+  const app = await appWith(deps)
+  t.after(() => app.close())
+  const res = await app.inject({ method: 'POST', url: '/api/wallet/buy-energy', payload: { initData: 'x' } })
+  const b = res.json()
+  assert.equal(b.energy, 120)
+  assert.deepEqual(calls.debits, [500_000n]) // 0.5 USDT
+  assert.deepEqual(calls.granted, [120])
+  assert.equal(calls.ledger[0].type, 'buy_energy')
+  assert.equal(calls.ledger[0].amount, -500_000n) // debit is negative
+})
+
+test('POST /buy-energy rejects when balance is insufficient (no energy granted)', async (t) => {
+  const { deps, calls } = makeDeps({
+    applyDebit: async () => { throw new (await import('#root/common/errors')).ClientError('Insufficient balance') },
+  })
+  const app = await appWith(deps)
+  t.after(() => app.close())
+  const res = await app.inject({ method: 'POST', url: '/api/wallet/buy-energy', payload: { initData: 'x' } })
+  assert.equal(res.json().error, 'Insufficient balance')
+  assert.equal(calls.granted.length, 0)
+})

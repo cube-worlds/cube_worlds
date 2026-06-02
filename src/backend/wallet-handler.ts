@@ -1,15 +1,15 @@
 import type { InitData } from '@telegram-apps/init-data-node'
 import type { FastifyInstance } from 'fastify'
-import type {
-  WalletEntryType} from '#root/common/helpers/wallet';
 import type { XRocketClient } from '#root/common/helpers/xrocket'
 import type { findUserById } from '#root/common/models/User'
 import type { WalletEntryStatus } from '#root/common/models/WalletLedger'
 import { ClientError } from '#root/common/errors'
+import { ENERGY_PACK_AMOUNT, ENERGY_PACK_PRICE_USDT } from '#root/common/helpers/energy'
 import {
   microToUsdt,
   validateUsdtAmount,
-  WALLET_CURRENCY
+  WALLET_CURRENCY,
+  WalletEntryType,
 } from '#root/common/helpers/wallet'
 import { safeErrorResponse } from './safe-error'
 
@@ -107,6 +107,33 @@ export function buildWalletHandler(deps: WalletHandlerDependencies) {
           expiredIn: 3600,
         })
         return { link: invoice.link, invoiceId: invoice.id }
+      }
+      catch (err) {
+        return safeErrorResponse(err, deps.logError)
+      }
+    })
+
+    fastify.post<{ Body: { initData: string } }>('/buy-energy', initDataSchema, async (request) => {
+      if (request.validationError)
+        return { error: 'Invalid request body' }
+      const { initData } = request.body
+      if (!initData)
+        return { error: 'No initData provided' }
+      try {
+        const user = await findUserByInitData(initData, deps)
+        const cost = validateUsdtAmount(ENERGY_PACK_PRICE_USDT)
+        // Atomic debit first — throws ClientError if unaffordable, so no energy
+        // is granted on insufficient funds.
+        await deps.applyDebit(user.id, cost)
+        await deps.insertLedgerEntry({
+          userId: user.id,
+          type: WalletEntryType.BuyEnergy,
+          amount: -cost, // debit
+          externalId: deps.generateId(),
+          meta: { energy: ENERGY_PACK_AMOUNT },
+        })
+        const energy = await deps.grantEnergy(user, ENERGY_PACK_AMOUNT)
+        return { energy, spentUsdt: ENERGY_PACK_PRICE_USDT }
       }
       catch (err) {
         return safeErrorResponse(err, deps.logError)
