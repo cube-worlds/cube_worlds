@@ -28,9 +28,17 @@ export function riskMultiplier(risk: Risk, riskRoll: number): number {
 }
 
 // Divide a world's fixed CUBE pool among its commitments by effective weight
-// (weight × risk multiplier). Total awarded is <= pool (floor rounding only
-// reduces it); the per-share FLOOR_PAYOUT guarantees a participant never gets
-// zero. An empty world mints nothing.
+// (weight × risk multiplier). An empty world mints nothing.
+//
+// Bound: proportional shares sum to <= pool (floor rounding only reduces the
+// total). The per-share FLOOR_PAYOUT — which guarantees a participant never
+// gets zero ("positive numbers") — is the ONE thing that can push the total
+// slightly above pool: the true ceiling is `pool + n*FLOOR_PAYOUT`. With the
+// minimum real commitment weight (one expedition = 30 energy) the proportional
+// share only drops below FLOOR_PAYOUT once a single world holds more explorers
+// than its pool (>~5000 at POOL_PER_WORLD=5000) within one tick, so at MVP
+// scale the practical bound is pool. Production pool sizing (Plan 3) must
+// account for the floor at extreme crowding.
 export function settleWorld(pool: number, commitments: Commitment[]): Award[] {
   if (commitments.length === 0) return []
   const effective = commitments.map((c) => ({
