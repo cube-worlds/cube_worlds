@@ -4,6 +4,7 @@ import test from 'node:test'
 import {
   addBags,
   canAfford,
+  readBag,
   subtractBags,
   UPGRADE_TRACKS,
 } from '#root/common/models/Castle'
@@ -35,4 +36,9 @@ test('subtractBags returns the exact difference (no flooring at zero)', () => {
     { gold: 40, iron: 50, mana: 0, food: 0 },
   )
   assert.deepEqual(r, { gold: 60, iron: 0, mana: 10, food: 5 })
+})
+
+test('readBag extracts the four resource fields from a castle', () => {
+  const castle = { gold: 7, iron: 8, mana: 9, food: 10, walls: 3, userId: 1 }
+  assert.deepEqual(readBag(castle), { gold: 7, iron: 8, mana: 9, food: 10 })
 })

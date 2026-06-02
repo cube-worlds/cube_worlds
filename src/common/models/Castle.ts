@@ -84,6 +84,10 @@ export function addBags(a: ResourceBag, b: ResourceBag): ResourceBag {
   }
 }
 
+// Returns the exact field-by-field difference. Intentionally does NOT floor at
+// zero: callers that need affordability must check canAfford first, and the real
+// overdraft guard is the $gte CAS in spendForUpgrade — not this helper. Do not
+// add a Math.max(0, …) floor here.
 export function subtractBags(a: ResourceBag, b: ResourceBag): ResourceBag {
   return {
     gold: a.gold - b.gold,
@@ -123,6 +127,9 @@ export async function spendForUpgrade(
   cost: ResourceBag,
   track: UpgradeTrack,
 ): Promise<boolean> {
+  if (!(UPGRADE_TRACKS as readonly string[]).includes(track)) {
+    throw new Error(`Invalid upgrade track: ${track}`)
+  }
   const result = await CastleModel.findOneAndUpdate(
     {
       _id: castleId,
