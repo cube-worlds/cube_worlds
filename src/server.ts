@@ -40,6 +40,8 @@ const ROUTE_RATE_LIMITS: Record<string, { max: number, timeWindow: string }> = {
   '/api/wallet/balance': { max: 60, timeWindow: '1 minute' },
   '/api/wallet/invoice': { max: 20, timeWindow: '1 minute' },
   '/api/wallet/buy-energy': { max: 30, timeWindow: '1 minute' },
+  '/api/wallet/withdraw': { max: 10, timeWindow: '1 minute' },
+  '/api/wallet/transfer': { max: 15, timeWindow: '1 minute' },
 }
 
 export async function createServer(bot: Bot) {

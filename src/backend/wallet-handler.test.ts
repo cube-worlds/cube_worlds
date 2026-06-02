@@ -109,3 +109,57 @@ test('POST /buy-energy rejects when balance is insufficient (no energy granted)'
   assert.equal(res.json().error, 'Insufficient balance')
   assert.equal(calls.granted.length, 0)
 })
+
+test('POST /transfer debits the sender and calls xRocket transfer', async (t) => {
+  const { deps, calls } = makeDeps()
+  const app = await appWith(deps)
+  t.after(() => app.close())
+  const res = await app.inject({ method: 'POST', url: '/api/wallet/transfer', payload: { initData: 'x', tgUserId: 99, amount: 1 } })
+  assert.equal(res.json().ok, true)
+  assert.deepEqual(calls.debits, [1_000_000n])
+  assert.equal(calls.transfers[0].tgUserId, 99)
+  assert.equal(calls.transfers[0].transferId, 'gen_1')
+  assert.equal(calls.transfers[0].amount, 1)
+})
+
+test('POST /transfer refunds the balance when xRocket fails', async (t) => {
+  const { deps, calls } = makeDeps({
+    xrocket: { ...makeDeps().deps.xrocket, transfer: async () => { throw new Error('xRocket down') } },
+  })
+  const app = await appWith(deps)
+  t.after(() => app.close())
+  const res = await app.inject({ method: 'POST', url: '/api/wallet/transfer', payload: { initData: 'x', tgUserId: 99, amount: 1 } })
+  assert.equal(res.json().error, 'Transfer failed, balance refunded')
+  assert.deepEqual(calls.debits, [1_000_000n])
+  assert.deepEqual(calls.credits, [1_000_000n]) // refunded
+})
+
+test('POST /withdraw debits amount plus fee and calls xRocket withdrawal', async (t) => {
+  const { deps, calls } = makeDeps()
+  const app = await appWith(deps)
+  t.after(() => app.close())
+  const res = await app.inject({ method: 'POST', url: '/api/wallet/withdraw', payload: { initData: 'x', network: 'TON', address: 'EQabc', amount: 1 } })
+  const b = res.json()
+  assert.equal(b.status, 'CREATED')
+  assert.equal(b.feeUsdt, 0.1)
+  assert.deepEqual(calls.debits, [1_100_000n]) // 1 USDT + 0.1 fee
+  assert.equal(calls.withdrawals[0].network, 'TON')
+  assert.equal(calls.withdrawals[0].withdrawalId, 'gen_1')
+})
+
+test('POST /withdraw is refused when withdrawals are paused', async (t) => {
+  const { deps, calls } = makeDeps({ areWithdrawalsPaused: async () => true })
+  const app = await appWith(deps)
+  t.after(() => app.close())
+  const res = await app.inject({ method: 'POST', url: '/api/wallet/withdraw', payload: { initData: 'x', network: 'TON', address: 'EQabc', amount: 1 } })
+  assert.equal(res.json().error, 'Withdrawals are temporarily paused')
+  assert.equal(calls.debits.length, 0)
+})
+
+test('POST /withdraw rejects an amount below the network minimum', async (t) => {
+  const { deps } = makeDeps()
+  const app = await appWith(deps)
+  t.after(() => app.close())
+  const res = await app.inject({ method: 'POST', url: '/api/wallet/withdraw', payload: { initData: 'x', network: 'TON', address: 'EQabc', amount: 0.5 } })
+  assert.equal(res.json().error, 'Below minimum withdrawal')
+})
