@@ -62,6 +62,9 @@ export function extendActiveUntil(
 export async function grantSeasonPass(input: {
   userId: number
   telegramPaymentChargeId: string
+  // Telegram's authoritative subscription expiry, when present. If omitted, the
+  // expiry is computed by extending one period from the later of now / current.
+  activeUntil?: Date
   now?: Date
 }): Promise<void> {
   const now = input.now ?? new Date()
@@ -77,7 +80,7 @@ export async function grantSeasonPass(input: {
     throw err
   }
   const existing = await SeasonPassModel.findOne({ userId: input.userId })
-  const activeUntil = extendActiveUntil(now, existing?.activeUntil)
+  const activeUntil = input.activeUntil ?? extendActiveUntil(now, existing?.activeUntil)
   await SeasonPassModel.updateOne(
     { userId: input.userId },
     { $set: { activeUntil, lastChargeAt: now, tier: 'season' } },
