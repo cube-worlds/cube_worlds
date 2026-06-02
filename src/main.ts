@@ -3,7 +3,7 @@
 import process from 'node:process'
 import mongoose from 'mongoose'
 import { onShutdown } from 'node-graceful-shutdown'
-import settlementRunner from '#root/backend/expedition-settlement'
+import settlementRunner from '#root/backend/expedition-settlement-runner'
 import tournamentSettlementRunner from '#root/backend/tournament-settlement-runner'
 import reconciliationRunner from '#root/backend/wallet-reconciliation-runner'
 import { isMoneyRailEnabled } from '#root/backend/xrocket-client'

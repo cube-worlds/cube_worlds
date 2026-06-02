@@ -40,11 +40,15 @@ export interface SettlementDependencies {
   findSettledUncredited: () => Promise<Array<{ _id: unknown, userId: number, cubeAwarded: number }>>
   claimCredit: (expeditionId: unknown) => Promise<boolean>
   addPoints: (userId: number, add: bigint, reason: BalanceChangeType) => Promise<bigint>
+  // Production gate: the CUBE faucet only credits expeditions when enabled.
+  // Optional — undefined means enabled (keeps the pure module config-free; the
+  // composer injects the real config flag).
+  faucetEnabled?: () => boolean
   logInfo: (message: string) => void
   logError: (message: string) => void
 }
 
-function createDefaultDependencies(): SettlementDependencies {
+export function createDefaultDependencies(): SettlementDependencies {
   return {
     currentTickId: () => currentTickId(),
     findUnsettledWorlds: async (tick) =>
@@ -100,6 +104,12 @@ export function buildSettlementRunner(
   // safe one; the reconciliation worker in Plan 2 is the mechanism that
   // detects and replays any such gap. Revisit before any hard-currency use.
   async function creditPass(): Promise<void> {
+    // Production gate: until the faucet is enabled, leave settled expeditions
+    // uncredited. They stay credited=false, so enabling the faucet later pays
+    // the backlog — nothing is silently lost. Expeditions still resolve and
+    // display their share; only the CUBE mint is withheld.
+    if (deps.faucetEnabled && !deps.faucetEnabled())
+      return
     const pending = await deps.findSettledUncredited()
     for (const e of pending) {
       const won = await deps.claimCredit(e._id)
@@ -121,7 +131,3 @@ export function buildSettlementRunner(
 
   return { runOnce }
 }
-
-const settlementRunner = buildSettlementRunner()
-
-export default settlementRunner
