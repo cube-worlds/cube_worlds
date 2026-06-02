@@ -85,10 +85,20 @@ export function buildSettlementRunner(
       }
       await deps.markWorldSettled(world.tickId, world.worldId)
     }
+    if (worlds.length > 0) {
+      deps.logInfo(`Settlement: settled ${worlds.length} world(s) for ticks < ${tick}`)
+    }
   }
 
   // Second pass: credit balances for any settled-but-uncredited expedition.
   // claimCredit's CAS guarantees exactly one runner credits each row.
+  //
+  // Ordering is deliberate: claimCredit flips credited=true BEFORE addPoints
+  // runs. A crash in the gap therefore loses this expedition's CUBE (it stays
+  // credited=true, never re-selected) rather than risking a double-pay on the
+  // next run. For a soft-currency faucet that bias (prefer under-pay) is the
+  // safe one; the reconciliation worker in Plan 2 is the mechanism that
+  // detects and replays any such gap. Revisit before any hard-currency use.
   async function creditPass(): Promise<void> {
     const pending = await deps.findSettledUncredited()
     for (const e of pending) {
