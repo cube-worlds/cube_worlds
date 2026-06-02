@@ -3,10 +3,13 @@
 import process from 'node:process'
 import mongoose from 'mongoose'
 import { onShutdown } from 'node-graceful-shutdown'
+import settlementRunner from '#root/backend/expedition-settlement'
 import { setMenuButton, syncBotCommands } from '#root/bot/handlers/commands/sync-commands'
 import { createBot } from '#root/bot/index'
+import { currentTickId } from '#root/common/helpers/tick'
 import { ensureClaimUniquenessMigration } from '#root/common/models/Claim'
 import { createInitialBalancesIfNotExists } from '#root/common/models/User'
+import { ensureWorldsForTick } from '#root/common/models/World'
 import { config } from '#root/config'
 import { logger } from '#root/logger'
 import { createServer } from '#root/server'
@@ -49,6 +52,23 @@ try {
   const subscription = new Subscription(bot)
 
   void subscription.startProcessTransactions()
+
+  // Seed the current tick's worlds so the board is never empty, then run
+  // settlement every minute. Each run closes any tick that has rolled over
+  // and is idempotent, so overlapping intervals or restarts are safe.
+  await ensureWorldsForTick(currentTickId())
+  const SETTLEMENT_INTERVAL_MS = 60 * 1000
+  const settlementTimer = setInterval(() => {
+    void (async () => {
+      try {
+        await ensureWorldsForTick(currentTickId())
+        await settlementRunner.runOnce()
+      } catch (error) {
+        logger.error(error)
+      }
+    })()
+  }, SETTLEMENT_INTERVAL_MS)
+  settlementTimer.unref()
 
   if (config.BOT_MODE === 'webhook') {
     // to prevent receiving updates before the bot is ready
