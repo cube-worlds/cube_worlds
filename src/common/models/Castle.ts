@@ -104,6 +104,38 @@ export function canAfford(have: ResourceBag, cost: ResourceBag): boolean {
     && have.food >= cost.food
 }
 
+export const MAX_TRACK_LEVEL = 10
+
+export interface UpgradeCost {
+  cube: bigint
+  resources: ResourceBag
+}
+
+// Per-track base cost at level 0; multiplied by (currentLevel + 1) per level.
+const TRACK_BASE: Record<UpgradeTrack, UpgradeCost> = {
+  walls: { cube: 500n, resources: { gold: 100, iron: 300, mana: 0, food: 0 } },
+  forge: { cube: 500n, resources: { gold: 200, iron: 200, mana: 50, food: 0 } },
+  tavern: { cube: 500n, resources: { gold: 300, iron: 0, mana: 0, food: 200 } },
+  mine: { cube: 500n, resources: { gold: 200, iron: 100, mana: 0, food: 0 } },
+}
+
+export function upgradeCost(track: UpgradeTrack, currentLevel: number): UpgradeCost {
+  if (currentLevel >= MAX_TRACK_LEVEL) {
+    throw new Error(`Track ${track} is already at max level`)
+  }
+  const mult = currentLevel + 1
+  const base = TRACK_BASE[track]
+  return {
+    cube: base.cube * BigInt(mult),
+    resources: {
+      gold: base.resources.gold * mult,
+      iron: base.resources.iron * mult,
+      mana: base.resources.mana * mult,
+      food: base.resources.food * mult,
+    },
+  }
+}
+
 // Credit produced resources to the castle and advance the clock in one update.
 export async function creditProduction(
   castleId: unknown,

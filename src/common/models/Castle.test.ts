@@ -4,9 +4,11 @@ import test from 'node:test'
 import {
   addBags,
   canAfford,
+  MAX_TRACK_LEVEL,
   readBag,
   subtractBags,
   UPGRADE_TRACKS,
+  upgradeCost,
 } from '#root/common/models/Castle'
 
 test('UPGRADE_TRACKS lists the four tracks', () => {
@@ -41,4 +43,17 @@ test('subtractBags returns the exact difference (no flooring at zero)', () => {
 test('readBag extracts the four resource fields from a castle', () => {
   const castle = { gold: 7, iron: 8, mana: 9, food: 10, walls: 3, userId: 1 }
   assert.deepEqual(readBag(castle), { gold: 7, iron: 8, mana: 9, food: 10 })
+})
+
+test('upgradeCost scales with the next level and is per-track', () => {
+  const c0 = upgradeCost('mine', 0)
+  assert.equal(c0.cube, 500n)
+  assert.deepEqual(c0.resources, { gold: 200, iron: 100, mana: 0, food: 0 })
+  const c1 = upgradeCost('mine', 1)
+  assert.equal(c1.cube, 1000n) // 500 × (1+1)
+  assert.equal(c1.resources.gold, 400)
+})
+
+test('upgradeCost throws past the max level', () => {
+  assert.throws(() => upgradeCost('walls', MAX_TRACK_LEVEL))
 })
