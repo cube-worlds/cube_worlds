@@ -40,6 +40,14 @@ test('accrual caps at MAX_UNCLAIMED_TICKS even after a long absence', () => {
   assert.equal(r.nextProductionAt.getTime(), now.getTime())
 })
 
+test('two ticks preserves the partial-tick remainder in the clock', () => {
+  const last = new Date(0)
+  const now = new Date(2 * PRODUCTION_TICK_MS + 1000) // +1s remainder
+  const r = computeProduction({ lastProductionAt: last, mineLevel: 0, isFounder: false }, now)
+  assert.equal(r.ticks, 2)
+  assert.equal(r.nextProductionAt.getTime(), 2 * PRODUCTION_TICK_MS)
+})
+
 test('founder perk adds 20%, mine level scales 25% per level (floored)', () => {
   const last = new Date(0)
   const now = new Date(PRODUCTION_TICK_MS)

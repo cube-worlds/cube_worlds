@@ -53,6 +53,8 @@ export function computeProduction(
   }
   const mineMult = 1 + 0.25 * Math.max(0, input.mineLevel)
   const founderMult = input.isFounder ? FOUNDER_MULTIPLIER : 1
+  // Floor per-tick (not per-total) — each tick is independently rounded down,
+  // a deliberate, slightly conservative game-design choice.
   const perTick = (base: number) => Math.floor(base * mineMult * founderMult)
   const gained: ResourceBag = {
     gold: perTick(BASE_PRODUCTION.gold) * ticks,
