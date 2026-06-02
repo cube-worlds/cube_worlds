@@ -36,3 +36,8 @@ test('getBalanceChangeTypeName falls back to Unknown for missing values', () => 
   assert.equal(getBalanceChangeTypeName(999 as BalanceChangeType), 'Unknown')
   assert.equal(getBalanceChangeTypeName(-2 as BalanceChangeType), 'Unknown')
 })
+
+test('getBalanceChangeTypeName maps the expedition-loop types', () => {
+  assert.equal(getBalanceChangeTypeName(BalanceChangeType.Expedition), 'Expedition')
+  assert.equal(getBalanceChangeTypeName(BalanceChangeType.Spend), 'Spend')
+})

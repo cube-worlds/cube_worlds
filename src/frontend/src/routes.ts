@@ -1,6 +1,7 @@
 import ClaimComponent from './components/ClaimComponent.vue'
 import ClickerComponent from './components/ClickerComponent.vue'
 import CNFTComponent from './components/CNFT.vue'
+import ExpeditionComponent from './components/ExpeditionComponent.vue'
 import FAQComponent from './components/FAQ.vue'
 import LeaderboardComponent from './components/LeaderboardComponent.vue'
 import NotFoundComponent from './components/NotFound.vue'
@@ -44,6 +45,13 @@ export const menuRoutes: MenuRoute[] = [
     emoji: '⛏️',
     showInMenu: true,
     component: SatoshiMiningComponent,
+  },
+  {
+    path: '/expeditions',
+    name: 'ExpeditionsPage',
+    emoji: '⚔️',
+    showInMenu: true,
+    component: ExpeditionComponent,
   },
   {
     path: '/cnft',

@@ -15,6 +15,7 @@ declare module 'vue' {
     ClaimComponent: typeof import('./src/components/ClaimComponent.vue')['default']
     ClickerComponent: typeof import('./src/components/ClickerComponent.vue')['default']
     CNFT: typeof import('./src/components/CNFT.vue')['default']
+    ExpeditionComponent: typeof import('./src/components/ExpeditionComponent.vue')['default']
     FAQ: typeof import('./src/components/FAQ.vue')['default']
     LeaderboardComponent: typeof import('./src/components/LeaderboardComponent.vue')['default']
     LoadingOverlay: typeof import('./src/components/nested/LoadingOverlay.vue')['default']

@@ -14,6 +14,8 @@ export enum BalanceChangeType {
   Task = 6,
   Claim = 7,
   Trade = 8, // for $SATOSHI
+  Expedition = 9, // CUBE faucet: expedition payout
+  Spend = 10, // CUBE sink: energy refill / weight-boost
 }
 
 export function getBalanceChangeTypeName(

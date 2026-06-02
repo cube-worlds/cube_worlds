@@ -14,10 +14,13 @@ import { logger, loggerOptions } from '#root/logger'
 import authHandler from './backend/auth-handler'
 import balancesHandler from './backend/balances-handler'
 import claimHandler from './backend/claim-handler'
+import energyHandler from './backend/energy-handler'
+import expeditionHandler from './backend/expedition-handler'
 import leaderboardHandler from './backend/leaderboard-handler'
 import nftHandler from './backend/nft-handler'
 import setWalletHandler from './backend/set-wallet-handler'
 import walletNonceHandler from './backend/wallet-nonce-handler'
+import worldsHandler from './backend/worlds-handler'
 import { config } from './config'
 
 const ROUTE_RATE_LIMITS: Record<string, { max: number, timeWindow: string }> = {
@@ -28,6 +31,9 @@ const ROUTE_RATE_LIMITS: Record<string, { max: number, timeWindow: string }> = {
   '/api/users/claim/status': { max: 30, timeWindow: '1 minute' },
   '/api/users/leaderboard': { max: 60, timeWindow: '1 minute' },
   '/api/users/balances': { max: 60, timeWindow: '1 minute' },
+  '/api/game/worlds': { max: 60, timeWindow: '1 minute' },
+  '/api/game/expedition': { max: 30, timeWindow: '1 minute' },
+  '/api/game/energy/refill': { max: 20, timeWindow: '1 minute' },
 }
 
 export async function createServer(bot: Bot) {
@@ -103,6 +109,10 @@ export async function createServer(bot: Bot) {
   await server.register(balancesHandler, { prefix: '/api/users' })
   await server.register(leaderboardHandler, { prefix: '/api/users' })
   await server.register(claimHandler, { prefix: '/api/users' })
+
+  await server.register(worldsHandler, { prefix: '/api/game' })
+  await server.register(expeditionHandler, { prefix: '/api/game' })
+  await server.register(energyHandler, { prefix: '/api/game' })
 
   const __filename = fileURLToPath(import.meta.url)
   const __dirname = path.dirname(__filename)

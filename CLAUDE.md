@@ -56,11 +56,12 @@ Active features (registered in `src/bot/index.ts`): start, help, queue (admin), 
 - `addPoints()` uses `$inc` + logs to Balance model
 - Daily claim: 60s cooldown, 10-day streak, 100 base × multiplier
 - CNFT type at mint time (`pickCNFTType` in `src/common/models/CNFT.ts`): Whale (>1M votes), Diamond (>500K), Coin (>100K), Knight (>0 referrals), Common. `Dice` is a legacy type still in the enum and on past records but no longer produced — the `/dice` command was removed and `diceWinner` is never set to true for new users.
-- `BalanceChangeType` enum (`src/common/models/Balance.ts`): Initial, Deposit, Withdraw, Dice, Referral, Donation, Task, Claim, Trade. `Dice` and `Task` are legacy values; new entries are Claim/Referral/Donation/Trade.
+- `BalanceChangeType` enum (`src/common/models/Balance.ts`): Initial, Deposit, Withdraw, Dice, Referral, Donation, Task, Claim, Trade, Expedition, Spend. `Dice` and `Task` are legacy values; new entries are Claim/Referral/Donation/Trade. `Expedition` is the expedition-loop CUBE faucet (settlement payout); `Spend` is its CUBE sink (energy refill / weight-boost).
+- Expedition economy core loop (`#root/common/helpers/{tick,energy,congestion}` + `{Energy,World,Expedition}` models + `/api/game/{worlds,expedition,energy/refill}` handlers): spend Energy to send an expedition to one of 5 cube-worlds per 1-hour tick; at tick close each world's fixed CUBE pool is split among its explorers by effective weight (crowd-dilution congestion), credited via the idempotent settlement runner (`src/backend/expedition-settlement.ts`, started in `main.ts`). Two CUBE sinks ship here (refill, weight-boost); the faucet is gated for production until the third sink (tournament entry) lands. See `docs/ECONOMY.md` and the plan in `Journal/Projects/cube_worlds/plans/`.
 
 ## Security
 - Leaderboard pagination: limit 1–100, skip ≥ 0.
 - Random strings: `node:crypto.randomBytes`.
 
 ## Coverage (current)
-422 tests across 54 files. Run `npm run test:coverage` for the latest per-file line/branch/function report.
+477 tests across 65 files. Run `npm run test:coverage` for the latest per-file line/branch/function report.
