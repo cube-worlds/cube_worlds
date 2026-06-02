@@ -9,6 +9,14 @@ export const REFILL_ENERGY_AMOUNT = 30
 // ENERGY_MAX) for ENERGY_PACK_PRICE_USDT. Tunable; see the economy tuning doc.
 export const ENERGY_PACK_AMOUNT = 120
 export const ENERGY_PACK_PRICE_USDT = 0.5
+// Rewarded-ad faucet: each verified view grants AD_ENERGY_REWARD energy, capped
+// at AD_DAILY_CAP grants per UTC day per user.
+export const AD_ENERGY_REWARD = 20
+export const AD_DAILY_CAP = 5
+// Season Pass perks: a raised energy ceiling (regen rate is unchanged; the
+// higher cap is the benefit) and bonus tournament entries per week.
+export const SEASON_PASS_ENERGY_CAP = 240
+export const SEASON_PASS_BONUS_ENTRIES = 1
 
 export interface RegenResult {
   current: number
@@ -24,9 +32,10 @@ export function regenEnergy(
   current: number,
   regenAt: Date,
   now: Date = new Date(),
+  cap: number = ENERGY_MAX,
 ): RegenResult {
-  if (current >= ENERGY_MAX) {
-    return { current: ENERGY_MAX, regenAt: now }
+  if (current >= cap) {
+    return { current: cap, regenAt: now }
   }
   const elapsed = Math.max(0, now.getTime() - regenAt.getTime())
   const earned = Math.floor(elapsed / ENERGY_REGEN_INTERVAL_MS)
@@ -34,8 +43,8 @@ export function regenEnergy(
     return { current, regenAt }
   }
   const next = current + earned
-  if (next >= ENERGY_MAX) {
-    return { current: ENERGY_MAX, regenAt: now }
+  if (next >= cap) {
+    return { current: cap, regenAt: now }
   }
   const consumedMs = earned * ENERGY_REGEN_INTERVAL_MS
   return { current: next, regenAt: new Date(regenAt.getTime() + consumedMs) }

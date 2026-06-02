@@ -88,3 +88,26 @@ export async function getUserBalanceRecords(
 ): Promise<Balance[]> {
   return BalanceModel.find({ userId }).sort({ createdAt: -1 }).limit(count)
 }
+
+// Tournament scoring: sum of CUBE earned from expeditions in [since, until) per
+// user, restricted to the given user set. Returns a Map keyed by userId. Used by
+// both the live tournament leaderboard and the weekly settlement worker.
+export async function sumExpeditionCubeByUser(
+  since: Date,
+  until: Date,
+  userIds: number[],
+): Promise<Map<number, bigint>> {
+  if (userIds.length === 0)
+    return new Map()
+  const rows = await BalanceModel.aggregate<{ _id: number, amount: bigint }>([
+    {
+      $match: {
+        type: BalanceChangeType.Expedition,
+        userId: { $in: userIds },
+        createdAt: { $gte: since, $lt: until },
+      },
+    },
+    { $group: { _id: '$userId', amount: { $sum: '$amount' } } },
+  ])
+  return new Map(rows.map(r => [r._id, BigInt(r.amount ?? 0)]))
+}

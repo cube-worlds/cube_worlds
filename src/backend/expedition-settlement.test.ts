@@ -97,3 +97,37 @@ test('a CAS loss on credit skips the addPoints call', async () => {
   await runner.runOnce()
   assert.equal(credits.length, 0)
 })
+
+test('faucet disabled: settles worlds but credits no CUBE (backlog preserved)', async () => {
+  const credits: bigint[] = []
+  const settledWorlds: Array<{ tickId: number, worldId: string }> = []
+  const expeditions = [
+    { _id: 'e1', userId: 1, worldId: 'frostvault', weight: 30, risk: 'safe', settled: false, credited: false, cubeAwarded: 0 },
+  ]
+  const deps: SettlementDependencies = {
+    currentTickId: () => 101,
+    findUnsettledWorlds: async () => [{ tickId: 100, worldId: 'frostvault', cubePool: 5000 } as any],
+    findUnsettledForWorld: async () => expeditions as any,
+    rollRisk: () => 0,
+    settleExpedition: async (id, award) => {
+      const e = expeditions.find(x => x._id === id)!
+      e.settled = true
+      e.cubeAwarded = award
+      return true
+    },
+    markWorldSettled: async (tickId, worldId) => { settledWorlds.push({ tickId, worldId }) },
+    findSettledUncredited: async () => expeditions.filter(e => e.settled && !e.credited) as any,
+    claimCredit: async () => { throw new Error('claimCredit must not run when the faucet is disabled') },
+    addPoints: async (_id, add) => { credits.push(add); return add },
+    faucetEnabled: () => false,
+    logInfo: () => {},
+    logError: () => {},
+  }
+  const runner = buildSettlementRunner(deps)
+  await runner.runOnce()
+  // worlds still settle (shares computed/displayed)...
+  assert.deepEqual(settledWorlds, [{ tickId: 100, worldId: 'frostvault' }])
+  // ...but no CUBE is minted, and the row stays uncredited for a later enable.
+  assert.equal(credits.length, 0)
+  assert.equal(expeditions[0].credited, false)
+})

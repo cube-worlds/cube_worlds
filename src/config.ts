@@ -61,6 +61,22 @@ function createConfigFromEnvironment(environment: NodeJS.ProcessEnv) {
     TELEMETREE_PROJECT_ID: z.string(),
     XROCKET_API_KEY: z.string().default(''),
     XROCKET_BASE_URL: z.string().url().default('https://pay.testnet.xrocket.exchange/api'),
+    // Adsgram rewarded ads. Empty block id / secret ⇒ ads disabled.
+    ADSGRAM_BLOCK_ID: z.string().default(''),
+    ADSGRAM_REWARD_SECRET: z.string().default(''),
+    // Estimated net USD value of one verified rewarded-ad view; drives the
+    // rewards-pool accrual. Tunable — see docs/ECONOMY.md.
+    AD_REVENUE_PER_VIEW_USDT: z.number().default(0.003),
+    // Season Pass (Telegram Stars): price in Stars (XTR), 30-day subscription.
+    SEASON_PASS_STARS: z.number().int().default(150),
+    // Estimated net USD value of one Season Pass charge (for the accrual).
+    SEASON_PASS_REVENUE_USDT: z.number().default(1.8),
+    // Rewards pool share of net revenue, in basis points (2000 = 20%). Invariant.
+    REWARDS_POOL_BPS: z.number().int().default(2000),
+    // Production gate: the expedition CUBE faucet stays OFF until enabled. Flip
+    // to true only once the three sinks are live (refill, weight-boost,
+    // tournament entry).
+    EXPEDITION_FAUCET_ENABLED: z.boolean().default(false),
   })
 
   if (config.BOT_MODE === 'webhook') {

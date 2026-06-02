@@ -289,6 +289,30 @@ The five rules from §1.5 enforced at the code level:
 
 ---
 
+## 5. Implemented MVP constants (Expedition Economy, Plan 3)
+
+The expedition-economy MVP (Plans 1–3) implements the rails above. Live, tunable
+constants as shipped:
+
+### Faucets
+- **Expedition pool** (`POOL_PER_WORLD = 5000` CUBE × 5 worlds, `tick.ts` = 1h) — the bounded CUBE faucet; gated in production behind `EXPEDITION_FAUCET_ENABLED` (default off) until the three sinks are live.
+- **Rewarded-ad energy** (`AD_ENERGY_REWARD = 20`, capped `AD_DAILY_CAP = 5`/UTC-day/user) — single-use HMAC nonce + Adsgram S2S postback.
+
+### CUBE sinks (three — satisfies sinks-before-faucet)
+1. **Energy refill** — `REFILL_CUBE_COST = 500` → `REFILL_ENERGY_AMOUNT = 30`.
+2. **Expedition weight-boost** — `BOOST_CUBE_PER_WEIGHT = 100`.
+3. **Tournament entry** — `TOURNAMENT_ENTRY_CUBE = 2000` (the gate-unlocking third sink).
+
+### Rewards pool (20% of net revenue → real payouts)
+- `REWARDS_POOL_BPS = 2000` (20%), append-only `RewardsPoolLedger` (signed micro-USDT, idempotent on `externalId`).
+- Accrual sources: buy-energy (`accrual:buyenergy:<ledgerId>`), rewarded ads (`accrual:ad:<nonceRand>`, est. `AD_REVENUE_PER_VIEW_USDT`), Season Pass (`accrual:sp:<chargeId>`, est. `SEASON_PASS_REVENUE_USDT`).
+- **Weekly tournament** (`tournament.ts`, Monday-aligned 7-day window) ranks entrants by in-window expedition CUBE and splits the pool by `PAYOUT_WEIGHTS_BPS` (top 10: 30/20/15/10/7/6/5/3/2.5/1.5%), paid via free xRocket `transfer` (idempotent per `payout:<weekId>:<userId>`), paused while reconciliation has withdrawals paused, gated by a 3-day account-age anti-Sybil check.
+
+### Season Pass (Telegram Stars)
+- `SEASON_PASS_STARS = 150` (XTR), 30-day `subscription_period`; raises the energy cap to `SEASON_PASS_ENERGY_CAP = 240` and waives the weekly tournament entry fee (`SEASON_PASS_BONUS_ENTRIES = 1`). Idempotent on `telegram_payment_charge_id`.
+
+---
+
 ## How to use this doc
 
 - **Finance / fundraising:** §1 is the model — conservative $48M / base $96M / optimistic $200M+ over 5 years; cost side ~$115k/yr ex-marketing.

@@ -11,6 +11,7 @@ import fastify from 'fastify'
 import { webhookCallback } from 'grammy'
 import { createServer as createViteServer } from 'vite'
 import { logger, loggerOptions } from '#root/logger'
+import adRewardHandler from './backend/ad-reward'
 import authHandler from './backend/auth-handler'
 import balancesHandler from './backend/balances-handler'
 import claimHandler from './backend/claim-handler'
@@ -18,7 +19,9 @@ import energyHandler from './backend/energy-handler'
 import expeditionHandler from './backend/expedition-handler'
 import leaderboardHandler from './backend/leaderboard-handler'
 import nftHandler from './backend/nft-handler'
+import { createSeasonPassInvoiceHandler } from './backend/season-pass-invoice'
 import setWalletHandler from './backend/set-wallet-handler'
+import tournamentHandler from './backend/tournament'
 import walletHandler from './backend/wallet'
 import walletNonceHandler from './backend/wallet-nonce-handler'
 import walletWebhookHandler from './backend/wallet-webhook'
@@ -36,6 +39,11 @@ const ROUTE_RATE_LIMITS: Record<string, { max: number, timeWindow: string }> = {
   '/api/game/worlds': { max: 60, timeWindow: '1 minute' },
   '/api/game/expedition': { max: 30, timeWindow: '1 minute' },
   '/api/game/energy/refill': { max: 20, timeWindow: '1 minute' },
+  '/api/game/tournament': { max: 60, timeWindow: '1 minute' },
+  '/api/game/tournament/enter': { max: 15, timeWindow: '1 minute' },
+  '/api/game/ad-nonce': { max: 20, timeWindow: '1 minute' },
+  '/api/game/ad-reward': { max: 60, timeWindow: '1 minute' }, // S2S; the nonce is the real gate
+  '/api/game/season-pass/invoice': { max: 15, timeWindow: '1 minute' },
   '/api/wallet/webhook': { max: 120, timeWindow: '1 minute' },
   '/api/wallet/balance': { max: 60, timeWindow: '1 minute' },
   '/api/wallet/invoice': { max: 20, timeWindow: '1 minute' },
@@ -121,6 +129,9 @@ export async function createServer(bot: Bot) {
   await server.register(worldsHandler, { prefix: '/api/game' })
   await server.register(expeditionHandler, { prefix: '/api/game' })
   await server.register(energyHandler, { prefix: '/api/game' })
+  await server.register(tournamentHandler, { prefix: '/api/game' })
+  await server.register(adRewardHandler, { prefix: '/api/game' })
+  await server.register(createSeasonPassInvoiceHandler(bot.api), { prefix: '/api/game' })
 
   await server.register(walletWebhookHandler, { prefix: '/api/wallet' })
   await server.register(walletHandler, { prefix: '/api/wallet' })

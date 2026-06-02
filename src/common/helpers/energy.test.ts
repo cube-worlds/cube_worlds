@@ -2,6 +2,8 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
+  AD_DAILY_CAP,
+  AD_ENERGY_REWARD,
   ENERGY_MAX,
   ENERGY_PACK_AMOUNT,
   ENERGY_PACK_PRICE_USDT,
@@ -10,6 +12,8 @@ import {
   REFILL_CUBE_COST,
   REFILL_ENERGY_AMOUNT,
   regenEnergy,
+  SEASON_PASS_BONUS_ENTRIES,
+  SEASON_PASS_ENERGY_CAP,
 } from '#root/common/helpers/energy'
 
 test('constants have the agreed MVP values', () => {
@@ -52,4 +56,25 @@ test('regenEnergy leaves an already-capped balance untouched', () => {
   const result = regenEnergy(ENERGY_MAX, new Date(0), now)
   assert.equal(result.current, ENERGY_MAX)
   assert.equal(result.regenAt.getTime(), now.getTime())
+})
+
+test('ad-reward + season-pass constants have the agreed MVP values', () => {
+  assert.equal(AD_ENERGY_REWARD, 20)
+  assert.equal(AD_DAILY_CAP, 5)
+  assert.equal(SEASON_PASS_ENERGY_CAP, 240)
+  assert.equal(SEASON_PASS_BONUS_ENTRIES, 1)
+})
+
+test('regenEnergy regenerates past ENERGY_MAX when given a higher cap', () => {
+  // A season-pass holder (cap 240) keeps regenerating beyond the base 120.
+  const result = regenEnergy(150, new Date(0), new Date(60 * 60 * 1000), SEASON_PASS_ENERGY_CAP)
+  assert.equal(result.current, 160) // +10 in one hour
+  // ...but still freezes at the elevated cap, not above it.
+  const capped = regenEnergy(235, new Date(0), new Date(10 * 60 * 60 * 1000), SEASON_PASS_ENERGY_CAP)
+  assert.equal(capped.current, SEASON_PASS_ENERGY_CAP)
+})
+
+test('regenEnergy default cap still clamps at ENERGY_MAX', () => {
+  const result = regenEnergy(119, new Date(0), new Date(10 * 60 * 60 * 1000))
+  assert.equal(result.current, ENERGY_MAX)
 })

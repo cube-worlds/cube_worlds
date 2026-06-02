@@ -76,6 +76,21 @@ test('appInfo GETs /app/info and returns balances', async () => {
   assert.equal(data.balances[0].balance, 100)
 })
 
+test('multiCheque posts to /multi-cheque with a default refProgram', async () => {
+  const captured: any[] = []
+  const c = client(fakeFetch(captured, { success: true, data: { id: 5, link: 'https://t.me/cq/5', state: 'active' } }))
+  const data = await c.multiCheque({ currency: 'USDT', chequePerUser: 1, usersNumber: 10, description: 'prizes' })
+  assert.equal(data.id, 5)
+  assert.equal(captured[0].url, 'https://x.test/api/multi-cheque')
+  assert.deepEqual(JSON.parse(captured[0].init.body), {
+    refProgram: 0,
+    currency: 'USDT',
+    chequePerUser: 1,
+    usersNumber: 10,
+    description: 'prizes',
+  })
+})
+
 test('throws when the HTTP response is not ok', async () => {
   const c = client(fakeFetch([], { success: false, message: 'bad' }, false, 400))
   await assert.rejects(() => c.appInfo(), /xRocket/)
