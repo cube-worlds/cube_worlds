@@ -16,6 +16,7 @@ export enum BalanceChangeType {
   Trade = 8, // for $SATOSHI
   Expedition = 9, // CUBE faucet: expedition payout
   Spend = 10, // CUBE sink: energy refill / weight-boost
+  CastleUpgrade = 11, // CUBE sink: castle upgrade track (100% burn)
 }
 
 export function getBalanceChangeTypeName(
