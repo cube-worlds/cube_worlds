@@ -1,7 +1,7 @@
 /* eslint-disable test/no-import-node-test */
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { generateRandomString, randomFloat } from '#root/common/helpers/random'
+import { generateRandomString, randomFloat, randomId } from '#root/common/helpers/random'
 
 test('generateRandomString returns a string of the requested length', () => {
   for (const length of [1, 8, 16, 32, 64]) {
@@ -29,4 +29,10 @@ test('randomFloat returns values in [0, 1) across 1000 draws', () => {
     assert.ok(v >= 0, `expected >= 0, got ${v}`)
     assert.ok(v < 1, `expected < 1, got ${v}`)
   }
+})
+
+test('randomId returns a 32-char hex string', () => {
+  const id = randomId()
+  assert.match(id, /^[0-9a-f]{32}$/)
+  assert.notEqual(randomId(), randomId())
 })

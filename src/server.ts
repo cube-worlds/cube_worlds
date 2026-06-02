@@ -19,6 +19,7 @@ import expeditionHandler from './backend/expedition-handler'
 import leaderboardHandler from './backend/leaderboard-handler'
 import nftHandler from './backend/nft-handler'
 import setWalletHandler from './backend/set-wallet-handler'
+import walletHandler from './backend/wallet'
 import walletNonceHandler from './backend/wallet-nonce-handler'
 import walletWebhookHandler from './backend/wallet-webhook'
 import worldsHandler from './backend/worlds-handler'
@@ -36,6 +37,8 @@ const ROUTE_RATE_LIMITS: Record<string, { max: number, timeWindow: string }> = {
   '/api/game/expedition': { max: 30, timeWindow: '1 minute' },
   '/api/game/energy/refill': { max: 20, timeWindow: '1 minute' },
   '/api/wallet/webhook': { max: 120, timeWindow: '1 minute' },
+  '/api/wallet/balance': { max: 60, timeWindow: '1 minute' },
+  '/api/wallet/invoice': { max: 20, timeWindow: '1 minute' },
 }
 
 export async function createServer(bot: Bot) {
@@ -117,6 +120,7 @@ export async function createServer(bot: Bot) {
   await server.register(energyHandler, { prefix: '/api/game' })
 
   await server.register(walletWebhookHandler, { prefix: '/api/wallet' })
+  await server.register(walletHandler, { prefix: '/api/wallet' })
 
   const __filename = fileURLToPath(import.meta.url)
   const __dirname = path.dirname(__filename)

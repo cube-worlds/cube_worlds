@@ -15,3 +15,9 @@ export function generateRandomString(length: number): string {
 export function randomFloat(): number {
   return randomBytes(4).readUInt32BE(0) / 0x1_0000_0000
 }
+
+// A 32-hex-char random id for idempotency keys (withdrawalId/transferId). Fits
+// xRocket's 50-char limit. Uses node:crypto for unbiased randomness.
+export function randomId(): string {
+  return randomBytes(16).toString('hex')
+}
