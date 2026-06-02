@@ -7,6 +7,7 @@ import LeaderboardComponent from './components/LeaderboardComponent.vue'
 import NotFoundComponent from './components/NotFound.vue'
 import ExchangeComponent from './components/SatoshiExchange.vue'
 import SatoshiMiningComponent from './components/SatoshiMining.vue'
+import WalletComponent from './components/WalletComponent.vue'
 
 export interface MenuRoute {
   path: string
@@ -52,6 +53,13 @@ export const menuRoutes: MenuRoute[] = [
     emoji: '⚔️',
     showInMenu: true,
     component: ExpeditionComponent,
+  },
+  {
+    path: '/wallet',
+    name: 'WalletPage',
+    emoji: '👛',
+    showInMenu: true,
+    component: WalletComponent,
   },
   {
     path: '/cnft',

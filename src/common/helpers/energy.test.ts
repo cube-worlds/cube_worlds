@@ -3,6 +3,8 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
   ENERGY_MAX,
+  ENERGY_PACK_AMOUNT,
+  ENERGY_PACK_PRICE_USDT,
   ENERGY_REGEN_INTERVAL_MS,
   EXPEDITION_ENERGY_COST,
   REFILL_CUBE_COST,
@@ -17,6 +19,11 @@ test('constants have the agreed MVP values', () => {
   assert.equal(ENERGY_REGEN_INTERVAL_MS, 360_000)
   assert.equal(REFILL_CUBE_COST, 500)
   assert.equal(REFILL_ENERGY_AMOUNT, 30)
+})
+
+test('energy-pack constants have the agreed MVP values', () => {
+  assert.equal(ENERGY_PACK_AMOUNT, 120)
+  assert.equal(ENERGY_PACK_PRICE_USDT, 0.5)
 })
 
 test('regenEnergy adds whole points for elapsed intervals, capped at max', () => {
