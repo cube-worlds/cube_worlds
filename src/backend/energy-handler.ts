@@ -60,6 +60,13 @@ export function buildEnergyHandler(
       if (!initData) return { error: 'No initData provided' }
       try {
         const user = await findUserByInitData(initData, deps)
+        // KNOWN MVP GAP: this affordability check reads a snapshot of votes and
+        // the debit below is a non-atomic $inc, so two refills fired in the same
+        // instant could both pass and drive the balance negative. Unlike the
+        // expedition handler, there is no energy-CAS gate here to serialize
+        // them. Accepted for MVP (the whole faucet is gated behind Plan 3's
+        // release gate); Plan 2 replaces this with an atomic guarded debit /
+        // reconciliation. Rate limiting (20/min) bounds the blast radius.
         if (user.votes < BigInt(REFILL_CUBE_COST)) {
           throw new ClientError('Not enough CUBE')
         }
