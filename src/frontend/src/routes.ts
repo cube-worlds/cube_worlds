@@ -7,6 +7,7 @@ import LeaderboardComponent from './components/LeaderboardComponent.vue'
 import NotFoundComponent from './components/NotFound.vue'
 import ExchangeComponent from './components/SatoshiExchange.vue'
 import SatoshiMiningComponent from './components/SatoshiMining.vue'
+import TournamentComponent from './components/TournamentComponent.vue'
 import WalletComponent from './components/WalletComponent.vue'
 
 export interface MenuRoute {
@@ -53,6 +54,13 @@ export const menuRoutes: MenuRoute[] = [
     emoji: '⚔️',
     showInMenu: true,
     component: ExpeditionComponent,
+  },
+  {
+    path: '/tournament',
+    name: 'TournamentPage',
+    emoji: '🏅',
+    showInMenu: true,
+    component: TournamentComponent,
   },
   {
     path: '/wallet',
