@@ -22,9 +22,10 @@ const EnergyModel = getModelForClass(Energy)
 
 export { EnergyModel }
 
+// regenAt is set inline at insert time (not here) so the timestamp reflects
+// the moment of creation, never module-load time.
 const ENERGY_DEFAULTS = {
   current: ENERGY_MAX,
-  regenAt: new Date(),
 }
 
 // Atomic upsert — same E11000-recovery shape as findOrCreateClaim.
