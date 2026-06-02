@@ -24,6 +24,11 @@ const createConfigFromEnvironment = (environment: NodeJS.ProcessEnv) => {
     BOT_ALLOWED_UPDATES: z.array(z.enum(API_CONSTANTS.ALL_UPDATE_TYPES)).default([]),
     MONGO: z.string(),
     BOT_ADMINS: z.array(z.number()).default([]),
+    // Staging guard: when true, skip the on-chain tx-processing loop AND all
+    // Telegram engagement (no setWebhook/polling). Lets us validate boot,
+    // mongo, Fastify, SPA + /api on axveer without a second instance touching
+    // the live MNEMONICS wallet or hijacking the live webhook. Default off.
+    STAGING: z.boolean().default(false),
     WEB_APP_URL: z.string().url(),
     COLLECTION_ADDRESS: z.string(),
     COLLECTION_OWNER: z.string(),
