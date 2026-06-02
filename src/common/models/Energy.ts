@@ -4,6 +4,7 @@ import { getModelForClass, modelOptions, prop } from '@typegoose/typegoose'
 import { TimeStamps } from '@typegoose/typegoose/lib/defaultClasses'
 import { ClientError } from '#root/common/errors'
 import { ENERGY_MAX, regenEnergy } from '#root/common/helpers/energy'
+import { energyCapFor } from './SeasonPass'
 import { User } from './User'
 
 @modelOptions({ schemaOptions: { timestamps: true } })
@@ -49,11 +50,18 @@ export async function findOrCreateEnergy(
   return existing as DocumentType<Energy>
 }
 
-export function getEnergyStatus(energy: DocumentType<Energy>, now: Date = new Date()) {
-  const regen = regenEnergy(energy.current, energy.regenAt, now)
+export function getEnergyStatus(
+  energy: DocumentType<Energy>,
+  now: Date = new Date(),
+  cap: number = ENERGY_MAX,
+) {
+  // Never clamp a balance already above the base cap (a season-pass holder who
+  // stockpiled past 120): the effective cap is at least the stored balance.
+  const effectiveCap = Math.max(cap, energy.current)
+  const regen = regenEnergy(energy.current, energy.regenAt, now, effectiveCap)
   return {
     current: regen.current,
-    max: ENERGY_MAX,
+    max: effectiveCap,
     regenAt: regen.regenAt,
   }
 }
@@ -87,8 +95,11 @@ export async function spendEnergy(
   amount: number,
   now: Date = new Date(),
   persist: EnergyPersist = persistEnergyAtomic,
+  cap: number = ENERGY_MAX,
 ): Promise<EnergyUpdateFields> {
-  const regen = regenEnergy(energy.current, energy.regenAt, now)
+  // max(cap, current) so a season-pass holder above the base cap never has
+  // their stockpiled energy clamped away by the regen step.
+  const regen = regenEnergy(energy.current, energy.regenAt, now, Math.max(cap, energy.current))
   if (regen.current < amount) {
     throw new ClientError('Not enough energy')
   }
@@ -112,10 +123,15 @@ export async function grantEnergy(
   user: UserDoc,
   amount: number,
   now: Date = new Date(),
+  cap?: number,
 ): Promise<number> {
+  // grantEnergy holds the full UserDoc, so it self-resolves the season-pass cap
+  // when one isn't passed — every caller (refill, buy-energy, ad-reward) gets the
+  // elevated ceiling for free, with no wiring change.
+  const effectiveCap = cap ?? (await energyCapFor(user.id, now))
   const energy = await findOrCreateEnergy(user)
-  const regen = regenEnergy(energy.current, energy.regenAt, now)
-  const next = Math.min(ENERGY_MAX, regen.current + amount)
+  const regen = regenEnergy(energy.current, energy.regenAt, now, Math.max(effectiveCap, energy.current))
+  const next = Math.min(effectiveCap, regen.current + amount)
   await EnergyModel.updateOne(
     { _id: energy._id },
     { $set: { current: next, regenAt: regen.regenAt } },
