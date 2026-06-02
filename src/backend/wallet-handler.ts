@@ -5,6 +5,7 @@ import type { findUserById } from '#root/common/models/User'
 import type { WalletEntryStatus } from '#root/common/models/WalletLedger'
 import { ClientError } from '#root/common/errors'
 import { ENERGY_PACK_AMOUNT, ENERGY_PACK_PRICE_USDT } from '#root/common/helpers/energy'
+import { accrueShare } from '#root/common/helpers/rewards'
 import {
   microToUsdt,
   usdtToMicro,
@@ -12,6 +13,7 @@ import {
   WALLET_CURRENCY,
   WalletEntryType,
 } from '#root/common/helpers/wallet'
+import { RewardsEntryType } from '#root/common/models/RewardsPoolLedger'
 import { safeErrorResponse } from './safe-error'
 
 // `findUserById` is imported only for its return type — the handler is pure and
@@ -36,6 +38,7 @@ export interface WalletHandlerDependencies {
     meta?: Record<string, unknown>
   }) => Promise<{ _id: unknown }>
   setLedgerStatus: (externalId: string, status: WalletEntryStatus) => Promise<void>
+  accrueRewards: (entry: { type: RewardsEntryType, amount: bigint, externalId: string, meta?: Record<string, unknown> }) => Promise<void>
   areWithdrawalsPaused: () => Promise<boolean>
   generateId: () => string
   callbackUrl: () => string
@@ -155,14 +158,28 @@ export function buildWalletHandler(deps: WalletHandlerDependencies) {
         // Atomic debit first — throws ClientError if unaffordable, so no energy
         // is granted on insufficient funds.
         await deps.applyDebit(user.id, cost)
+        const ledgerId = deps.generateId()
         await deps.insertLedgerEntry({
           userId: user.id,
           type: WalletEntryType.BuyEnergy,
           amount: -cost, // debit
-          externalId: deps.generateId(),
+          externalId: ledgerId,
           meta: { energy: ENERGY_PACK_AMOUNT },
         })
         const energy = await deps.grantEnergy(user, ENERGY_PACK_AMOUNT)
+        // Accrue the 20% rewards-pool share. Best-effort and idempotent on the
+        // debit's id — a missed accrual must never fail the user's purchase; the
+        // pool audit / reconciliation surfaces any drift.
+        try {
+          await deps.accrueRewards({
+            type: RewardsEntryType.AccrualBuyEnergy,
+            amount: accrueShare(cost),
+            externalId: `accrual:buyenergy:${ledgerId}`,
+          })
+        }
+        catch (err) {
+          deps.logError(`rewards accrual failed for buy-energy ${ledgerId}: ${(err as Error).message}`)
+        }
         return { energy, spentUsdt: ENERGY_PACK_PRICE_USDT }
       }
       catch (err) {

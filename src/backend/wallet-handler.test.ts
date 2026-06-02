@@ -15,6 +15,7 @@ export function makeDeps(overrides: Partial<WalletHandlerDependencies> = {}) {
     credits: [] as bigint[],
     granted: [] as number[],
     ledger: [] as any[],
+    accruals: [] as any[],
   }
   const deps: WalletHandlerDependencies = {
     validateInitData: () => {},
@@ -26,6 +27,7 @@ export function makeDeps(overrides: Partial<WalletHandlerDependencies> = {}) {
     grantEnergy: async (_u, amount) => { calls.granted.push(amount); return amount },
     insertLedgerEntry: async (e) => { calls.ledger.push(e); return { _id: 'l1' } },
     setLedgerStatus: async () => {},
+    accrueRewards: async (e) => { calls.accruals.push(e) },
     areWithdrawalsPaused: async () => false,
     generateId: () => 'gen_1',
     callbackUrl: () => 'https://app.test/api/wallet/webhook',
@@ -98,6 +100,22 @@ test('POST /buy-energy debits the pack price and grants energy', async (t) => {
   assert.deepEqual(calls.granted, [120])
   assert.equal(calls.ledger[0].type, 'buy_energy')
   assert.equal(calls.ledger[0].amount, -500_000n) // debit is negative
+  // 20% of the 0.5 USDT pack price accrues to the rewards pool, idempotent on
+  // the debit's ledger id.
+  assert.equal(calls.accruals.length, 1)
+  assert.equal(calls.accruals[0].amount, 100_000n) // 20% of 500_000
+  assert.equal(calls.accruals[0].externalId, 'accrual:buyenergy:gen_1')
+})
+
+test('POST /buy-energy still succeeds if the rewards accrual fails', async (t) => {
+  const { deps, calls } = makeDeps({
+    accrueRewards: async () => { throw new Error('pool write boom') },
+  })
+  const app = await appWith(deps)
+  t.after(() => app.close())
+  const res = await app.inject({ method: 'POST', url: '/api/wallet/buy-energy', payload: { initData: 'x' } })
+  assert.equal(res.json().energy, 120) // purchase unaffected
+  assert.deepEqual(calls.granted, [120])
 })
 
 test('POST /buy-energy rejects when balance is insufficient (no energy granted)', async (t) => {

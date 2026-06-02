@@ -1,5 +1,6 @@
 import { randomId } from '#root/common/helpers/random'
 import { grantEnergy } from '#root/common/models/Energy'
+import { accrueRewards } from '#root/common/models/RewardsPoolLedger'
 import { findUserById } from '#root/common/models/User'
 import { applyDebit, creditBalance, getBalance } from '#root/common/models/WalletBalance'
 import { areWithdrawalsPaused } from '#root/common/models/WalletGuard'
@@ -20,6 +21,7 @@ const walletHandler = buildWalletHandler({
   grantEnergy: (user, amount) => grantEnergy(user, amount),
   insertLedgerEntry: entry => insertLedgerEntry(entry) as never,
   setLedgerStatus,
+  accrueRewards,
   areWithdrawalsPaused,
   generateId: () => randomId(),
   callbackUrl: () => `${config.WEB_APP_URL.replace(/\/$/, '')}/api/wallet/webhook`,
