@@ -4,12 +4,15 @@ import process from 'node:process'
 import mongoose from 'mongoose'
 import { onShutdown } from 'node-graceful-shutdown'
 import settlementRunner from '#root/backend/expedition-settlement'
+import tournamentSettlementRunner from '#root/backend/tournament-settlement-runner'
 import reconciliationRunner from '#root/backend/wallet-reconciliation-runner'
 import { isMoneyRailEnabled } from '#root/backend/xrocket-client'
 import { setMenuButton, syncBotCommands } from '#root/bot/handlers/commands/sync-commands'
 import { createBot } from '#root/bot/index'
 import { currentTickId } from '#root/common/helpers/tick'
+import { currentWeekId } from '#root/common/helpers/tournament'
 import { ensureClaimUniquenessMigration } from '#root/common/models/Claim'
+import { findOrCreateTournament } from '#root/common/models/Tournament'
 import { createInitialBalancesIfNotExists } from '#root/common/models/User'
 import { ensureWorldsForTick } from '#root/common/models/World'
 import { config } from '#root/config'
@@ -88,6 +91,24 @@ try {
     reconciliationTimer.unref()
     // Run once at boot so a divergence present at startup pauses immediately.
     void reconciliationRunner.runOnce().catch(error => logger.error(error))
+
+    // Weekly tournament: seed the current week, then settle any closed week and
+    // pay winners from the rewards pool. The interval is short so a just-closed
+    // week settles promptly; each run is idempotent. Requires the money rail
+    // (payouts go through xRocket).
+    await findOrCreateTournament(currentWeekId())
+    const TOURNAMENT_INTERVAL_MS = 5 * 60 * 1000
+    const tournamentTimer = setInterval(() => {
+      void (async () => {
+        try {
+          await findOrCreateTournament(currentWeekId())
+          await tournamentSettlementRunner.runOnce()
+        } catch (error) {
+          logger.error(error)
+        }
+      })()
+    }, TOURNAMENT_INTERVAL_MS)
+    tournamentTimer.unref()
   }
 
   if (config.BOT_MODE === 'webhook') {
