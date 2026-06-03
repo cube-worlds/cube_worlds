@@ -11,7 +11,7 @@ import {
   lastWithdrawAt,
   markBridgeStatus,
 } from '#root/common/models/CubeBridgeLedger'
-import { addPoints, findUserById } from '#root/common/models/User'
+import { addPoints, debitVotes, findUserById } from '#root/common/models/User'
 import { logger } from '#root/logger'
 import { defaultParseInitData, defaultValidateInitData } from './init-data'
 import { safeErrorResponse } from './safe-error'
@@ -29,6 +29,7 @@ export interface CubeBridgeHandlerDependencies {
   vaultAddress: () => string
   lastWithdrawAt: (userId: number) => Promise<Date | null>
   now: () => Date
+  debitVotes: (userId: number, amount: bigint, reason: BalanceChangeType) => Promise<bigint | null>
   addPoints: (userId: number, add: bigint, reason: BalanceChangeType) => Promise<bigint>
   insertBridgeRow: (row: {
     userId: number, type: CubeBridgeEntryType, amount: bigint, fee: bigint, externalId: string, status?: CubeBridgeStatus
@@ -49,6 +50,7 @@ export function createDefaultDependencies(): CubeBridgeHandlerDependencies {
     vaultAddress: () => { throw new Error('vaultAddress not wired') },
     lastWithdrawAt,
     now: () => new Date(),
+    debitVotes,
     addPoints,
     insertBridgeRow,
     randomExternalId: () => `wd-${randomId()}`,
@@ -119,26 +121,44 @@ export function buildCubeBridgeHandler(
       try {
         const user = await findUserByInitData(initData, deps)
         if (!user.wallet) return { error: 'No wallet bound' }
-        if (user.votes < gross) return { error: 'Not enough CUBE' }
         const last = await deps.lastWithdrawAt(user.id)
+        // Best-effort rolling cooldown: two requests in the same instant can both
+        // pass this read (no Completed row yet). The atomic debit below prevents
+        // overdraft regardless; hard 1-per-24h enforcement would need a
+        // lastWithdrawAt timestamp folded into the debit CAS — out of scope here.
         if (!canWithdraw(last, deps.now()).ok) return { error: 'Withdraw cooldown active' }
 
         const { fee, net } = applyWithdrawFee(gross)
         const externalId = deps.randomExternalId()
-        await deps.addPoints(user.id, -gross, BalanceChangeType.Withdraw)
+
+        // Overdraft-safe debit. null = insufficient funds or lost race. This is
+        // the integrity boundary that makes concurrent withdraws safe (no over-send).
+        const newBalance = await deps.debitVotes(user.id, gross, BalanceChangeType.Withdraw)
+        if (newBalance === null) return { error: 'Not enough CUBE' }
+
         await deps.insertBridgeRow({
           userId: user.id, type: CubeBridgeEntryType.Withdraw, amount: gross, fee, externalId, status: CubeBridgeStatus.Pending,
         })
+
         try {
           await deps.sendCubeJetton(user.wallet, net)
-          await deps.markBridgeStatus(externalId, CubeBridgeStatus.Completed)
-          return { ok: true, gross: gross.toString(), fee: fee.toString(), net: net.toString() }
         } catch (sendErr) {
+          // The send itself failed — funds never left custody. Refund + mark failed.
           await deps.addPoints(user.id, gross, BalanceChangeType.Withdraw)
           await deps.markBridgeStatus(externalId, CubeBridgeStatus.Failed)
-          deps.logError(`CUBE withdraw failed for ${user.id}: ${(sendErr as Error).message}`)
+          deps.logError(`CUBE withdraw send failed for ${user.id}: ${(sendErr as Error).message}`)
           return { error: 'Withdraw failed, CUBE refunded' }
         }
+
+        // Send SUCCEEDED — jettons are delivered. Post-send bookkeeping must NOT
+        // refund if it throws (that would be a free withdraw). Leave the row
+        // Pending for reconciliation/monitoring; the user's funds are out.
+        try {
+          await deps.markBridgeStatus(externalId, CubeBridgeStatus.Completed)
+        } catch (markErr) {
+          deps.logError(`CUBE withdraw delivered but mark-complete failed for ${user.id} (externalId=${externalId}); reconcile pending row: ${(markErr as Error).message}`)
+        }
+        return { ok: true, gross: gross.toString(), fee: fee.toString(), net: net.toString() }
       } catch (err) {
         return safeErrorResponse(err, deps.logError)
       }

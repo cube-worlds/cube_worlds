@@ -160,6 +160,33 @@ export async function findUserById(
   return UserModel.findOne({ id }) as unknown as Promise<UserDoc | null>
 }
 
+// Overdraft-safe CUBE debit: atomically decrements votes by `amount` (positive)
+// only if the balance covers it, then writes the Balance ledger row. Returns the
+// new balance, or null if funds were insufficient / the CAS was lost. Mirrors
+// applyDebit in the USDT wallet rail — use this for value-at-risk debits where a
+// plain addPoints($inc) would allow a negative balance under concurrency.
+export async function debitVotes(
+  userId: number,
+  amount: bigint,
+  reason: BalanceChangeType,
+): Promise<bigint | null> {
+  const updated = (await UserModel.findOneAndUpdate(
+    { id: userId, votes: { $gte: amount } },
+    { $inc: { votes: -amount } },
+    { new: true },
+  )) as unknown as { votes: bigint } | null
+  if (!updated) return null
+  try {
+    await addChangeBalanceRecord(userId, -amount, reason)
+  } catch (recordError) {
+    // Ledger write failed after the debit landed — compensate by reverting the
+    // decrement so votes (cache) and Balance (truth) stay aligned, then rethrow.
+    await UserModel.findOneAndUpdate({ id: userId }, { $inc: { votes: amount } })
+    throw recordError
+  }
+  return updated.votes
+}
+
 export async function findUserByWallet(
   wallet: string,
 ): Promise<UserDoc | null> {

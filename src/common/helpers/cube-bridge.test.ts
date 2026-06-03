@@ -29,3 +29,13 @@ test('fee math throws on a non-positive amount', () => {
   assert.throws(() => applyWithdrawFee(0n))
   assert.throws(() => applyWithdrawFee(-5n))
 })
+
+test('fee is zero for dust amounts below the 50-unit threshold', () => {
+  assert.equal(applyWithdrawFee(49n).fee, 0n)
+})
+
+test('fee floors in the user-favorable direction (house absorbs the remainder)', () => {
+  const r = applyWithdrawFee(149n)
+  assert.equal(r.fee, 2n)
+  assert.equal(r.net, 147n)
+})
