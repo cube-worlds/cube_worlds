@@ -82,7 +82,7 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-vue": "^10.9.1",
     "husky": "9.1.7",
-    "lint-staged": "16.4.0",
+    "lint-staged": "17.0.7",
     "prettier": "3.8.3",
     "prettier-plugin-organize-imports": "4.3.0",
     "tsc-watch": "7.2.0",
