@@ -394,3 +394,30 @@ Shipped June 2026. Constants in `src/common/helpers/{hero,combat,dungeon}.ts`, `
 ### Hero NFT mint
 
 Deploy-gated off until a TEP-62 hero collection (soulbound-aware) is deployed + audited; address in `HERO_COLLECTION_ADDRESS`. Batched runner (`hero-mint.ts`, re-entrancy guard, mint-before-flip bias) mirrors the castle mint.
+
+---
+
+## 8. Implemented Plan 6 constants (Equipment / 8h Quest / Boss Week)
+
+Shipped June 2026. Constants in `src/common/helpers/{equipment,quest,boss}.ts`, `equipment-handler.ts`, `quest-handler.ts`, `boss-handler.ts`, `boss-settlement.ts`. **No new CUBE faucet** — every Plan 6 reward is resources + XP + rate-limited Equipment items (DB objects, not currency); the Equipment NFT mint is deploy-gated off until `EQUIPMENT_COLLECTION_ADDRESS` is set.
+
+### Equipment
+
+4 slots × 4 rarities. Per-slot **common** baseline (`SLOT_PROFILE`), scaled by `RARITY_MULT` and floored, snapshotted onto the item at creation:
+
+| Slot | Common (hp/atk/def) | Favors |
+|------|---------------------|--------|
+| Weapon | 0 / 8 / 1 | atk |
+| Head | 12 / 0 / 4 | def |
+| Body | 24 / 0 / 6 | hp + def |
+| Accessory | 10 / 3 / 2 | balanced |
+
+`RARITY_MULT = { common 1, rare 1.6, epic 2.4, legendary 3.5 }`. Drop distribution `RARITY_WEIGHTS = { common 60, rare 25, epic 12, legendary 3 }`. Gear folds into combat via `withEquipment(statsForHero(...), aggregateEquipment(gear))` → unchanged `resolveCombat` (changes the outcome, never the seed). One item per `(hero, slot)` (unique partial index); atomic `equipItem` CAS.
+
+### 8-hour quest
+
+`QUEST_DURATION_MS = 8h`. Resource loot is **strictly richer than the dungeon** (8h opportunity cost): `base = 80 + 24×(L−1)`, `gold = roll(1)`, `iron = roll(0.7)`, `mana = roll(0.4)`, `food = roll(0.6)`, ±10% jitter, deterministic from `questSeed(userId, heroId, startMs)`. `questXp(L) = 120 + 8×L` (> `DUNGEON_XP_WIN`). `EQUIP_DROP_CHANCE = 0.15` (a deterministic per-quest equipment drop). Exactly-once via `HeroQuest` one-active-per-hero partial-unique + `status` CAS. A questing hero is occupancy-blocked from the dungeon and the boss.
+
+### Boss week
+
+One seeded boss per Monday-aligned `weekId` (`bossForWeek`: `hp = 4000 + rng×4000`, `atk = 30 + rng×30`, `def = 10 + rng×15`). **One attack per user per UTC day** (`BossAttack` unique `(userId, weekId, day)`); contribution = `bossDamage` (hero's summed strikes in a deterministic `MAX_ROUNDS`-capped fight, gear-scaled). `BOSS_ATTACK_XP = 40`. At week close the settlement worker ranks contributors and grants tiered Equipment by percentile (`bossRewardTier`: top 5% → legendary, next 15% → epic, next 30% → rare, rest → none), idempotent per `(weekId, userId)` (`BossReward` unique). **No CUBE, no resources** from the boss — the reward is the equipment drop only. Equipment-drop supply is therefore rate-limited (per-quest 15% chance + once-weekly boss), preserving item-inflation discipline.

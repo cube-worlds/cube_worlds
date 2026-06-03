@@ -228,10 +228,15 @@ Each phase maps to existing repo structure. Effort estimates assume one full-tim
 - ✅ Loot table (DB-only resource faucet + XP, no CUBE) — `dungeon.ts`, exactly-once via `DungeonRun`.
 - ✅ Frontend hero roster + dungeon UI — `HeroRosterComponent.vue` (🛡️ `/heroes`).
 
-**Deferred → Plan 6:**
-- Equipment NFT collection + equip slots.
-- 8-hour expedition (quest) slot per hero.
-- Boss week event scheduler.
+**✅ Plan 6 shipped (June 2026):**
+- Equipment NFT collection + equip slots — DB-canonical `Equipment` (4 slots × 4 rarities, snapshotted bonus), atomic equip CAS + unique partial `(hero, slot)` index, deploy-gated mint (`EQUIPMENT_COLLECTION_ADDRESS`); gear folds into the unchanged combat resolver.
+- 8-hour quest slot per hero — `HeroQuest` one-active-per-hero, deterministic resource+XP loot (richer than the dungeon) + a 15% equipment drop; questing hero is occupancy-blocked from dungeon/boss.
+- Boss week event scheduler — seeded weekly boss, one attack/user/day, idempotent settlement worker awards tiered Equipment to top contributors by percentile.
+
+**Still deferred → Phase C/D:**
+- Equipment trading post / marketplace (Phase C, 5% $CUBE burn).
+- Stars / gacha hero purchase (Phase D).
+- On-chain equipment transfer beyond the deploy-gated mint.
 
 **Files added (core slice):**
 - `src/common/models/Hero.ts`, `src/common/models/DungeonRun.ts`

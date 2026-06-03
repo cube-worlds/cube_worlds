@@ -5,12 +5,15 @@ import type { ResourceBag } from '#root/common/helpers/production'
 import type { Castle } from '#root/common/models/Castle'
 import type { Hero } from '#root/common/models/Hero'
 import { ClientError } from '#root/common/errors'
-import { resolveHeroCombat } from '#root/common/helpers/combat'
+import { resolveCombat } from '#root/common/helpers/combat'
 import { dayBucket, DUNGEON_XP_LOSS, DUNGEON_XP_WIN, dungeonEnemy, dungeonLoot, dungeonSeed } from '#root/common/helpers/dungeon'
-import { applyXp } from '#root/common/helpers/hero'
+import { aggregateEquipment, withEquipment } from '#root/common/helpers/equipment'
+import { applyXp, statsForHero } from '#root/common/helpers/hero'
 import { creditResources, findOrCreateCastle } from '#root/common/models/Castle'
 import { claimDungeonCredit, claimDungeonRun, findDungeonRun } from '#root/common/models/DungeonRun'
+import { findEquippedForHero } from '#root/common/models/Equipment'
 import { findHeroForUser, grantHeroXp } from '#root/common/models/Hero'
+import { findActiveQuestForHero } from '#root/common/models/HeroQuest'
 import { addResourceRecords, ResourceChangeType, ResourceKind } from '#root/common/models/ResourceLedger'
 import { findUserById } from '#root/common/models/User'
 import { logger } from '#root/logger'
@@ -28,6 +31,8 @@ export interface DungeonHandlerDependencies {
   findUserById: (id: number) => Promise<ExistingUser | null>
   findOrCreateCastle: (user: ExistingUser) => Promise<DocumentType<Castle>>
   findHeroForUser: (userId: number, heroId: string) => Promise<HeroDoc | null>
+  findEquippedForHero: (heroId: string) => Promise<Array<{ bonusHp: number, bonusAtk: number, bonusDef: number }>>
+  findActiveQuestForHero: (heroId: string) => Promise<{ _id: unknown } | null>
   now: () => Date
   findDungeonRun: (userId: number, day: number) => Promise<{ win: boolean, lootGold: number } | null>
   claimDungeonRun: (input: { userId: number, day: number, heroId: string, seed: number, win: boolean, loot: ResourceBag, xpGained: number }) => Promise<{ _id: unknown } | null>
@@ -45,6 +50,8 @@ function createDefaultDependencies(): DungeonHandlerDependencies {
     findUserById,
     findOrCreateCastle,
     findHeroForUser: (userId, heroId) => findHeroForUser(userId, heroId) as never,
+    findEquippedForHero: heroId => findEquippedForHero(heroId) as never,
+    findActiveQuestForHero: heroId => findActiveQuestForHero(heroId) as never,
     now: () => new Date(),
     findDungeonRun: (userId, day) => findDungeonRun(userId, day) as never,
     claimDungeonRun: input => claimDungeonRun(input) as never,
@@ -96,11 +103,19 @@ export function buildDungeonHandler(deps: DungeonHandlerDependencies = createDef
         const user = await findUserByInitData(initData, deps)
         const hero = await deps.findHeroForUser(user.id, heroId)
         if (!hero) return { error: 'Hero not found' }
+        // A hero away on an 8h quest is unavailable for the dungeon (§2.5).
+        const onQuest = await deps.findActiveQuestForHero(String(hero._id))
+        if (onQuest) return { error: 'Hero is away on a quest' }
 
         const day = dayBucket(deps.now())
         const heroIdStr = String(hero._id)
         const seed = dungeonSeed(user.id, heroIdStr, day)
-        const result = resolveHeroCombat(seed, hero.heroClass, hero.level, dungeonEnemy(hero.level))
+        // Fold equipped gear into the hero's stats — gear changes the OUTCOME of
+        // the deterministic fight, never its seed (a retry still resolves identically).
+        const gear = await deps.findEquippedForHero(heroIdStr)
+        const bonus = aggregateEquipment(gear.map(g => ({ hp: g.bonusHp, atk: g.bonusAtk, def: g.bonusDef })))
+        const combatant = withEquipment(statsForHero(hero.heroClass, hero.level), bonus)
+        const result = resolveCombat(seed, combatant, dungeonEnemy(hero.level))
         const loot = result.win ? dungeonLoot(seed, hero.level) : ZERO_BAG
         const xpGained = result.win ? DUNGEON_XP_WIN : DUNGEON_XP_LOSS
 

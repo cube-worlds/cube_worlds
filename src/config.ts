@@ -81,6 +81,8 @@ function createConfigFromEnvironment(environment: NodeJS.ProcessEnv) {
     CASTLE_COLLECTION_ADDRESS: z.string().default(''),
     // Hero NFT collection (TEP-62). Empty ⇒ hero minting disabled.
     HERO_COLLECTION_ADDRESS: z.string().default(''),
+    // Equipment NFT collection (TEP-62, transferable). Empty ⇒ minting disabled.
+    EQUIPMENT_COLLECTION_ADDRESS: z.string().default(''),
     // $CUBE on-chain jetton bridge. Empty ⇒ bridge disabled.
     CUBE_JETTON_MASTER: z.string().default(''),
     CUBE_VAULT_ADDRESS: z.string().default(''),
