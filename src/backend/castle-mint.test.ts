@@ -46,3 +46,25 @@ test('a mint failure does not flip the flag and does not abort the batch', async
   assert.deepEqual(calls.minted, [2])
   assert.deepEqual(calls.flipped, [{ castleId: 'b', address: 'EQaddr2' }])
 })
+
+test('runOnce is re-entrancy-guarded: an overlapping call while minting is a no-op', async () => {
+  let release: () => void = () => {}
+  const gate = new Promise<void>((r) => { release = r })
+  const calls = { minted: [] as number[], flipped: [] as unknown[] }
+  const deps: CastleMintDependencies = {
+    batchSize: 10,
+    findUnmintedCastles: async () => [{ _id: 'a', userId: 1 }, { _id: 'b', userId: 2 }],
+    mintCastleNft: async (userId) => { await gate; calls.minted.push(userId); return `EQ${userId}` },
+    markCastleMinted: async (castleId) => { calls.flipped.push(castleId) },
+    logInfo: () => {},
+    logError: () => {},
+  }
+  const runner = buildCastleMintRunner(deps)
+  const first = runner.runOnce()      // enters, blocks on the gate inside mintCastleNft
+  const second = runner.runOnce()     // running === true → must bail immediately
+  await second                        // resolves without minting anything
+  release()                           // let the first run finish
+  await first
+  // Only the first run minted; the overlapping second was a no-op (no double-mint)
+  assert.deepEqual(calls.minted.sort((a, b) => a - b), [1, 2])
+})
