@@ -82,4 +82,4 @@ Real-balance (USDT) layer, independent of the CUBE ledger. All USDT is stored as
 - Random strings: `node:crypto.randomBytes`.
 
 ## Coverage (current)
-568 tests across 75 files. Run `npm run test:coverage` for the latest per-file line/branch/function report.
+662 tests across 100 files. Run `npm run test:coverage` for the latest per-file line/branch/function report.
