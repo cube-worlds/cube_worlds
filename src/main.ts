@@ -3,6 +3,7 @@
 import process from 'node:process'
 import mongoose from 'mongoose'
 import { onShutdown } from 'node-graceful-shutdown'
+import bossSettlementRunner from '#root/backend/boss-settlement-runner'
 import castleMintRunner from '#root/backend/castle-mint-runner'
 import { isCastleMintEnabled } from '#root/backend/castle-nft-client'
 import equipmentMintRunner from '#root/backend/equipment-mint-runner'
@@ -80,6 +81,20 @@ try {
     })()
   }, SETTLEMENT_INTERVAL_MS)
   settlementTimer.unref()
+
+  // Boss-week settlement: awards tiered Equipment to top contributors of any
+  // CLOSED week. Idempotent per (week, user), so overlapping runs are safe.
+  const BOSS_SETTLEMENT_INTERVAL_MS = 10 * 60 * 1000
+  const bossSettlementTimer = setInterval(() => {
+    void (async () => {
+      try {
+        await bossSettlementRunner.runOnce()
+      } catch (error) {
+        logger.error(error)
+      }
+    })()
+  }, BOSS_SETTLEMENT_INTERVAL_MS)
+  bossSettlementTimer.unref()
 
   if (isCastleMintEnabled()) {
     const CASTLE_MINT_INTERVAL_MS = 5 * 60 * 1000
