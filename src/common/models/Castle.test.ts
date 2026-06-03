@@ -4,8 +4,10 @@ import test from 'node:test'
 import {
   addBags,
   canAfford,
+  creditResources,
   MAX_TRACK_LEVEL,
   readBag,
+  spendResources,
   subtractBags,
   UPGRADE_TRACKS,
   upgradeCost,
@@ -60,4 +62,9 @@ test('upgradeCost throws past the max level', () => {
 
 test('canAfford allows an exact-equality balance', () => {
   assert.equal(canAfford({ gold: 50, iron: 0, mana: 0, food: 0 }, { gold: 50, iron: 0, mana: 0, food: 0 }), true)
+})
+
+test('spendResources and creditResources are exported functions', () => {
+  assert.equal(typeof spendResources, 'function')
+  assert.equal(typeof creditResources, 'function')
 })

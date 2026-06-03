@@ -198,3 +198,33 @@ export async function spendForUpgrade(
   )
   return result !== null
 }
+
+// Atomic generic resource debit (no track bump). $gte guards make overdraft
+// impossible — the same CAS shape as spendForUpgrade / applyDebit. Returns true
+// only if the debit won. Used by Tavern recruitment (Gold sink).
+export async function spendResources(
+  castleId: unknown,
+  cost: ResourceBag,
+): Promise<boolean> {
+  const result = await CastleModel.findOneAndUpdate(
+    {
+      _id: castleId,
+      gold: { $gte: cost.gold },
+      iron: { $gte: cost.iron },
+      mana: { $gte: cost.mana },
+      food: { $gte: cost.food },
+    },
+    { $inc: { gold: -cost.gold, iron: -cost.iron, mana: -cost.mana, food: -cost.food } },
+    { new: false },
+  )
+  return result !== null
+}
+
+// Credit resources to the castle (dungeon loot). Plain $inc — a faucet, no CAS
+// needed; the exactly-once guarantee lives in the DungeonRun credited flip.
+export async function creditResources(castleId: unknown, gain: ResourceBag): Promise<void> {
+  await CastleModel.updateOne(
+    { _id: castleId },
+    { $inc: { gold: gain.gold, iron: gain.iron, mana: gain.mana, food: gain.food } },
+  )
+}
