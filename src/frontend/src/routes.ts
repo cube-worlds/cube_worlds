@@ -1,3 +1,4 @@
+import BossEventComponent from './components/BossEventComponent.vue'
 import CastleComponent from './components/CastleComponent.vue'
 import ClaimComponent from './components/ClaimComponent.vue'
 import ClickerComponent from './components/ClickerComponent.vue'
@@ -63,6 +64,13 @@ export const menuRoutes: MenuRoute[] = [
     emoji: '🛡️',
     showInMenu: true,
     component: HeroRosterComponent,
+  },
+  {
+    path: '/boss',
+    name: 'BossPage',
+    emoji: '🐉',
+    showInMenu: true,
+    component: BossEventComponent,
   },
   {
     path: '/expeditions',
