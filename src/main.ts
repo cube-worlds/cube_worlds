@@ -5,6 +5,8 @@ import mongoose from 'mongoose'
 import { onShutdown } from 'node-graceful-shutdown'
 import castleMintRunner from '#root/backend/castle-mint-runner'
 import { isCastleMintEnabled } from '#root/backend/castle-nft-client'
+import equipmentMintRunner from '#root/backend/equipment-mint-runner'
+import { isEquipmentMintEnabled } from '#root/backend/equipment-nft-client'
 import settlementRunner from '#root/backend/expedition-settlement-runner'
 import heroMintRunner from '#root/backend/hero-mint-runner'
 import { isHeroMintEnabled } from '#root/backend/hero-nft-client'
@@ -105,6 +107,20 @@ try {
       })()
     }, HERO_MINT_INTERVAL_MS)
     heroMintTimer.unref()
+  }
+
+  if (isEquipmentMintEnabled()) {
+    const EQUIPMENT_MINT_INTERVAL_MS = 5 * 60 * 1000
+    const equipmentMintTimer = setInterval(() => {
+      void (async () => {
+        try {
+          await equipmentMintRunner.runOnce()
+        } catch (error) {
+          logger.error(error)
+        }
+      })()
+    }, EQUIPMENT_MINT_INTERVAL_MS)
+    equipmentMintTimer.unref()
   }
 
   // Hourly reconciliation: compare local USDT ledger against xRocket custody and
