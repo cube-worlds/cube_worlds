@@ -19,7 +19,7 @@ const networks = ['TON', 'BSC', 'ETH', 'BTC', 'TRX', 'SOL']
 
 // $CUBE on-chain bridge state
 const cubeBridgeAvailable = ref(false)
-const cubeBalance = ref(0)
+const cubeBalance = ref('')
 const cubeDepositAddress = ref('')
 const cubeCanWithdraw = ref(false)
 const cubeCooldown = ref(0)
