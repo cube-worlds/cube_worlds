@@ -22,7 +22,7 @@ function makeDeps(overrides: Partial<ProductionHandlerDependencies> = {}) {
     findUserById: async id => (id === 7 ? ({ id: 7, minted: true } as any) : null),
     findOrCreateCastle: async () => castle as any,
     now: () => new Date(PRODUCTION_TICK_MS),
-    creditProduction: async (_id, gained, next) => { calls.credited.push({ gained, next }) },
+    creditProduction: async (_id, _expected, gained, next) => { calls.credited.push({ gained, next }); return true },
     addResourceRecords: async (userId, rows) => { calls.ledger.push({ userId, rows }) },
     logError: () => {},
     ...overrides,
@@ -76,4 +76,15 @@ test('unknown user is rejected', async (t) => {
   t.after(() => app.close())
   const res = await app.inject({ method: 'POST', url: '/api/game/castle', payload: { initData: 'x' } })
   assert.equal(res.json().error, 'User not found in database')
+})
+
+test('/castle/claim that loses the credit CAS writes no ledger and claims nothing', async (t) => {
+  const { deps, calls } = makeDeps({ creditProduction: async () => false })
+  const app = await appWith(deps)
+  t.after(() => app.close())
+  const res = await app.inject({ method: 'POST', url: '/api/game/castle/claim', payload: { initData: 'x' } })
+  const body = res.json()
+  assert.equal(body.claimed.gold, 0)
+  assert.equal(body.ticks, 0)
+  assert.equal(calls.ledger.length, 0)
 })

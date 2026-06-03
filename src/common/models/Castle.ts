@@ -147,19 +147,23 @@ export async function markCastleMinted(castleId: unknown, address: string): Prom
   )
 }
 
-// Credit produced resources to the castle and advance the clock in one update.
+// CAS: credit production + advance the clock ONLY if lastProductionAt still
+// matches what the caller read. Serializes concurrent claims the same way
+// persistClaimAtomic does on lastClaimDate — a lost race credits nothing.
 export async function creditProduction(
   castleId: unknown,
+  expectedLastProductionAt: Date,
   gained: ResourceBag,
   nextProductionAt: Date,
-): Promise<void> {
-  await CastleModel.updateOne(
-    { _id: castleId },
+): Promise<boolean> {
+  const result = await CastleModel.updateOne(
+    { _id: castleId, lastProductionAt: expectedLastProductionAt },
     {
       $inc: { gold: gained.gold, iron: gained.iron, mana: gained.mana, food: gained.food },
       $set: { lastProductionAt: nextProductionAt },
     },
   )
+  return result.modifiedCount === 1
 }
 
 // Atomic CAS debit of resources + increment of one upgrade track. The $gte

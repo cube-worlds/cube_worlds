@@ -30,7 +30,7 @@ export interface ProductionHandlerDependencies {
   findUserById: (id: number) => Promise<ExistingUser | null>
   findOrCreateCastle: (user: ExistingUser) => Promise<DocumentType<Castle>>
   now: () => Date
-  creditProduction: (castleId: unknown, gained: ReturnType<typeof readBag>, next: Date) => Promise<void>
+  creditProduction: (castleId: unknown, expectedLastProductionAt: Date, gained: ReturnType<typeof readBag>, next: Date) => Promise<boolean>
   addResourceRecords: (
     userId: number,
     rows: Array<{ kind: ResourceKind, amount: number, type: ResourceChangeType }>,
@@ -122,7 +122,11 @@ export function buildProductionHandler(
           now,
         )
         if (ticks > 0) {
-          await deps.creditProduction(castle._id, gained, nextProductionAt)
+          const won = await deps.creditProduction(castle._id, castle.lastProductionAt, gained, nextProductionAt)
+          if (!won) {
+            // Lost the race: a concurrent claim already credited this window.
+            return { claimed: { gold: 0, iron: 0, mana: 0, food: 0 }, ticks: 0, nextProductionAt: castle.lastProductionAt }
+          }
           await deps.addResourceRecords(user.id, [
             { kind: ResourceKind.Gold, amount: gained.gold, type: ResourceChangeType.Production },
             { kind: ResourceKind.Iron, amount: gained.iron, type: ResourceChangeType.Production },

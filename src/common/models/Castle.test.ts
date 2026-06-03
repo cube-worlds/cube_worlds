@@ -57,3 +57,7 @@ test('upgradeCost scales with the next level and is per-track', () => {
 test('upgradeCost throws past the max level', () => {
   assert.throws(() => upgradeCost('walls', MAX_TRACK_LEVEL))
 })
+
+test('canAfford allows an exact-equality balance', () => {
+  assert.equal(canAfford({ gold: 50, iron: 0, mana: 0, food: 0 }, { gold: 50, iron: 0, mana: 0, food: 0 }), true)
+})
