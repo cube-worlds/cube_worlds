@@ -153,7 +153,7 @@ Every action that mints $CUBE must have a matched sink. Concrete sinks:
 | Sink | $CUBE cost | Burn or transfer? |
 |------|-----------|-------------------|
 | Hero recruitment (Tavern) | 100 + Gold | 50% burn / 50% treasury |
-| Castle upgrade (any track) | 500–10000 | 100% burn |
+| **Castle upgrade (any track)** | **500–10000 CUBE + resources** | **100% CUBE burn** (`BalanceChangeType.CastleUpgrade`; also debits DB resource bags) |
 | Arena entry fee | 10 | Burn |
 | Marketplace listing fee | 1% of price | Burn |
 | Marketplace sale fee | 5% of price | 50% burn / 50% treasury |
@@ -321,3 +321,41 @@ constants as shipped:
 - **Player-facing comms:** §4.2 is the "how you earn" surface; §4.3 is the "why we can't be Sybil-farmed" defense.
 
 For the game design + TON contracts + phase roadmap that this economy sits on, see [ANCIENT_WORLDS_PLAN.md](ANCIENT_WORLDS_PLAN.md).
+
+---
+
+## 6. Implemented Phase A constants (Castle / Ancient Worlds)
+
+Shipped June 2026. All constants are in `src/common/helpers/production.ts`, `castle-upgrade-handler.ts`, and `cube-bridge.ts` unless noted.
+
+### Castle production
+
+| Constant | Value | Notes |
+|----------|-------|-------|
+| `PRODUCTION_TICK_MS` | `8h` (28 800 000 ms) | One production tick per castle |
+| `MAX_UNCLAIMED_TICKS` | `3` | Resources cap at 24 h of backlog |
+| `FOUNDER_MULTIPLIER` | `1.2` | +20% output for existing CNFT holders (`User.minted`), keyed in `src/common/helpers/founder.ts` |
+| `BASE_PRODUCTION` | `{gold:50, iron:30, mana:10, food:40}` | Per-tick base output at Mine level 0 |
+| Mine level output scalar | `floor(base × (1 + 0.25 × mineLevel))` | Applied per-tick before Founder multiplier |
+
+### Castle upgrade costs
+
+`upgradeCost(track, level) = baseCost[track] × (level + 1)`. `MAX_TRACK_LEVEL = 10`.
+
+| Track | Base cost (CUBE) | Level 1 → 10 CUBE range |
+|-------|-----------------|-------------------------|
+| Walls | 500 | 500 → 5 000 |
+| Forge | 500 | 500 → 5 000 |
+| Tavern | 500 | 500 → 5 000 |
+| Mine | 500 | 500 → 5 000 |
+
+Each upgrade also consumes DB resource bags (gold/iron/mana/food) via an atomic $gte CAS (`spendForUpgrade`). The CUBE debit uses `BalanceChangeType.CastleUpgrade` (100% burn, per §2.4). The resource debit is recorded in `ResourceLedger` with `ResourceChangeType.Upgrade`.
+
+### On-chain $CUBE bridge
+
+| Constant | Value | Notes |
+|----------|-------|-------|
+| `WITHDRAW_FEE_BPS` | `200` | 2% withdrawal fee burned at DB debit time |
+| `WITHDRAW_COOLDOWN_MS` | `24h` (86 400 000 ms) | Per-user cooldown; next withdraw blocked until elapsed |
+
+DB `User.votes` remains the canonical balance. `CubeBridgeLedger` is append-only, idempotent on `externalId`, with statuses `pending / completed / failed`. Route gated by env `CUBE_JETTON_MASTER` + `CUBE_VAULT_ADDRESS`. **Alert on long-lived `pending` rows** — a completed chain-send whose `markBridgeStatus(Completed)` threw will sit `pending` indefinitely (funds delivered; cooldown not set; user sees false error).

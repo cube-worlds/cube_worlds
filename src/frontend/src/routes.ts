@@ -1,3 +1,4 @@
+import CastleComponent from './components/CastleComponent.vue'
 import ClaimComponent from './components/ClaimComponent.vue'
 import ClickerComponent from './components/ClickerComponent.vue'
 import CNFTComponent from './components/CNFT.vue'
@@ -22,9 +23,16 @@ export interface MenuRoute {
 export const menuRoutes: MenuRoute[] = [
   {
     path: '/',
+    name: 'CastlePage',
+    emoji: '🏰',
+    showInMenu: true,
+    component: CastleComponent,
+  },
+  {
+    path: '/claim',
     name: 'ClaimPage',
     emoji: '🏠',
-    showInMenu: true,
+    showInMenu: false,
     component: ClaimComponent,
   },
   {
@@ -50,7 +58,7 @@ export const menuRoutes: MenuRoute[] = [
   },
   {
     path: '/expeditions',
-    name: 'ExpeditionsPage',
+    name: 'DispatchPage',
     emoji: '⚔️',
     showInMenu: true,
     component: ExpeditionComponent,

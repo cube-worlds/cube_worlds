@@ -77,6 +77,11 @@ function createConfigFromEnvironment(environment: NodeJS.ProcessEnv) {
     // to true only once the three sinks are live (refill, weight-boost,
     // tournament entry).
     EXPEDITION_FAUCET_ENABLED: z.boolean().default(false),
+    // Castle NFT collection (TEP-62). Empty ⇒ castle minting disabled.
+    CASTLE_COLLECTION_ADDRESS: z.string().default(''),
+    // $CUBE on-chain jetton bridge. Empty ⇒ bridge disabled.
+    CUBE_JETTON_MASTER: z.string().default(''),
+    CUBE_VAULT_ADDRESS: z.string().default(''),
   })
 
   if (config.BOT_MODE === 'webhook') {

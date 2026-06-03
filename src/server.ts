@@ -14,11 +14,15 @@ import { logger, loggerOptions } from '#root/logger'
 import adRewardHandler from './backend/ad-reward'
 import authHandler from './backend/auth-handler'
 import balancesHandler from './backend/balances-handler'
+import castleUpgradeHandler from './backend/castle-upgrade-handler'
 import claimHandler from './backend/claim-handler'
+import cubeBridgeHandler from './backend/cube-bridge'
+import { isCubeJettonEnabled } from './backend/cube-jetton-client'
 import energyHandler from './backend/energy-handler'
 import expeditionHandler from './backend/expedition-handler'
 import leaderboardHandler from './backend/leaderboard-handler'
 import nftHandler from './backend/nft-handler'
+import productionHandler from './backend/production-handler'
 import { createSeasonPassInvoiceHandler } from './backend/season-pass-invoice'
 import setWalletHandler from './backend/set-wallet-handler'
 import tournamentHandler from './backend/tournament'
@@ -127,6 +131,8 @@ export async function createServer(bot: Bot) {
   await server.register(claimHandler, { prefix: '/api/users' })
 
   await server.register(worldsHandler, { prefix: '/api/game' })
+  await server.register(productionHandler, { prefix: '/api/game' })
+  await server.register(castleUpgradeHandler, { prefix: '/api/game' })
   await server.register(expeditionHandler, { prefix: '/api/game' })
   await server.register(energyHandler, { prefix: '/api/game' })
   await server.register(tournamentHandler, { prefix: '/api/game' })
@@ -135,6 +141,10 @@ export async function createServer(bot: Bot) {
 
   await server.register(walletWebhookHandler, { prefix: '/api/wallet' })
   await server.register(walletHandler, { prefix: '/api/wallet' })
+
+  if (isCubeJettonEnabled()) {
+    await server.register(cubeBridgeHandler, { prefix: '/api/cube' })
+  }
 
   const __filename = fileURLToPath(import.meta.url)
   const __dirname = path.dirname(__filename)
