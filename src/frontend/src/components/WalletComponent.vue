@@ -284,7 +284,9 @@ onMounted(() => {
             class="main-button"
             :disabled="cubeBusy || !cubeCanWithdraw"
             @click="cubeWithdraw"
-          >Withdraw</button>
+          >
+            Withdraw
+          </button>
         </div>
         <div v-if="!cubeCanWithdraw && cubeCooldown > 0" class="info-text">
           Cooldown: {{ cubeCooldown }}s remaining
