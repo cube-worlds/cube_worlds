@@ -17,6 +17,7 @@ export enum BalanceChangeType {
   Expedition = 9, // CUBE faucet: expedition payout
   Spend = 10, // CUBE sink: energy refill / weight-boost
   CastleUpgrade = 11, // CUBE sink: castle upgrade track (100% burn)
+  Recruit = 12, // CUBE sink: Tavern hero recruitment
 }
 
 export function getBalanceChangeTypeName(
