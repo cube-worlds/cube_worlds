@@ -152,7 +152,7 @@ Every action that mints $CUBE must have a matched sink. Concrete sinks:
 
 | Sink | $CUBE cost | Burn or transfer? |
 |------|-----------|-------------------|
-| Hero recruitment (Tavern) | 100 + Gold | 50% burn / 50% treasury |
+| **Hero recruitment (Tavern)** | **1000 CUBE × (n+1) + 300 Gold × (n+1)** | **100% CUBE burn** (`BalanceChangeType.Recruit`; escalates with heroes owned `n`; Gold debited from castle, `ResourceChangeType.Recruit`) — see §7 |
 | **Castle upgrade (any track)** | **500–10000 CUBE + resources** | **100% CUBE burn** (`BalanceChangeType.CastleUpgrade`; also debits DB resource bags) |
 | Arena entry fee | 10 | Burn |
 | Marketplace listing fee | 1% of price | Burn |
@@ -359,3 +359,38 @@ Each upgrade also consumes DB resource bags (gold/iron/mana/food) via an atomic 
 | `WITHDRAW_COOLDOWN_MS` | `24h` (86 400 000 ms) | Per-user cooldown; next withdraw blocked until elapsed |
 
 DB `User.votes` remains the canonical balance. `CubeBridgeLedger` is append-only, idempotent on `externalId`, with statuses `pending / completed / failed`. Route gated by env `CUBE_JETTON_MASTER` + `CUBE_VAULT_ADDRESS`. **Alert on long-lived `pending` rows** — a completed chain-send whose `markBridgeStatus(Completed)` threw will sit `pending` indefinitely (funds delivered; cooldown not set; user sees false error).
+
+---
+
+## 7. Implemented Phase B constants (Heroes & PvE, core slice)
+
+Shipped June 2026. Constants in `src/common/helpers/{hero,combat,dungeon}.ts`, `hero-handler.ts`, `dungeon-handler.ts`.
+
+### Hero classes & scaling
+
+| Class | Base (hp/atk/def) | Per-level (hp/atk/def) |
+|-------|-------------------|------------------------|
+| Knight | 120 / 18 / 12 | 18 / 3 / 2 |
+| Mage | 80 / 28 / 6 | 10 / 5 / 1 |
+| Archer | 95 / 24 / 8 | 13 / 4 / 1 |
+| Rogue | 100 / 22 / 9 | 14 / 4 / 2 |
+
+`MAX_HERO_LEVEL = 30`. XP curve `xpToReach(L) = 50 × (L−1) × L` (L1=0, L2=100, L3=300…), cumulative.
+
+### Tavern recruitment (CUBE + Gold sink)
+
+`recruitCost(n) = { cube: 1000n × (n+1), gold: 300 × (n+1) }` where `n` = heroes already owned (anti-inflation escalation). `tavernCapacity(tavernLevel) = 1 + tavernLevel`. CUBE debited first (atomic `debitVotes`, `BalanceChangeType.Recruit`, 100% burn), then Gold (`spendResources` $gte CAS, `ResourceChangeType.Recruit`); **CUBE refunded if the Gold CAS loses**. First hero is `soulbound`; CNFT holders get the `founderVariant` flag.
+
+### Daily dungeon (deterministic PvE)
+
+- Day bucket `dayBucket = floor(now / 24h)`; seed `dungeonSeed(userId, heroId, day)` is fixed per fight → a retry resolves the **identical** fight (no rerolling).
+- Enemy scales to hero level: `{ hp: 90 + 16×(L−1), atk: 20 + 3×(L−1), def: 8 + (L−1) }`.
+- Combat is a seeded mulberry32 resolver (`combat.ts`), 1000×-reproducible, `MAX_ROUNDS`-capped.
+- XP: `DUNGEON_XP_WIN = 60`, `DUNGEON_XP_LOSS = 20`.
+- Loot (win only, deterministic from seed, scaled by level): `gold = roll(1)`, `iron = roll(0.7)`, `mana = roll(0.3)`, `food = roll(0.5)` where `base = 20 + 10×(L−1)` and each roll jitters ±20%.
+- **Loot is a DB-only resource faucet + XP — NO CUBE.** The CUBE-faucet discipline (§2.4, sinks-before-faucet) is preserved; a CUBE loot drop is deferred and would need the same gating as `EXPEDITION_FAUCET_ENABLED`.
+- Exactly-once: `DungeonRun` unique `(userId, day)` claim + `credited` CAS flip (mirrors `expedition-settlement`). Loot credited via `creditResources` + `ResourceChangeType.Loot`; XP via `applyXp` → `grantHeroXp`.
+
+### Hero NFT mint
+
+Deploy-gated off until a TEP-62 hero collection (soulbound-aware) is deployed + audited; address in `HERO_COLLECTION_ADDRESS`. Batched runner (`hero-mint.ts`, re-entrancy guard, mint-before-flip bias) mirrors the castle mint.
