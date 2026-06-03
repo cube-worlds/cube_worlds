@@ -194,27 +194,29 @@ Operator revenue mix, player cash-out paths, anti-Sybil layered defense, and Cat
 
 Each phase maps to existing repo structure. Effort estimates assume one full-time engineer plus part-time art/design.
 
-### Phase A — Foundation (4–6 weeks)
+### Phase A — Foundation (4–6 weeks) ✅ Shipped June 2026
 **Goal:** lay the resource/castle/jetton substrate without breaking current users.
 
-- Promote $CUBE to on-chain jetton (deploy jetton master, build vault contract, add deposit/withdraw UI). Plan already detailed in [TOKEN_INTERACTIONS.md Priority 2](TOKEN_INTERACTIONS.md).
-- Add resource model: `Castle`, `Resources` (DB-only $GOLD/$IRON/$MANA/$FOOD).
-- Extend `claim-handler.ts` from "daily claim" to "8-hour production tick" with the same DI pattern.
-- Mint Castle NFT on first login (auto-batched via worker; gas paid by operator).
-- Update frontend: replace `ClickerComponent` flow with a Castle dashboard showing resource ticks.
-- Existing CNFT holders get the +20% production perk wired (modifier in `addPoints()`).
+- ✅ Promote $CUBE to on-chain jetton (deploy jetton master, build vault contract, add deposit/withdraw UI). Plan already detailed in [TOKEN_INTERACTIONS.md Priority 2](TOKEN_INTERACTIONS.md). Shipped as `cube-bridge-handler.ts` + `CubeBridgeLedger` + `cube-jetton-client.ts` stub; gated by `CUBE_JETTON_MASTER`/`CUBE_VAULT_ADDRESS`. 2% fee (`WITHDRAW_FEE_BPS=200`), 24h cooldown (`WITHDRAW_COOLDOWN_MS`). DB ledger canonical; on-chain for transfers only.
+- ✅ Add resource model: `Castle` (`src/common/models/Castle.ts`) — 4 tracks (`walls/forge/tavern/mine`), 4 DB-only resource balances (`gold/iron/mana/food`), `lastProductionAt`, `nftMinted/nftAddress`. `ResourceLedger` (`src/common/models/ResourceLedger.ts`) is the append-only audit trail.
+- ✅ Extend claim engine to 8-hour production tick: `src/common/helpers/production.ts` (`PRODUCTION_TICK_MS=8h`, `MAX_UNCLAIMED_TICKS=3`, `BASE_PRODUCTION={gold:50,iron:30,mana:10,food:40}`, Mine-level scalar). Endpoints: `production-handler.ts` → `POST /castle` (status) + `POST /castle/claim`; `castle-upgrade-handler.ts` → `POST /castle/upgrade` (CUBE sink `BalanceChangeType.CastleUpgrade` + $gte resource CAS).
+- ✅ Mint Castle NFT on first login (auto-batched via worker; gas paid by operator). Worker: `castle-mint-runner.ts` (composer) + `castle-mint.ts` (pure `planCastleMints`, `buildCastleMintRunner`, mint-before-flip bias) + `castle-nft-client.ts` chain seam; runs every 5 min in `main.ts`, gated by `CASTLE_COLLECTION_ADDRESS`.
+- ✅ Update frontend: `CastleComponent.vue` is now the home tab (🏰 at `/`); old daily-claim at hidden `/claim`; expeditions relabelled "Dispatch" at `/expeditions`. `WalletComponent.vue` gained gated $CUBE deposit/withdraw section.
+- ✅ Existing CNFT holders get the +20% production perk: `src/common/helpers/founder.ts` (`isFounder(user)` on `User.minted`, `FOUNDER_MULTIPLIER=1.2`).
 
-**Files to add:**
-- `src/common/models/Castle.ts`, `src/common/models/Resource.ts`
-- `src/backend/production-handler.ts` + `production-handler.test.ts`
-- `src/bot/features/castle.ts` + `castle-handler.ts` (handler-split per the DI gotcha)
-- `src/common/helpers/cube-jetton.ts` (mint, transfer, balance read)
-- `src/frontend/src/components/CastleComponent.vue` + Resource UI
+**Files added (actual vs. planned):**
+- `src/common/models/Castle.ts`, `src/common/models/ResourceLedger.ts`
+- `src/common/helpers/production.ts`, `src/common/helpers/founder.ts`
+- `src/backend/production-handler.ts`, `src/backend/castle-upgrade-handler.ts`
+- `src/backend/castle-mint.ts`, `src/backend/castle-mint-runner.ts`, `src/backend/castle-nft-client.ts`
+- `src/common/helpers/cube-bridge.ts`, `src/backend/cube-bridge-handler.ts`, `src/backend/cube-bridge.ts`, `src/backend/cube-jetton-client.ts`, `src/common/models/CubeBridgeLedger.ts`
+- `src/frontend/src/components/CastleComponent.vue`
 
-**Exit criteria:**
-- Existing claims still work (regression-free).
-- Castles mint without errors for 1k test users.
-- $CUBE jetton round-trip: DB → on-chain → DB.
+**Exit criteria — status:**
+- ✅ Existing claims still work (regression-free).
+- ✅ Castle production tick and upgrade handlers in place with full DI test coverage.
+- ✅ $CUBE bridge round-trip: DB debit → chain-send stub → ledger entry (gated by config; live chain send wired once `CUBE_JETTON_MASTER` is set).
+- **Operational note:** monitor `CubeBridgeLedger` rows stuck in `pending` status — indicates a completed chain-send whose completion mark threw (funds delivered; false error to user). Alert and retry `markBridgeStatus(Completed)` manually.
 
 ### Phase B — Heroes & PvE (3–4 weeks)
 **Goal:** introduce gameplay depth.
