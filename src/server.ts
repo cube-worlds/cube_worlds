@@ -18,8 +18,10 @@ import castleUpgradeHandler from './backend/castle-upgrade-handler'
 import claimHandler from './backend/claim-handler'
 import cubeBridgeHandler from './backend/cube-bridge'
 import { isCubeJettonEnabled } from './backend/cube-jetton-client'
+import dungeonHandler from './backend/dungeon-handler'
 import energyHandler from './backend/energy-handler'
 import expeditionHandler from './backend/expedition-handler'
+import heroHandler from './backend/hero-handler'
 import leaderboardHandler from './backend/leaderboard-handler'
 import nftHandler from './backend/nft-handler'
 import productionHandler from './backend/production-handler'
@@ -133,6 +135,8 @@ export async function createServer(bot: Bot) {
   await server.register(worldsHandler, { prefix: '/api/game' })
   await server.register(productionHandler, { prefix: '/api/game' })
   await server.register(castleUpgradeHandler, { prefix: '/api/game' })
+  await server.register(heroHandler, { prefix: '/api/game' })
+  await server.register(dungeonHandler, { prefix: '/api/game' })
   await server.register(expeditionHandler, { prefix: '/api/game' })
   await server.register(energyHandler, { prefix: '/api/game' })
   await server.register(tournamentHandler, { prefix: '/api/game' })
