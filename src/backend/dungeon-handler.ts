@@ -13,6 +13,7 @@ import { creditResources, findOrCreateCastle } from '#root/common/models/Castle'
 import { claimDungeonCredit, claimDungeonRun, findDungeonRun } from '#root/common/models/DungeonRun'
 import { findEquippedForHero } from '#root/common/models/Equipment'
 import { findHeroForUser, grantHeroXp } from '#root/common/models/Hero'
+import { findActiveQuestForHero } from '#root/common/models/HeroQuest'
 import { addResourceRecords, ResourceChangeType, ResourceKind } from '#root/common/models/ResourceLedger'
 import { findUserById } from '#root/common/models/User'
 import { logger } from '#root/logger'
@@ -31,6 +32,7 @@ export interface DungeonHandlerDependencies {
   findOrCreateCastle: (user: ExistingUser) => Promise<DocumentType<Castle>>
   findHeroForUser: (userId: number, heroId: string) => Promise<HeroDoc | null>
   findEquippedForHero: (heroId: string) => Promise<Array<{ bonusHp: number, bonusAtk: number, bonusDef: number }>>
+  findActiveQuestForHero: (heroId: string) => Promise<{ _id: unknown } | null>
   now: () => Date
   findDungeonRun: (userId: number, day: number) => Promise<{ win: boolean, lootGold: number } | null>
   claimDungeonRun: (input: { userId: number, day: number, heroId: string, seed: number, win: boolean, loot: ResourceBag, xpGained: number }) => Promise<{ _id: unknown } | null>
@@ -49,6 +51,7 @@ function createDefaultDependencies(): DungeonHandlerDependencies {
     findOrCreateCastle,
     findHeroForUser: (userId, heroId) => findHeroForUser(userId, heroId) as never,
     findEquippedForHero: heroId => findEquippedForHero(heroId) as never,
+    findActiveQuestForHero: heroId => findActiveQuestForHero(heroId) as never,
     now: () => new Date(),
     findDungeonRun: (userId, day) => findDungeonRun(userId, day) as never,
     claimDungeonRun: input => claimDungeonRun(input) as never,
@@ -100,6 +103,9 @@ export function buildDungeonHandler(deps: DungeonHandlerDependencies = createDef
         const user = await findUserByInitData(initData, deps)
         const hero = await deps.findHeroForUser(user.id, heroId)
         if (!hero) return { error: 'Hero not found' }
+        // A hero away on an 8h quest is unavailable for the dungeon (§2.5).
+        const onQuest = await deps.findActiveQuestForHero(String(hero._id))
+        if (onQuest) return { error: 'Hero is away on a quest' }
 
         const day = dayBucket(deps.now())
         const heroIdStr = String(hero._id)

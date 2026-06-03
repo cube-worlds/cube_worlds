@@ -16,6 +16,7 @@ function makeDeps(overrides: Partial<DungeonHandlerDependencies> = {}) {
     findOrCreateCastle: async () => ({ _id: 'c7', userId: 7 } as any),
     findHeroForUser: async (_u, id) => (id === 'h1' ? hero as any : null),
     findEquippedForHero: async () => [],
+    findActiveQuestForHero: async () => null,
     now: () => new Date(86_400_000 * 19876),
     findDungeonRun: async () => null,
     claimDungeonRun: async (input) => { calls.claimed.push(input); return ({ _id: 'r1', ...input, credited: false } as any) },
@@ -99,6 +100,15 @@ test('equipped gear changes the resolved fight for the same seed', async (t) => 
   // Same seed, different stats → a demonstrably different fight (gear is wired in).
   assert.notDeepEqual(r1.rounds, r2.rounds)
   assert.ok(r2.rounds.length < r1.rounds.length, 'a higher-atk hero should end the fight faster')
+})
+
+test('dungeon refuses a hero that is away on a quest', async (t) => {
+  const { deps, calls } = makeDeps({ findActiveQuestForHero: async () => ({ _id: 'q1' }) })
+  const app = await appWith(deps)
+  t.after(() => app.close())
+  const res = await app.inject({ method: 'POST', url: '/api/game/dungeon/run', payload: { initData: 'x', heroId: 'h1' } })
+  assert.equal(res.json().error, 'Hero is away on a quest')
+  assert.equal(calls.claimed.length, 0)
 })
 
 test('a lost-credit-CAS run (concurrent) credits nothing', async (t) => {

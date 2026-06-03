@@ -26,6 +26,7 @@ import heroHandler from './backend/hero-handler'
 import leaderboardHandler from './backend/leaderboard-handler'
 import nftHandler from './backend/nft-handler'
 import productionHandler from './backend/production-handler'
+import questHandler from './backend/quest-handler'
 import { createSeasonPassInvoiceHandler } from './backend/season-pass-invoice'
 import setWalletHandler from './backend/set-wallet-handler'
 import tournamentHandler from './backend/tournament'
@@ -139,6 +140,7 @@ export async function createServer(bot: Bot) {
   await server.register(heroHandler, { prefix: '/api/game' })
   await server.register(dungeonHandler, { prefix: '/api/game' })
   await server.register(equipmentHandler, { prefix: '/api/game' })
+  await server.register(questHandler, { prefix: '/api/game' })
   await server.register(expeditionHandler, { prefix: '/api/game' })
   await server.register(energyHandler, { prefix: '/api/game' })
   await server.register(tournamentHandler, { prefix: '/api/game' })
