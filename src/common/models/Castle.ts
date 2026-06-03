@@ -136,6 +136,17 @@ export function upgradeCost(track: UpgradeTrack, currentLevel: number): UpgradeC
   }
 }
 
+export function findUnmintedCastles(limit = 10) {
+  return CastleModel.find({ nftMinted: false }).limit(limit)
+}
+
+export async function markCastleMinted(castleId: unknown, address: string): Promise<void> {
+  await CastleModel.updateOne(
+    { _id: castleId },
+    { $set: { nftMinted: true, nftAddress: address } },
+  )
+}
+
 // Credit produced resources to the castle and advance the clock in one update.
 export async function creditProduction(
   castleId: unknown,

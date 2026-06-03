@@ -3,6 +3,8 @@
 import process from 'node:process'
 import mongoose from 'mongoose'
 import { onShutdown } from 'node-graceful-shutdown'
+import castleMintRunner from '#root/backend/castle-mint-runner'
+import { isCastleMintEnabled } from '#root/backend/castle-nft-client'
 import settlementRunner from '#root/backend/expedition-settlement-runner'
 import tournamentSettlementRunner from '#root/backend/tournament-settlement-runner'
 import reconciliationRunner from '#root/backend/wallet-reconciliation-runner'
@@ -74,6 +76,20 @@ try {
     })()
   }, SETTLEMENT_INTERVAL_MS)
   settlementTimer.unref()
+
+  if (isCastleMintEnabled()) {
+    const CASTLE_MINT_INTERVAL_MS = 5 * 60 * 1000
+    const castleMintTimer = setInterval(() => {
+      void (async () => {
+        try {
+          await castleMintRunner.runOnce()
+        } catch (error) {
+          logger.error(error)
+        }
+      })()
+    }, CASTLE_MINT_INTERVAL_MS)
+    castleMintTimer.unref()
+  }
 
   // Hourly reconciliation: compare local USDT ledger against xRocket custody and
   // pause withdrawals on divergence. Only runs when the money rail is configured.
