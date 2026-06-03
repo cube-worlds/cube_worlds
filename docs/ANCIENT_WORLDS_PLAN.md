@@ -218,26 +218,30 @@ Each phase maps to existing repo structure. Effort estimates assume one full-tim
 - ✅ $CUBE bridge round-trip: DB debit → chain-send stub → ledger entry (gated by config; live chain send wired once `CUBE_JETTON_MASTER` is set).
 - **Operational note:** monitor `CubeBridgeLedger` rows stuck in `pending` status — indicates a completed chain-send whose completion mark threw (funds delivered; false error to user). Alert and retry `markBridgeStatus(Completed)` manually.
 
-### Phase B — Heroes & PvE (3–4 weeks)
+### Phase B — Heroes & PvE (3–4 weeks) ✅ Core slice shipped June 2026
 **Goal:** introduce gameplay depth.
 
-- Hero NFT collection deployed; first hero soulbound, subsequent tradable.
-- Tavern recruitment ($CUBE + $GOLD sink).
-- PvE dungeon endpoint (deterministic combat resolver).
-- 8-hour expedition slot per hero.
-- Loot table.
+**Shipped (core slice):**
+- ✅ Hero NFT collection scaffolding — deploy-gated batched mint (`hero-mint.ts` + `hero-nft-client.ts`, off until `HERO_COLLECTION_ADDRESS` set); first hero `soulbound`.
+- ✅ Tavern recruitment ($CUBE + $GOLD sink, atomic, refund-on-loss) — `hero-handler.ts`.
+- ✅ PvE daily dungeon endpoint with deterministic seeded combat resolver — `dungeon-handler.ts` + `combat.ts` (1000×-reproducible).
+- ✅ Loot table (DB-only resource faucet + XP, no CUBE) — `dungeon.ts`, exactly-once via `DungeonRun`.
+- ✅ Frontend hero roster + dungeon UI — `HeroRosterComponent.vue` (🛡️ `/heroes`).
+
+**Deferred → Plan 6:**
+- Equipment NFT collection + equip slots.
+- 8-hour expedition (quest) slot per hero.
 - Boss week event scheduler.
 
-**Files to add:**
-- `src/common/models/Hero.ts`, `src/common/models/Equipment.ts`
-- `src/backend/dungeon-handler.ts`, `src/backend/expedition-handler.ts`
-- `src/common/helpers/combat.ts` (deterministic resolver — pure function for testability)
-- Hero NFT mint logic mirroring `src/bot/features/admin/queue.ts` but auto-triggered
-- Frontend hero roster UI
+**Files added (core slice):**
+- `src/common/models/Hero.ts`, `src/common/models/DungeonRun.ts`
+- `src/common/helpers/{hero,combat,dungeon}.ts` (pure, config-free)
+- `src/backend/{hero-handler,dungeon-handler,hero-mint,hero-mint-runner,hero-nft-client}.ts`
+- Frontend `HeroRosterComponent.vue`
 
 **Exit criteria:**
-- Combat resolver passes 1000 reproducibility tests.
-- Hero NFT mints cost < 0.1 TON per user end-to-end.
+- ✅ Combat resolver passes 1000 reproducibility tests.
+- Hero NFT mints cost < 0.1 TON per user end-to-end — pending collection deploy.
 
 ### Phase C — PvP & Clans (4–5 weeks)
 **Goal:** the social hook. This is the highest-retention work in the roadmap.

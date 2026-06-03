@@ -6,6 +6,8 @@ import { onShutdown } from 'node-graceful-shutdown'
 import castleMintRunner from '#root/backend/castle-mint-runner'
 import { isCastleMintEnabled } from '#root/backend/castle-nft-client'
 import settlementRunner from '#root/backend/expedition-settlement-runner'
+import heroMintRunner from '#root/backend/hero-mint-runner'
+import { isHeroMintEnabled } from '#root/backend/hero-nft-client'
 import tournamentSettlementRunner from '#root/backend/tournament-settlement-runner'
 import reconciliationRunner from '#root/backend/wallet-reconciliation-runner'
 import { isMoneyRailEnabled } from '#root/backend/xrocket-client'
@@ -89,6 +91,20 @@ try {
       })()
     }, CASTLE_MINT_INTERVAL_MS)
     castleMintTimer.unref()
+  }
+
+  if (isHeroMintEnabled()) {
+    const HERO_MINT_INTERVAL_MS = 5 * 60 * 1000
+    const heroMintTimer = setInterval(() => {
+      void (async () => {
+        try {
+          await heroMintRunner.runOnce()
+        } catch (error) {
+          logger.error(error)
+        }
+      })()
+    }, HERO_MINT_INTERVAL_MS)
+    heroMintTimer.unref()
   }
 
   // Hourly reconciliation: compare local USDT ledger against xRocket custody and

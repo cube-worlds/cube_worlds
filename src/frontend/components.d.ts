@@ -18,6 +18,7 @@ declare module 'vue' {
     CNFT: typeof import('./src/components/CNFT.vue')['default']
     ExpeditionComponent: typeof import('./src/components/ExpeditionComponent.vue')['default']
     FAQ: typeof import('./src/components/FAQ.vue')['default']
+    HeroRosterComponent: typeof import('./src/components/HeroRosterComponent.vue')['default']
     LeaderboardComponent: typeof import('./src/components/LeaderboardComponent.vue')['default']
     LoadingOverlay: typeof import('./src/components/nested/LoadingOverlay.vue')['default']
     MainMenu: typeof import('./src/components/nested/MainMenu.vue')['default']

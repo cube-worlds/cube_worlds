@@ -13,6 +13,7 @@ export enum ResourceChangeType {
   Production = 0, // faucet: 8h castle production
   Upgrade = 1, // sink: spent on a castle upgrade track
   Loot = 2, // reserved: future PvE/expedition loot
+  Recruit = 3, // sink: Gold spent recruiting a hero
 }
 
 export type ResourceChangeKeys = keyof typeof ResourceChangeType

@@ -4,6 +4,7 @@ import ClickerComponent from './components/ClickerComponent.vue'
 import CNFTComponent from './components/CNFT.vue'
 import ExpeditionComponent from './components/ExpeditionComponent.vue'
 import FAQComponent from './components/FAQ.vue'
+import HeroRosterComponent from './components/HeroRosterComponent.vue'
 import LeaderboardComponent from './components/LeaderboardComponent.vue'
 import NotFoundComponent from './components/NotFound.vue'
 import ExchangeComponent from './components/SatoshiExchange.vue'
@@ -55,6 +56,13 @@ export const menuRoutes: MenuRoute[] = [
     emoji: '⛏️',
     showInMenu: true,
     component: SatoshiMiningComponent,
+  },
+  {
+    path: '/heroes',
+    name: 'HeroesPage',
+    emoji: '🛡️',
+    showInMenu: true,
+    component: HeroRosterComponent,
   },
   {
     path: '/expeditions',
