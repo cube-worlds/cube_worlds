@@ -14,6 +14,7 @@ import { logger, loggerOptions } from '#root/logger'
 import adRewardHandler from './backend/ad-reward'
 import authHandler from './backend/auth-handler'
 import balancesHandler from './backend/balances-handler'
+import bossHandler from './backend/boss-handler'
 import castleUpgradeHandler from './backend/castle-upgrade-handler'
 import claimHandler from './backend/claim-handler'
 import cubeBridgeHandler from './backend/cube-bridge'
@@ -141,6 +142,7 @@ export async function createServer(bot: Bot) {
   await server.register(dungeonHandler, { prefix: '/api/game' })
   await server.register(equipmentHandler, { prefix: '/api/game' })
   await server.register(questHandler, { prefix: '/api/game' })
+  await server.register(bossHandler, { prefix: '/api/game' })
   await server.register(expeditionHandler, { prefix: '/api/game' })
   await server.register(energyHandler, { prefix: '/api/game' })
   await server.register(tournamentHandler, { prefix: '/api/game' })
