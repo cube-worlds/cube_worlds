@@ -17,8 +17,27 @@ const tr = ref({ tgUserId: 0, amount: 1 })
 
 const networks = ['TON', 'BSC', 'ETH', 'BTC', 'TRX', 'SOL']
 
+// $CUBE on-chain bridge state
+const cubeBridgeAvailable = ref(false)
+const cubeBalance = ref(0)
+const cubeDepositAddress = ref('')
+const cubeCanWithdraw = ref(false)
+const cubeCooldown = ref(0)
+const cubeWithdrawAmount = ref('')
+const cubeError = ref('')
+const cubeBusy = ref(false)
+
 async function api(path: string, body: Record<string, unknown>) {
   const response = await fetch(`/api/wallet/${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ initData: userStore.initData, ...body }),
+  })
+  return response.json()
+}
+
+async function cubeApi(path: string, body: Record<string, unknown>) {
+  const response = await fetch(`/api/cube/${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ initData: userStore.initData, ...body }),
@@ -135,8 +154,56 @@ async function transfer() {
   }
 }
 
+async function loadCubeStatus() {
+  if (!userStore.initData)
+    return
+  try {
+    const data = await cubeApi('status', {})
+    if (data.error || !data.depositAddress) {
+      cubeBridgeAvailable.value = false
+      return
+    }
+    cubeBridgeAvailable.value = true
+    cubeBalance.value = data.balance
+    cubeDepositAddress.value = data.depositAddress
+    cubeCanWithdraw.value = data.canWithdraw
+    cubeCooldown.value = data.cooldownSecondsRemaining ?? 0
+  } catch {
+    cubeBridgeAvailable.value = false
+  }
+}
+
+async function copyCubeAddress() {
+  try {
+    await navigator.clipboard.writeText(cubeDepositAddress.value)
+  } catch {
+    // clipboard unavailable — silently ignore
+  }
+}
+
+async function cubeWithdraw() {
+  if (!userStore.initData)
+    return
+  cubeBusy.value = true
+  cubeError.value = ''
+  try {
+    const data = await cubeApi('withdraw', { amount: cubeWithdrawAmount.value })
+    if (data.error) {
+      cubeError.value = data.error
+      return
+    }
+    cubeWithdrawAmount.value = ''
+    await loadCubeStatus()
+  } catch {
+    cubeError.value = 'Failed to withdraw CUBE.'
+  } finally {
+    cubeBusy.value = false
+  }
+}
+
 onMounted(() => {
   loadBalance()
+  loadCubeStatus()
 })
 </script>
 
@@ -196,6 +263,33 @@ onMounted(() => {
           <input v-model.number="tr.amount" type="number" min="0" step="0.1" class="field">
         </div>
         <button class="main-button" :disabled="isBusy" @click="transfer">Send</button>
+      </div>
+
+      <!-- $CUBE on-chain bridge -->
+      <div v-if="cubeBridgeAvailable" class="section">
+        <div class="section-title">$CUBE On-Chain</div>
+        <div class="balance-card cube-balance-card">
+          <span class="balance-label">CUBE Balance</span>
+          <span class="balance-value">{{ cubeBalance }} CUBE</span>
+        </div>
+        <div class="section-title">Deposit address</div>
+        <div class="row">
+          <input :value="cubeDepositAddress" readonly class="field">
+          <button class="main-button" @click="copyCubeAddress">Copy</button>
+        </div>
+        <div class="section-title">Withdraw</div>
+        <div class="row">
+          <input v-model="cubeWithdrawAmount" type="number" min="0" placeholder="amount" class="field">
+          <button
+            class="main-button"
+            :disabled="cubeBusy || !cubeCanWithdraw"
+            @click="cubeWithdraw"
+          >Withdraw</button>
+        </div>
+        <div v-if="!cubeCanWithdraw && cubeCooldown > 0" class="info-text">
+          Cooldown: {{ cubeCooldown }}s remaining
+        </div>
+        <div v-if="cubeError" class="error-text">{{ cubeError }}</div>
       </div>
     </template>
   </div>
@@ -314,6 +408,10 @@ onMounted(() => {
   text-align: center;
   padding: 0.5rem 0;
   margin-bottom: 0.5rem;
+}
+
+.cube-balance-card {
+  margin-bottom: 1rem;
 }
 
 @keyframes fadeIn {
