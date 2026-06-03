@@ -16,6 +16,8 @@ import authHandler from './backend/auth-handler'
 import balancesHandler from './backend/balances-handler'
 import castleUpgradeHandler from './backend/castle-upgrade-handler'
 import claimHandler from './backend/claim-handler'
+import cubeBridgeHandler from './backend/cube-bridge'
+import { isCubeJettonEnabled } from './backend/cube-jetton-client'
 import energyHandler from './backend/energy-handler'
 import expeditionHandler from './backend/expedition-handler'
 import leaderboardHandler from './backend/leaderboard-handler'
@@ -139,6 +141,10 @@ export async function createServer(bot: Bot) {
 
   await server.register(walletWebhookHandler, { prefix: '/api/wallet' })
   await server.register(walletHandler, { prefix: '/api/wallet' })
+
+  if (isCubeJettonEnabled()) {
+    await server.register(cubeBridgeHandler, { prefix: '/api/cube' })
+  }
 
   const __filename = fileURLToPath(import.meta.url)
   const __dirname = path.dirname(__filename)
