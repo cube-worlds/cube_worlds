@@ -5,6 +5,9 @@
 # Lift-and-shift of production main @ 8a53660 (apex cubeworlds.club, apex-only).
 # Build context is the repo root (Dockerfile builds src/frontend + runs via tsx).
 # Deployed from branch `deploy/kamal-scaffold`.
+# Redeploy fence: .kamal/hooks/pre-app-boot stops the old container BEFORE the
+# new one boots (the tx-loop must never run twice — double-mint hazard). The
+# ~10-30s downtime per deploy is intended; --skip-hooks re-creates the hazard.
 
 service: cube-worlds-bot
 image:   chiliec/cube-worlds-bot     # GHCR: composed to ghcr.io/chiliec/cube-worlds-bot via registry.server
