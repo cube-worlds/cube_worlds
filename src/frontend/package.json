@@ -20,6 +20,7 @@
     "@tonconnect/ui": "^2.4.1",
     "@vitejs/plugin-vue": "^6.0.4",
     "axios": "^1.16.1",
+    "buffer": "^6.0.3",
     "element-plus": "^2.13.2",
     "fluent-vue": "^3.8.1",
     "pinia": "^3.0.4",

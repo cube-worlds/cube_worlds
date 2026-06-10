@@ -1,7 +1,5 @@
 import { fileURLToPath, URL } from 'node:url'
-import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill'
 import vue from '@vitejs/plugin-vue'
-import rollupNodePolyFill from 'rollup-plugin-polyfill-node'
 import AutoImport from 'unplugin-auto-import/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 import Components from 'unplugin-vue-components/vite'
@@ -23,25 +21,15 @@ export default defineConfig({
       resolvers: [ElementPlusResolver()],
     }),
   ],
+  // Node.js global to browser globalThis (@ton/core expects a Node-like env;
+  // Buffer itself is polyfilled in src/polyfills.ts)
+  define: {
+    global: 'globalThis',
+  },
   optimizeDeps: {
-    esbuildOptions: {
-      // Node.js global to browser globalThis
-      define: {
-        global: 'globalThis',
-      },
-      // Enable esbuild polyfill plugins
-      plugins: [
-        NodeGlobalsPolyfillPlugin({
-          buffer: true,
-        }),
-      ],
-    },
     include: ['vue', 'vue-router', 'pinia'],
   },
   build: {
-    rollupOptions: {
-      plugins: [rollupNodePolyFill()],
-    },
     target: 'esnext',
     outDir: 'dist',
     assetsDir: 'assets',

@@ -1,7 +1,7 @@
 import type { Bot } from '#root/bot/index'
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import cors from '@fastify/cors'
 import helmet from '@fastify/helmet'
 import middie from '@fastify/middie'
@@ -9,7 +9,6 @@ import rateLimit from '@fastify/rate-limit'
 import fastifyStatic from '@fastify/static'
 import fastify from 'fastify'
 import { webhookCallback } from 'grammy'
-import { createServer as createViteServer } from 'vite'
 import { logger, loggerOptions } from '#root/logger'
 import adRewardHandler from './backend/ad-reward'
 import authHandler from './backend/auth-handler'
@@ -163,6 +162,15 @@ export async function createServer(bot: Bot) {
   const frontendPath = path.join(__dirname, 'frontend')
 
   if (config.NODE_ENV === 'development') {
+    // Load vite from the frontend's own node_modules: the frontend's
+    // vite.config.ts and plugins resolve there, and two copies of vite's
+    // native rolldown binding in one process segfault on dlopen.
+    const { createServer: createViteServer } = (await import(
+      pathToFileURL(
+        path.join(frontendPath, 'node_modules/vite/dist/node/index.js'),
+      ).href
+    )) as typeof import('vite')
+
     // run front with HMR
     const vite = await createViteServer({
       root: frontendPath,
