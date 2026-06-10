@@ -19,11 +19,16 @@ function createConfigFromEnvironment(environment: NodeJS.ProcessEnv) {
     BOT_TOKEN: z.string(),
     BOT_NAME: z.string().default('cube_worlds_bot'),
     BOT_WEBHOOK: z.string().default(''),
+    // Empty ⇒ unset; required in webhook mode (enforced after parsing below).
+    // The empty-string escape keeps polling mode bootable without a secret —
+    // a bare .min(16).default('') would reject its own default. A refine
+    // (not .or(z.literal(''))) because znv doesn't support ZodUnion.
     BOT_WEBHOOK_SECRET: z
       .string()
-      .regex(/^[\w-]+$/, 'BOT_WEBHOOK_SECRET must be alphanumeric (with _-)')
-      .min(16)
-      .max(256)
+      .refine(
+        s => s === '' || /^[\w-]{16,256}$/.test(s),
+        'BOT_WEBHOOK_SECRET must be 16-256 chars of [A-Za-z0-9_-]',
+      )
       .default(''),
     BOT_SERVER_HOST: z.string().default('0.0.0.0'),
     BOT_SERVER_PORT: port().default(80),
