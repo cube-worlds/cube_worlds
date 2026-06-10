@@ -40,7 +40,9 @@ export async function findArenaOpponent(attackerId: number, rating: number): Pro
     const filter: Record<string, unknown> = { userId: { $ne: attackerId } }
     if (Number.isFinite(w)) filter.rating = { $gte: rating - w, $lte: rating + w }
     const pick = await sampleProfile(filter)
-    if (pick) return pick
+    // A rated profile alone isn't enough — opening the PvP tab creates one.
+    // Only a hero owner can defend; fall through to a wider window otherwise.
+    if (pick && (await HeroModel.exists({ userId: pick.userId })) !== null) return pick
   }
   return sampleHeroOwner(attackerId)
 }

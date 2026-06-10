@@ -46,10 +46,10 @@ export class Match extends TimeStamps {
   @prop({ type: String, required: true, enum: MATCH_MODES })
   mode!: MatchMode
 
-  @prop({ type: Number, required: true, index: true })
+  @prop({ type: Number, required: true })
   attackerId!: number
 
-  @prop({ type: Number, required: true, index: true })
+  @prop({ type: Number, required: true })
   defenderId!: number
 
   @prop({ _id: false, type: MatchSide, required: true })
@@ -63,7 +63,7 @@ export class Match extends TimeStamps {
   stake!: number
 
   // The pending→resolved CAS is the exactly-once credit boundary.
-  @prop({ type: String, required: true, enum: ['pending', 'resolved'], default: 'pending', index: true })
+  @prop({ type: String, required: true, enum: ['pending', 'resolved'], default: 'pending' })
   status!: 'pending' | 'resolved'
 
   @prop({ type: Number })
