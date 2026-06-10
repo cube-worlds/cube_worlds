@@ -42,6 +42,7 @@ const userStore = useUserStore()
 const status = ref<PvpStatus | null>(null)
 const heroes = ref<Hero[]>([])
 const chosenHero = ref('')
+const questingHeroIds = ref<Set<string>>(new Set())
 const loadError = ref('')
 const actionError = ref('')
 const isLoading = ref(false)
@@ -80,6 +81,12 @@ async function refresh() {
     if (!list.error) {
       heroes.value = list.heroes ?? []
       if (!chosenHero.value && heroes.value.length) chosenHero.value = heroes.value[0].id
+    }
+    const q = await post<{ quests?: Array<{ heroId: string }>, error?: string }>('/api/game/quest', {})
+    if (!q.error) questingHeroIds.value = new Set((q.quests ?? []).map(item => item.heroId))
+    if (chosenHero.value && questingHeroIds.value.has(chosenHero.value)) {
+      const free = heroes.value.find(h => !questingHeroIds.value.has(h.id))
+      chosenHero.value = free ? free.id : ''
     }
   } catch (err) {
     loadError.value = 'Failed to load the arena.'
@@ -144,7 +151,9 @@ onMounted(() => { refresh() })
           <div class="prod-title">Pick a hero (questing heroes are unavailable)</div>
           <div class="fight-row">
             <select v-model="chosenHero" class="hero-select">
-              <option v-for="h in heroes" :key="h.id" :value="h.id">{{ h.heroClass }} Lv{{ h.level }}</option>
+              <option v-for="h in heroes" :key="h.id" :value="h.id" :disabled="questingHeroIds.has(h.id)">
+                {{ h.heroClass }} Lv{{ h.level }}{{ questingHeroIds.has(h.id) ? ' (on quest)' : '' }}
+              </option>
             </select>
           </div>
           <div class="fight-row buttons">

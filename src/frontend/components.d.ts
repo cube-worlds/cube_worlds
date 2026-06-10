@@ -12,6 +12,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     Accordion: typeof import('./src/components/nested/Accordion.vue')['default']
+    ArenaComponent: typeof import('./src/components/ArenaComponent.vue')['default']
     BossEventComponent: typeof import('./src/components/BossEventComponent.vue')['default']
     CastleComponent: typeof import('./src/components/CastleComponent.vue')['default']
     ClaimComponent: typeof import('./src/components/ClaimComponent.vue')['default']
