@@ -128,7 +128,7 @@ export interface MatchResolution {
 export async function resolveMatchCas(matchId: unknown, result: MatchResolution): Promise<boolean> {
   const res = await MatchModel.updateOne(
     { _id: matchId, status: 'pending' },
-    { $set: { status: 'resolved', ...result } },
+    { $set: { ...result, status: 'resolved' } },
   )
   return res.modifiedCount === 1
 }
