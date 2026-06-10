@@ -5,7 +5,7 @@ import { RAIDS_PER_DAY, RATING_FLOOR, RATING_START } from '#root/common/helpers/
 
 @modelOptions({ schemaOptions: { timestamps: true } })
 export class PvpProfile extends TimeStamps {
-  @prop({ type: Number, required: true, unique: true, index: true })
+  @prop({ type: Number, required: true, unique: true })
   userId!: number
 
   // Single ELO ladder — arena AND raids move it (one ladder, kept honest by

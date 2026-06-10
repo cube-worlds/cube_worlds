@@ -10,7 +10,7 @@ export class AdGrant extends TimeStamps {
   @prop({ type: Number, required: true, index: true })
   userId!: number
 
-  @prop({ type: String, required: true, unique: true, index: true })
+  @prop({ type: String, required: true, unique: true })
   nonceRand!: string
 
   @prop({ type: String, required: true })

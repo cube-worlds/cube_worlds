@@ -5,7 +5,7 @@ import { WALLET_CURRENCY } from '#root/common/helpers/wallet'
 
 @modelOptions({ schemaOptions: { timestamps: true } })
 export class WalletBalance extends TimeStamps {
-  @prop({ type: Number, required: true, unique: true, index: true })
+  @prop({ type: Number, required: true, unique: true })
   userId!: number
 
   @prop({ type: String, required: true, default: WALLET_CURRENCY })

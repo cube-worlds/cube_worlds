@@ -48,10 +48,10 @@ export function pickNextColor(latestColorForType: number | undefined): number {
 
 @modelOptions({ schemaOptions: { timestamps: false } })
 export class CNFT {
-  @prop({ type: Number, required: true, index: true, unique: true })
+  @prop({ type: Number, required: true, unique: true })
   index!: number
 
-  @prop({ type: Number, required: true, index: true, unique: true })
+  @prop({ type: Number, required: true, unique: true })
   userId!: number
 
   @prop({ type: String, required: true })

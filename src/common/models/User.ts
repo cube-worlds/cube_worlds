@@ -22,7 +22,7 @@ export enum UserState {
 
 @modelOptions({ schemaOptions: { timestamps: true, id: false } })
 export class User extends TimeStamps {
-  @prop({ type: Number, required: true, index: true, unique: true })
+  @prop({ type: Number, required: true, unique: true })
   id!: number
 
   @prop({ type: String, required: true, default: 'en' })

@@ -17,7 +17,7 @@ export class Claim extends TimeStamps {
   // Unique per user — enforced by a Mongo index. Production deployments that
   // existed before this constraint must run ensureClaimUniquenessMigration()
   // first to dedupe; on fresh DBs Mongoose creates the index automatically.
-  @prop({ ref: () => User, required: true, unique: true, index: true })
+  @prop({ ref: () => User, required: true, unique: true })
   user!: Ref<User>
 
   @prop({ type: Number, required: true, default: 0 })

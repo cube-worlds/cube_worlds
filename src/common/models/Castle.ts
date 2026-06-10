@@ -10,7 +10,7 @@ export type UpgradeTrack = (typeof UPGRADE_TRACKS)[number]
 
 @modelOptions({ schemaOptions: { timestamps: true } })
 export class Castle extends TimeStamps {
-  @prop({ type: Number, required: true, unique: true, index: true })
+  @prop({ type: Number, required: true, unique: true })
   userId!: number
 
   @prop({ type: Number, required: true, default: 0 })

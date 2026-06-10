@@ -38,7 +38,7 @@ export class CubeBridgeLedger extends TimeStamps {
 
   // Idempotency key: on-chain tx hash (deposit) or our generated withdrawalId.
   // Unique — a replay collides on E11000, signalling "already processed".
-  @prop({ type: String, required: true, unique: true, index: true })
+  @prop({ type: String, required: true, unique: true })
   externalId!: string
 
   @prop({ type: String, required: true, enum: CubeBridgeStatus, default: CubeBridgeStatus.Pending })

@@ -32,7 +32,7 @@ export class WalletLedger extends TimeStamps {
 
   // Idempotency key: xRocket payment id (deposit), or our generated
   // withdrawalId/transferId (debit). Unique — a replay collides on E11000.
-  @prop({ type: String, required: true, unique: true, index: true })
+  @prop({ type: String, required: true, unique: true })
   externalId!: string
 
   @prop({ type: String, required: true, default: WalletEntryStatus.Created })

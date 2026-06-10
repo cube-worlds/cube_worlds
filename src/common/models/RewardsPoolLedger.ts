@@ -32,7 +32,7 @@ export class RewardsPoolLedger extends TimeStamps {
 
   // Idempotency key (e.g. `accrual:buyenergy:<ledgerId>` or
   // `payout:<weekId>:<userId>`). Unique — a replay collides on E11000.
-  @prop({ type: String, required: true, unique: true, index: true })
+  @prop({ type: String, required: true, unique: true })
   externalId!: string
 
   @prop({ type: Object, required: false })

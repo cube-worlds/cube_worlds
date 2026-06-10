@@ -9,7 +9,7 @@ import { User } from './User'
 
 @modelOptions({ schemaOptions: { timestamps: true } })
 export class Energy extends TimeStamps {
-  @prop({ ref: () => User, required: true, unique: true, index: true })
+  @prop({ ref: () => User, required: true, unique: true })
   user!: Ref<User>
 
   @prop({ type: Number, required: true, default: ENERGY_MAX })

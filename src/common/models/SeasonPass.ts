@@ -9,7 +9,7 @@ export const SEASON_PASS_PERIOD_MS = 30 * 24 * 60 * 60 * 1000
 // stacks rather than truncates).
 @modelOptions({ schemaOptions: { timestamps: true } })
 export class SeasonPass extends TimeStamps {
-  @prop({ type: Number, required: true, unique: true, index: true })
+  @prop({ type: Number, required: true, unique: true })
   userId!: number
 
   @prop({ type: Date, required: true })
@@ -31,7 +31,7 @@ export { SeasonPassModel }
 // skip extending the pass).
 @modelOptions({ schemaOptions: { timestamps: true } })
 export class SeasonPassCharge extends TimeStamps {
-  @prop({ type: String, required: true, unique: true, index: true })
+  @prop({ type: String, required: true, unique: true })
   telegramPaymentChargeId!: string
 
   @prop({ type: Number, required: true, index: true })
