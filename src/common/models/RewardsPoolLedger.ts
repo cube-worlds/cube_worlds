@@ -1,4 +1,4 @@
-import { getModelForClass, modelOptions, prop } from '@typegoose/typegoose'
+import { getModelForClass, modelOptions, prop, Severity } from '@typegoose/typegoose'
 import { TimeStamps } from '@typegoose/typegoose/lib/defaultClasses'
 import { WALLET_CURRENCY } from '#root/common/helpers/wallet'
 
@@ -13,7 +13,12 @@ export enum RewardsEntryType {
   Payout = 'payout',
 }
 
-@modelOptions({ schemaOptions: { timestamps: true } })
+// allowMixed: `meta` is a deliberately schemaless bag (accrual/payout
+// context) — Mixed is intended, not an accident.
+@modelOptions({
+  schemaOptions: { timestamps: true },
+  options: { allowMixed: Severity.ALLOW },
+})
 export class RewardsPoolLedger extends TimeStamps {
   @prop({ type: String, required: true })
   type!: RewardsEntryType

@@ -1,6 +1,6 @@
 import type { DocumentType } from '@typegoose/typegoose'
 import type { WalletEntryType } from '#root/common/helpers/wallet';
-import { getModelForClass, modelOptions, prop } from '@typegoose/typegoose'
+import { getModelForClass, modelOptions, prop, Severity } from '@typegoose/typegoose'
 import { TimeStamps } from '@typegoose/typegoose/lib/defaultClasses'
 import { WALLET_CURRENCY } from '#root/common/helpers/wallet'
 
@@ -10,7 +10,12 @@ export enum WalletEntryStatus {
   Failed = 'failed',
 }
 
-@modelOptions({ schemaOptions: { timestamps: true } })
+// allowMixed: `meta` is a deliberately schemaless bag (xRocket payload
+// snapshots, failure reasons) — Mixed is intended, not an accident.
+@modelOptions({
+  schemaOptions: { timestamps: true },
+  options: { allowMixed: Severity.ALLOW },
+})
 export class WalletLedger extends TimeStamps {
   @prop({ type: Number, required: true, index: true })
   userId!: number
