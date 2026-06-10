@@ -16,4 +16,5 @@ test('PvpProfileModel exposes ladder + shield + raid-day paths with spec default
   }
   assert.equal((paths.rating.options as { default?: number }).default, 1000)
   assert.equal((paths.raidsToday.options as { default?: number }).default, 0)
+  assert.equal((paths.raidDay.options as { default?: number }).default, -1)
 })

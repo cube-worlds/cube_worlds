@@ -64,6 +64,7 @@ export async function applyRatingDelta(userId: number, delta: number, won: boole
     [{
       $set: {
         userId: { $ifNull: ['$userId', userId] },
+        createdAt: { $ifNull: ['$createdAt', '$$NOW'] },
         rating: { $max: [RATING_FLOOR, { $add: [{ $ifNull: ['$rating', RATING_START] }, delta] }] },
         wins: { $add: [{ $ifNull: ['$wins', 0] }, won ? 1 : 0] },
         losses: { $add: [{ $ifNull: ['$losses', 0] }, won ? 0 : 1] },
