@@ -7,7 +7,7 @@ import { TOURNAMENT_ENTRY_CUBE } from '#root/common/helpers/tournament'
 @index({ weekId: 1 }, { unique: true })
 @modelOptions({ schemaOptions: { timestamps: true } })
 export class Tournament extends TimeStamps {
-  @prop({ type: Number, required: true, index: true })
+  @prop({ type: Number, required: true })
   weekId!: number
 
   @prop({ type: Number, required: true, default: TOURNAMENT_ENTRY_CUBE })

@@ -8,7 +8,7 @@ import { HERO_CLASSES } from '#root/common/helpers/hero'
 @index({ nftMinted: 1 })
 @modelOptions({ schemaOptions: { timestamps: true } })
 export class Hero extends TimeStamps {
-  @prop({ type: Number, required: true, index: true })
+  @prop({ type: Number, required: true })
   userId!: number
 
   @prop({ type: String, required: true, enum: HERO_CLASSES })
@@ -29,7 +29,7 @@ export class Hero extends TimeStamps {
   founderVariant!: boolean
 
   // Deploy-gated NFT mint state (mirrors Castle).
-  @prop({ type: Boolean, required: true, default: false, index: true })
+  @prop({ type: Boolean, required: true, default: false })
   nftMinted!: boolean
 
   @prop({ type: String })

@@ -17,7 +17,7 @@ export type EquipmentSource = 'quest' | 'boss'
 @index({ nftMinted: 1 })
 @modelOptions({ schemaOptions: { timestamps: true } })
 export class Equipment extends TimeStamps {
-  @prop({ type: Number, required: true, index: true })
+  @prop({ type: Number, required: true })
   userId!: number
 
   @prop({ type: String, required: true, enum: EQUIPMENT_SLOTS })
@@ -44,7 +44,7 @@ export class Equipment extends TimeStamps {
   source!: EquipmentSource
 
   // Deploy-gated NFT mint state (mirrors Hero/Castle).
-  @prop({ type: Boolean, required: true, default: false, index: true })
+  @prop({ type: Boolean, required: true, default: false })
   nftMinted!: boolean
 
   @prop({ type: String })

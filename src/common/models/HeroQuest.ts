@@ -10,7 +10,7 @@ export type QuestStatus = 'active' | 'claimed'
 @index({ userId: 1 })
 @modelOptions({ schemaOptions: { timestamps: true } })
 export class HeroQuest extends TimeStamps {
-  @prop({ type: Number, required: true, index: true })
+  @prop({ type: Number, required: true })
   userId!: number
 
   @prop({ type: String, required: true })
