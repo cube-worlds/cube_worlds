@@ -186,7 +186,7 @@ onMounted(() => { refresh() })
               <span>{{ m.mode === 'arena' ? '⚔️' : '🏴‍☠️' }}</span>
               <span v-if="m.youAttacked">You attacked {{ m.opponent.name }}</span>
               <span v-else>{{ m.opponent.name }} {{ m.mode === 'raid' ? 'raided you' : 'fought you' }}</span>
-              <span :class="m.youWon ? 'won' : 'lost'">{{ m.youWon ? 'won' : 'lost' }}</span>
+              <span :class="m.youWon === null ? 'pending' : m.youWon ? 'won' : 'lost'">{{ m.youWon === null ? 'pending' : m.youWon ? 'won' : 'lost' }}</span>
               <span v-if="m.ratingDelta !== null" class="delta">{{ m.ratingDelta > 0 ? '+' : '' }}{{ m.ratingDelta }}</span>
               <span v-if="m.mode === 'raid' && (m.loot.gold || m.loot.iron || m.loot.mana || m.loot.food)" class="loot">
                 {{ m.youAttacked ? '+' : '-' }}{{ lootLine(m.loot) }}
@@ -237,6 +237,7 @@ onMounted(() => { refresh() })
 .history-row { display: flex; gap: 0.4rem; flex-wrap: wrap; padding: 0.25rem 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
 .won { color: #aaffcc; }
 .lost { color: #ff9999; }
+.pending { color: #ccccaa; }
 .delta { color: #aaddff; }
 .loot { color: #ffddaa; }
 .dispatch-link { display: block; text-align: center; color: #aaddff; text-decoration: none; padding: 0.6rem; }
