@@ -7,8 +7,8 @@ Help contributors and automation tools work effectively in this repo by providin
 1. `cp .env.example .env` and fill required tokens/keys.
 2. `npm install`
 3. `npm --prefix src/frontend install`
-4. `npm run dev` (backend in tsx watch mode)
-5. `npm --prefix src/frontend run dev` (frontend Vite dev server on port 5173)
+4. `npm run dev` — full app at http://localhost:3000 (API + bot + frontend HMR via embedded vite)
+5. Optional: `npm --prefix src/frontend run dev` (frontend-only Vite on port 5173, no /api)
 
 ## Safe Defaults
 - Prefer TypeScript edits under `src/`. Never edit `build/`.

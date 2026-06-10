@@ -74,7 +74,7 @@ The dice (`/dice`), NFT-mint (`/mint`), and story (`/play`) commands were remove
 
 ## Build and Deployment
 
-- **Dev:** `npm run dev` (tsx watch mode) + `npm --prefix src/frontend run dev` (Vite HMR)
+- **Dev:** `npm run dev` (tsx watch) serves the full app at :3000 — vite runs as Fastify middleware with HMR, dynamically imported from `src/frontend/node_modules` (two copies of rolldown's native binding in one process segfault). `npm --prefix src/frontend run dev` is an optional frontend-only server (:5173, no /api).
 - **Build:** `npm run build:all` → tsc for backend, vite for frontend
 - **Production:** Docker (Node 20 slim), runs on port 80, nginx reverse proxy
 - **Dev server:** Fastify serves Vite as middleware via `@fastify/middie`

@@ -99,8 +99,8 @@ The HMAC-signed DOOM captcha is still wired end-to-end — `generateCaptchaToken
 
 ```bash
 npm install && npm --prefix src/frontend install   # Install all deps
-npm run dev                                         # Backend watch mode (tsx)
-npm --prefix src/frontend run dev                   # Frontend dev server (:5173)
+npm run dev                                         # Full app at :3000 — API + bot + frontend HMR (embedded vite)
+npm --prefix src/frontend run dev                   # Optional: frontend-only vite (:5173, no /api)
 npm run build:all                                   # Build backend (tsc) + frontend (vite)
 npm run lint                                        # ESLint (@antfu/eslint-config)
 npm run format                                      # Prettier
@@ -120,6 +120,8 @@ NODE_ENV=test node --import tsx --test src/backend/auth-handler.test.ts
 - **Import order** enforced — type imports first, then builtins, external, internal (`perfectionist/sort-imports`).
 - **Never touch `build/`** — generated output.
 - **Frontend isolation** — `src/frontend/` has its own `package.json`. Don't mix deps.
+- **One vite copy per process** — root and `src/frontend` both install vite; loading both copies of rolldown's native binding in one process segfaults. Dev mode dynamically imports vite from `src/frontend/node_modules` in `server.ts` — never add a top-level `import 'vite'` to backend code.
+- **Browser Buffer** — `@ton/core` needs a global `Buffer` in the browser; `src/frontend/src/polyfills.ts` (first module entry in `index.html`) provides it. Vite 8 ignores `optimizeDeps.esbuildOptions` — don't re-add esbuild-era polyfill plugins.
 - **File paths** — always use `folderPath()` from `src/common/helpers/files.ts` for user-data directories. It sanitizes names and checks path boundaries.
 - **Secrets** — BOT_TOKEN, MNEMONICS, API keys come from `.env`. Never log them. Never hardcode cryptographic keys client-side.
 - **NFT image params** — `image` must be validated against CNFTImageType whitelist, `color` as integer 0-10, `index` as non-negative integer.

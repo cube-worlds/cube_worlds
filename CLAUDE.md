@@ -4,8 +4,8 @@ Telegram Mini App game on TON blockchain. CUBE points via daily claims and refer
 ## Commands
 ```bash
 npm install && npm --prefix src/frontend install
-npm run dev                                      # Backend watch (tsx)
-npm --prefix src/frontend run dev                # Frontend dev (port 5173)
+npm run dev                                      # Full app at :3000 — API + bot + frontend HMR (embedded vite)
+npm --prefix src/frontend run dev                # Optional: frontend-only vite (port 5173, no /api)
 npm run build:all                                # Backend (tsc) + frontend (vite)
 npm run lint && npm run typecheck && npm run test:backend  # all quality checks
 npm run test:coverage                            # per-file line/branch/func report
@@ -19,6 +19,11 @@ NODE_ENV=test node --import tsx --test src/backend/auth-handler.test.ts  # singl
 - **Claim locking**: in-process promise chain (`claimLocks` Map) — single-process only
 - **Path aliases**: `#root/*` → `./build/src/*` (backend), `@/*` → `./src/*` (frontend)
 - **ESM only**, no CommonJS. No semicolons, single quotes, 2-space indent.
+- **One vite copy per process**: root and `src/frontend` each have a vite install; loading both copies of rolldown's native binding in one process **segfaults on dlopen**. In dev, `server.ts` dynamically imports vite from `src/frontend/node_modules` (where the config/plugins resolve) — never add a top-level `import 'vite'` to backend code.
+- **Browser Buffer**: `@ton/core` needs a global `Buffer`; `src/frontend/src/polyfills.ts` (first module entry in `index.html`) provides it. Vite 8 ignores `optimizeDeps.esbuildOptions` — don't re-add esbuild-era polyfill plugins to `vite.config.ts`.
+- **Fatal startup errors**: the top-level catch in `main.ts` uses `console.error`, not `logger` — pino's worker-thread transport can't flush before `process.exit(1)`, which silently swallows the message.
+- **`BOT_WEBHOOK_SECRET`** is only required in webhook mode (post-parse check in `config.ts`); empty is valid in polling mode.
+- **Model index conventions**: `unique: true` alone (it creates the index — no `index: true` beside it); single-field secondary indexes go in class-level `@index()` decorators next to the unique/partial ones, not `@prop({ index: true })`; deliberately schemaless `meta` bags need `options: { allowMixed: Severity.ALLOW }`.
 
 ## Handler Pattern (DI)
 ```ts

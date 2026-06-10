@@ -71,9 +71,11 @@ cp .env.example .env
 npm install
 npm --prefix src/frontend install
 
-# 3. Run in watch mode
-npm run dev                            # backend (tsx watch)
-npm --prefix src/frontend run dev      # frontend (Vite, port 5173)
+# 3. Run in watch mode — serves the full app (API + bot + frontend HMR) at http://localhost:3000
+npm run dev
+
+# Optional: standalone frontend-only Vite server (port 5173, no /api)
+npm --prefix src/frontend run dev
 ```
 
 ## 📜 Scripts
