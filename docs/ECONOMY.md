@@ -154,10 +154,10 @@ Every action that mints $CUBE must have a matched sink. Concrete sinks:
 |------|-----------|-------------------|
 | **Hero recruitment (Tavern)** | **1000 CUBE × (n+1) + 300 Gold × (n+1)** | **100% CUBE burn** (`BalanceChangeType.Recruit`; escalates with heroes owned `n`; Gold debited from castle, `ResourceChangeType.Recruit`) — see §7 |
 | **Castle upgrade (any track)** | **500–10000 CUBE + resources** | **100% CUBE burn** (`BalanceChangeType.CastleUpgrade`; also debits DB resource bags) |
-| Arena entry fee | 10 | Burn |
+| Arena entry fee | 10 | Burn (BalanceChangeType.ArenaEntry — shipped) |
 | Marketplace listing fee | 1% of price | Burn |
 | Marketplace sale fee | 5% of price | 50% burn / 50% treasury |
-| PvP raid stake (forfeit) | 50 | Burn |
+| PvP raid stake (forfeit) | 50 | Burn on loss, refunded on win (BalanceChangeType.RaidStake — shipped; + 25 Food upkeep per raid) |
 | Season Pass (CUBE-tier alt) | 5000 | 100% burn |
 | Gacha pull (CUBE alt) | 1000 | 100% burn |
 
