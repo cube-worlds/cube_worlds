@@ -1,4 +1,5 @@
 import type { DocumentType } from '@typegoose/typegoose'
+import type { UpdateQuery } from 'mongoose'
 import type { ResourceBag } from '#root/common/helpers/production'
 import type { UserDoc } from './User'
 import { getModelForClass, modelOptions, prop } from '@typegoose/typegoose'
@@ -227,4 +228,28 @@ export async function creditResources(castleId: unknown, gain: ResourceBag): Pro
     { _id: castleId },
     { $inc: { gold: gain.gold, iron: gain.iron, mana: gain.mana, food: gain.food } },
   )
+}
+
+export function findCastleByUserId(userId: number) {
+  return CastleModel.findOne({ userId })
+}
+
+// Atomically remove floor(bps/10000) of EACH resource bag and return what was
+// taken. Single pipeline findOneAndUpdate with new:false — the pre-image tells
+// us exactly what the subtraction saw, so the returned loot equals the debit
+// even under concurrent spends. Taking a fraction of what is actually there
+// can never overdraw (mirrors plunderAmounts in helpers/pvp.ts).
+export async function plunderResources(castleId: unknown, bps: number): Promise<ResourceBag> {
+  const frac = bps / 10_000
+  const take = (field: string) => ({
+    $subtract: [`$${field}`, { $floor: { $multiply: [`$${field}`, frac] } }],
+  })
+  const before = await CastleModel.findOneAndUpdate(
+    { _id: castleId },
+    [{ $set: { gold: take('gold'), iron: take('iron'), mana: take('mana'), food: take('food') } }] as unknown as UpdateQuery<Castle>,
+    { new: false },
+  )
+  if (!before) return { gold: 0, iron: 0, mana: 0, food: 0 }
+  const f = (v: number) => Math.max(0, Math.floor(v * frac))
+  return { gold: f(before.gold), iron: f(before.iron), mana: f(before.mana), food: f(before.food) }
 }

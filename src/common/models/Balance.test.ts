@@ -41,3 +41,10 @@ test('getBalanceChangeTypeName maps the expedition-loop types', () => {
   assert.equal(getBalanceChangeTypeName(BalanceChangeType.Expedition), 'Expedition')
   assert.equal(getBalanceChangeTypeName(BalanceChangeType.Spend), 'Spend')
 })
+
+test('getBalanceChangeTypeName maps the castle and pvp types', () => {
+  assert.equal(getBalanceChangeTypeName(BalanceChangeType.CastleUpgrade), 'CastleUpgrade')
+  assert.equal(getBalanceChangeTypeName(BalanceChangeType.Recruit), 'Recruit')
+  assert.equal(getBalanceChangeTypeName(BalanceChangeType.ArenaEntry), 'ArenaEntry')
+  assert.equal(getBalanceChangeTypeName(BalanceChangeType.RaidStake), 'RaidStake')
+})

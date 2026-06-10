@@ -18,6 +18,8 @@ export enum BalanceChangeType {
   Spend = 10, // CUBE sink: energy refill / weight-boost
   CastleUpgrade = 11, // CUBE sink: castle upgrade track (100% burn)
   Recruit = 12, // CUBE sink: Tavern hero recruitment
+  ArenaEntry = 13, // CUBE sink: arena 1v1 entry fee (100% burn)
+  RaidStake = 14, // CUBE sink: raid stake — burned on loss, refunded on win
 }
 
 export function getBalanceChangeTypeName(

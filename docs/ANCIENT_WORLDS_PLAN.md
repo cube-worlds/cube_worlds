@@ -251,6 +251,13 @@ Each phase maps to existing repo structure. Effort estimates assume one full-tim
 ### Phase C — PvP & Clans (4–5 weeks)
 **Goal:** the social hook. This is the highest-retention work in the roadmap.
 
+**✅ Slice 1 shipped (June 2026) — Arena + Raids, DB-canonical:**
+- Async-snapshot arena 1v1 with a single ELO ladder (raids move rating too — anti-tanking) — unified `Match` engine, `matchSeed(matchId)` determinism, status-CAS exactly-once credit.
+- Castle raids: 50 CUBE stake (forfeit on loss), 25 Food upkeep, atomic floor(10%)-per-bag plunder, 8h shield on a successful raid, 3 raids/day CAS cap, walls defend (+5%/level hp/def on the defender snapshot).
+- No PvP escrow contract yet — stakes are DB-canonical CUBE (the Tact escrow remains this phase's deferred on-chain step).
+
+**Still deferred → later Phase C plans:** arena seasons, clans + clan castle + chat bridge, trading post, PvP escrow contract.
+
 - Deploy PvP escrow Tact contract.
 - Arena 1v1 matchmaking.
 - Castle raid endpoint.

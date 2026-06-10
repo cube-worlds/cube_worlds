@@ -14,6 +14,7 @@ export enum ResourceChangeType {
   Upgrade = 1, // sink: spent on a castle upgrade track
   Loot = 2, // reserved: future PvE/expedition loot
   Recruit = 3, // sink: Gold spent recruiting a hero
+  Raid = 4, // raid: Food upkeep (sink) + plundered loot (zero-sum transfer, both sides)
 }
 
 export type ResourceChangeKeys = keyof typeof ResourceChangeType

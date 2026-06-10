@@ -68,3 +68,9 @@ test('spendResources and creditResources are exported functions', () => {
   assert.equal(typeof spendResources, 'function')
   assert.equal(typeof creditResources, 'function')
 })
+
+test('plunderResources and findCastleByUserId are exported', async () => {
+  const { plunderResources, findCastleByUserId } = await import('#root/common/models/Castle')
+  assert.equal(typeof plunderResources, 'function')
+  assert.equal(typeof findCastleByUserId, 'function')
+})
