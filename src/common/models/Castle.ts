@@ -1,4 +1,5 @@
 import type { DocumentType } from '@typegoose/typegoose'
+import type { UpdateQuery } from 'mongoose'
 import type { ResourceBag } from '#root/common/helpers/production'
 import type { UserDoc } from './User'
 import { getModelForClass, modelOptions, prop } from '@typegoose/typegoose'
@@ -245,10 +246,10 @@ export async function plunderResources(castleId: unknown, bps: number): Promise<
   })
   const before = await CastleModel.findOneAndUpdate(
     { _id: castleId },
-    [{ $set: { gold: take('gold'), iron: take('iron'), mana: take('mana'), food: take('food') } }] as never,
+    [{ $set: { gold: take('gold'), iron: take('iron'), mana: take('mana'), food: take('food') } }] as unknown as UpdateQuery<Castle>,
     { new: false },
   )
   if (!before) return { gold: 0, iron: 0, mana: 0, food: 0 }
-  const f = (v: number) => Math.max(0, Math.floor((v * bps) / 10_000))
+  const f = (v: number) => Math.max(0, Math.floor(v * frac))
   return { gold: f(before.gold), iron: f(before.iron), mana: f(before.mana), food: f(before.food) }
 }
