@@ -17,5 +17,8 @@ test('ResourceKind enumerates the four resources', () => {
 test('getResourceChangeTypeName maps known + unknown values', () => {
   assert.equal(getResourceChangeTypeName(ResourceChangeType.Production), 'Production')
   assert.equal(getResourceChangeTypeName(ResourceChangeType.Upgrade), 'Upgrade')
+  assert.equal(getResourceChangeTypeName(ResourceChangeType.Loot), 'Loot')
+  assert.equal(getResourceChangeTypeName(ResourceChangeType.Recruit), 'Recruit')
+  assert.equal(getResourceChangeTypeName(ResourceChangeType.Raid), 'Raid')
   assert.equal(getResourceChangeTypeName(-999 as ResourceChangeType), 'Unknown')
 })
