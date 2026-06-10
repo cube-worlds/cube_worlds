@@ -1,3 +1,4 @@
+import ArenaComponent from './components/ArenaComponent.vue'
 import BossEventComponent from './components/BossEventComponent.vue'
 import CastleComponent from './components/CastleComponent.vue'
 import ClaimComponent from './components/ClaimComponent.vue'
@@ -71,6 +72,13 @@ export const menuRoutes: MenuRoute[] = [
     emoji: '🐉',
     showInMenu: true,
     component: BossEventComponent,
+  },
+  {
+    path: '/arena',
+    name: 'ArenaPage',
+    emoji: '🗡️',
+    showInMenu: true,
+    component: ArenaComponent,
   },
   {
     path: '/expeditions',
