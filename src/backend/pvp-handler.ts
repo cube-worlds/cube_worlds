@@ -422,6 +422,10 @@ export function buildPvpHandler(deps: PvpHandlerDependencies = createDefaultDepe
 
         // Stake (burned on loss, refunded on win) → Food upkeep (consumed
         // win or lose). Refund-on-loss ordering mirrors hero recruitment.
+        // Operational note: a crash/throw between this debit and the match
+        // insert loses the stake (+Food+slot) with no match record to sweep —
+        // same accepted bias as recruit (false-loss ≫ false-credit); the catch
+        // must NOT release the slot blindly (it also covers pre-claim paths).
         const balance = await deps.debitVotes(user.id, RAID_STAKE_CUBE, BalanceChangeType.RaidStake)
         if (balance === null) {
           await deps.releaseRaidSlot(user.id, day)
