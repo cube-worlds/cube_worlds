@@ -392,7 +392,89 @@ export function buildPvpHandler(deps: PvpHandlerDependencies = createDefaultDepe
       }
     })
 
-    // Task 9 inserts the /raid/attack route here.
+    fastify.post<{ Body: Body }>('/raid/attack', fightSchema, async (request) => {
+      if (request.validationError) return { error: 'Invalid request body' }
+      const { initData, heroId } = request.body
+      if (!initData) return { error: 'No initData provided' }
+      if (!heroId) return { error: 'No heroId provided' }
+      try {
+        const user = await findUserByInitData(initData, deps)
+        const hero = await deps.findHeroForUser(user.id, heroId)
+        if (!hero) return { error: 'Hero not found' }
+        const onQuest = await deps.findActiveQuestForHero(String(hero._id))
+        if (onQuest) return { error: 'Hero is away on a quest' }
+
+        await sweepPending(user.id, deps)
+        const profile = await deps.findOrCreatePvpProfile(user.id)
+        const now = deps.now()
+        const day = dayBucket(now)
+
+        // Claim one of today's 3 slots FIRST (atomic CAS) — every refusal
+        // below must release it.
+        const slot = await deps.claimRaidSlot(user.id, day)
+        if (!slot) return { error: 'Raid limit reached for today' }
+
+        const target = await deps.findRaidTarget(user.id, profile.rating, now)
+        if (!target) {
+          await deps.releaseRaidSlot(user.id, day)
+          return { error: 'No raid target found' }
+        }
+
+        // Stake (burned on loss, refunded on win) → Food upkeep (consumed
+        // win or lose). Refund-on-loss ordering mirrors hero recruitment.
+        const balance = await deps.debitVotes(user.id, RAID_STAKE_CUBE, BalanceChangeType.RaidStake)
+        if (balance === null) {
+          await deps.releaseRaidSlot(user.id, day)
+          return { error: 'Not enough CUBE' }
+        }
+        const castle = await deps.findOrCreateCastle(user)
+        const upkeep: ResourceBag = { gold: 0, iron: 0, mana: 0, food: RAID_FOOD_UPKEEP }
+        const fed = await deps.spendResources(castle._id, upkeep)
+        if (!fed) {
+          await deps.addPoints(user.id, RAID_STAKE_CUBE, BalanceChangeType.RaidStake)
+          await deps.releaseRaidSlot(user.id, day)
+          return { error: 'Not enough Food' }
+        }
+        await deps.addResourceRecords(user.id, [
+          { kind: ResourceKind.Food, amount: -RAID_FOOD_UPKEEP, type: ResourceChangeType.Raid },
+        ])
+
+        const targetCastle = await deps.findCastleByUserId(target.userId)
+        const defender = await buildDefenderSide(target.userId, target.rating, targetCastle?.walls ?? 0, deps)
+        if (!defender) {
+          // The target lost its roster between matching and snapshot — undo everything.
+          await deps.addPoints(user.id, RAID_STAKE_CUBE, BalanceChangeType.RaidStake)
+          await deps.creditResources(castle._id, upkeep)
+          await deps.addResourceRecords(user.id, [
+            { kind: ResourceKind.Food, amount: RAID_FOOD_UPKEEP, type: ResourceChangeType.Raid },
+          ])
+          await deps.releaseRaidSlot(user.id, day)
+          return { error: 'No raid target found' }
+        }
+
+        const attacker = await buildAttackerSide(user, hero, profile.rating, deps)
+        const match = await deps.createPendingMatch({
+          mode: 'raid',
+          attackerId: user.id,
+          defenderId: target.userId,
+          stake: Number(RAID_STAKE_CUBE),
+          attacker,
+          defender,
+        })
+        const settled = await settleMatch(match, deps)
+        return {
+          mode: 'raid',
+          win: settled.attackerWon,
+          rounds: settled.rounds,
+          ratingDelta: settled.ratingDelta,
+          loot: settled.loot,
+          stakeReturned: settled.attackerWon,
+          opponent: { name: defender.name, heroClass: defender.heroClass, level: defender.level },
+        }
+      } catch (err) {
+        return safeErrorResponse(err, deps.logError)
+      }
+    })
   }
 }
 

@@ -231,3 +231,126 @@ test('equipped gear changes an arena fight (same opponent, same seed path)', asy
   // Both harnesses mint match id m1 → identical seed; only the gear differs.
   assert.notDeepEqual(r1.rounds, r2.rounds)
 })
+
+test('raid/attack claims a slot, stakes CUBE, pays Food, and on a win refunds stake + plunders + shields', async (t) => {
+  // Stack the attacker so the win is certain: max gear vs a level-1 defender.
+  const weakDefender = { _id: 'h9', userId: 9, heroClass: 'mage', level: 1, xp: 0 }
+  const { deps, calls } = makeDeps({
+    findHeroesByUser: async u => (u === 9 ? ([weakDefender] as any) : []),
+    findEquippedForHero: async heroId => (heroId === 'h1' ? [{ bonusHp: 500, bonusAtk: 200, bonusDef: 100 }] : []),
+  })
+  const app = await appWith(deps)
+  t.after(() => app.close())
+  const body = (await app.inject({ method: 'POST', url: '/api/game/raid/attack', payload: { initData: 'x', heroId: 'h1' } })).json()
+  assert.equal(body.win, true)
+  assert.equal(body.stakeReturned, true)
+  assert.deepEqual(body.loot, { gold: 100, iron: 50, mana: 5, food: 20 })
+  // Slot claimed for dayBucket(NOW), never released on the happy path.
+  assert.deepEqual(calls.slotClaims, [{ u: 7, day: 20_614 }])
+  assert.equal(calls.slotReleases.length, 0)
+  // Stake debited (50n, RaidStake=14) and refunded on the win.
+  assert.equal(calls.debits.length, 1)
+  assert.equal(calls.debits[0].amount, 50n)
+  assert.equal(calls.debits[0].reason, 14)
+  assert.equal(calls.refunds.length, 1)
+  assert.equal(calls.refunds[0].amount, 50n)
+  // Food upkeep spent and ledgered (negative Raid row).
+  assert.equal(calls.fed.length, 1)
+  assert.equal(calls.fed[0].cost.food, 25)
+  // Plunder hit the DEFENDER castle; credit hit the ATTACKER castle.
+  assert.equal(calls.plunders.length, 1)
+  assert.equal(calls.plunders[0].castleId, 'c9')
+  assert.equal(calls.credits[0].castleId, 'c7')
+  // Ledger rows both directions + the upkeep row.
+  assert.equal(calls.ledger.length, 3)
+  // Defender shielded for 8h from NOW.
+  assert.equal(calls.shields.length, 1)
+  assert.equal(calls.shields[0].u, 9)
+  assert.equal(calls.shields[0].until.getTime(), NOW.getTime() + 8 * 60 * 60 * 1000)
+  // ELO moved both ways; raids grant no XP.
+  assert.equal(calls.rating.length, 2)
+  assert.equal(calls.xp.length, 0)
+})
+
+test('raid/attack on a LOST fight burns the stake and never plunders or shields', async (t) => {
+  // Stack the defender so the loss is certain.
+  const strongDefender = { _id: 'h9', userId: 9, heroClass: 'knight', level: 30, xp: 0 }
+  const { deps, calls } = makeDeps({
+    findHeroesByUser: async u => (u === 9 ? ([strongDefender] as any) : []),
+  })
+  const app = await appWith(deps)
+  t.after(() => app.close())
+  const body = (await app.inject({ method: 'POST', url: '/api/game/raid/attack', payload: { initData: 'x', heroId: 'h1' } })).json()
+  assert.equal(body.win, false)
+  assert.equal(body.stakeReturned, false)
+  assert.equal(calls.refunds.length, 0) // the stake stays burned
+  assert.equal(calls.plunders.length, 0)
+  assert.equal(calls.shields.length, 0)
+  assert.equal(calls.rating.length, 2) // ELO still moves — raids are on the ladder
+})
+
+test('raid/attack rejects when the daily cap is hit and releases nothing', async (t) => {
+  const { deps, calls } = makeDeps({ claimRaidSlot: async () => false })
+  const app = await appWith(deps)
+  t.after(() => app.close())
+  const body = (await app.inject({ method: 'POST', url: '/api/game/raid/attack', payload: { initData: 'x', heroId: 'h1' } })).json()
+  assert.equal(body.error, 'Raid limit reached for today')
+  assert.equal(calls.debits.length, 0)
+  assert.equal(calls.slotReleases.length, 0)
+})
+
+test('raid/attack releases the slot when no target exists', async (t) => {
+  const { deps, calls } = makeDeps({ findRaidTarget: async () => null })
+  const app = await appWith(deps)
+  t.after(() => app.close())
+  const body = (await app.inject({ method: 'POST', url: '/api/game/raid/attack', payload: { initData: 'x', heroId: 'h1' } })).json()
+  assert.equal(body.error, 'No raid target found')
+  assert.deepEqual(calls.slotReleases, [{ u: 7, day: 20_614 }])
+  assert.equal(calls.debits.length, 0)
+})
+
+test('raid/attack releases the slot when CUBE is short', async (t) => {
+  const { deps, calls } = makeDeps({ debitVotes: async () => null })
+  const app = await appWith(deps)
+  t.after(() => app.close())
+  const body = (await app.inject({ method: 'POST', url: '/api/game/raid/attack', payload: { initData: 'x', heroId: 'h1' } })).json()
+  assert.equal(body.error, 'Not enough CUBE')
+  assert.equal(calls.slotReleases.length, 1)
+})
+
+test('raid/attack refunds the stake and releases the slot when Food is short', async (t) => {
+  const { deps, calls } = makeDeps({ spendResources: async () => false })
+  const app = await appWith(deps)
+  t.after(() => app.close())
+  const body = (await app.inject({ method: 'POST', url: '/api/game/raid/attack', payload: { initData: 'x', heroId: 'h1' } })).json()
+  assert.equal(body.error, 'Not enough Food')
+  assert.equal(calls.refunds.length, 1)
+  assert.equal(calls.refunds[0].amount, 50n)
+  assert.equal(calls.slotReleases.length, 1)
+  assert.equal(calls.ledger.length, 0) // upkeep is ledgered only after the spend wins
+})
+
+test('raid/attack refunds everything when the target turns out to have no roster', async (t) => {
+  const { deps, calls } = makeDeps({ findHeroesByUser: async () => [] })
+  const app = await appWith(deps)
+  t.after(() => app.close())
+  const body = (await app.inject({ method: 'POST', url: '/api/game/raid/attack', payload: { initData: 'x', heroId: 'h1' } })).json()
+  assert.equal(body.error, 'No raid target found')
+  assert.equal(calls.refunds.length, 1) // stake back
+  // Food credited back to the attacker castle + a compensating ledger row.
+  assert.equal(calls.credits.length, 1)
+  assert.equal(calls.credits[0].gain.food, 25)
+  assert.equal(calls.slotReleases.length, 1)
+})
+
+test('the raid defender snapshot carries the walls bonus', async (t) => {
+  const { deps, calls } = makeDeps() // defender castle has walls: 4 (makeDeps default)
+  const app = await appWith(deps)
+  t.after(() => app.close())
+  await app.inject({ method: 'POST', url: '/api/game/raid/attack', payload: { initData: 'x', heroId: 'h1' } })
+  const snap = calls.created[0].defender
+  // mage L5: base hp 120, def 10 → walls 4 = +20% → hp 144, def 12; atk untouched (48).
+  assert.equal(snap.hp, 144)
+  assert.equal(snap.def, 12)
+  assert.equal(snap.atk, 48)
+})
