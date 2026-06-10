@@ -195,6 +195,10 @@ try {
     await bot.start()
   }
 } catch (error) {
-  logger.error(error)
+  // Not logger.error: pino's transport runs in a worker thread that may not
+  // have started (let alone flushed) by the time process.exit fires, which
+  // swallows the message and makes startup crashes silent. console.error
+  // writes to stderr synchronously and can't be lost.
+  console.error(error)
   process.exit(1)
 }
