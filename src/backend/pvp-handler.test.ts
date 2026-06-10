@@ -133,3 +133,101 @@ test('pvp status sweeps a crash-stranded pending match before reporting', async 
   assert.equal(calls.resolved[0].id, 'mStranded')
   assert.equal(calls.rating.length, 2) // both sides moved
 })
+
+test('arena/fight debits the entry burn, snapshots both sides, resolves, moves ELO and grants XP', async (t) => {
+  const { deps, calls } = makeDeps()
+  const app = await appWith(deps)
+  t.after(() => app.close())
+  const body = (await app.inject({ method: 'POST', url: '/api/game/arena/fight', payload: { initData: 'x', heroId: 'h1' } })).json()
+  assert.equal(typeof body.win, 'boolean')
+  assert.ok(Array.isArray(body.rounds) && body.rounds.length > 0)
+  assert.equal(body.opponent.name, 'defender')
+  // Entry fee: exactly one debit of 10n, reason ArenaEntry (13), never refunded.
+  assert.equal(calls.debits.length, 1)
+  assert.equal(calls.debits[0].amount, 10n)
+  assert.equal(calls.debits[0].reason, 13)
+  assert.equal(calls.refunds.length, 0)
+  // Snapshot carries at-insert ratings (attacker 1000, defender 1040).
+  assert.equal(calls.created.length, 1)
+  assert.equal(calls.created[0].attacker.rating, 1000)
+  assert.equal(calls.created[0].defender.rating, 1040)
+  // Both sides moved, zero-sum, and the attacker hero got XP.
+  assert.equal(calls.rating.length, 2)
+  assert.equal(calls.rating[0].delta + calls.rating[1].delta, 0)
+  assert.equal(calls.xp.length, 1)
+  // Arena never touches resources or shields.
+  assert.equal(calls.plunders.length, 0)
+  assert.equal(calls.shields.length, 0)
+})
+
+test('arena/fight refunds the entry when no opponent exists', async (t) => {
+  const { deps, calls } = makeDeps({ findArenaOpponent: async () => null })
+  const app = await appWith(deps)
+  t.after(() => app.close())
+  const body = (await app.inject({ method: 'POST', url: '/api/game/arena/fight', payload: { initData: 'x', heroId: 'h1' } })).json()
+  assert.equal(body.error, 'No opponent found')
+  assert.equal(calls.refunds.length, 1)
+  assert.equal(calls.refunds[0].amount, 10n)
+  assert.equal(calls.created.length, 0)
+})
+
+test('arena/fight refunds when the matched opponent has no living roster', async (t) => {
+  const { deps, calls } = makeDeps({ findHeroesByUser: async () => [] })
+  const app = await appWith(deps)
+  t.after(() => app.close())
+  const body = (await app.inject({ method: 'POST', url: '/api/game/arena/fight', payload: { initData: 'x', heroId: 'h1' } })).json()
+  assert.equal(body.error, 'No opponent found')
+  assert.equal(calls.refunds.length, 1)
+})
+
+test('arena/fight rejects when CUBE is short', async (t) => {
+  const { deps, calls } = makeDeps({ debitVotes: async () => null })
+  const app = await appWith(deps)
+  t.after(() => app.close())
+  const body = (await app.inject({ method: 'POST', url: '/api/game/arena/fight', payload: { initData: 'x', heroId: 'h1' } })).json()
+  assert.equal(body.error, 'Not enough CUBE')
+  assert.equal(calls.created.length, 0)
+})
+
+test('arena/fight rejects a hero away on a quest (occupancy guard)', async (t) => {
+  const { deps, calls } = makeDeps({ findActiveQuestForHero: async () => ({ _id: 'q1' }) })
+  const app = await appWith(deps)
+  t.after(() => app.close())
+  const body = (await app.inject({ method: 'POST', url: '/api/game/arena/fight', payload: { initData: 'x', heroId: 'h1' } })).json()
+  assert.equal(body.error, 'Hero is away on a quest')
+  assert.equal(calls.debits.length, 0)
+})
+
+test('arena/fight rejects a hero the user does not own', async (t) => {
+  const { deps } = makeDeps({ findHeroForUser: async () => null })
+  const app = await appWith(deps)
+  t.after(() => app.close())
+  const body = (await app.inject({ method: 'POST', url: '/api/game/arena/fight', payload: { initData: 'x', heroId: 'h1' } })).json()
+  assert.equal(body.error, 'Hero not found')
+})
+
+test('arena/fight on a lost resolve CAS (concurrent) credits nothing', async (t) => {
+  const { deps, calls } = makeDeps({ resolveMatchCas: async () => false })
+  const app = await appWith(deps)
+  t.after(() => app.close())
+  const body = (await app.inject({ method: 'POST', url: '/api/game/arena/fight', payload: { initData: 'x', heroId: 'h1' } })).json()
+  assert.equal(typeof body.win, 'boolean') // deterministic result still returned
+  assert.equal(calls.rating.length, 0)
+  assert.equal(calls.xp.length, 0)
+})
+
+test('equipped gear changes an arena fight (same opponent, same seed path)', async (t) => {
+  const bare = makeDeps()
+  const appBare = await appWith(bare.deps)
+  t.after(() => appBare.close())
+  const r1 = (await appBare.inject({ method: 'POST', url: '/api/game/arena/fight', payload: { initData: 'x', heroId: 'h1' } })).json()
+
+  const geared = makeDeps({
+    findEquippedForHero: async heroId => (heroId === 'h1' ? [{ bonusHp: 0, bonusAtk: 60, bonusDef: 0 }] : []),
+  })
+  const appGeared = await appWith(geared.deps)
+  t.after(() => appGeared.close())
+  const r2 = (await appGeared.inject({ method: 'POST', url: '/api/game/arena/fight', payload: { initData: 'x', heroId: 'h1' } })).json()
+  // Both harnesses mint match id m1 → identical seed; only the gear differs.
+  assert.notDeepEqual(r1.rounds, r2.rounds)
+})

@@ -156,6 +156,7 @@ async function findUserByInitData(initData: string, deps: PvpHandlerDependencies
 }
 
 const statusSchema = { schema: { body: { type: 'object', properties: { initData: { type: 'string', maxLength: 8192 } } } }, attachValidation: true } as const
+const fightSchema = { schema: { body: { type: 'object', properties: { initData: { type: 'string', maxLength: 8192 }, heroId: { type: 'string', maxLength: 64 } } } }, attachValidation: true } as const
 
 const ZERO_BAG: ResourceBag = { gold: 0, iron: 0, mana: 0, food: 0 }
 
@@ -184,7 +185,7 @@ async function effectiveStats(hero: HeroDoc, deps: PvpHandlerDependencies, walls
 
 // The defender's STRONGEST hero defends (best effective stats incl. gear). A
 // snapshot can always defend — defender occupancy is intentionally ignored.
-async function _buildDefenderSide(
+async function buildDefenderSide(
   userId: number,
   rating: number,
   wallsLevel: number,
@@ -212,7 +213,7 @@ async function _buildDefenderSide(
   }
 }
 
-async function _buildAttackerSide(
+async function buildAttackerSide(
   user: ExistingUser,
   hero: HeroDoc,
   rating: number,
@@ -341,7 +342,55 @@ export function buildPvpHandler(deps: PvpHandlerDependencies = createDefaultDepe
       }
     })
 
-    // Task 8 inserts the /arena/fight route here.
+    fastify.post<{ Body: Body }>('/arena/fight', fightSchema, async (request) => {
+      if (request.validationError) return { error: 'Invalid request body' }
+      const { initData, heroId } = request.body
+      if (!initData) return { error: 'No initData provided' }
+      if (!heroId) return { error: 'No heroId provided' }
+      try {
+        const user = await findUserByInitData(initData, deps)
+        const hero = await deps.findHeroForUser(user.id, heroId)
+        if (!hero) return { error: 'Hero not found' }
+        const onQuest = await deps.findActiveQuestForHero(String(hero._id))
+        if (onQuest) return { error: 'Hero is away on a quest' }
+
+        await sweepPending(user.id, deps)
+        const profile = await deps.findOrCreatePvpProfile(user.id)
+
+        // Entry fee is a 100% burn — debit first, refund only if matchmaking
+        // comes up empty (the recruit-handler refund-on-loss discipline).
+        const balance = await deps.debitVotes(user.id, ARENA_ENTRY_CUBE, BalanceChangeType.ArenaEntry)
+        if (balance === null) return { error: 'Not enough CUBE' }
+
+        const opponent = await deps.findArenaOpponent(user.id, profile.rating)
+        const defender = opponent ? await buildDefenderSide(opponent.userId, opponent.rating, 0, deps) : null
+        if (!opponent || !defender) {
+          await deps.addPoints(user.id, ARENA_ENTRY_CUBE, BalanceChangeType.ArenaEntry)
+          return { error: 'No opponent found' }
+        }
+
+        const attacker = await buildAttackerSide(user, hero, profile.rating, deps)
+        const match = await deps.createPendingMatch({
+          mode: 'arena',
+          attackerId: user.id,
+          defenderId: opponent.userId,
+          stake: 0,
+          attacker,
+          defender,
+        })
+        const settled = await settleMatch(match, deps)
+        return {
+          mode: 'arena',
+          win: settled.attackerWon,
+          rounds: settled.rounds,
+          ratingDelta: settled.ratingDelta,
+          xpGained: settled.xpGained,
+          opponent: { name: defender.name, heroClass: defender.heroClass, level: defender.level },
+        }
+      } catch (err) {
+        return safeErrorResponse(err, deps.logError)
+      }
+    })
 
     // Task 9 inserts the /raid/attack route here.
   }
