@@ -34,9 +34,12 @@ test('eloDelta: a win never decreases, a loss never increases, and bounded by K'
 })
 
 test('eloDelta is zero-sum across the pair', () => {
-  // The defender applies the negated attacker delta — same magnitude both sides.
-  const d = eloDelta(1200, 1000, true)
-  assert.equal(d + -d, 0)
+  // Attacker's win delta must exactly cancel the defender's loss delta.
+  for (const [a, b] of [[1000, 1000], [1200, 1000], [1000, 1400], [100, 3000]]) {
+    const atkDelta = eloDelta(a, b, true)
+    const defDelta = eloDelta(b, a, false)
+    assert.equal(atkDelta + defDelta, 0, `non-zero sum: a=${a} b=${b}`)
+  }
 })
 
 test('eloDelta pays more for beating a stronger opponent', () => {

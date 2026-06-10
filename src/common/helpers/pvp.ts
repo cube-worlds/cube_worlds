@@ -35,7 +35,7 @@ export function matchSeed(matchId: string): number {
 }
 
 // Castle investment defends the castle: +5%/Walls level on hp and def (never
-// atk — walls don't swing swords), floored, capped at MAX_TRACK_LEVEL.
+// atk — walls don't swing swords), floored, capped at MAX_WALLS_BONUS_LEVEL.
 export function wallsBonus(stats: Stats, wallsLevel: number): Stats {
   const lvl = Math.max(0, Math.min(wallsLevel, MAX_WALLS_BONUS_LEVEL))
   const mult = 1 + 0.05 * lvl
