@@ -1,0 +1,22 @@
+# Staging overlay — `kamal setup -d staging` / `kamal deploy -d staging`.
+#
+# Validates that the lift-and-shift image boots on axveer: mongoose.connect to
+# the shared mongo with the cube_worlds_bot app-user creds (this is the FIRST
+# real shared-mongo app on axveer), initial-balances write, Fastify listen,
+# kamal-proxy routing + LE cert, SPA `/` 200, and `/api/*` reads.
+#
+# It does NOT engage the on-chain tx-processing loop or the live Telegram
+# webhook — STAGING=true gates both in src/main.ts, so a staging instance can
+# never double-mint against the live MNEMONICS wallet while legacy is still up.
+#
+# Routes on a Hetzner-zone host (dns.sh can create it) so LE HTTP-01 validates;
+# cubeworlds.club DNS is still on legacy and would fail the ACME challenge.
+#
+# Production cutover (Phase D) uses the base config/deploy.yml UNCHANGED:
+# plain `kamal deploy` → apex cubeworlds.club, webhook mode, tx loop live.
+proxy:
+  hosts:
+    - cube-next.axveer.io
+env:
+  clear:
+    STAGING: "true"

@@ -61,138 +61,151 @@ try {
     await shutdown()
   })
 
-  const subscription = new Subscription(bot)
-
-  void subscription.startProcessTransactions()
-
-  // Seed the current tick's worlds so the board is never empty, then run
-  // settlement every minute. Each run closes any tick that has rolled over
-  // and is idempotent, so overlapping intervals or restarts are safe.
-  await ensureWorldsForTick(currentTickId())
-  const SETTLEMENT_INTERVAL_MS = 60 * 1000
-  const settlementTimer = setInterval(() => {
-    void (async () => {
-      try {
-        await ensureWorldsForTick(currentTickId())
-        await settlementRunner.runOnce()
-      } catch (error) {
-        logger.error(error)
-      }
-    })()
-  }, SETTLEMENT_INTERVAL_MS)
-  settlementTimer.unref()
-
-  // Boss-week settlement: awards tiered Equipment to top contributors of any
-  // CLOSED week. Idempotent per (week, user), so overlapping runs are safe.
-  const BOSS_SETTLEMENT_INTERVAL_MS = 10 * 60 * 1000
-  const bossSettlementTimer = setInterval(() => {
-    void (async () => {
-      try {
-        await bossSettlementRunner.runOnce()
-      } catch (error) {
-        logger.error(error)
-      }
-    })()
-  }, BOSS_SETTLEMENT_INTERVAL_MS)
-  bossSettlementTimer.unref()
-
-  if (isCastleMintEnabled()) {
-    const CASTLE_MINT_INTERVAL_MS = 5 * 60 * 1000
-    const castleMintTimer = setInterval(() => {
-      void (async () => {
-        try {
-          await castleMintRunner.runOnce()
-        } catch (error) {
-          logger.error(error)
-        }
-      })()
-    }, CASTLE_MINT_INTERVAL_MS)
-    castleMintTimer.unref()
-  }
-
-  if (isHeroMintEnabled()) {
-    const HERO_MINT_INTERVAL_MS = 5 * 60 * 1000
-    const heroMintTimer = setInterval(() => {
-      void (async () => {
-        try {
-          await heroMintRunner.runOnce()
-        } catch (error) {
-          logger.error(error)
-        }
-      })()
-    }, HERO_MINT_INTERVAL_MS)
-    heroMintTimer.unref()
-  }
-
-  if (isEquipmentMintEnabled()) {
-    const EQUIPMENT_MINT_INTERVAL_MS = 5 * 60 * 1000
-    const equipmentMintTimer = setInterval(() => {
-      void (async () => {
-        try {
-          await equipmentMintRunner.runOnce()
-        } catch (error) {
-          logger.error(error)
-        }
-      })()
-    }, EQUIPMENT_MINT_INTERVAL_MS)
-    equipmentMintTimer.unref()
-  }
-
-  // Hourly reconciliation: compare local USDT ledger against xRocket custody and
-  // pause withdrawals on divergence. Only runs when the money rail is configured.
-  if (isMoneyRailEnabled()) {
-    const RECONCILIATION_INTERVAL_MS = 60 * 60 * 1000
-    const reconciliationTimer = setInterval(() => {
-      void (async () => {
-        try {
-          await reconciliationRunner.runOnce()
-        } catch (error) {
-          logger.error(error)
-        }
-      })()
-    }, RECONCILIATION_INTERVAL_MS)
-    reconciliationTimer.unref()
-    // Run once at boot so a divergence present at startup pauses immediately.
-    void reconciliationRunner.runOnce().catch(error => logger.error(error))
-
-    // Weekly tournament: seed the current week, then settle any closed week and
-    // pay winners from the rewards pool. The interval is short so a just-closed
-    // week settles promptly; each run is idempotent. Requires the money rail
-    // (payouts go through xRocket).
-    await findOrCreateTournament(currentWeekId())
-    const TOURNAMENT_INTERVAL_MS = 5 * 60 * 1000
-    const tournamentTimer = setInterval(() => {
-      void (async () => {
-        try {
-          await findOrCreateTournament(currentWeekId())
-          await tournamentSettlementRunner.runOnce()
-        } catch (error) {
-          logger.error(error)
-        }
-      })()
-    }, TOURNAMENT_INTERVAL_MS)
-    tournamentTimer.unref()
-  }
-
-  if (config.BOT_MODE === 'webhook') {
-    // to prevent receiving updates before the bot is ready
-    await bot.init()
-
+  if (config.STAGING) {
+    // Staging guard: never run a second tx-processing loop against the live
+    // MNEMONICS wallet while legacy is still up (double-mint risk), never touch
+    // the live Telegram webhook, and run no background settlement/mint workers
+    // against the shared DB. Just listen so health/SPA/api can be validated on
+    // axveer. The full runtime engages only on the real cutover (STAGING off).
     await server.listen({
       host: config.BOT_SERVER_HOST,
       port: config.BOT_SERVER_PORT,
     })
+    logger.warn('STAGING mode: tx-processing loop, background workers, and Telegram disabled')
+  } else {
+    const subscription = new Subscription(bot)
 
-    await bot.api.setWebhook(config.BOT_WEBHOOK, {
-      allowed_updates: config.BOT_ALLOWED_UPDATES,
-      secret_token: config.BOT_WEBHOOK_SECRET,
-    })
-  } else if (config.BOT_MODE === 'polling') {
-    await server.listen({
-      host: config.BOT_SERVER_HOST,
-      port: config.BOT_SERVER_PORT,
-    })
-    await bot.start()
+    void subscription.startProcessTransactions()
+
+    // Seed the current tick's worlds so the board is never empty, then run
+    // settlement every minute. Each run closes any tick that has rolled over
+    // and is idempotent, so overlapping intervals or restarts are safe.
+    await ensureWorldsForTick(currentTickId())
+    const SETTLEMENT_INTERVAL_MS = 60 * 1000
+    const settlementTimer = setInterval(() => {
+      void (async () => {
+        try {
+          await ensureWorldsForTick(currentTickId())
+          await settlementRunner.runOnce()
+        } catch (error) {
+          logger.error(error)
+        }
+      })()
+    }, SETTLEMENT_INTERVAL_MS)
+    settlementTimer.unref()
+
+    // Boss-week settlement: awards tiered Equipment to top contributors of any
+    // CLOSED week. Idempotent per (week, user), so overlapping runs are safe.
+    const BOSS_SETTLEMENT_INTERVAL_MS = 10 * 60 * 1000
+    const bossSettlementTimer = setInterval(() => {
+      void (async () => {
+        try {
+          await bossSettlementRunner.runOnce()
+        } catch (error) {
+          logger.error(error)
+        }
+      })()
+    }, BOSS_SETTLEMENT_INTERVAL_MS)
+    bossSettlementTimer.unref()
+
+    if (isCastleMintEnabled()) {
+      const CASTLE_MINT_INTERVAL_MS = 5 * 60 * 1000
+      const castleMintTimer = setInterval(() => {
+        void (async () => {
+          try {
+            await castleMintRunner.runOnce()
+          } catch (error) {
+            logger.error(error)
+          }
+        })()
+      }, CASTLE_MINT_INTERVAL_MS)
+      castleMintTimer.unref()
+    }
+
+    if (isHeroMintEnabled()) {
+      const HERO_MINT_INTERVAL_MS = 5 * 60 * 1000
+      const heroMintTimer = setInterval(() => {
+        void (async () => {
+          try {
+            await heroMintRunner.runOnce()
+          } catch (error) {
+            logger.error(error)
+          }
+        })()
+      }, HERO_MINT_INTERVAL_MS)
+      heroMintTimer.unref()
+    }
+
+    if (isEquipmentMintEnabled()) {
+      const EQUIPMENT_MINT_INTERVAL_MS = 5 * 60 * 1000
+      const equipmentMintTimer = setInterval(() => {
+        void (async () => {
+          try {
+            await equipmentMintRunner.runOnce()
+          } catch (error) {
+            logger.error(error)
+          }
+        })()
+      }, EQUIPMENT_MINT_INTERVAL_MS)
+      equipmentMintTimer.unref()
+    }
+
+    // Hourly reconciliation: compare local USDT ledger against xRocket custody and
+    // pause withdrawals on divergence. Only runs when the money rail is configured.
+    if (isMoneyRailEnabled()) {
+      const RECONCILIATION_INTERVAL_MS = 60 * 60 * 1000
+      const reconciliationTimer = setInterval(() => {
+        void (async () => {
+          try {
+            await reconciliationRunner.runOnce()
+          } catch (error) {
+            logger.error(error)
+          }
+        })()
+      }, RECONCILIATION_INTERVAL_MS)
+      reconciliationTimer.unref()
+      // Run once at boot so a divergence present at startup pauses immediately.
+      void reconciliationRunner.runOnce().catch(error => logger.error(error))
+
+      // Weekly tournament: seed the current week, then settle any closed week and
+      // pay winners from the rewards pool. The interval is short so a just-closed
+      // week settles promptly; each run is idempotent. Requires the money rail
+      // (payouts go through xRocket).
+      await findOrCreateTournament(currentWeekId())
+      const TOURNAMENT_INTERVAL_MS = 5 * 60 * 1000
+      const tournamentTimer = setInterval(() => {
+        void (async () => {
+          try {
+            await findOrCreateTournament(currentWeekId())
+            await tournamentSettlementRunner.runOnce()
+          } catch (error) {
+            logger.error(error)
+          }
+        })()
+      }, TOURNAMENT_INTERVAL_MS)
+      tournamentTimer.unref()
+    }
+
+    if (config.BOT_MODE === 'webhook') {
+      // to prevent receiving updates before the bot is ready
+      await bot.init()
+
+      await server.listen({
+        host: config.BOT_SERVER_HOST,
+        port: config.BOT_SERVER_PORT,
+      })
+
+      await bot.api.setWebhook(config.BOT_WEBHOOK, {
+        allowed_updates: config.BOT_ALLOWED_UPDATES,
+        secret_token: config.BOT_WEBHOOK_SECRET,
+      })
+    } else if (config.BOT_MODE === 'polling') {
+      await server.listen({
+        host: config.BOT_SERVER_HOST,
+        port: config.BOT_SERVER_PORT,
+      })
+      await bot.start()
+    }
   }
 } catch (error) {
   // Not logger.error: pino's transport runs in a worker thread that may not

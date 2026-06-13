@@ -37,6 +37,11 @@ function createConfigFromEnvironment(environment: NodeJS.ProcessEnv) {
       .default([]),
     MONGO: z.string(),
     BOT_ADMINS: z.array(z.number()).default([]),
+    // Staging guard: when true, skip the on-chain tx-processing loop AND all
+    // Telegram engagement (no setWebhook/polling). Lets us validate boot,
+    // mongo, Fastify, SPA + /api on axveer without a second instance touching
+    // the live MNEMONICS wallet or hijacking the live webhook. Default off.
+    STAGING: z.boolean().default(false),
     WEB_APP_URL: z.string().url(),
     ALLOWED_ORIGINS: z.array(z.string()).default([]),
     // Number of proxy hops to trust for X-Forwarded-For. Set this to match

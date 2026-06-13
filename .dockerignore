@@ -1,0 +1,13 @@
+node_modules
+src/frontend/node_modules
+src/frontend/dist
+.git
+.github
+.husky
+.vscode
+.env*
+data
+logs
+backups
+*.log
+.DS_Store
