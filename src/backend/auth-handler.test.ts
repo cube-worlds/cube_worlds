@@ -16,6 +16,8 @@ interface StubUser {
   wallet?: string
   referalId?: number
   votes: bigint
+  minted: boolean
+  state: string
   saveCalls: number
   save: () => Promise<void>
 }
@@ -37,6 +39,8 @@ function createStubUser(overrides: Partial<StubUser> = {}): StubUser {
     id: 1001,
     language: 'en',
     votes: BigInt(200),
+    minted: false,
+    state: 'WaitNothing',
     saveCalls: 0,
     save: async () => {
       user.saveCalls += 1
@@ -63,6 +67,15 @@ async function createAuthTestContext(
     findUserById: async (id: number) => {
       const user = users.get(id)
       return user ? toResolvedUser(user) : null
+    },
+    findOrCreateUser: async (id: number) => {
+      // Upsert: create-and-insert a fresh stub if the user is unknown.
+      let user = users.get(id)
+      if (!user) {
+        user = createStubUser({ id, votes: BigInt(0) })
+        users.set(id, user)
+      }
+      return toResolvedUser(user)
     },
     info: (message: string) => {
       infoLogs.push(message)
@@ -104,7 +117,7 @@ test('POST /api/auth/login validates required initData', async (t) => {
   assert.equal(response.json().error, 'No initData or hash provided')
 })
 
-test('POST /api/auth/login returns user not found', async (t) => {
+test('POST /api/auth/login upserts a brand-new user (no "User not found")', async (t) => {
   const ctx = await createAuthTestContext({
     parseInitData: () => ({ user: { id: 404 } } as InitData),
   })
@@ -118,8 +131,35 @@ test('POST /api/auth/login returns user not found', async (t) => {
     payload: { initData: 'signed-payload' },
   })
 
+  const body = response.json()
   assert.equal(response.statusCode, 200)
-  assert.equal(response.json().error, 'User not found')
+  assert.equal(body.error, undefined, 'no error — the user is created on first login')
+  assert.equal(body.id, 404)
+  // freshly created → not minted, default mint state
+  assert.equal(body.minted, false)
+  assert.equal(body.mintState, 'WaitNothing')
+  // the upsert actually inserted the user
+  assert.ok(ctx.users.has(404), 'new user persisted')
+})
+
+test('POST /api/auth/login returns minted + mintState for an existing user', async (t) => {
+  const ctx = await createAuthTestContext()
+  ctx.users.get(1001)!.minted = true
+  ctx.users.get(1001)!.state = 'Submited'
+  t.after(async () => {
+    await ctx.app.close()
+  })
+
+  const response = await ctx.app.inject({
+    method: 'POST',
+    url: '/api/auth/login',
+    payload: { initData: 'signed-payload' },
+  })
+
+  const body = response.json()
+  assert.equal(body.id, 1001)
+  assert.equal(body.minted, true)
+  assert.equal(body.mintState, 'Submited')
 })
 
 test('POST /api/auth/login returns validation error for missing telegram user id', async (t) => {
@@ -225,11 +265,13 @@ test('POST /api/auth/login assigns referral when eligible', async (t) => {
     [7777, receiver],
   ])
 
+  const lookup = async (id: number) => {
+    const user = users.get(id)
+    return user ? toResolvedUser(user) : null
+  }
   const ctx = await createAuthTestContext({
-    findUserById: async (id: number) => {
-      const user = users.get(id)
-      return user ? toResolvedUser(user) : null
-    },
+    findUserById: lookup,
+    findOrCreateUser: lookup,
   })
   t.after(async () => {
     await ctx.app.close()

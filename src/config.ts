@@ -93,9 +93,11 @@ function createConfigFromEnvironment(environment: NodeJS.ProcessEnv) {
     HERO_COLLECTION_ADDRESS: z.string().default(''),
     // Equipment NFT collection (TEP-62, transferable). Empty ⇒ minting disabled.
     EQUIPMENT_COLLECTION_ADDRESS: z.string().default(''),
-    // $CUBE on-chain jetton bridge. Empty ⇒ bridge disabled.
-    CUBE_JETTON_MASTER: z.string().default(''),
-    CUBE_VAULT_ADDRESS: z.string().default(''),
+    // Escalating NFT-mint eligibility floor (in votes): floor(n) = min(base + step*n, cap),
+    // where n = number of NFTs already minted. Donate TON → votes to clear it. Tunable.
+    MINT_FLOOR_BASE_VOTES: z.number().int().default(0),
+    MINT_FLOOR_STEP_VOTES: z.number().int().default(500),
+    MINT_FLOOR_CAP_VOTES: z.number().int().default(100000),
   })
 
   if (config.BOT_MODE === 'webhook') {

@@ -1,7 +1,15 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { menuRoutes } from '@/routes'
+import { useUserStore } from '@/stores/userStore'
 
-const menu = menuRoutes.filter((r) => r.showInMenu)
+const userStore = useUserStore()
+
+// NFT-gated entry: hide all game tabs until the user owns an NFT. The router
+// guard already blocks navigation; this keeps the menu in sync visually.
+const menu = computed(() =>
+  userStore.user?.minted ? menuRoutes.filter((r) => r.showInMenu) : [],
+)
 </script>
 
 <template>

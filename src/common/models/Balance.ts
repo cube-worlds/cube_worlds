@@ -13,7 +13,7 @@ export enum BalanceChangeType {
   Donation = 5, // TON
   Task = 6,
   Claim = 7,
-  Trade = 8, // for $SATOSHI
+  Trade = 8, // legacy (was the on-chain jetton exchange, removed)
   Expedition = 9, // CUBE faucet: expedition payout
   Spend = 10, // CUBE sink: energy refill / weight-boost
   CastleUpgrade = 11, // CUBE sink: castle upgrade track (100% burn)

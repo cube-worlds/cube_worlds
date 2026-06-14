@@ -1,7 +1,7 @@
 import { config } from '#root/config'
 
 // Config+chain seam for Castle NFT minting (no test imports this). Mirrors
-// xrocket-client.ts / satoshi.ts: wraps an already-deployed collection.
+// xrocket-client.ts: wraps an already-deployed collection.
 export function isCastleMintEnabled(): boolean {
   return config.CASTLE_COLLECTION_ADDRESS.length > 0
 }

@@ -4,8 +4,10 @@ import type {
   ClipGuidancePreset,
   SDSampler,
 } from '#root/common/helpers/generation'
+import type { MintFloorParams } from '#root/common/helpers/mint-floor'
 import { getModelForClass, modelOptions, prop } from '@typegoose/typegoose'
 import { TimeStamps } from '@typegoose/typegoose/lib/defaultClasses'
+import { mintFloorVotes } from '#root/common/helpers/mint-floor'
 import {
   addChangeBalanceRecord,
   BalanceChangeType,
@@ -18,6 +20,9 @@ import { logger } from '#root/logger'
 export enum UserState {
   WaitNothing = 'WaitNothing',
   Submited = 'Submited',
+  // Admin returned the draft for changes — the user can regenerate in the app,
+  // which clears this back to Submited.
+  Rework = 'Rework',
 }
 
 @modelOptions({ schemaOptions: { timestamps: true, id: false } })
@@ -65,6 +70,11 @@ export class User extends TimeStamps {
 
   @prop({ type: Boolean, required: true, default: false })
   minted!: boolean
+
+  // Transient CAS guard: set true while an admin-approved mint is in flight so
+  // a double-approve can't mint twice. Cleared on success or on retry release.
+  @prop({ type: Boolean })
+  mintingInProgress?: boolean
 
   @prop({ type: Date })
   mintedAt?: Date
@@ -205,6 +215,60 @@ export async function findQueue(): Promise<UserDoc[]> {
     .limit(10)) as unknown as UserDoc[]
 }
 
+// Total NFTs minted so far — drives the escalating mint floor (mintFloorVotes).
+export async function countMinted(): Promise<number> {
+  return UserModel.countDocuments({ minted: true })
+}
+
+// Atomic CAS into the minting guard — only the first caller wins, so a
+// double-approve mints exactly once. Returns true if this call claimed it.
+export async function claimUserForMint(userId: number): Promise<boolean> {
+  const claimed = await UserModel.findOneAndUpdate(
+    { id: userId, minted: false, mintingInProgress: { $ne: true } },
+    { $set: { mintingInProgress: true } },
+    { new: true },
+  )
+  return claimed !== null
+}
+
+// Release the guard (only safe before the on-chain mint landed).
+export async function releaseMintClaim(userId: number): Promise<void> {
+  await UserModel.findOneAndUpdate(
+    { id: userId },
+    { $set: { mintingInProgress: false } },
+  )
+}
+
+// Flip the user to minted and clear the guard — called after the on-chain mint.
+export async function markUserMinted(
+  userId: number,
+  nftUrl: string,
+  nftImage: string,
+  nftJson: string,
+): Promise<void> {
+  await UserModel.findOneAndUpdate(
+    { id: userId },
+    {
+      $set: {
+        minted: true,
+        mintedAt: new Date(),
+        mintingInProgress: false,
+        nftUrl,
+        nftImage,
+        nftJson,
+      },
+    },
+  )
+}
+
+// Move a draft back to Rework (admin returned it for changes).
+export async function setUserRework(userId: number): Promise<void> {
+  await UserModel.findOneAndUpdate(
+    { id: userId },
+    { $set: { state: UserState.Rework } },
+  )
+}
+
 export function findMintedWithDate() {
   return UserModel.find({ minted: true, mintedAt: { $exists: true } }).sort({
     mintedAt: -1,
@@ -277,6 +341,9 @@ export interface UserOperationsDependencies {
   countMintedUsers: () => Promise<number>
   countLineUsers: () => Promise<number>
   countUsersUpdatedSince: (since: Date) => Promise<number>
+  // Total NFTs minted (drives the escalating floor) and the eligible-queue query.
+  countAllMinted: () => Promise<number>
+  findEligibleSubmissions: (floor: bigint) => Promise<UserDoc[]>
   now: () => number
   infoLog: (message: string) => void
   debugLog: (message: string) => void
@@ -306,6 +373,15 @@ function createDefaultUserOperationsDependencies(): UserOperationsDependencies {
     countLineUsers: () => countUsers(false),
     countUsersUpdatedSince: (since) =>
       UserModel.countDocuments({ updatedAt: { $gte: since } }),
+    countAllMinted: countMinted,
+    // Eligible queue: un-minted Submited users whose votes clear the floor,
+    // ranked by votes desc (donate more → minted sooner).
+    findEligibleSubmissions: async (floor) =>
+      (await UserModel.find({
+        minted: false,
+        state: UserState.Submited,
+        votes: { $gte: floor },
+      }).sort({ votes: -1 })) as unknown as UserDoc[],
     now: () => Date.now(),
     infoLog: (message) => logger.info(message),
     debugLog: (message) => logger.debug(message),
@@ -376,6 +452,16 @@ export function buildUserOperations(
     }
   }
 
+  // Floor-aware queue: compute the current floor from the minted count, then
+  // return the eligible submissions (votes ≥ floor) ranked by votes desc.
+  async function eligibleQueue(
+    floorParams: MintFloorParams,
+  ): Promise<UserDoc[]> {
+    const mintedCount = await deps.countAllMinted()
+    const floor = mintFloorVotes(mintedCount, floorParams)
+    return deps.findEligibleSubmissions(floor)
+  }
+
   async function userStats() {
     const all = await deps.countAllUsers()
     const minted = await deps.countMintedUsers()
@@ -391,7 +477,7 @@ export function buildUserOperations(
     return { all, minted, notMinted, month, week, day }
   }
 
-  return { placeInLine, placeInWhales, addPoints, userStats }
+  return { placeInLine, placeInWhales, addPoints, eligibleQueue, userStats }
 }
 
 const defaultUserOps = buildUserOperations()
@@ -399,6 +485,7 @@ const defaultUserOps = buildUserOperations()
 export const placeInLine = defaultUserOps.placeInLine
 export const placeInWhales = defaultUserOps.placeInWhales
 export const addPoints = defaultUserOps.addPoints
+export const eligibleQueue = defaultUserOps.eligibleQueue
 export const userStats = defaultUserOps.userStats
 
 export async function createInitialBalancesIfNotExists() {

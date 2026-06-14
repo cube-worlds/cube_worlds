@@ -3,7 +3,6 @@ import { fromNano } from '@ton/core'
 import { tonToPoints } from '#root/common/helpers/points'
 import { parseInternalInMessage } from '#root/common/helpers/transaction-parsing'
 import { BalanceChangeType } from '#root/common/models/Balance'
-import { commaSeparatedNumber } from './common/helpers/numbers'
 
 export interface SubscriptionUser {
   id: number
@@ -36,8 +35,6 @@ export interface SubscriptionDependencies {
     delta: bigint,
     type: BalanceChangeType,
   ) => Promise<bigint>
-  convertCubeToSatoshi: (votes: number) => Promise<number>
-  sendJetton: (toAddress: Address, amount: bigint) => Promise<void>
   sendMessage: (userId: number, text: string) => Promise<void>
   sendMessageToAdmins: (text: string) => Promise<void>
   translateDonation: (language: string, ton: number) => string
@@ -45,9 +42,6 @@ export interface SubscriptionDependencies {
   error: (message: string) => void
   debug: (message: string) => void
 }
-
-export const INSUFFICIENT_CUBES_MESSAGE
-  = " You have'nt sufficient $CUBES to exchange for $SATOSHI points."
 
 export async function processTransaction(
   tx: Transaction,
@@ -97,36 +91,11 @@ export async function processTransaction(
     return
   }
 
-  if (typeof message === 'string' && message.startsWith('s:')) {
-    const votesRequested = Number.parseInt(message.slice(2), 10)
-    if (user.votes < votesRequested) {
-      await deps.sendMessage(user.id, INSUFFICIENT_CUBES_MESSAGE)
-      return
-    }
-    const decreasedBalance = await deps.addPoints(
-      user.id,
-      -BigInt(votesRequested),
-      BalanceChangeType.Donation,
-    )
-    const satoshiToSend = await deps.convertCubeToSatoshi(votesRequested)
+  await deps.addPoints(user.id, points, BalanceChangeType.Donation)
 
-    deps.info(
-      `User ${user.id} new balance ${decreasedBalance} after trade ${votesRequested} $CUBE for ${fromNano(satoshiToSend)} $SATOSHI`,
-    )
+  await deps.sendMessage(user.id, deps.translateDonation(user.language, ton))
 
-    await deps.sendJetton(senderAddress, BigInt(satoshiToSend))
-
-    await deps.sendMessage(
-      user.id,
-      `Successfully exchanged ${commaSeparatedNumber(votesRequested)} $CUBES for ${fromNano(satoshiToSend)} $SATOSHI!`,
-    )
-  } else {
-    await deps.addPoints(user.id, points, BalanceChangeType.Donation)
-
-    await deps.sendMessage(user.id, deps.translateDonation(user.language, ton))
-
-    await deps.sendMessageToAdmins(
-      `🚀 RECEIVED ${ton} TON FROM @${user.name}${message ? ` with message "${message}"` : ''}. Minted: ${user.minted ? '✅' : '❌'}`,
-    )
-  }
+  await deps.sendMessageToAdmins(
+    `🚀 RECEIVED ${ton} TON FROM @${user.name}${message ? ` with message "${message}"` : ''}. Minted: ${user.minted ? '✅' : '❌'}`,
+  )
 }

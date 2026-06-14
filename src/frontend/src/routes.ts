@@ -8,9 +8,8 @@ import ExpeditionComponent from './components/ExpeditionComponent.vue'
 import FAQComponent from './components/FAQ.vue'
 import HeroRosterComponent from './components/HeroRosterComponent.vue'
 import LeaderboardComponent from './components/LeaderboardComponent.vue'
+import MintComponent from './components/MintComponent.vue'
 import NotFoundComponent from './components/NotFound.vue'
-import ExchangeComponent from './components/SatoshiExchange.vue'
-import SatoshiMiningComponent from './components/SatoshiMining.vue'
 import TournamentComponent from './components/TournamentComponent.vue'
 import WalletComponent from './components/WalletComponent.vue'
 
@@ -39,25 +38,19 @@ export const menuRoutes: MenuRoute[] = [
     component: ClaimComponent,
   },
   {
+    // NFT-gated entry: non-minted users are routed here by the router guard.
+    path: '/mint',
+    name: 'MintPage',
+    emoji: '🎟️',
+    showInMenu: false,
+    component: MintComponent,
+  },
+  {
     path: '/leaderboard',
     name: 'LeaderboardPage',
     emoji: '🏆',
     showInMenu: true,
     component: LeaderboardComponent,
-  },
-  {
-    path: '/exchange',
-    name: 'ExchangePage',
-    emoji: '💰',
-    showInMenu: true,
-    component: ExchangeComponent,
-  },
-  {
-    path: '/mining',
-    name: 'SatoshiMiningPage',
-    emoji: '⛏️',
-    showInMenu: true,
-    component: SatoshiMiningComponent,
   },
   {
     path: '/heroes',
