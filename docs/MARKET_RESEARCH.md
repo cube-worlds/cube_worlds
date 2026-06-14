@@ -4,6 +4,8 @@ _Compiled 2026-05-18. Two parallel research passes on the 2024–2026 Telegram c
 
 Companion docs: [NFT_INTERACTIONS.md](NFT_INTERACTIONS.md) (cross-chain NFT mechanics catalog), [TOKEN_INTERACTIONS.md](TOKEN_INTERACTIONS.md) (token sources/sinks/utility and Cube Worlds economy plan).
 
+> **⚠️ Pre-pivot research (2026-06-14 note).** This is a point-in-time research snapshot. Since it was compiled, Cube Worlds went **DB-only $CUBE** (no on-chain jetton), made the entry NFT a hard game gate, and shipped the ancient-worlds loop (castles/heroes/PvP/expeditions) + monetization rails. The strategic analysis below still holds; treat any reference to an on-chain $CUBE jetton or the CUBE→SATOSHI swap as superseded. Ground truth: [`../CLAUDE.md`](../CLAUDE.md); current plan status in [ANCIENT_WORLDS_PLAN.md](ANCIENT_WORLDS_PLAN.md).
+
 ---
 
 ## TL;DR

@@ -4,6 +4,8 @@ _Compiled 2026-05-19. Cross-chain research on NFT interaction mechanics in Web3 
 
 Companion docs: [MARKET_RESEARCH.md](MARKET_RESEARCH.md) (Telegram crypto-game landscape), [TOKEN_INTERACTIONS.md](TOKEN_INTERACTIONS.md) (token economy patterns and Cube Worlds sink plan).
 
+> **⚠️ Pre-pivot research (2026-06-14 note).** Point-in-time NFT-mechanics catalog. Since it was compiled, Cube Worlds shipped NFT collections for the entry pass plus castle / hero / equipment items (all DB-canonical with deploy-gated on-chain mint, gated behind `*_COLLECTION_ADDRESS`), and made $CUBE **DB-only** (no on-chain jetton). The pattern catalog still applies; map any "jetton" reference to a DB ledger. Ground truth: [`../CLAUDE.md`](../CLAUDE.md).
+
 ---
 
 ## TL;DR
