@@ -24,12 +24,11 @@ declare module 'vue' {
     LeaderboardComponent: typeof import('./src/components/LeaderboardComponent.vue')['default']
     LoadingOverlay: typeof import('./src/components/nested/LoadingOverlay.vue')['default']
     MainMenu: typeof import('./src/components/nested/MainMenu.vue')['default']
+    MintComponent: typeof import('./src/components/MintComponent.vue')['default']
     NotFound: typeof import('./src/components/NotFound.vue')['default']
     Pagination: typeof import('./src/components/nested/Pagination.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
-    SatoshiExchange: typeof import('./src/components/SatoshiExchange.vue')['default']
-    SatoshiMining: typeof import('./src/components/SatoshiMining.vue')['default']
     TournamentComponent: typeof import('./src/components/TournamentComponent.vue')['default']
     WalletComponent: typeof import('./src/components/WalletComponent.vue')['default']
   }

@@ -1,6 +1,6 @@
 import type { InitData } from '@telegram-apps/init-data-node'
 import type { FastifyInstance } from 'fastify'
-import { findUserById } from '#root/common/models/User'
+import { findOrCreateUser, findUserById } from '#root/common/models/User'
 import { logger } from '#root/logger'
 import { defaultParseInitData, defaultValidateInitData } from './init-data'
 import { safeErrorResponse } from './safe-error'
@@ -16,6 +16,8 @@ export interface AuthHandlerDependencies {
   validateInitData: (initData: string) => void
   parseInitData: (initData: string) => InitData
   findUserById: (id: number) => Promise<ExistingUser | null>
+  // Upsert on login so a brand-new user exists and can begin minting.
+  findOrCreateUser: (id: number) => Promise<ExistingUser | null>
   info: (message: string) => void
   error: (message: string) => void
   logError: (message: string) => void
@@ -26,6 +28,7 @@ function createDefaultDependencies(): AuthHandlerDependencies {
     validateInitData: defaultValidateInitData,
     parseInitData: defaultParseInitData,
     findUserById,
+    findOrCreateUser,
     info: logger.info.bind(logger),
     error: logger.error.bind(logger),
     logError: logger.error.bind(logger),
@@ -67,7 +70,8 @@ export function buildAuthHandler(
           if (!tgUserId) {
             return { error: 'Invalid telegram user id' }
           }
-          const user = await dependencies.findUserById(tgUserId)
+          // Upsert: a first-time login creates the user so they can mint.
+          const user = await dependencies.findOrCreateUser(tgUserId)
           if (!user) return { error: 'User not found' }
 
           const userAlreadyInvited = user.wallet || user.referalId
@@ -89,6 +93,8 @@ export function buildAuthHandler(
             wallet: user.wallet,
             referalId: user.referalId,
             balance: user.votes.toString(),
+            minted: user.minted,
+            mintState: user.state,
             ip: request.ip,
           }
         } catch (err) {

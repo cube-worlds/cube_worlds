@@ -1,9 +1,12 @@
 /* eslint-disable test/no-import-node-test */
-import type { UserOperationsDependencies } from '#root/common/models/User'
+import type { MintFloorParams } from '#root/common/helpers/mint-floor'
+import type { UserDoc, UserOperationsDependencies } from '#root/common/models/User'
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { BalanceChangeType } from '#root/common/models/Balance'
 import { buildUserOperations } from '#root/common/models/User'
+
+const FLOOR_PARAMS: MintFloorParams = { base: 0n, step: 500n, cap: 100_000n }
 
 function noopDeps(): UserOperationsDependencies {
   return {
@@ -16,6 +19,8 @@ function noopDeps(): UserOperationsDependencies {
     countMintedUsers: async () => 0,
     countLineUsers: async () => 0,
     countUsersUpdatedSince: async () => 0,
+    countAllMinted: async () => 0,
+    findEligibleSubmissions: async () => [],
     now: () => 0,
     infoLog: () => {},
     debugLog: () => {},
@@ -199,6 +204,60 @@ test('addPoints logs unrecoverable drift when balance write AND revert fail', as
   assert.equal(errorLogs.length, 2)
   assert.match(errorLogs[0], /unrecoverable drift for 7/)
   assert.match(errorLogs[1], /Can't add points 5 to user 7/)
+})
+
+// eligibleQueue — floor-aware filtering + ranking
+
+test('eligibleQueue computes the floor from the minted count and queries with it', async () => {
+  const floorQueries: bigint[] = []
+  const ops = buildUserOperations({
+    ...noopDeps(),
+    // 10 minted → floor = 0 + 500*10 = 5000
+    countAllMinted: async () => 10,
+    findEligibleSubmissions: async (floor) => {
+      floorQueries.push(floor)
+      return [] as unknown as UserDoc[]
+    },
+  })
+
+  await ops.eligibleQueue(FLOOR_PARAMS)
+
+  assert.deepEqual(floorQueries, [5_000n], 'queries with floor(10)=5000')
+})
+
+test('eligibleQueue forwards the votes-desc-ranked submissions verbatim', async () => {
+  // The DB query is the source of truth for filter (votes >= floor) + sort
+  // (votes desc); the op just threads the computed floor into it.
+  const ranked = [
+    { id: 1, votes: 9_000n },
+    { id: 2, votes: 6_000n },
+  ] as unknown as UserDoc[]
+  const ops = buildUserOperations({
+    ...noopDeps(),
+    countAllMinted: async () => 1, // floor(1) = 500
+    findEligibleSubmissions: async (floor) => {
+      assert.equal(floor, 500n)
+      return ranked
+    },
+  })
+
+  const result = await ops.eligibleQueue(FLOOR_PARAMS)
+  assert.deepEqual(result, ranked)
+})
+
+test('eligibleQueue caps the floor at the configured cap for large minted counts', async () => {
+  const floorQueries: bigint[] = []
+  const ops = buildUserOperations({
+    ...noopDeps(),
+    countAllMinted: async () => 10_000, // 500*10000 = 5,000,000 → capped
+    findEligibleSubmissions: async (floor) => {
+      floorQueries.push(floor)
+      return [] as unknown as UserDoc[]
+    },
+  })
+
+  await ops.eligibleQueue(FLOOR_PARAMS)
+  assert.deepEqual(floorQueries, [100_000n], 'floor clamped to cap')
 })
 
 // userStats — date-window math

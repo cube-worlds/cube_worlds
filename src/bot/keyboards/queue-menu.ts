@@ -1,15 +1,11 @@
 import type { Context } from '#root/bot/context'
 import type { User, UserDoc } from '#root/common/models/User'
 import { Menu } from '@grammyjs/menu'
-import { photoKeyboard } from '#root/bot/keyboards/photo'
-import { saveImageFromUrl } from '#root/common/helpers/files'
+import { InputFile } from 'grammy'
+import { MintAction, mintActionData } from '#root/bot/callback-data/mint-action'
 import { linkToIPFSGateway } from '#root/common/helpers/ipfs'
-import { getUserProfileFile } from '#root/common/helpers/photo'
-import { adminIndex } from '#root/common/helpers/telegram'
-import { i18n } from '#root/common/i18n'
-import { findQueue, findUserById, UserState } from '#root/common/models/User'
+import { eligibleQueue } from '#root/common/models/User'
 import { config } from '#root/config'
-import { logger } from '#root/logger'
 
 export function photoCaption(user: User) {
   return `@[${user.name}](tg://user?id=${user.id})
@@ -23,103 +19,66 @@ Minted: ${user.minted ? '✅' : '❌'} ${user.nftUrl ? `[NFT](${user.nftUrl})` :
 `
 }
 
-export async function sendUserMetadata(
-  context: Context,
-  selectedUser: UserDoc,
-) {
-  context.chatAction = 'upload_document'
-
-  const adminUser = context.dbuser
-  const selectedUserId: number = selectedUser.id
-  adminUser.selectedUser = selectedUser.id
-  await adminUser.save()
-
-  try {
-    const nextAvatar = await getUserProfileFile(
-      context,
-      selectedUserId,
-      adminUser.avatarNumber ?? 0,
-    )
-    if (!nextAvatar) {
-      return context.reply(context.t('wrong'))
-    }
-    const photoUrl = `https://api.telegram.org/file/bot${config.BOT_TOKEN}/${nextAvatar.file_path}`
-
-    const admIndex = adminIndex(context.dbuser.id)
-    const username = selectedUser.name
-    if (!username) return context.reply('Empty username')
-
-    selectedUser.avatar = await saveImageFromUrl(
-      photoUrl,
-      admIndex,
-      username,
-      true,
-    )
-    await selectedUser.save()
-
-    await context.replyWithPhoto(nextAvatar.file_id, {
-      caption: photoCaption(selectedUser),
-      parse_mode: 'Markdown',
-      reply_markup: {
-        inline_keyboard: photoKeyboard,
-      },
-    })
-  } catch (error) {
-    const errorMessage = (error as Error).message
-    if (errorMessage === 'No profile avatars') {
-      selectedUser.state = UserState.WaitNothing
-      await selectedUser.save()
-      const message = `❌ ${i18n.t(selectedUser.language, 'queue.no_photo_after_submit')}`
-      await context.api.sendMessage(selectedUser.id, message)
-      await context.api.sendMessage(adminUser.id, message)
-    } else if (errorMessage === 'No square photos') {
-      selectedUser.state = UserState.WaitNothing
-      await selectedUser.save()
-      const message = `❌ ${i18n.t(selectedUser.language, 'queue.no_square_avatars')}`
-      await context.api.sendMessage(selectedUser.id, message)
-      await context.api.sendMessage(adminUser.id, message)
-    } else if (errorMessage.startsWith("Call to 'getFile' failed!")) {
-      const nextAvatarNumber =
-        context.dbuser.selectedUser === selectedUser.id
-          ? (context.dbuser.avatarNumber ?? -1) + 1
-          : 0
-      context.dbuser.avatarNumber = nextAvatarNumber
-      await context.dbuser.save()
-      return context.reply('Avatar is unavailable, trying to change it')
-    } else {
-      logger.error(error)
-      return context.reply(context.t('wrong'))
-    }
+// Admin-facing keyboard: exactly two actions, Approve / Return-to-work.
+function approveReturnKeyboard(userId: number) {
+  return {
+    inline_keyboard: [
+      [
+        {
+          text: '✅ Approve',
+          callback_data: mintActionData.pack({
+            action: MintAction.Approve,
+            userId,
+          }),
+        },
+        {
+          text: '↩️ Return to work',
+          callback_data: mintActionData.pack({
+            action: MintAction.Return,
+            userId,
+          }),
+        },
+      ],
+    ],
   }
 }
 
-export const queueMenu = new Menu('queue').dynamic(async (cntxt, range) => {
-  const adminUser = await findUserById((cntxt as Context).dbuser.id)
-  if (!adminUser) {
-    return []
+// Send the auto-generated draft (image + description) with the two-button
+// Approve/Return keyboard. The image was produced in the webview (user.image).
+export async function sendQueueEntry(context: Context, user: UserDoc) {
+  const caption = photoCaption(user)
+  const reply_markup = approveReturnKeyboard(user.id)
+  if (user.image) {
+    const photo = user.image.startsWith('http')
+      ? user.image
+      : new InputFile(user.image)
+    await context.replyWithPhoto(photo, {
+      caption,
+      parse_mode: 'Markdown',
+      reply_markup,
+    })
+  } else {
+    await context.reply(caption, { parse_mode: 'Markdown', reply_markup })
   }
-  const users = await findQueue()
-  const usersWithAdmin = [...users, adminUser]
-  for (const user of usersWithAdmin) {
+}
+
+function floorParamsFromConfig() {
+  return {
+    base: BigInt(config.MINT_FLOOR_BASE_VOTES),
+    step: BigInt(config.MINT_FLOOR_STEP_VOTES),
+    cap: BigInt(config.MINT_FLOOR_CAP_VOTES),
+  }
+}
+
+// Lists only eligible (votes ≥ floor), un-minted, Submited users, ranked by
+// votes desc; clicking one opens its draft with Approve / Return.
+export const queueMenu = new Menu('queue').dynamic(async (_ctx, range) => {
+  const users = await eligibleQueue(floorParamsFromConfig())
+  for (const user of users) {
     range
-      .text(
-        `(${user.diceWinner ? `🎲 ${user.votes}` : user.votes}) ${user.name ?? user.wallet}`,
-        async (ctx) => {
-          const context = ctx as unknown as Context
-          const author = await ctx.api.getChatMember(user.id, user.id)
-
-          if (author.user.username !== user.name) {
-            const oldUsername = user.name
-            user.name = author.user.username
-            await user.save()
-            return ctx.reply(
-              `Username changed from @${oldUsername} to @${user.name}`,
-            )
-          }
-
-          await sendUserMetadata(context, user)
-        },
-      )
+      .text(`(${user.votes}) ${user.name ?? user.wallet}`, async (ctx) => {
+        await sendQueueEntry(ctx as unknown as Context, user)
+      })
       .row()
   }
 })

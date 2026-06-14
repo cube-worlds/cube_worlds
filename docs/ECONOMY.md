@@ -351,14 +351,11 @@ Shipped June 2026. All constants are in `src/common/helpers/production.ts`, `cas
 
 Each upgrade also consumes DB resource bags (gold/iron/mana/food) via an atomic $gte CAS (`spendForUpgrade`). The CUBE debit uses `BalanceChangeType.CastleUpgrade` (100% burn, per §2.4). The resource debit is recorded in `ResourceLedger` with `ResourceChangeType.Upgrade`.
 
-### On-chain $CUBE bridge
+### On-chain $CUBE bridge — REMOVED (June 2026)
 
-| Constant | Value | Notes |
-|----------|-------|-------|
-| `WITHDRAW_FEE_BPS` | `200` | 2% withdrawal fee burned at DB debit time |
-| `WITHDRAW_COOLDOWN_MS` | `24h` (86 400 000 ms) | Per-user cooldown; next withdraw blocked until elapsed |
-
-DB `User.votes` remains the canonical balance. `CubeBridgeLedger` is append-only, idempotent on `externalId`, with statuses `pending / completed / failed`. Route gated by env `CUBE_JETTON_MASTER` + `CUBE_VAULT_ADDRESS`. **Alert on long-lived `pending` rows** — a completed chain-send whose `markBridgeStatus(Completed)` threw will sit `pending` indefinitely (funds delivered; cooldown not set; user sees false error).
+> **$CUBE is now DB-only.** The on-chain $CUBE jetton bridge (`cube-bridge-handler.ts`, `cube-jetton-client.ts`, `CubeBridgeLedger`, `/api/cube`, config `CUBE_JETTON_MASTER`/`CUBE_VAULT_ADDRESS`) and the SATOSHI jetton exchange (`satoshi.ts`, the `s:` branch of the TON watcher) were removed in the DB-only pivot. `User.votes` + the `Balance` ledger stay canonical; the xRocket USDT rail is untouched.
+>
+> **Minting moved into the webview** (`/api/mint/{quote,generate,status}`) funded purely by **TON donations** (the surviving TON watcher credits `votes`). Eligibility is an **escalating floor** `mintFloorVotes(mintedCount) = min(base + step·n, cap)` (config `MINT_FLOOR_BASE_VOTES`/`STEP`/`CAP`, defaults 0/500/100000); the queue ranks eligible users by votes desc (donate more → minted sooner). Admin curation shrank to a binary **Approve / Return-to-work** (`queue-approval-handler.ts`, single mint on double-approve via the `mintingInProgress` CAS). Owning the minted NFT gates game entry (router guard + menu filter; auth upserts new users and returns `minted`/`mintState`).
 
 ---
 

@@ -9,6 +9,9 @@ export interface UserStore {
   wallet: string
   referalId: number | undefined
   balance: string | undefined
+  // NFT-gated entry: owns an on-chain NFT? + the current mint lifecycle state.
+  minted: boolean
+  mintState: string
   ip: string
 }
 
@@ -33,5 +36,19 @@ export const useUserStore = defineStore('userStore', () => {
     balance.value = BigInt(value)
   }
 
-  return { wallet, setWallet, user, setUser, balance, setBalance, initData }
+  // Flip the gate open once the mint lands (status poll sees minted=true).
+  function setMinted(value: boolean) {
+    if (user.value) user.value.minted = value
+  }
+
+  return {
+    wallet,
+    setWallet,
+    user,
+    setUser,
+    balance,
+    setBalance,
+    setMinted,
+    initData,
+  }
 })

@@ -11,10 +11,7 @@ import { Buffer } from 'node:buffer'
 import test from 'node:test'
 import { beginCell, Cell, Address as TonAddress, toNano } from '@ton/core'
 import { BalanceChangeType } from '#root/common/models/Balance'
-import {
-  INSUFFICIENT_CUBES_MESSAGE,
-  processTransaction,
-} from '#root/subscription-core'
+import { processTransaction } from '#root/subscription-core'
 
 const SENDER = TonAddress.parse(
   '0QC4sEG_VQ4QawHnr77mqJhC98cpoyI-0gXuwR76Ff2kT4eI',
@@ -80,8 +77,6 @@ interface RecordedDeps {
     delta: bigint
     type: BalanceChangeType
   }>
-  convertCalls: number[]
-  sendJettonCalls: Array<{ to: Address, amount: bigint }>
   userMessages: Array<{ userId: number, text: string }>
   adminMessages: string[]
   donationTranslations: Array<{ language: string, ton: number }>
@@ -91,17 +86,13 @@ interface RecordedDeps {
 interface DepsOverrides {
   existing?: unknown
   user?: SubscriptionUser | null
-  satoshiPerCall?: number
   saveThrows?: boolean
-  sendJettonThrows?: Error
 }
 
 function makeDeps(overrides: DepsOverrides = {}): RecordedDeps {
   const saved: TransactionRecord[] = []
   const rejected: TransactionRecord[] = []
   const addPointsCalls: RecordedDeps['addPointsCalls'] = []
-  const convertCalls: number[] = []
-  const sendJettonCalls: RecordedDeps['sendJettonCalls'] = []
   const userMessages: RecordedDeps['userMessages'] = []
   const adminMessages: string[] = []
   const donationTranslations: RecordedDeps['donationTranslations'] = []
@@ -124,14 +115,6 @@ function makeDeps(overrides: DepsOverrides = {}): RecordedDeps {
       addPointsCalls.push({ userId, delta, type })
       return delta
     },
-    convertCubeToSatoshi: async (votes) => {
-      convertCalls.push(votes)
-      return overrides.satoshiPerCall ?? Number(toNano('123'))
-    },
-    sendJetton: async (to, amount) => {
-      if (overrides.sendJettonThrows) throw overrides.sendJettonThrows
-      sendJettonCalls.push({ to, amount })
-    },
     sendMessage: async (userId, text) => {
       userMessages.push({ userId, text })
     },
@@ -152,8 +135,6 @@ function makeDeps(overrides: DepsOverrides = {}): RecordedDeps {
     saved,
     rejected,
     addPointsCalls,
-    convertCalls,
-    sendJettonCalls,
     userMessages,
     adminMessages,
     donationTranslations,
@@ -265,73 +246,7 @@ test('processTransaction stays silent (no admin alert) for tiny unknown-sender t
   assert.equal(ctx.logs.error.length, 1, 'still logs locally')
 })
 
-// 4. EXCHANGE PATH (s:N)
-
-test('processTransaction blocks exchange when user lacks cubes', async () => {
-  const user: SubscriptionUser = { ...defaultUser, votes: BigInt(50) }
-  const ctx = makeDeps({ user })
-  const tx = buildTransaction({
-    value: toNano('0.1'),
-    body: textBody('s:1000'),
-  })
-
-  await processTransaction(tx, ctx.deps)
-
-  assert.equal(ctx.userMessages.length, 1)
-  assert.equal(ctx.userMessages[0].userId, user.id)
-  assert.equal(ctx.userMessages[0].text, INSUFFICIENT_CUBES_MESSAGE)
-  assert.equal(ctx.addPointsCalls.length, 0, 'no balance change')
-  assert.equal(ctx.sendJettonCalls.length, 0, 'no jetton sent')
-  assert.equal(ctx.convertCalls.length, 0, 'no rate calc')
-})
-
-test('processTransaction debits cubes, sends SATOSHI jetton, and notifies user on exchange', async () => {
-  const user: SubscriptionUser = { ...defaultUser, votes: BigInt(5_000_000) }
-  const satoshiPerCall = Number(toNano('42')) // 42 SATOSHI in nanos
-  const ctx = makeDeps({ user, satoshiPerCall })
-  const tx = buildTransaction({
-    value: toNano('0.1'),
-    body: textBody('s:1909767'),
-  })
-
-  await processTransaction(tx, ctx.deps)
-
-  assert.equal(ctx.addPointsCalls.length, 1)
-  assert.deepEqual(ctx.addPointsCalls[0], {
-    userId: user.id,
-    delta: -BigInt(1909767),
-    type: BalanceChangeType.Donation,
-  })
-
-  assert.deepEqual(ctx.convertCalls, [1909767])
-
-  assert.equal(ctx.sendJettonCalls.length, 1)
-  assert.equal(
-    ctx.sendJettonCalls[0].to.toString(),
-    SENDER.toString(),
-    'jetton sent to original sender, not the bot/admin',
-  )
-  assert.equal(ctx.sendJettonCalls[0].amount, BigInt(satoshiPerCall))
-
-  assert.equal(ctx.userMessages.length, 1)
-  assert.match(ctx.userMessages[0].text, /Successfully exchanged/)
-  assert.match(ctx.userMessages[0].text, /1,909,767/)
-  assert.equal(ctx.adminMessages.length, 0, 'exchange does not spam admins')
-})
-
-test('processTransaction parses s:0 as zero-cube exchange (always passes balance check)', async () => {
-  const user: SubscriptionUser = { ...defaultUser, votes: 0n }
-  const ctx = makeDeps({ user })
-  const tx = buildTransaction({ value: toNano('0.1'), body: textBody('s:0') })
-
-  await processTransaction(tx, ctx.deps)
-
-  assert.equal(ctx.addPointsCalls.length, 1)
-  assert.equal(ctx.addPointsCalls[0].delta, 0n)
-  assert.deepEqual(ctx.convertCalls, [0])
-})
-
-// 5. DONATION PATH
+// 4. DONATION PATH
 
 test('processTransaction credits points and translates donation message for known user', async () => {
   const ctx = makeDeps({ user: defaultUser })
@@ -404,20 +319,21 @@ test('processTransaction donation respects user language for translated message'
   assert.equal(ctx.userMessages[0].text, 'donation-msg(ru,2.5)')
 })
 
-// 6. NON-MATCHING PREFIX FALLS BACK TO DONATION
+// 5. ARBITRARY COMMENTS ARE TREATED AS DONATIONS
 
-test('processTransaction treats messages without "s:" prefix as donations', async () => {
+test('processTransaction treats any comment as a donation (no exchange branch)', async () => {
   const ctx = makeDeps({ user: defaultUser })
   const tx = buildTransaction({
     value: toNano('1'),
-    body: textBody('not-an-exchange'),
+    body: textBody('s:1000'),
   })
 
   await processTransaction(tx, ctx.deps)
 
-  // donation flow: positive points + admin message
+  // donation flow: positive points + admin message; the old "s:" exchange
+  // branch is gone, so even an "s:"-prefixed comment now credits a donation.
   assert.equal(ctx.addPointsCalls.length, 1)
   assert.ok(ctx.addPointsCalls[0].delta > 0n)
-  assert.equal(ctx.sendJettonCalls.length, 0)
-  assert.equal(ctx.convertCalls.length, 0)
+  assert.equal(ctx.addPointsCalls[0].type, BalanceChangeType.Donation)
+  assert.equal(ctx.adminMessages.length, 1)
 })
