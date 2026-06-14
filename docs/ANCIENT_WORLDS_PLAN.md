@@ -12,6 +12,18 @@
 
 ---
 
+> ## ⚠️ Status update (2026-06-14) — read first
+>
+> This plan is the **design vision**; parts of it have shipped and one major decision was reversed. Current ground truth lives in [`../CLAUDE.md`](../CLAUDE.md).
+>
+> **Shipped:** Phase A (castles, resources, 8h production), Phase B (heroes, recruitment, daily dungeon, combat resolver) + Plan 6 (equipment, 8h quest, boss week), and Phase C slice 1 (async-snapshot PvP — arena + castle raids on an ELO ladder). Plus the expedition economy, weekly tournament, Season Pass, rewarded ads, and the xRocket USDT money rail.
+>
+> **Decision reversed — $CUBE is now DB-only.** This doc and the research trilogy assume $CUBE eventually becomes an on-chain jetton. **That was undone.** $CUBE stays a DB-only soft currency (`User.votes` + the `Balance` ledger are canonical); the on-chain $CUBE bridge and the CUBE→SATOSHI exchange were removed. The only on-chain mint is the **entry-gating NFT** (webview semi-auto mint + escalating floor + binary admin Approve/Return). Where this doc says "promote CUBE to a jetton" or "multi-jetton resources," read it as DB-only ledgers.
+>
+> **Still pending (ops):** deploy + audit the NFT collections (`*_COLLECTION_ADDRESS` gates), then flip `EXPEDITION_FAUCET_ENABLED` once the CUBE sinks are tuned. Deferred features: clans, equipment trading post, Tact PvP escrow.
+
+---
+
 ## 0. Where this fits
 
 ### What the codebase already gives us (May 2026)

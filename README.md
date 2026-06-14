@@ -1,9 +1,9 @@
-# 🕋 Cube Worlds Bot 🎲
+# 🕋 Cube Worlds Bot
 
 [![Telegram](https://img.shields.io/badge/Telegram-@cube__worlds__bot-26A5E4?logo=telegram&logoColor=white)](https://t.me/cube_worlds_bot)
 [![CI](https://github.com/cube-worlds/cube_worlds/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/cube-worlds/cube_worlds/actions/workflows/main.yml)
 ![Coverage](docs/coverage.svg)
-![Tests](https://img.shields.io/badge/tests-422%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-749%20passing-brightgreen)
 ![Node](https://img.shields.io/badge/node-%E2%89%A518-339933?logo=node.js&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
 ![TON](https://img.shields.io/badge/TON-blockchain-0098EA?logo=tonkeeper&logoColor=white)
@@ -11,17 +11,18 @@
 
 <a target="_blank" href="https://dorahacks.io/buidl/10796"><img src="https://cdn.dorahacks.io/images/buidl-embed/light-simple.png" height="33" width="84" alt="DoraHacks BUIDL"/></a>
 
-A Telegram Mini App game on the TON blockchain. Earn **$CUBE** through daily claims and referrals, then have admins mint a generative pixel-art NFT for top holders. Includes a CUBE → SATOSHI jetton swap and an idle-clicker mining mode.
+A Telegram Mini App game on the TON blockchain. Earn **$CUBE** (a DB-only soft currency) through daily claims, referrals, and TON donations; rank a queue to mint a generative pixel-art NFT that gates game entry; then play an ancient-world ARPG/4X loop — castles, heroes, expeditions, PvP arena & raids, and weekly tournaments — with an optional real-money (USDT) rail via xRocket.
 
 ---
 
 ## ✨ Highlights
 
 - 🎮 **Mini App game** — Vue 3 frontend served straight inside Telegram, with TonConnect wallet integration.
-- 🪙 **Daily claims + referrals** — daily streak bonuses with premium-user multipliers, referral chain rewards.
-- 🎨 **AI-generated NFTs** — Stability AI image-to-image + ChatGPT descriptions, pinned to IPFS, minted as TON cNFTs from an admin-curated queue.
-- ⛓️ **On-chain transaction monitoring** — Fastify worker polls TON for incoming payments and credits points automatically.
-- 🧪 **Heavily tested backend** — 422 tests on the Node.js built-in test runner.
+- 🪙 **DB-only $CUBE** — earned via daily streaks (premium multipliers), referrals, and TON donations; `User.votes` + the `Balance` ledger are canonical (no on-chain jetton).
+- 🎨 **NFT-gated entry** — Stability AI + ChatGPT generate a pixel-art cNFT through a player-facing webview mint with an escalating eligibility floor; a binary admin Approve/Return deploys it on-chain. Owning it unlocks the game.
+- 🏰 **Ancient-worlds economy** — castles & resource production, hero recruitment / dungeons / quests, weekly boss, async-snapshot PvP (arena + castle raids on an ELO ladder), and a congestion-based expedition loop.
+- 💰 **Monetization rails** — xRocket USDT wallet (deposits/withdrawals/transfers, reconciled), Telegram Stars Season Pass, Adsgram rewarded ads, and a weekly tournament with a rewards-pool payout.
+- 🧪 **Heavily tested backend** — 749 tests on the Node.js built-in test runner.
 
 ## 🏗️ Architecture
 
@@ -53,7 +54,8 @@ See **[ARCHITECTURE.md](ARCHITECTURE.md)** for the full system overview and runt
 | HTTP API   | [Fastify](https://fastify.dev/) + `@fastify/middie`, `@fastify/static`                 |
 | Frontend   | [Vue 3](https://vuejs.org/) + Vite + Pinia + [TonConnect](https://tonconnect.dev/)     |
 | Database   | MongoDB via [Typegoose](https://typegoose.github.io/typegoose/) (Mongoose decorators)  |
-| Blockchain | [@ton/ton](https://docs.ton.org/) for transactions, NFT minting, jetton operations      |
+| Blockchain | [@ton/ton](https://docs.ton.org/) for donations, wallet binding (ton_proof), NFT minting |
+| Money rail | [xRocket](https://pay.xrocket.tg/) USDT (micro-USDT ledger) + Telegram Stars (Season Pass) |
 | AI         | [Stability AI](https://stability.ai/) (images) + OpenAI (NFT descriptions)             |
 | Storage    | [Pinata](https://pinata.cloud/) IPFS for NFT metadata + artwork                        |
 | Quality    | [@antfu/eslint-config](https://github.com/antfu/eslint-config), Prettier, tsc, Husky   |
@@ -96,7 +98,7 @@ npm --prefix src/frontend run dev
 The backend uses Node.js's **built-in test runner** (`node --test`) — no Jest/Vitest. Handlers are written with **dependency injection** so tests can swap in mocks without spinning up Mongo, TON, or the bot. See [`src/backend/auth-handler.test.ts`](src/backend/auth-handler.test.ts) for the canonical pattern.
 
 ```bash
-npm run test:backend     # ~5s, 422 tests across 53 files
+npm run test:backend     # 749 tests across 113 files (Node test runner)
 npm run test:coverage    # full per-file coverage report
 ```
 
@@ -106,34 +108,31 @@ Areas at or near full coverage: every backend route handler, all callback-data p
 
 ```
 src/
-  main.ts               # entrypoint — MongoDB → bot → server → subscription → start
+  main.ts               # entrypoint — MongoDB → bot → server → subscription → workers
   server.ts             # Fastify, registers /api/* handlers
-  config.ts             # znv + Zod, lazy proxy singleton
-  subscription.ts       # TON transaction poller (composer wiring)
-  subscription-core.ts  # AccountSubscription polling class
-  subscription-start.ts # DI-friendly startup builder
+  config.ts             # znv + Zod, lazy proxy (throws on read when NODE_ENV=test)
+  subscription-core.ts  # TON transaction watcher (donations → votes)
+  subscription.ts       # composer wiring for the watcher
   bot/
     index.ts            # middleware chain (ORDER MATTERS) + feature registration
     context.ts          # Grammy Context + SessionData types
-    features/*.ts       # commands: start, help, line, stats, whales, unhandled,
-                        #           removed-commands, admin/{queue,collection,
-                        #           parameters,transaction,user}
+    features/*.ts       # commands: start, help, line, stats, whales, season-pass,
+                        #           unhandled, removed-commands, admin/{queue,
+                        #           collection,parameters,transaction,user}
     filters/is-admin.ts # auth filter for admin-only commands
-    handlers/           # error boundary + sync-commands runner
-    middlewares/*.ts    # attach-user, reaction, update-logger
-    keyboards/*.ts      # inline keyboards (photo, queue-menu)
-    callback-data/*.ts  # typed callback-data packers
-  backend/              # Fastify handlers (auth, claim, leaderboard, nft, balances, captcha)
+  backend/              # Fastify handlers (DI-split): auth, mint, claim, castle, hero,
+                        #   dungeon, quest, boss, pvp, expedition, tournament, wallet, …
+                        #   plus settlement + NFT-mint background runners
   common/
-    models/             # Typegoose: User, Balance, Claim, CNFT, Transaction, Vote
-    helpers/            # ton, ipfs, generation, files, telegram, random, satoshi, …
+    models/             # Typegoose: User, Balance, CNFT, Castle, Hero, Match, Wallet*, …
+    helpers/            # ton, ipfs, generation, files, mint-floor, combat, production, …
   frontend/             # Vue 3 + Vite (separate package.json)
-    captcha/            # standalone DOOM captcha (HTML/JS, not Vue; currently unused)
+    src/routes.ts       # route table; non-minted users are locked to /mint
 locales/                # Fluent (.ftl) translations
-docs/                   # research snapshots, coverage badge, future development
+docs/                   # design & research docs, coverage badge, economy model
 ```
 
-> The dice game (`/dice`), NFT-mint command (`/mint`), and story game (`/play`) were removed; `removed-commands.ts` catches those slash commands and points users to the Mini App. The HMAC captcha endpoint and `User.suspicionDices` field remain as orphaned scaffolding from the dice flow.
+> The dice game (`/dice`), NFT-mint command (`/mint`), and story game (`/play`) were removed; `removed-commands.ts` catches those slash commands and points users to the Mini App. The on-chain $CUBE jetton bridge and the CUBE→SATOSHI exchange were also removed in the DB-only pivot — see [CLAUDE.md](CLAUDE.md).
 
 ## 📚 Further Reading
 

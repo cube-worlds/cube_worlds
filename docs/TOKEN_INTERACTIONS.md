@@ -4,9 +4,13 @@ A survey of how fungible tokens (ERC-20 and equivalents — SPL, Jetton on TON, 
 
 Companion docs: [MARKET_RESEARCH.md](MARKET_RESEARCH.md) (Telegram + Web3 landscape), [NFT_INTERACTIONS.md](NFT_INTERACTIONS.md) (NFT mechanics).
 
+> **⚠️ Superseded in parts (2026-06-14 note).** This doc's headline recommendation — "add sinks, then **promote CUBE to an on-chain jetton**" — was **reversed**. $CUBE is now permanently **DB-only** (`User.votes` + the `Balance` ledger; no jetton master, no bridge). The CUBE→SATOSHI exchange described in Part 0 was **removed** along with the SATOSHI rail. The "add 3 sinks first" half of the plan **did** ship: refill, weight-boost, and tournament-entry are live CUBE sinks, satisfying the sinks-before-faucet invariant that still gates the expedition faucet (`EXPEDITION_FAUCET_ENABLED`, default off). The cross-chain token-mechanics survey below remains useful; treat the Cube-Worlds-specific "current surface" and the jetton-promotion plan as historical. Ground truth: [`../CLAUDE.md`](../CLAUDE.md) and [ECONOMY.md](ECONOMY.md).
+
 ---
 
 ## Part 0 — Cube Worlds' Current Token Surface
+
+> _Historical (May 2026 snapshot — describes the pre-pivot state with SATOSHI and a single sink). See the banner above for what changed._
 
 Confirmed from code (citations in section 4):
 

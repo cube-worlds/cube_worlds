@@ -1,5 +1,13 @@
 # Future Development Ideas
 
+> **Status note (2026-06-14).** Written before the DB-only $CUBE pivot and the
+> ancient-worlds build-out. Several "New Features" below have since shipped in some form
+> (achievements/CNFT tiers, seasonal events via the weekly tournament & boss week, push
+> via Season Pass flows) or were reframed (the marketplace is now a deferred Phase C
+> trading post). Items referencing SATOSHI/mining are obsolete — those rails were
+> removed. Treat this as a candidate list, not current state; ground truth is
+> [`../CLAUDE.md`](../CLAUDE.md).
+
 ## Recently Completed
 
 The following items have been addressed:
@@ -42,7 +50,7 @@ The NFT handler is the only backend handler without test coverage. Add:
 
 ### 3. Re-enable NFT Mint Notifications
 **Priority:** High | **Effort:** Small
-`sendNewPlaces` is commented out in `src/bot/features/admin/queue.ts:245` (with the import also commented at line 35). Review the notification logic and re-enable it so users get notified when their NFT is minted.
+The admin `/queue` flow was rewritten to a binary Approve/Return action (`queue-approval-handler.ts`). Wire a user-facing notification on successful mint/approval so users learn their NFT was minted (and on Return, that changes were requested).
 
 ### 4. Leaderboard Caching
 **Priority:** Medium | **Effort:** Small
@@ -90,8 +98,8 @@ Use Telegram's messaging capabilities to send proactive notifications:
 
 ### 11. In-App Trading / Marketplace
 **Priority:** Low | **Effort:** Large
-The exchange feature currently only supports CUBE-to-SATOSHI swaps via `SatoshiExchange.vue`. Consider building:
-- Peer-to-peer NFT trading between users
+(The CUBE→SATOSHI swap that originally motivated this item was removed in the DB-only pivot.) Deferred to Phase C as the equipment **trading post** (5% burn). Consider building:
+- Peer-to-peer NFT / equipment trading between users
 - Auction system for rare NFTs
 - Price history charts
 
@@ -139,7 +147,7 @@ The current NFT image generation (`src/common/helpers/generation.ts`) uses Stabi
 ## Technical Debt
 
 ### 17. Add E2E Tests
-Backend has 422 unit/integration tests across 53 files; everything else is gap. Add:
+Backend has 749 unit/integration tests across 113 files; the frontend and E2E flows are the gap. Add:
 - Frontend component tests (Vitest + Vue Test Utils)
 - E2E tests for critical flows (login → claim → check balance)
 - Bot command integration tests

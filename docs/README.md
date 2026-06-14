@@ -2,12 +2,14 @@
 
 Research, design, and planning docs for the Cube Worlds Telegram Mini App.
 
-For system architecture and code structure, see [../ARCHITECTURE.md](../ARCHITECTURE.md) at the repo root.
+For system architecture and code structure, see [../ARCHITECTURE.md](../ARCHITECTURE.md) at the repo root. For **current** project state (feature-by-feature), see [../CLAUDE.md](../CLAUDE.md).
+
+> **Note (2026-06-14):** most docs here are point-in-time research/design (May 2026), pre-dating the **DB-only $CUBE** pivot. Each carries a status banner. Key reversal: $CUBE is permanently DB-only (no on-chain jetton), and the CUBE→SATOSHI exchange was removed. `ECONOMY.md` is kept current.
 
 ## Primary plan
 
 ### [ANCIENT_WORLDS_PLAN.md](ANCIENT_WORLDS_PLAN.md) — Game design, contracts, roadmap
-Synthesis layer on top of the research trilogy. Lays out an ancient-world ARPG/4X (inspired by Diablo II / Lineage II / HOMM3) reshaped as a casual TMA with castles, PvP/PvE, an 8-hour activity window, multi-jetton resource economy, and existing CNFT as game pass. Covers game loop, TON contract list, Phase A–F roadmap mapped to existing files, and risks.
+Synthesis layer on top of the research trilogy. Lays out an ancient-world ARPG/4X (inspired by Diablo II / Lineage II / HOMM3) reshaped as a casual TMA with castles, PvP/PvE, an 8-hour activity window, a (now DB-only) resource economy, and the entry NFT as game pass. Covers game loop, TON contract list, Phase A–F roadmap mapped to existing files, and risks. Phases A–C slice 1 have shipped — see the status banner atop the doc.
 - **Start here** if you want the playable shape and build order.
 
 ### [ECONOMY.md](ECONOMY.md) — Financial model & tokenomics
@@ -30,9 +32,9 @@ A catalog of 20 NFT interaction patterns (breeding, fusion, evolution, rentals, 
 - **Cube Worlds catalog** in Part 4: CNFT-as-multiplier → achievement SBTs → burn-to-upgrade fusion → CNFT rental → season access pass.
 
 ### 3. [TOKEN_INTERACTIONS.md](TOKEN_INTERACTIONS.md) — Fungible-token mechanics across all chains
-Sources, sinks, utility patterns, and economy models (single-token vs dual-token vs off-chain-points-then-TGE) with the survivor games' lessons. Anchored on the structural problem: Cube Worlds has 4 token sources and exactly 1 sink.
-- **Start here if** you're tuning the CUBE/SATOSHI economy.
-- **Cube Worlds plan** in Part 4: add 3 sinks first (dice refill, season pass, tournaments), then promote CUBE to on-chain jetton, then add Stars rail.
+Sources, sinks, utility patterns, and economy models (single-token vs dual-token vs off-chain-points-then-TGE) with the survivor games' lessons. Anchored on the (then) structural problem: Cube Worlds had 4 token sources and exactly 1 sink.
+- **Start here if** you're tuning the CUBE economy.
+- **Partly superseded:** its "add 3 sinks first" recommendation shipped; its "then promote CUBE to on-chain jetton" recommendation was **reversed** — $CUBE stays DB-only. See the doc's banner.
 
 ## Engineering backlog
 

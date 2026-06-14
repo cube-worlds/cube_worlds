@@ -2,66 +2,79 @@
 
 ## Project Summary
 
-Cube Worlds is a Telegram Mini App game on the TON blockchain. Users earn CUBE points via daily claims and referrals; admins curate the queue of users whose AI-generated NFTs get minted. The app also supports CUBE-to-SATOSHI token exchange and an idle clicker.
+Cube Worlds is a Telegram Mini App game on the TON blockchain. **$CUBE is a DB-only
+soft currency** (no on-chain jetton): players earn `votes` from daily claims, referrals,
+and **TON donations**, which rank a queue for **on-chain NFT minting** via a webview
+semi-automatic flow. Owning the NFT gates game entry. On top of that sits an
+ancient-world ARPG/4X economy — castles, heroes, expeditions, PvP arena/raids, weekly
+tournaments — plus a real-money (USDT) rail through xRocket.
 
-Three parts: Telegram bot (Grammy), Fastify API backend, Vue 3 frontend (Vite). MongoDB via Typegoose.
+Three parts: Telegram bot (Grammy), Fastify API backend, Vue 3 frontend (Vite).
+MongoDB via Typegoose. ESM only, no semicolons, single quotes, 2-space indent.
 
-The dice game and ChatGPT-powered story game (`/dice`, `/mint`, `/play`) were removed; the captcha endpoint and `suspicionDices` field remain as orphaned scaffolding from those flows.
+> **Source of truth:** `CLAUDE.md` carries the detailed, continuously-updated context
+> (feature-by-feature). This file is the generic-agent orientation; `ARCHITECTURE.md`
+> has the system diagram. When they disagree, trust `CLAUDE.md`.
 
-See `CLAUDE.md` for the compact context summary and `ARCHITECTURE.md` for the system diagram.
+### Recent pivot (2026-06-14)
+
+The on-chain $CUBE jetton bridge **and** the CUBE→SATOSHI jetton exchange were removed.
+$CUBE is now DB-only (`User.votes` + the `Balance` ledger are canonical). The old
+admin-curated, per-step NFT queue was replaced by a binary **Approve / Return** admin
+action plus a player-facing **webview mint** (`/api/mint`). The dice/story games
+(`/dice`, `/mint`, `/play`) and the captcha endpoint were already gone. Do not
+reintroduce any of these — the `removedCommandsFeature` safety net points users at the
+Mini App for the old commands.
 
 ## Repository Layout
 
 ```
-src/main.ts              — Entrypoint: MongoDB → bot → server → subscription → start
-src/server.ts            — Fastify: registers all handlers under /api/ prefixes
-src/config.ts            — Env config (znv/zod, lazy proxy singleton)
-src/subscription.ts      — TON blockchain transaction poller (composer wiring)
-src/subscription-start.ts — Pure builder for the subscription startup logic (DI)
-src/subscription-core.ts — Top-level subscription wiring
+src/main.ts               — Entrypoint: MongoDB → bot → server → subscription → workers
+src/server.ts             — Fastify: registers all handlers under /api/ prefixes
+src/config.ts             — Env config (znv/zod, lazy proxy; THROWS on read in NODE_ENV=test)
+src/subscription-core.ts  — TON transaction watcher (donations → votes faucet)
+src/subscription.ts       — Composer wiring for the watcher
 src/bot/
-  index.ts               — Middleware chain + feature registration (ORDER MATTERS)
-  context.ts             — Grammy Context + SessionData type definitions
-  callback-data/*.ts     — Typed callback-data packers (e.g. image-selection)
+  index.ts                — Middleware chain + feature registration (ORDER MATTERS)
+  context.ts              — Grammy Context + SessionData types
   features/
-    start.ts             — /start (referral capture, wallet prompt)
-    help.ts              — /help (split into help-handler.ts + help.ts)
-    line.ts              — /line — leaderboard preview in chat
-    stats.ts             — /stats (split)
-    whales.ts            — /whales — top-vote ranking
-    removed-commands.ts  — Catches /dice /mint /play and points to the Mini App (split)
-    unhandled.ts         — Final fallback (split)
+    start.ts              — /start (referral capture, wallet prompt)
+    help.ts               — /help        (split: help-handler.ts + help.ts)
+    line.ts               — /line — leaderboard preview in chat
+    stats.ts              — /stats        (split)
+    whales.ts             — /whales — top-vote ranking
+    season-pass.ts        — Telegram Stars pre_checkout + successful_payment  (split)
+    removed-commands.ts   — Catches /dice /mint /play → points to the Mini App (split)
+    unhandled.ts          — Final fallback
     admin/
-      queue.ts           — /queue — admin NFT mint workflow
-      collection.ts      — /collection — admin browse minted CNFTs
-      parameters.ts      — /params — runtime tweaks
-      transaction.ts     — /tx — admin transaction inspection (split)
-      user.ts            — /user — admin user inspection (split)
-  filters/is-admin.ts    — Auth filter for admin-only commands
-  handlers/              — Error boundary + sync-commands runner
-  middlewares/
-    attach-user.ts       — Loads/creates User from DB
-    reaction.ts          — slapReaction (auto-react to messages)
-    update-logger.ts     — Dev-only update logging
-  keyboards/             — Inline keyboards (photo, queue-menu)
-src/backend/
-  auth-handler.ts        — POST /api/auth/login (initData validation)
-  set-wallet-handler.ts  — POST /api/auth/set-wallet (TON address)
-  claim-handler.ts       — POST /api/users/claim + /claim/status (daily rewards)
-  leaderboard-handler.ts — GET /api/users/leaderboard (paginated, bounded)
-  balances-handler.ts    — GET /api/users/balances (aggregate stats)
-  nft-handler.ts         — NFT metadata + image generation (input-validated)
-  captcha.ts             — HMAC-signed captcha verification (no longer invoked by any feature; vestigial)
-  *.test.ts              — Tests (Node.js test runner, DI-based mocking)
+      queue.ts            — /queue — NFT mint approve/return  (split: queue-approval-handler.ts)
+      collection.ts       — /collection — browse minted CNFTs
+      parameters.ts       — /params — runtime tweaks
+      transaction.ts      — /tx          (split)
+      user.ts             — /user        (split)
+  filters/is-admin.ts     — Auth filter for admin-only commands (reads config — composer only)
+src/backend/              — Fastify route handlers, all DI-split (see Key Patterns)
+  auth-handler.ts         — POST /api/auth/login (initData validation, upsert, minted/mintState)
+  set-wallet-handler.ts + wallet-nonce-handler.ts + ton-proof.ts — TON Connect ton_proof binding
+  mint-handler.ts + mint.ts            — POST /api/mint/{quote,generate,status} (webview mint)
+  claim-handler.ts        — daily claim
+  production-handler.ts, castle-upgrade-handler.ts          — Castle / resources
+  hero-handler.ts, dungeon-handler.ts, quest-handler.ts     — Heroes / PvE
+  equipment-handler.ts, boss-handler.ts                     — Equipment / boss week
+  pvp-handler.ts, pvp-matchmaking.ts                        — Arena + raids
+  expedition-handler.ts, worlds-handler.ts, energy-handler.ts — Expedition economy
+  tournament-handler.ts, ad-reward-handler.ts, season-pass-invoice-handler.ts — Monetization
+  wallet-handler.ts, wallet-webhook-handler.ts, xrocket-client.ts — xRocket USDT money rail
+  *-settlement.ts + *-settlement-runner.ts — Idempotent background workers
+  *-mint.ts + *-mint-runner.ts + *-nft-client.ts — Deploy-gated on-chain NFT mints
 src/common/
-  models/                — User, Balance, Claim, CNFT, Transaction, Vote
-  helpers/               — ton, ipfs, generation, files, telegram, random, satoshi, etc.
-  i18n.ts                — Fluent i18n middleware
-src/frontend/            — Vue 3 app (separate package.json)
-  src/routes.ts          — Frontend route table (some entries have showInMenu: false)
-  src/components/        — Page-level components (ClaimComponent, FAQ, CNFT, etc.)
-  src/stores/userStore.ts — Pinia store (wallet, user, balance, initData)
-  captcha/               — Standalone DOOM captcha (HTML/JS, NOT Vue, currently unused)
+  models/                 — Typegoose models (User, Balance, CNFT, Castle, Hero, Match, ...)
+  helpers/                — Pure helpers (mint-floor, combat, dungeon, production, tournament, ...)
+  i18n.ts                 — Fluent i18n middleware
+src/frontend/             — Vue 3 app (separate package.json — keep deps isolated)
+  src/routes.ts           — Route table; router.beforeEach locks non-minted users to /mint
+  src/components/         — Page components (Castle, HeroRoster, Arena, Mint, Wallet, ...)
+  src/stores/userStore.ts — Pinia store (wallet, user, balance, initData, minted/mintState)
 ```
 
 ## Key Patterns
@@ -75,37 +88,44 @@ export function buildFooHandler(deps = createDefaultDependencies()) {
   return async function(ctx) { /* ... */ }
 }
 ```
-Tests call `buildFooHandler({ findUser: mockFn })` to inject stubs. Follow this pattern for any new route or command.
+Tests call `buildFooHandler({ findUser: mockFn })` to inject stubs. Follow this for any
+new route or command. Reference: `auth-handler.test.ts` (route), `help-handler.test.ts` (command).
 
 ### Handler-split for config-touching modules
-`src/config.ts` is a lazy proxy that throws when `NODE_ENV=test` (because the schema's `NODE_ENV` enum doesn't include `test`). Any module imported transitively from a test must therefore not touch `config.X` at module load.
+`src/config.ts` is a lazy Proxy that **throws on any property read when `NODE_ENV=test`**.
+Any module a test imports — even transitively — must not touch `config.X` at load time.
+When a handler needs `isAdmin`, `tonClient`, or any config-derived dependency, split it:
+- `foo-handler.ts` — pure DI handler, no `config` / `is-admin` / `ton` / `xrocket` import
+- `foo.ts` — composer that imports the heavy deps and injects them
 
-When a command needs `isAdmin` (which reads `config.BOT_ADMINS` at load) or `tonClient` (which reads many config values), split the file:
-- `foo-handler.ts` — pure DI handler, no `config` / `is-admin` / `ton` imports
-- `foo.ts` — Composer wiring that imports `isAdmin` and passes it in via `createXyzHandlerDependencies(isAdmin)`
-
-See `balance-handler.ts` + `balance.ts` and `transaction-handler.ts` + `admin/transaction.ts` for reference splits.
+Reference splits: `mint-handler.ts` + `mint.ts`, `admin/transaction-handler.ts` +
+`admin/transaction.ts`, `wallet-handler.ts` + `wallet.ts`.
 
 ### Authentication
-Endpoints validate Telegram `initData` with BOT_TOKEN (24-hour expiry). Flow: client sends initData in body → server validates signature → extracts user ID → finds User in MongoDB.
+Endpoints validate Telegram `initData` (HMAC + 24h expiry) → extract `user.id` → look up
+in MongoDB. Wallet binding additionally requires TON Connect **ton_proof**: a stateless
+HMAC nonce (`/api/auth/wallet-nonce`) is signed by the wallet and verified in
+`ton-proof.ts` (payload HMAC + expiry + userId + domain + stateInit hash + Ed25519 sig).
 
-### Captcha Flow (vestigial)
-The HMAC-signed DOOM captcha is still wired end-to-end — `generateCaptchaToken()` in `src/backend/captcha.ts` mints tokens, `captcha/script.js` + `captcha.html` render the iframe, and `GET /api/captcha/check` verifies (`server.ts:29`). It was driven by the removed dice command, so nothing currently issues tokens or sets `User.suspicionDices`. Tests (`captcha.test.ts`) still exercise the token round-trip. Keep the auth invariants if you reuse it: no secrets client-side, BOT_TOKEN as HMAC key.
-
-### Game Currency
-`User.votes` (bigint) is the central CUBE balance. Modified via `addPoints()` which atomically increments with `$inc` and logs to Balance model. All changes tracked with `BalanceChangeType` enum.
+### Game currency & economy
+`User.votes` (bigint) is the canonical **DB-only** $CUBE balance, mutated only via
+`addPoints()` (`$inc` + a `Balance` ledger row tagged with `BalanceChangeType`). The
+separate **USDT money rail** stores `WalletBalance` in bigint micro-USDT and never mixes
+with the CUBE ledger. **Invariant: sinks ship before faucets** — the expedition CUBE
+faucet stays gated behind `EXPEDITION_FAUCET_ENABLED` (default off) until its sinks are
+tuned. See `docs/ECONOMY.md`.
 
 ## Common Commands
 
 ```bash
 npm install && npm --prefix src/frontend install   # Install all deps
-npm run dev                                         # Full app at :3000 — API + bot + frontend HMR (embedded vite)
+npm run dev                                         # Full app at :3000 — API + bot + frontend HMR
 npm --prefix src/frontend run dev                   # Optional: frontend-only vite (:5173, no /api)
 npm run build:all                                   # Build backend (tsc) + frontend (vite)
-npm run lint                                        # ESLint (@antfu/eslint-config)
+npm run lint                                        # ESLint
 npm run format                                      # Prettier
 npm run typecheck                                   # TypeScript (tsc)
-npm run test:backend                                # 455 tests (~6s)
+npm run test:backend                                # Full backend suite (Node.js test runner)
 npm run test:coverage                               # Per-file line/branch/func coverage
 ```
 
@@ -117,35 +137,41 @@ NODE_ENV=test node --import tsx --test src/backend/auth-handler.test.ts
 ## Agent Safety Rules
 
 - **ESM only** — `"type": "module"`. No `require()`.
-- **Import order** enforced — type imports first, then builtins, external, internal (`perfectionist/sort-imports`).
+- **Import order** enforced — type imports first; value imports external-before-internal
+  (`#root/*`) per `perfectionist/sort-imports`.
 - **Never touch `build/`** — generated output.
 - **Frontend isolation** — `src/frontend/` has its own `package.json`. Don't mix deps.
-- **One vite copy per process** — root and `src/frontend` both install vite; loading both copies of rolldown's native binding in one process segfaults. Dev mode dynamically imports vite from `src/frontend/node_modules` in `server.ts` — never add a top-level `import 'vite'` to backend code.
-- **Browser Buffer** — `@ton/core` needs a global `Buffer` in the browser; `src/frontend/src/polyfills.ts` (first module entry in `index.html`) provides it. Vite 8 ignores `optimizeDeps.esbuildOptions` — don't re-add esbuild-era polyfill plugins.
-- **File paths** — always use `folderPath()` from `src/common/helpers/files.ts` for user-data directories. It sanitizes names and checks path boundaries.
-- **Secrets** — BOT_TOKEN, MNEMONICS, API keys come from `.env`. Never log them. Never hardcode cryptographic keys client-side.
-- **NFT image params** — `image` must be validated against CNFTImageType whitelist, `color` as integer 0-10, `index` as non-negative integer.
-- **Pagination** — leaderboard limit is capped at 100. Apply similar bounds to any new paginated endpoint.
-- **`NODE_ENV=test` gotcha** — see the handler-split note above. Tests must not transitively load `#root/config`.
+- **One vite copy per process** — root and `src/frontend` both install vite; loading both
+  copies of rolldown's native binding in one process segfaults on dlopen. Dev mode
+  dynamically imports vite from `src/frontend/node_modules` in `server.ts` — never add a
+  top-level `import 'vite'` to backend code.
+- **Browser Buffer** — `@ton/core` needs a global `Buffer`; `src/frontend/src/polyfills.ts`
+  (first module in `index.html`) provides it. Vite 8 ignores `optimizeDeps.esbuildOptions`.
+- **File paths** — use `folderPath()` from `src/common/helpers/files.ts` for any user-data
+  path; it sanitizes names and checks the `./data/` boundary.
+- **Secrets** — BOT_TOKEN, MNEMONICS, xRocket/Stability/OpenAI keys come from `.env`.
+  Never log them. Never hardcode cryptographic keys client-side.
+- **Pagination** — leaderboard limit capped 1–100, skip ≥ 0. Bound any new paginated endpoint.
+- **Idempotency** — settlement workers, the wallet webhook, and NFT mints are
+  exactly-once via unique `externalId` / status-CAS. Preserve this when editing them.
+- **`NODE_ENV=test` gotcha** — see the handler-split note. Tests must not transitively
+  load `#root/config`.
 
 ## Testing
 
-- **Runner:** Node.js built-in (`node --test`)
+- **Runner:** Node.js built-in (`node --test`) — not Jest/Vitest.
 - **Command:** `npm run test:backend`
-- **Current state:** 422 tests across 53 files
-- **Pattern:** Use DI to inject mock dependencies. See `auth-handler.test.ts` for reference.
+- **Pattern:** DI mock injection. See `auth-handler.test.ts` for reference.
 - **Before finishing any change:**
   ```bash
-  npm run lint && npm run typecheck && npm run test:backend && npm --prefix src/frontend run build
+  npm run lint && npm run typecheck && npm run test:backend && npm run build:all
   ```
-
-## Known TODOs
-
-- `src/bot/features/admin/queue.ts:244` — Re-enable `sendNewPlaces` notification (currently commented out along with the import on line 35)
 
 ## Further Reading
 
-- `CLAUDE.md` — Compact project context
+- `CLAUDE.md` — Detailed, current project context (feature-by-feature)
 - `ARCHITECTURE.md` — System shape overview
 - `CODEX.md` — Quick reference for Codex / Cursor
-- `docs/FUTURE_DEVELOPMENT.md` — Prioritized improvements and feature ideas
+- `docs/ECONOMY.md` — Tokenomics, sink discipline, financial model
+- `docs/ANCIENT_WORLDS_PLAN.md` — Game design & roadmap
+- `docs/FUTURE_DEVELOPMENT.md` — Prioritized improvements
