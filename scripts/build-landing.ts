@@ -146,6 +146,10 @@ async function main() {
     const raw = await readText(path.join(blogDir, file))
     const { data, body } = parseFrontMatter(raw)
     const slug = data.slug ?? file.replace(/\.md$/, '')
+    const outPath = path.join(OUT, 'blog', slug, 'index.html')
+    if (!outPath.startsWith(OUT + path.sep)) {
+      throw new Error(`Unsafe slug in ${file}: ${slug}`)
+    }
     posts.push({ slug, title: data.title ?? slug, date: data.date ?? '', description: data.description ?? '' })
     const article = `<section><div class="wrap" style="max-width:820px;">`
       + `<p class="hero-sub" style="margin:0 0 1rem;">${data.date ?? ''}</p>`
