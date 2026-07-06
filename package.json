@@ -24,7 +24,7 @@
     "update:frontend": "cd src/frontend && npx npm-check-updates -u && npm install",
     "update:all": "npm run update:bot && npm run update:frontend",
     "prepare": "npx husky",
-    "lint": "eslint . --ignore-pattern .github/ --ignore-pattern docs/",
+    "lint": "eslint . --ignore-pattern .github/ --ignore-pattern docs/ --ignore-pattern .superpowers/",
     "format": "prettier --write \"**/*.{ts,js,vue,json,css,scss,md}\"",
     "format:check": "prettier --check \"**/*.{ts,js,vue,json,css,scss,md}\"",
     "start": "tsc && tsx ./src/main.ts",
