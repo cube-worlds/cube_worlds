@@ -18,6 +18,6 @@ export function commaSeparatedNumber(input: number | bigint): string {
 }
 
 export function kFormatter(input: number | bigint): string {
-  const formatter = Intl.NumberFormat('en', { notation: 'compact' })
+  const formatter = new Intl.NumberFormat('en', { notation: 'compact' })
   return formatter.format(input)
 }
