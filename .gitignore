@@ -131,6 +131,7 @@ dist
 
 # Data
 data/
+!src/landing/src/data/
 
 *.env
 

@@ -1,0 +1,27 @@
+{
+  "brand": "Cube Worlds",
+  "telegramBot": "https://t.me/cube_worlds_bot",
+  "contact": "https://t.me/babin",
+  "baseUrl": "https://cubeworlds.club",
+  "nav": [
+    { "slug": "", "label": "Home" },
+    { "slug": "gameplay", "label": "Gameplay" },
+    { "slug": "economy", "label": "Economy" },
+    { "slug": "screens", "label": "Screens" },
+    { "slug": "history", "label": "History" },
+    { "slug": "investors", "label": "Investors" },
+    { "slug": "blog", "label": "Blog" },
+    { "slug": "faq", "label": "FAQ" }
+  ],
+  "footer": [
+    { "slug": "press", "label": "Press" },
+    { "slug": "privacy", "label": "Privacy" },
+    { "slug": "terms", "label": "Terms" }
+  ],
+  "metricsFallback": {
+    "players": "4,000+",
+    "minted": "1,200+",
+    "paidOut": "$1,400+",
+    "activeWeek": "800+"
+  }
+}
