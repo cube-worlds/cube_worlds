@@ -149,3 +149,21 @@ active: investors
     </div>
   </div>
 </section>
+
+<script>
+  (function () {
+    var fmt = function (n) { return Number(n).toLocaleString('en-US') }
+    fetch('/api/public/metrics').then(function (r) { return r.json() }).then(function (m) {
+      var map = {
+        players: fmt(m.players),
+        minted: fmt(m.minted),
+        paidOut: '$' + fmt(Math.round(Number(m.paidOutMicroUsdt) / 1e6)),
+        activeWeek: fmt(m.activeWeek),
+      }
+      document.querySelectorAll('[data-metric]').forEach(function (el) {
+        var key = el.getAttribute('data-metric')
+        if (map[key] != null) { el.textContent = map[key] }
+      })
+    }).catch(function () {})
+  })()
+</script>
