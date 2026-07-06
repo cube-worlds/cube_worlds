@@ -20,6 +20,9 @@ COPY . .
 RUN npm --prefix src/frontend ci
 RUN npm --prefix src/frontend run build:frontend
 
+# Build the static landing site into src/landing/dist
+RUN npm run build:landing
+
 USER node
 
 EXPOSE 80
