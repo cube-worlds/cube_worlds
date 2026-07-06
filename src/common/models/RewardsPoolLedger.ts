@@ -84,3 +84,9 @@ export async function poolBalance(): Promise<bigint> {
   const rows = await RewardsPoolLedgerModel.find({ currency: WALLET_CURRENCY })
   return rows.reduce((total, row) => total + row.amount, 0n)
 }
+
+// Total USDT paid out to players, as positive micro-USDT.
+export async function totalPaidOut(): Promise<bigint> {
+  const rows = await RewardsPoolLedgerModel.find({ type: RewardsEntryType.Payout }).lean()
+  return rows.reduce((total, row) => total + (row.amount < 0n ? -row.amount : 0n), 0n)
+}

@@ -289,6 +289,10 @@ export function countAllWallets(): Promise<number> {
   return UserModel.countDocuments({ wallet: { $exists: true } })
 }
 
+export function countActiveSince(since: Date): Promise<number> {
+  return UserModel.countDocuments({ updatedAt: { $gte: since } })
+}
+
 export function countAllLine(): Promise<number> {
   return UserModel.countDocuments({
     state: UserState.Submited,
