@@ -25,6 +25,7 @@ import leaderboardHandler from './backend/leaderboard-handler'
 import mintHandler from './backend/mint'
 import nftHandler from './backend/nft-handler'
 import productionHandler from './backend/production-handler'
+import publicMetricsHandler from './backend/public-metrics'
 import pvpHandler from './backend/pvp-handler'
 import questHandler from './backend/quest-handler'
 import { createSeasonPassInvoiceHandler } from './backend/season-pass-invoice'
@@ -134,6 +135,8 @@ export async function createServer(bot: Bot) {
   await server.register(balancesHandler, { prefix: '/api/users' })
   await server.register(leaderboardHandler, { prefix: '/api/users' })
   await server.register(claimHandler, { prefix: '/api/users' })
+
+  await server.register(publicMetricsHandler, { prefix: '/api/public' })
 
   await server.register(worldsHandler, { prefix: '/api/game' })
   await server.register(productionHandler, { prefix: '/api/game' })
