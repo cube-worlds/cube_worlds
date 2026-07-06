@@ -1,4 +1,3 @@
-import { Buffer } from 'node:buffer'
 import { cp, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import process from 'node:process'
@@ -202,4 +201,3 @@ main().catch((error) => {
   process.stderr.write(`${error instanceof Error ? error.stack : String(error)}\n`)
   process.exitCode = 1
 })
-void Buffer // keep import used if tree-shaken in future; harmless

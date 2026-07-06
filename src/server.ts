@@ -225,6 +225,30 @@ export async function createServer(bot: Bot) {
         return reply.type('text/html').send(html)
       }
       // Root and everything else → the multi-page landing dist.
+      // Serve non-HTML landing assets (CSS, images, etc.) in dev mode.
+      const clean = (url.split('?')[0] || '/').replace(/\/+$/, '')
+      const rel = clean === '' ? '' : clean.slice(1)
+      if (rel && !rel.endsWith('.html')) {
+        const staticAbs = path.join(landingPath, rel)
+        if (staticAbs.startsWith(landingPath + path.sep)) {
+          try {
+            const buf = await fs.readFile(staticAbs)
+            const ext = path.extname(staticAbs).toLowerCase()
+            const ct = ext === '.css' ? 'text/css'
+              : ext === '.js' ? 'application/javascript'
+              : ext === '.png' ? 'image/png'
+              : ext === '.svg' ? 'image/svg+xml'
+              : ext === '.json' ? 'application/json'
+              : ext === '.xml' ? 'application/xml'
+              : ext === '.txt' ? 'text/plain'
+              : 'application/octet-stream'
+            return reply.type(ct).send(buf)
+          }
+          catch {
+            // not found, fall through to HTML resolver
+          }
+        }
+      }
       const file = await resolveLandingFile(url)
       if (file) {
         const html = await fs.readFile(file, 'utf-8')

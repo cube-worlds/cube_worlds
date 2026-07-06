@@ -32,7 +32,7 @@
     "start:force": "tsx ./src/main.ts",
     "typecheck": "tsc",
     "test": "npm run test:backend",
-    "test:backend": "NODE_ENV=test node --import tsx --test $(find src -name '*.test.ts' -not -path 'src/frontend/*')",
+    "test:backend": "NODE_ENV=test node --import tsx --test scripts/landing/*.test.ts $(find src -name '*.test.ts' -not -path 'src/frontend/*')",
     "test:coverage": "NODE_ENV=test node --import tsx --test --experimental-test-coverage --test-coverage-include='src/**/*.ts' --test-coverage-exclude='src/**/*.test.ts' --test-coverage-exclude='src/frontend/**' $(find src -name '*.test.ts' -not -path 'src/frontend/*')"
   },
   "dependencies": {
