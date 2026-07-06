@@ -163,9 +163,32 @@ export async function createServer(bot: Bot) {
   // is served under /game (Vite base '/game/'). Telegram must open /game. The
   // landing dir also holds tonconnect-manifest.json + logo.png, which TON Connect
   // and the manifest reference at the root origin.
-  const landingPath = path.join(__dirname, 'landing')
+  const landingPath = path.join(__dirname, 'landing', 'dist')
 
   const isGameUrl = (url: string) => url === '/game' || url.startsWith('/game/')
+
+  const resolveLandingFile = async (url: string): Promise<string | null> => {
+    const clean = (url.split('?')[0] || '/').replace(/\/+$/, '')
+    const rel = clean === '' ? 'index.html' : clean.slice(1)
+    const candidates = rel.endsWith('.html')
+      ? [rel]
+      : [path.join(rel, 'index.html'), `${rel}.html`]
+    for (const candidate of candidates) {
+      const abs = path.join(landingPath, candidate)
+      // Guard against path traversal outside the landing dir.
+      if (!abs.startsWith(landingPath)) {
+        continue
+      }
+      try {
+        await fs.access(abs)
+        return abs
+      }
+      catch {
+        // try next candidate
+      }
+    }
+    return null
+  }
 
   if (config.NODE_ENV === 'development') {
     // Load vite from the frontend's own node_modules: the frontend's
@@ -201,12 +224,14 @@ export async function createServer(bot: Bot) {
         const html = await vite.transformIndexHtml(url, indexHtml)
         return reply.type('text/html').send(html)
       }
-      // Root and everything else → the static landing page.
-      const landingHtml = await fs.readFile(
-        path.join(landingPath, 'index.html'),
-        'utf-8',
-      )
-      return reply.type('text/html').send(landingHtml)
+      // Root and everything else → the multi-page landing dist.
+      const file = await resolveLandingFile(url)
+      if (file) {
+        const html = await fs.readFile(file, 'utf-8')
+        return reply.type('text/html').send(html)
+      }
+      const notFound = await fs.readFile(path.join(landingPath, '404.html'), 'utf-8')
+      return reply.status(404).type('text/html').send(notFound)
     })
   } else {
     // Landing (+ root assets: manifest, logo) at the root.
@@ -220,7 +245,7 @@ export async function createServer(bot: Bot) {
       prefix: '/game/',
       decorateReply: false,
     })
-    server.setNotFoundHandler({ preHandler: [] }, (req, reply) => {
+    server.setNotFoundHandler({ preHandler: [] }, async (req, reply) => {
       const url = req.raw.url || '/'
       if (url.startsWith('/api/')) {
         return reply.status(404).send({ error: 'API route not found' })
@@ -230,7 +255,11 @@ export async function createServer(bot: Bot) {
           .type('text/html')
           .sendFile('index.html', path.join(frontendPath, 'dist'))
       }
-      return reply.type('text/html').sendFile('index.html', landingPath)
+      const file = await resolveLandingFile(url)
+      if (file) {
+        return reply.type('text/html').sendFile(path.relative(landingPath, file), landingPath)
+      }
+      return reply.status(404).type('text/html').sendFile('404.html', landingPath)
     })
   }
 
