@@ -8,7 +8,10 @@ const composer = new Composer<Context>()
 
 const feature = composer.chatType('private')
 
-const handle = buildRemovedCommandsHandler({ webAppUrl: config.WEB_APP_URL })
+// The Mini App lives under /game (root serves the public landing).
+const handle = buildRemovedCommandsHandler({
+  webAppUrl: `${config.WEB_APP_URL.replace(/\/$/, '')}/game`,
+})
 
 feature.on('message:text', logHandle('removed-command'), async (ctx, next) => {
   const text = ctx.message?.text ?? ''

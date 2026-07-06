@@ -40,7 +40,14 @@ try {
 
   try {
     await syncBotCommands(bot.api)
-    await setMenuButton(bot.api)
+    const menuButton = await setMenuButton(bot.api)
+    if (menuButton.changed) {
+      logger.info(
+        `Menu button updated: ${menuButton.previousUrl ?? '(none)'} → ${menuButton.url}`,
+      )
+    } else {
+      logger.info(`Menu button already current (${menuButton.url})`)
+    }
   } catch (error) {
     logger.warn({ err: error }, 'Failed to sync bot commands or menu button')
   }

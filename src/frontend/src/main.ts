@@ -12,7 +12,9 @@ import 'element-plus/dist/index.css'
 import './style.css'
 
 const router = createRouter({
-  history: createWebHistory(),
+  // Base is '/game/' in prod (see vite.config.ts base); route paths like '/mint'
+  // stay base-relative, so the beforeEach gate comparisons are unaffected.
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes: vueRoutes,
 })
 

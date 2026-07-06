@@ -11,7 +11,8 @@ const feature = composer.chatType('private')
 feature.command(
   'help',
   logHandle('command-help'),
-  buildHelpCommandHandler({ webAppUrl: config.WEB_APP_URL }),
+  // The Mini App lives under /game (root serves the public landing).
+  buildHelpCommandHandler({ webAppUrl: `${config.WEB_APP_URL.replace(/\/$/, '')}/game` }),
 )
 
 export { composer as helpFeature }
