@@ -1,6 +1,6 @@
 /* eslint-disable test/no-import-node-test */
 import type { BotCommandScope } from '@grammyjs/types'
-import type { BotApiLike } from '#root/bot/handlers/commands/sync-commands-core'
+import type { BotApiLike, ChatMenuButton } from '#root/bot/handlers/commands/sync-commands-core'
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
@@ -15,7 +15,9 @@ interface SetMyCommandsCall {
   options?: { language_code?: string, scope?: BotCommandScope }
 }
 
-function makeApiStub() {
+function makeApiStub(
+  currentMenuButton: ChatMenuButton = { type: 'default' },
+) {
   const setMyCommandsCalls: SetMyCommandsCall[] = []
   const setMyDescriptionCalls: Array<{ description: string, options?: { language_code?: string } }> = []
   const setMyShortDescriptionCalls: Array<{ short_description: string, options?: { language_code?: string } }> = []
@@ -33,6 +35,7 @@ function makeApiStub() {
     setChatMenuButton: async (options) => {
       setChatMenuButtonCalls.push(options)
     },
+    getChatMenuButton: async () => currentMenuButton,
   }
   return {
     api,
@@ -160,18 +163,69 @@ test('syncBotCommands fans description and short-description across locales', as
   })
 })
 
-test('buildSetMenuButton calls setChatMenuButton with a web_app button at the configured URL', async () => {
-  const stub = makeApiStub()
-  const set = buildSetMenuButton({ webAppUrl: 'https://app.example', label: 'Open App' })
+test('buildSetMenuButton sets the web_app button when none is configured yet', async () => {
+  const stub = makeApiStub({ type: 'default' })
+  const set = buildSetMenuButton({ webAppUrl: 'https://app.example/game', label: 'Open App' })
 
-  await set(stub.api)
+  const result = await set(stub.api)
 
   assert.equal(stub.setChatMenuButtonCalls.length, 1)
   assert.deepEqual(stub.setChatMenuButtonCalls[0], {
     menu_button: {
       type: 'web_app',
       text: 'Open App',
-      web_app: { url: 'https://app.example' },
+      web_app: { url: 'https://app.example/game' },
     },
   })
+  assert.deepEqual(result, { changed: true, previousUrl: null, url: 'https://app.example/game' })
+})
+
+test('buildSetMenuButton updates when the existing web_app URL differs (/ → /game)', async () => {
+  const stub = makeApiStub({
+    type: 'web_app',
+    text: 'Open App',
+    web_app: { url: 'https://app.example' },
+  })
+  const set = buildSetMenuButton({ webAppUrl: 'https://app.example/game', label: 'Open App' })
+
+  const result = await set(stub.api)
+
+  assert.equal(stub.setChatMenuButtonCalls.length, 1)
+  assert.deepEqual(result, {
+    changed: true,
+    previousUrl: 'https://app.example',
+    url: 'https://app.example/game',
+  })
+})
+
+test('buildSetMenuButton is a no-op when the URL and label already match', async () => {
+  const stub = makeApiStub({
+    type: 'web_app',
+    text: 'Open App',
+    web_app: { url: 'https://app.example/game' },
+  })
+  const set = buildSetMenuButton({ webAppUrl: 'https://app.example/game', label: 'Open App' })
+
+  const result = await set(stub.api)
+
+  assert.equal(stub.setChatMenuButtonCalls.length, 0)
+  assert.deepEqual(result, {
+    changed: false,
+    previousUrl: 'https://app.example/game',
+    url: 'https://app.example/game',
+  })
+})
+
+test('buildSetMenuButton updates when only the label differs', async () => {
+  const stub = makeApiStub({
+    type: 'web_app',
+    text: 'Old Label',
+    web_app: { url: 'https://app.example/game' },
+  })
+  const set = buildSetMenuButton({ webAppUrl: 'https://app.example/game', label: 'Open App' })
+
+  const result = await set(stub.api)
+
+  assert.equal(stub.setChatMenuButtonCalls.length, 1)
+  assert.equal(result.changed, true)
 })

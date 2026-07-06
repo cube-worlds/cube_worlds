@@ -15,7 +15,8 @@ export const syncBotCommands = buildSyncBotCommands({
 })
 
 export const setMenuButton = buildSetMenuButton({
-  webAppUrl: config.WEB_APP_URL,
+  // The Mini App lives under /game (root serves the public landing).
+  webAppUrl: `${config.WEB_APP_URL.replace(/\/$/, '')}/game`,
   label: i18n.t(DEFAULT_LOCALE, 'menu_button.label'),
 })
 

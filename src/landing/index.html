@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cube Worlds — Ancient Worlds ARPG on TON</title>
+<meta name="description" content="Cube Worlds is an NFT-gated ancient-worlds ARPG inside Telegram, built on TON. Build castles, recruit heroes, raid rivals, and compete for real USDT prize pools. $CUBE economy.">
+<meta property="og:title" content="Cube Worlds — Ancient Worlds ARPG on TON">
+<meta property="og:description" content="NFT-gated ARPG inside Telegram on TON. Castles, heroes, PvP, weekly boss, USDT tournaments.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://cubeworlds.club/">
+<meta property="og:image" content="https://cubeworlds.club/logo.png">
+<link rel="canonical" href="https://cubeworlds.club/">
+<link rel="icon" href="https://cubeworlds.club/logo.png">
+<meta name="theme-color" content="#000033">
+<style>
+  :root {
+    --bg: #000018;
+    --bg2: #05061e;
+    --panel: #0b0d28;
+    --panel2: #10133a;
+    --border: #1e224e;
+    --accent: #ff9933;
+    --accent2: #6633ff;
+    --blue: #3366ff;
+    --text: #e7ecff;
+    --muted: #9aa2cc;
+    --dim: #6a7099;
+    --ok: #66ffb3;
+    --warn: #ffcc66;
+    --err: #ff6b6b;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.55;
+    overflow-x: hidden;
+  }
+  a { color: inherit; }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 0 1.25rem; }
+  h1, h2, h3 { line-height: 1.15; }
+  .accent { color: var(--accent); }
+  .grad-text {
+    background: linear-gradient(100deg, #ff9933, #ffdd66 40%, #9d7bff 80%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+
+  /* Starfield backdrop */
+  .cosmos-bg {
+    position: fixed; inset: 0; z-index: -2;
+    background:
+      radial-gradient(circle at 78% 8%, rgba(102,51,255,0.20), transparent 45%),
+      radial-gradient(circle at 12% 70%, rgba(255,153,51,0.12), transparent 42%),
+      linear-gradient(180deg, #000018, #05061e 60%, #02030f);
+  }
+  .cosmos-bg::before {
+    content: ''; position: absolute; inset: 0;
+    background-image:
+      radial-gradient(1px 1px at 15% 20%, #fff, transparent),
+      radial-gradient(1px 1px at 65% 12%, #fff, transparent),
+      radial-gradient(1px 1px at 42% 55%, #fff, transparent),
+      radial-gradient(1px 1px at 88% 68%, #fff, transparent),
+      radial-gradient(1px 1px at 30% 82%, #fff, transparent),
+      radial-gradient(2px 2px at 72% 40%, #fff, transparent),
+      radial-gradient(1px 1px at 8% 45%, #fff, transparent),
+      radial-gradient(1px 1px at 55% 92%, #fff, transparent);
+    opacity: 0.5;
+  }
+  .sun-glow {
+    position: fixed; top: -80px; right: 8%; z-index: -1;
+    width: 220px; height: 220px; border-radius: 50%;
+    background: radial-gradient(circle, #ff9933 0%, #ff6600 55%, transparent 72%);
+    filter: blur(6px); opacity: 0.55;
+  }
+
+  /* Nav */
+  nav {
+    position: sticky; top: 0; z-index: 50;
+    backdrop-filter: blur(10px);
+    background: rgba(4,5,20,0.72);
+    border-bottom: 1px solid var(--border);
+  }
+  nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 62px; }
+  .brand { display: flex; align-items: center; gap: 0.55rem; font-weight: 800; font-size: 1.15rem; letter-spacing: 0.3px; }
+  .brand .logo { font-size: 1.4rem; }
+  .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+  .nav-links a { text-decoration: none; color: var(--muted); font-size: 0.92rem; font-weight: 600; transition: color .2s; }
+  .nav-links a:hover { color: #fff; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    text-decoration: none; font-weight: 700; cursor: pointer;
+    border-radius: 12px; padding: 0.7rem 1.25rem; font-size: 0.95rem; border: none;
+    transition: transform .15s, box-shadow .2s;
+  }
+  .btn-primary { background: linear-gradient(135deg, #0098ea, #22a0ff); color: #fff; box-shadow: 0 6px 20px rgba(0,152,234,0.35); }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(0,152,234,0.45); }
+  .btn-ghost { background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: #fff; }
+  .btn-ghost:hover { background: rgba(255,255,255,0.11); }
+  .btn-accent { background: linear-gradient(135deg, #ff9933, #ff7a00); color: #201200; box-shadow: 0 6px 20px rgba(255,153,51,0.3); }
+  .btn-accent:hover { transform: translateY(-2px); }
+
+  /* Hero */
+  header.hero { padding: 4.5rem 0 3rem; text-align: center; }
+  .badge-pill {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    background: rgba(102,51,255,0.14); border: 1px solid rgba(102,51,255,0.4);
+    color: #c9b8ff; font-size: 0.8rem; font-weight: 600;
+    padding: 0.35rem 0.85rem; border-radius: 999px; margin-bottom: 1.5rem;
+  }
+  header.hero h1 { font-size: clamp(2.3rem, 6vw, 4rem); margin: 0 0 1rem; font-weight: 900; }
+  header.hero p.lead { font-size: clamp(1.05rem, 2.2vw, 1.3rem); color: var(--muted); max-width: 720px; margin: 0 auto 2rem; }
+  .hero-cta { display: flex; gap: 0.85rem; justify-content: center; flex-wrap: wrap; }
+  .hero-sub { margin-top: 1.25rem; color: var(--dim); font-size: 0.85rem; }
+
+  .chips { display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap; margin-top: 2.5rem; }
+  .chip { background: var(--panel); border: 1px solid var(--border); border-radius: 999px; padding: 0.45rem 1rem; font-size: 0.85rem; color: var(--muted); }
+  .chip b { color: #fff; }
+
+  /* Sections */
+  section { padding: 4rem 0; }
+  .section-head { text-align: center; max-width: 720px; margin: 0 auto 3rem; }
+  .section-head .eyebrow { color: var(--accent); font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; font-size: 0.78rem; }
+  .section-head h2 { font-size: clamp(1.8rem, 4vw, 2.6rem); margin: 0.6rem 0 0.75rem; font-weight: 800; }
+  .section-head p { color: var(--muted); font-size: 1.05rem; margin: 0; }
+
+  /* Feature grid */
+  .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.1rem; }
+  .feature {
+    background: linear-gradient(180deg, var(--panel), var(--bg2));
+    border: 1px solid var(--border); border-radius: 18px; padding: 1.5rem;
+    transition: transform .2s, border-color .2s;
+  }
+  .feature:hover { transform: translateY(-4px); border-color: rgba(255,153,51,0.4); }
+  .feature .ico { font-size: 2rem; margin-bottom: 0.75rem; display: block; }
+  .feature h3 { margin: 0 0 0.5rem; font-size: 1.15rem; }
+  .feature p { margin: 0; color: var(--muted); font-size: 0.92rem; }
+
+  /* Economy / investor */
+  .econ-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 2rem; align-items: start; }
+  @media (max-width: 860px){ .econ-grid { grid-template-columns: 1fr; } }
+  .econ-card { background: linear-gradient(180deg, var(--panel2), var(--panel)); border: 1px solid var(--border); border-radius: 18px; padding: 1.75rem; }
+  .econ-card h3 { margin-top: 0; }
+  .econ-list { list-style: none; padding: 0; margin: 0; }
+  .econ-list li { padding: 0.6rem 0; border-bottom: 1px solid var(--border); display: flex; gap: 0.7rem; font-size: 0.95rem; color: var(--muted); }
+  .econ-list li:last-child { border-bottom: none; }
+  .econ-list li b { color: #fff; }
+  .econ-list .k { color: var(--accent); flex-shrink: 0; }
+  .stat-tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.85rem; }
+  .stat-tile { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 1.1rem; text-align: center; }
+  .stat-tile .num { font-size: 1.7rem; font-weight: 800; color: #fff; }
+  .stat-tile .lbl { color: var(--muted); font-size: 0.82rem; margin-top: 0.25rem; }
+  .rails { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1rem; }
+  .rail { background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 10px; padding: 0.5rem 0.85rem; font-size: 0.85rem; color: var(--muted); }
+  .rail b { color: #fff; }
+
+  /* Steps */
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 1.1rem; }
+  .step { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; position: relative; }
+  .step .n { position: absolute; top: -14px; left: 20px; width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #ff7a00); color: #201200; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+  .step h3 { margin: 0.5rem 0 0.5rem; font-size: 1.1rem; }
+  .step p { margin: 0; color: var(--muted); font-size: 0.92rem; }
+
+  /* Gallery filter */
+  .filter-bar { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin-bottom: 2.25rem; }
+  .filter-btn { background: var(--panel); border: 1px solid var(--border); color: var(--muted); border-radius: 999px;
+    padding: 0.45rem 1rem; font-size: 0.85rem; cursor: pointer; font-weight: 600; transition: all .15s; }
+  .filter-btn:hover { color: #fff; }
+  .filter-btn.active { background: linear-gradient(135deg, var(--accent), #ff7a00); color: #201200; border-color: transparent; }
+
+  .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 2rem; justify-items: center; }
+  .screen-wrap { display: flex; flex-direction: column; align-items: center; }
+  .screen-wrap.hidden { display: none; }
+  .screen-label { margin-bottom: 0.85rem; text-align: center; max-width: 300px; }
+  .screen-label .name { font-weight: 700; font-size: 1rem; }
+  .screen-label .route { color: var(--dim); font-size: 0.75rem; font-family: ui-monospace, monospace; }
+  .screen-label .desc { color: var(--muted); font-size: 0.78rem; margin-top: 0.25rem; }
+  .state-tag { display:inline-block; margin-top:0.35rem; font-size:0.68rem; font-weight:700; letter-spacing:0.3px;
+    padding:0.12rem 0.5rem; border-radius:6px; background: rgba(102,51,255,0.18); color:#c9b8ff; border:1px solid rgba(102,51,255,0.35); }
+
+  /* Phone frame + in-app theme (mirrors the real Mini App) */
+  .phone {
+    width: 300px; height: 600px; border-radius: 30px; border: 9px solid #111436;
+    box-shadow: 0 22px 50px rgba(0,0,0,0.6); overflow: hidden; position: relative; background: #000033;
+  }
+  .cosmos { position: absolute; inset: 0; display: flex; flex-direction: column;
+    background: radial-gradient(circle at 30% 12%, #14235e 0%, #000033 55%); overflow: hidden; }
+  .stars-lite::before { content:''; position:absolute; inset:0;
+    background-image:
+      radial-gradient(1px 1px at 20% 30%, #fff, transparent),
+      radial-gradient(1px 1px at 70% 20%, #fff, transparent),
+      radial-gradient(1px 1px at 40% 60%, #fff, transparent),
+      radial-gradient(1px 1px at 85% 75%, #fff, transparent),
+      radial-gradient(1px 1px at 55% 85%, #fff, transparent),
+      radial-gradient(1px 1px at 10% 80%, #fff, transparent);
+    opacity: 0.6; }
+  .mini-sun { position:absolute; top:8%; left:18%; width:52px; height:52px; border-radius:50%;
+    background: radial-gradient(circle,#ff9933 0%,#ff6600 100%); box-shadow:0 0 36px #ff9933,0 0 60px #ff6600; z-index:1; }
+  .top-bar { position:relative; z-index:10; display:flex; justify-content:space-between; align-items:center;
+    padding:0.5rem 0.8rem; height:42px; background:rgba(0,0,51,0.8); backdrop-filter:blur(5px);
+    border-bottom:1px solid rgba(255,255,255,0.1); }
+  .coin-balance { font-size:0.9rem; font-weight:bold; color:#fff; }
+  .ton-connect { background:#0098ea; color:#fff; font-size:0.7rem; font-weight:600; padding:0.28rem 0.55rem; border-radius:8px; }
+  .content { position:relative; z-index:10; flex:1; overflow-y:auto; padding:0.7rem; }
+  .content::-webkit-scrollbar { width:4px; } .content::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.15); border-radius:2px; }
+  .footer { position:relative; z-index:10; height:48px; display:flex; justify-content:space-around; align-items:center;
+    background:rgba(0,0,51,0.8); backdrop-filter:blur(5px); border-top:1px solid rgba(255,255,255,0.1); font-size:1.25rem; }
+  .footer a { text-decoration:none; opacity:0.8; position:relative; }
+  .footer a.active { opacity:1; }
+  .footer a.active::after { content:''; position:absolute; bottom:-5px; left:20%; width:60%; height:2px; background:var(--accent); }
+
+  .app-card { background:rgba(0,0,51,0.7); border-radius:1rem; padding:0.9rem; border:1px solid rgba(255,255,255,0.1);
+    box-shadow:0 0 20px rgba(51,102,255,0.2); backdrop-filter:blur(5px); }
+  h1.a-title, h2.a-title { color:#fff; font-size:1.2rem; margin:0 0 0.85rem; text-align:center; text-shadow:0 0 8px rgba(255,255,255,0.5); }
+  .sub-card { background:rgba(255,255,255,0.04); border-radius:0.8rem; padding:0.7rem 0.8rem; margin-bottom:0.7rem; border:1px solid rgba(255,255,255,0.08); }
+  .card-title { color:#ccccff; font-size:0.8rem; margin-bottom:0.4rem; }
+  .a-stat-row { display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.1); padding:0.22rem 0; font-size:0.82rem; }
+  .a-btn { background:var(--accent); color:#000; border:none; border-radius:8px; padding:0.5rem 0.85rem; font-weight:bold; cursor:pointer; width:100%; font-size:0.85rem; margin-top:0.45rem; }
+  .a-btn.blue { background:linear-gradient(135deg,#3366ff,#6633ff); color:#fff; }
+  .a-btn.raid { background:linear-gradient(135deg,#803030,#aa4040); color:#fff; }
+  .a-btn.secondary { background:rgba(255,255,255,0.15); color:#fff; }
+  .a-btn.ghost { background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); color:#fff; }
+  .a-btn.sm { width:auto; padding:0.38rem 0.7rem; font-size:0.78rem; margin:0; }
+  .a-btn:disabled { opacity:0.5; }
+  .a-ok { color:var(--ok); font-size:0.82rem; } .a-warn { color:var(--warn); font-size:0.82rem; }
+  .a-note { color:#aaaacc; font-size:0.75rem; } .a-info { color:#ccccff; font-size:0.82rem; text-align:center; padding:0.4rem 0; }
+  .a-lead { font-size:0.95rem; text-align:center; margin:0.3rem 0; }
+  .founder-badge { text-align:center; color:#ffd966; font-weight:700; margin-bottom:0.7rem; font-size:0.82rem; }
+  .rgrid { display:grid; grid-template-columns:repeat(4,1fr); gap:0.35rem; margin-bottom:0.7rem; }
+  .rc { background:rgba(255,255,255,0.05); border-radius:0.55rem; padding:0.4rem; text-align:center; }
+  .rc .l { display:block; color:#aaaacc; font-size:0.6rem; } .rc .v { display:block; color:#fff; font-weight:700; font-size:0.9rem; }
+  .track { display:flex; align-items:center; justify-content:space-between; gap:0.5rem; padding:0.5rem 0.7rem; border-radius:0.7rem;
+    border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.04); margin-bottom:0.45rem; }
+  .track .tn { color:#fff; font-weight:700; font-size:0.82rem; display:block; } .track .td { color:#aaaacc; font-size:0.66rem; }
+  .a-link { display:block; text-align:center; color:#aaddff; text-decoration:none; padding:0.45rem; font-size:0.82rem; }
+  .preview-image { width:100%; border-radius:8px; aspect-ratio:1; image-rendering:pixelated; display:flex; align-items:center; justify-content:center; font-size:2.4rem;
+    background: repeating-conic-gradient(#6b4c9a 0% 25%, #4a3270 0% 50%) 50% / 20px 20px; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:0.35rem; } .grid4 { display:grid; grid-template-columns:repeat(4,1fr); gap:0.35rem; }
+  .ebar { height:0.65rem; background:rgba(255,255,255,0.1); border-radius:0.35rem; overflow:hidden; margin-top:0.3rem; }
+  .efill { height:100%; background:linear-gradient(90deg,#3366ff,#6633ff); }
+  .toggle { flex:1; padding:0.38rem; border-radius:0.55rem; border:1px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.05); color:#aaaacc; font-size:0.78rem; }
+  .toggle.active { background:linear-gradient(90deg,#3366ff,#6633ff); color:#fff; border-color:transparent; }
+  .world { padding:0.6rem 0.75rem; border-radius:0.75rem; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.04); margin-bottom:0.45rem; }
+  .world .wn { color:#fff; font-weight:700; margin-bottom:0.3rem; font-size:0.88rem; } .world .ws { display:flex; gap:0.8rem; margin-bottom:0.45rem; color:#ccccff; font-size:0.76rem; }
+  .herocard { padding:0.55rem 0.75rem; border-radius:0.75rem; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.04); margin-bottom:0.45rem; }
+  .hh { display:flex; justify-content:space-between; align-items:center; } .hn { color:#fff; font-weight:700; font-size:0.82rem; text-transform:capitalize; } .hx { color:#aaaacc; font-size:0.68rem; }
+  .chip-g { font-size:0.63rem; color:#dde; background:rgba(255,255,255,0.06); border-radius:0.5rem; padding:0.1rem 0.38rem; display:inline-block; margin:0.3rem 0.2rem 0 0; }
+  .chip-g.epic { color:#cc99ff; } .chip-g.legendary { color:#ffcc66; } .chip-g.rare { color:#99ccff; }
+  .hact { display:flex; gap:0.35rem; margin-top:0.45rem; }
+  .sel { background:rgba(0,0,40,0.8); color:#fff; border:1px solid rgba(255,255,255,0.15); border-radius:0.4rem; font-size:0.76rem; padding:0.32rem; flex:1; }
+  .boss-name { color:#ffcccc; font-size:1.05rem; font-weight:700; text-align:center; margin-bottom:0.3rem; }
+  .boss-stats { color:#ccccff; font-size:0.8rem; text-align:center; margin-bottom:0.4rem; } .board-line { color:#fff; font-size:0.8rem; text-align:center; }
+  .rounds { margin:0.4rem 0 0; padding-left:1rem; color:#ccccff; font-size:0.7rem; } .rounds .hp { color:#8888aa; }
+  .rhead { font-weight:700; margin-bottom:0.4rem; font-size:0.82rem; } .rhead.win { color:var(--ok); } .rhead.loss { color:#ff9999; } .rhead.dmg { color:#ffddaa; }
+  .rating { color:#aaddff; font-size:1.05rem; font-weight:700; text-align:center; } .record { color:#ccccff; font-size:0.8rem; text-align:center; }
+  .hrow { display:flex; gap:0.35rem; flex-wrap:wrap; padding:0.22rem 0; border-bottom:1px solid rgba(255,255,255,0.06); font-size:0.72rem; color:#ccccff; }
+  .won { color:var(--ok); } .lost { color:#ff9999; } .delta { color:#aaddff; } .lootc { color:#ffddaa; }
+  .prize-value { color:#fff; font-size:1.4rem; font-weight:700; text-align:center; display:block; text-shadow:0 0 8px rgba(102,51,255,0.4); }
+  .prize-label, .prize-sub { display:block; text-align:center; color:#ccccff; font-size:0.76rem; }
+  .brow { display:flex; align-items:center; gap:0.5rem; padding:0.38rem 0.1rem; border-bottom:1px solid rgba(255,255,255,0.08); font-size:0.8rem; }
+  .brank { width:2.2rem; color:#ffd479; font-weight:700; } .buser { flex:1; } .bscore { color:#fff; font-weight:600; }
+  .bal-value { color:#fff; font-size:1.3rem; font-weight:700; text-align:center; display:block; text-shadow:0 0 8px rgba(102,51,255,0.4); }
+  .field { padding:0.42rem 0.55rem; border-radius:0.55rem; border:1px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.05); color:#fff; font-size:0.8rem; flex:1; width:100%; }
+  .arow { display:flex; gap:0.35rem; margin-bottom:0.35rem; }
+  .lbrow { display:flex; align-items:center; gap:0.6rem; padding:0.4rem 0.25rem; border-bottom:1px solid rgba(255,255,255,0.06); font-size:0.8rem; }
+  .lbrank { width:2.5rem; font-weight:700; } .tier1 .lbrank { color:#ffd700; } .tier2 .lbrank { color:#c0c0c0; } .tier3 .lbrank { color:#cd7f32; }
+  .lbwallet { flex:1; font-family:ui-monospace,monospace; font-size:0.72rem; color:#dde; } .lbvotes { color:#fff; font-weight:600; }
+  .progress-bar { height:1.3rem; background:rgba(255,255,255,0.1); border-radius:0.65rem; position:relative; overflow:hidden; margin-bottom:0.5rem; }
+  .progress-fill { height:100%; background:linear-gradient(90deg,#3366ff,#6633ff); box-shadow:0 0 10px rgba(102,51,255,0.5); }
+  .ptext { color:#fff; font-size:0.88rem; font-weight:bold; text-align:center; }
+  .cnft-img { width:100%; aspect-ratio:1; border-radius:10px; background: repeating-conic-gradient(#3a5a9a 0% 25%, #27406e 0% 50%) 50% / 26px 26px; display:flex; align-items:center; justify-content:center; font-size:3rem; }
+
+  /* FAQ */
+  .faq-list { max-width: 800px; margin: 0 auto; }
+  details.faq { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 0 1.25rem; margin-bottom: 0.75rem; }
+  details.faq summary { cursor: pointer; padding: 1.1rem 0; font-weight: 700; font-size: 1.02rem; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+  details.faq summary::-webkit-details-marker { display: none; }
+  details.faq summary::after { content: '+'; color: var(--accent); font-size: 1.4rem; font-weight: 400; }
+  details.faq[open] summary::after { content: '\2212'; }
+  details.faq p { color: var(--muted); margin: 0 0 1.1rem; font-size: 0.95rem; }
+
+  /* CTA band */
+  .cta-band { text-align: center; background: linear-gradient(135deg, rgba(102,51,255,0.18), rgba(255,153,51,0.12)); border: 1px solid var(--border); border-radius: 24px; padding: 3rem 1.5rem; }
+  .cta-band h2 { font-size: clamp(1.6rem, 4vw, 2.4rem); margin: 0 0 0.75rem; }
+  .cta-band p { color: var(--muted); max-width: 560px; margin: 0 auto 1.75rem; }
+
+  /* Footer */
+  footer.site { border-top: 1px solid var(--border); padding: 2.5rem 0; color: var(--dim); font-size: 0.88rem; }
+  footer.site .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem; align-items: center; }
+  footer.site a { color: var(--muted); text-decoration: none; margin-left: 1.25rem; }
+  footer.site a:hover { color: #fff; }
+  .disclaimer { max-width: 1200px; margin: 1.5rem auto 0; padding: 0 1.25rem; color: var(--dim); font-size: 0.75rem; line-height: 1.5; }
+
+  @media (max-width: 700px){ .nav-links { display: none; } }
+</style>
+</head>
+<body>
+<div class="cosmos-bg"></div>
+<div class="sun-glow"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="wrap">
+    <div class="brand"><span class="logo">🧊</span> Cube Worlds</div>
+    <div class="nav-links">
+      <a href="#game">Game</a>
+      <a href="#economy">Economy</a>
+      <a href="#screens">Screens</a>
+      <a href="#start">How to play</a>
+      <a href="#faq">FAQ</a>
+    </div>
+    <a class="btn btn-primary" href="https://t.me/cube_worlds_bot" target="_blank" rel="noopener">✈️ Open in Telegram</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="wrap">
+    <span class="badge-pill">⛓️ Built on TON · 🎮 Playable inside Telegram</span>
+    <h1>Build an empire in the <span class="grad-text">Ancient Worlds</span></h1>
+    <p class="lead">
+      Cube Worlds is an NFT-gated idle-ARPG that lives entirely inside Telegram. Raise a castle,
+      recruit heroes, raid rivals, hunt the weekly boss, and compete for real USDT prize pools —
+      all powered by the $CUBE economy on TON.
+    </p>
+    <div class="hero-cta">
+      <a class="btn btn-primary" href="https://t.me/cube_worlds_bot" target="_blank" rel="noopener">✈️ Play now in Telegram</a>
+      <a class="btn btn-ghost" href="#screens">👀 See the screens</a>
+    </div>
+    <p class="hero-sub">Own a Cube Worlds NFT to enter · Free to start · No download</p>
+
+    <div class="chips">
+      <div class="chip"><b>🏰</b> Castles &amp; production</div>
+      <div class="chip"><b>🛡️</b> Heroes &amp; PvE dungeons</div>
+      <div class="chip"><b>🗡️</b> Arena &amp; raids</div>
+      <div class="chip"><b>🐉</b> Weekly boss</div>
+      <div class="chip"><b>🏅</b> USDT tournaments</div>
+    </div>
+  </div>
+</header>
+
+<!-- GAME OVERVIEW -->
+<section id="game">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">The Game</div>
+      <h2>A full ARPG loop, in chat</h2>
+      <p>Every system is on-chain-ready and DB-canonical. Progress compounds while you're away and pays off when you return.</p>
+    </div>
+    <div class="feature-grid">
+      <div class="feature"><span class="ico">🏰</span><h3>Your Castle</h3><p>Four upgrade tracks — Mine, Walls, Forge, Tavern. Resources accrue on an 8-hour production tick. Founders earn +20%.</p></div>
+      <div class="feature"><span class="ico">🛡️</span><h3>Heroes &amp; Dungeons</h3><p>Recruit knights, mages, archers and rogues at the Tavern. Run the deterministic daily dungeon and 8-hour quests for XP and loot.</p></div>
+      <div class="feature"><span class="ico">⚔️</span><h3>Equipment</h3><p>Four slots × four rarities. Gear folds directly into combat. Rare drops from quests and the weekly boss.</p></div>
+      <div class="feature"><span class="ico">🗡️</span><h3>Arena &amp; Raids</h3><p>Async-snapshot PvP on a single ELO ladder. Raid rival castles to plunder resources — or shield up after you're hit.</p></div>
+      <div class="feature"><span class="ico">🐉</span><h3>Weekly Boss</h3><p>The whole server chips away at a shared boss. Top the damage board for legendary, epic and rare equipment tiers.</p></div>
+      <div class="feature"><span class="ico">⚔️</span><h3>Expeditions</h3><p>Spend energy to dispatch expeditions across five cube-worlds. A congestion model dilutes crowded worlds — pick your risk.</p></div>
+      <div class="feature"><span class="ico">🏅</span><h3>Tournaments</h3><p>Monday-aligned weekly tournaments with real USDT prize pools, funded by the rewards pool and paid out via xRocket.</p></div>
+      <div class="feature"><span class="ico">🎟️</span><h3>NFT-gated entry</h3><p>Generate a pixel-art NFT, climb the mint queue with votes, and own your seat in the world before you play.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ECONOMY / INVESTORS -->
+<section id="economy">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Economy &amp; Sustainability</div>
+      <h2>Designed for the long game</h2>
+      <p>A deliberately conservative token model: sinks before faucets, no premature listing, and a rewards pool funded by real revenue.</p>
+    </div>
+    <div class="econ-grid">
+      <div class="econ-card">
+        <h3>The $CUBE model</h3>
+        <ul class="econ-list">
+          <li><span class="k">◆</span><span><b>$CUBE is DB-only.</b> Votes come from daily claims, referrals and TON donations — no on-chain jetton, no premature TGE.</span></li>
+          <li><span class="k">🎟️</span><span><b>NFT-gated.</b> Owning a Cube Worlds NFT gates game entry. An escalating mint floor keeps supply honest as the collection grows.</span></li>
+          <li><span class="k">🔥</span><span><b>Sinks before faucets.</b> Energy refills, weight-boosts, hero recruitment, castle upgrades and tournament entry all burn $CUBE before any faucet turns on.</span></li>
+          <li><span class="k">💰</span><span><b>20% rewards pool.</b> A fifth of net revenue accrues to an append-only, idempotent rewards ledger in micro-USDT that funds player payouts.</span></li>
+          <li><span class="k">🏆</span><span><b>Skill pays.</b> Weekly tournaments rank by in-window expedition CUBE and pay winners real USDT via free xRocket transfers.</span></li>
+        </ul>
+      </div>
+      <div>
+        <div class="stat-tiles">
+          <div class="stat-tile"><div class="num">TON</div><div class="lbl">Settlement chain</div></div>
+          <div class="stat-tile"><div class="num">20%</div><div class="lbl">Revenue → rewards pool</div></div>
+          <div class="stat-tile"><div class="num">4</div><div class="lbl">NFT collections</div></div>
+          <div class="stat-tile"><div class="num">100%</div><div class="lbl">In-Telegram, no download</div></div>
+        </div>
+        <div class="econ-card" style="margin-top:1rem;">
+          <h3 style="margin-top:0;">Monetization rails</h3>
+          <div class="rails">
+            <div class="rail"><b>xRocket</b> USDT deposits, withdrawals &amp; payouts</div>
+            <div class="rail"><b>Telegram Stars</b> Season Pass</div>
+            <div class="rail"><b>Adsgram</b> rewarded ads → energy</div>
+            <div class="rail"><b>TON</b> donations → mint votes</div>
+          </div>
+          <p class="a-note" style="margin-top:1rem;">All USDT is held as bigint micro-USDT with an overdraft-proof ledger and an hourly custody reconciliation guard.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SCREENS GALLERY -->
+<section id="screens">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Product Tour</div>
+      <h2>Every screen, as players see it</h2>
+      <p>These are faithful mockups of the live Telegram Mini App — the same cosmic UI, balance bar and emoji navigation. The game itself runs only inside Telegram.</p>
+    </div>
+
+    <div class="filter-bar">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="onboarding">Onboarding &amp; Mint</button>
+      <button class="filter-btn" data-filter="core">Core game</button>
+      <button class="filter-btn" data-filter="pvp">Combat &amp; PvP</button>
+      <button class="filter-btn" data-filter="economy">Economy</button>
+    </div>
+
+    <div class="gallery">
+
+      <!-- MINT: not-connected -->
+      <div class="screen-wrap" data-cat="onboarding">
+        <div class="screen-label"><div class="name">🎟️ Mint — connect wallet</div><div class="route">/mint</div><div class="desc">First stop for a new player. Wallet is delivery address + donation identity.</div><span class="state-tag">state 1/9 · not-connected</span></div>
+        <div class="phone"><div class="cosmos"><div class="stars-lite"></div><div class="mini-sun"></div>
+          <div class="top-bar"><span class="coin-balance">0 $CUBE</span><span class="ton-connect">Connect</span></div>
+          <div class="content"><h2 class="a-title">🎟️ Mint your Cube Worlds NFT</h2>
+            <div class="app-card"><p class="a-lead">Connect your TON wallet to begin.</p>
+              <p class="a-note">Your wallet is both the NFT delivery address and your donation identity — use the Connect button at the top.</p></div>
+          </div><div class="footer"><a class="active">🎟️</a></div>
+        </div></div>
+      </div>
+
+      <!-- MINT: ready -->
+      <div class="screen-wrap" data-cat="onboarding">
+        <div class="screen-label"><div class="name">🎟️ Mint — ready</div><div class="route">/mint</div><div class="desc">Wallet bound. Shows floor vs. your votes and the Generate CTA.</div><span class="state-tag">state 2/9 · ready</span></div>
+        <div class="phone"><div class="cosmos"><div class="stars-lite"></div><div class="mini-sun"></div>
+          <div class="top-bar"><span class="coin-balance">1,240 $CUBE</span><span class="ton-connect">EQAb…9xK2</span></div>
+          <div class="content"><h2 class="a-title">🎟️ Mint your Cube Worlds NFT</h2>
+            <div class="app-card"><div class="a-stat-row"><span>Mint floor</span><span>2,500 votes</span></div>
+              <div class="a-stat-row"><span>Your votes</span><span>1,240</span></div>
+              <button class="a-btn">✨ Generate my NFT</button></div>
+          </div><div class="footer"><a class="active">🎟️</a></div>
+        </div></div>
+      </div>
+
+      <!-- MINT: preview -->
+      <div class="screen-wrap" data-cat="onboarding">
+        <div class="screen-label"><div class="name">🎟️ Mint — preview</div><div class="route">/mint</div><div class="desc">AI pixel-art + description generated; eligibility &amp; donate CTA.</div><span class="state-tag">state 4/9 · preview</span></div>
+        <div class="phone"><div class="cosmos"><div class="stars-lite"></div><div class="mini-sun"></div>
+          <div class="top-bar"><span class="coin-balance">1,240 $CUBE</span><span class="ton-connect">EQAb…9xK2</span></div>
+          <div class="content"><h2 class="a-title">🎟️ Mint your Cube Worlds NFT</h2>
+            <div class="app-card"><div class="preview-image">🧊</div>
+              <p class="a-note" style="font-style:italic;">A stoic cube-knight forged in the ashfall crater, banner raised.</p>
+              <div class="a-stat-row"><span>Mint floor</span><span>2,500 votes</span></div>
+              <div class="a-stat-row"><span>Your votes</span><span>1,240</span></div>
+              <p class="a-warn">💎 Donate TON to earn 1,260 more votes and qualify to mint.</p>
+              <button class="a-btn secondary">🔄 Regenerate</button></div>
+          </div><div class="footer"><a class="active">🎟️</a></div>
+        </div></div>
+      </div>
+
+      <!-- MINT: below-floor / in-queue combined states -->
+      <div class="screen-wrap" data-cat="onboarding">
+        <div class="screen-label"><div class="name">🎟️ Mint — in queue</div><div class="route">/mint</div><div class="desc">Eligible &amp; ranked; donate more TON to climb.</div><span class="state-tag">state 6/9 · in-queue</span></div>
+        <div class="phone"><div class="cosmos"><div class="stars-lite"></div><div class="mini-sun"></div>
+          <div class="top-bar"><span class="coin-balance">3,100 $CUBE</span><span class="ton-connect">EQAb…9xK2</span></div>
+          <div class="content"><h2 class="a-title">🎟️ Mint your Cube Worlds NFT</h2>
+            <div class="app-card"><p class="a-ok">✅ You're in the mint queue.</p>
+              <div class="a-stat-row"><span>Your position</span><span>#14</span></div>
+              <p class="a-note">Donate more TON to climb the queue and mint sooner.</p></div>
+            <div class="sub-card" style="margin-top:0.7rem;"><div class="card-title">Also possible</div>
+              <p class="a-warn">⏳ Eligible — your NFT is awaiting admin review.</p>
+              <p class="a-warn" style="margin-top:0.5rem;">↩️ Your draft was returned. Please regenerate it.</p></div>
+          </div><div class="footer"><a class="active">🎟️</a></div>
+        </div></div>
+      </div>
+
+      <!-- MINT: minted -->
+      <div class="screen-wrap" data-cat="onboarding">
+        <div class="screen-label"><div class="name">🎟️ Mint — minted 🎉</div><div class="route">/mint</div><div class="desc">NFT minted; gate unlocks, all game tabs appear.</div><span class="state-tag">state 9/9 · minted</span></div>
+        <div class="phone"><div class="cosmos"><div class="stars-lite"></div><div class="mini-sun"></div>
+          <div class="top-bar"><span class="coin-balance">3,100 $CUBE</span><span class="ton-connect">EQAb…9xK2</span></div>
+          <div class="content"><h2 class="a-title">🎟️ Mint your Cube Worlds NFT</h2>
+            <div class="app-card"><p class="a-ok">🎉 Your NFT is minted!</p>
+              <a class="a-link" style="color:#66ccff;">View on-chain</a>
+              <button class="a-btn">🚀 Enter the game</button></div>
+          </div><div class="footer"><a class="active">🎟️</a></div>
+        </div></div>
+      </div>
+
+      <!-- CNFT viewer -->
+      <div class="screen-wrap" data-cat="onboarding">
+        <div class="screen-label"><div class="name">🎨 NFT Viewer</div><div class="route">/cnft</div><div class="desc">Shows the owned collectible with claim / view-on-GetGems action.</div><span class="state-tag">hidden route</span></div>
+        <div class="phone"><div class="cosmos"><div class="stars-lite"></div><div class="mini-sun"></div>
+          <div class="top-bar"><span class="coin-balance">3,100 $CUBE</span><span class="ton-connect">EQAb…9xK2</span></div>
+          <div class="content"><h2 class="a-title">Your Cube Worlds NFT</h2>
+            <div class="app-card"><h2 class="a-title" style="font-size:1rem;">Diamond Cube #142</h2>
+              <div class="cnft-img">💎</div>
+              <p class="a-note" style="margin-top:0.6rem;">A crystalline guardian of the Frozen Abyss — 500K+ votes tier.</p>
+              <button class="a-btn blue">Show on GetGems</button></div>
+          </div><div class="footer"><a>🏰</a><a>🏆</a><a>🛡️</a><a>🐉</a><a>🗡️</a><a>⚔️</a></div>
+        </div></div>
+      </div>
+
+      <!-- CASTLE -->
+      <div class="screen-wrap" data-cat="core">
+        <div class="screen-label"><div class="name">🏰 Castle (Home)</div><div class="route">/</div><div class="desc">Resources, 8h production, four upgrade tracks, founder perk.</div><span class="state-tag">home tab</span></div>
+        <div class="phone"><div class="cosmos"><div class="stars-lite"></div><div class="mini-sun"></div>
+          <div class="top-bar"><span class="coin-balance">3,100 $CUBE</span><span class="ton-connect">EQAb…9xK2</span></div>
+          <div class="content"><div class="app-card"><h1 class="a-title">Your Castle</h1>
+            <div class="founder-badge">⭐ Founder — +20% production</div>
+            <div class="rgrid"><div class="rc"><span class="l">Gold</span><span class="v">820</span></div><div class="rc"><span class="l">Iron</span><span class="v">460</span></div><div class="rc"><span class="l">Mana</span><span class="v">150</span></div><div class="rc"><span class="l">Food</span><span class="v">610</span></div></div>
+            <div class="sub-card"><div class="card-title">Production</div><div class="a-ok">+72G 43I 14M 57F ready</div><button class="a-btn">Claim production</button></div>
+            <div class="track"><div><span class="tn">Mine (Lv 3)</span><span class="td">Resource production rate</span></div><button class="a-btn sm">Upgrade</button></div>
+            <div class="track"><div><span class="tn">Walls (Lv 2)</span><span class="td">PvP defense</span></div><button class="a-btn sm">Upgrade</button></div>
+            <div class="track"><div><span class="tn">Forge (Lv 1)</span><span class="td">Equipment quality</span></div><button class="a-btn sm">Upgrade</button></div>
+            <div class="track"><div><span class="tn">Tavern (Lv 2)</span><span class="td">Hero recruitment cap</span></div><button class="a-btn sm">Upgrade</button></div>
+            <a class="a-link">⚔️ Dispatch a hero on expedition →</a></div>
+          </div><div class="footer"><a class="active">🏰</a><a>🏆</a><a>🛡️</a><a>🐉</a><a>🗡️</a><a>⚔️</a></div>
+        </div></div>
+      </div>
+
+      <!-- HEROES -->
+      <div class="screen-wrap" data-cat="core">
+        <div class="screen-label"><div class="name">🛡️ Heroes</div><div class="route">/heroes</div><div class="desc">Recruit, daily dungeon, 8h quest, equipment, combat replay.</div><span class="state-tag">core tab</span></div>
+        <div class="phone"><div class="cosmos"><div class="stars-lite"></div><div class="mini-sun"></div>
+          <div class="top-bar"><span class="coin-balance">3,100 $CUBE</span><span class="ton-connect">EQAb…9xK2</span></div>
+          <div class="content"><div class="app-card"><h1 class="a-title">Heroes</h1>
+            <div class="sub-card"><div class="card-title">Recruit at the Tavern (CUBE + Gold)</div>
+              <div class="grid4"><button class="a-btn sm" style="width:100%">knight</button><button class="a-btn sm" style="width:100%">mage</button><button class="a-btn sm" style="width:100%">archer</button><button class="a-btn sm" style="width:100%">rogue</button></div></div>
+            <div class="herocard"><div class="hh"><span class="hn">knight (Lv 7) ⭐ 🔒</span><span class="hx">1,820 XP</span></div>
+              <div><span class="chip-g legendary">weapon · +9⚔</span><span class="chip-g epic">body · +6🛡</span></div>
+              <div class="hact"><button class="a-btn sm blue" style="flex:1">⚔️ Daily dungeon</button><button class="a-btn sm ghost" style="flex:1">🧭 8h quest</button></div></div>
+            <div class="herocard"><div class="hh"><span class="hn">mage (Lv 4)</span><span class="hx">540 XP</span></div>
+              <div class="hact"><span class="a-warn" style="align-self:center;font-size:0.76rem">⏳ Questing — 5h 12m</span></div></div>
+            <div class="sub-card"><div class="rhead win">🏆 Victory! (+60 XP)</div><div class="a-ok">Loot: +40G 20I 5M 30F</div>
+              <ol class="rounds"><li>🗡️ Hero hits for 28 <span class="hp">(hero 90 / enemy 52)</span></li><li>👹 Enemy hits for 14 <span class="hp">(hero 76 / enemy 52)</span></li><li>🗡️ Hero hits for 31 <span class="hp">(hero 76 / enemy 21)</span></li></ol></div>
+            <a class="a-link">🐉 Raid the weekly boss →</a></div>
+          </div><div class="footer"><a>🏰</a><a>🏆</a><a class="active">🛡️</a><a>🐉</a><a>🗡️</a><a>⚔️</a></div>
+        </div></div>
+      </div>
+
+      <!-- EXPEDITIONS -->
+      <div class="screen-wrap" data-cat="core">
+        <div class="screen-label"><div class="name">⚔️ Dispatch (Expeditions)</div><div class="route">/expeditions</div><div class="desc">Spend energy across five worlds; congestion-diluted CUBE pool.</div><span class="state-tag">core tab</span></div>
+        <div class="phone"><div class="cosmos"><div class="stars-lite"></div><div class="mini-sun"></div>
+          <div class="top-bar"><span class="coin-balance">3,100 $CUBE</span><span class="ton-connect">EQAb…9xK2</span></div>
+          <div class="content"><div class="app-card"><h1 class="a-title">Expeditions</h1>
+            <div class="sub-card"><div class="card-title" style="text-align:center">Energy: 6 / 10</div><div class="ebar"><div class="efill" style="width:60%"></div></div></div>
+            <div class="arow"><span class="a-note" style="align-self:center">Risk:</span><button class="toggle active">Safe</button><button class="toggle">Greedy</button></div>
+            <div class="world"><div class="wn">The Verdant Hollow</div><div class="ws"><span>Pool: 50,000 ◆</span><span>Explorers: 128</span></div><button class="a-btn sm blue" style="width:100%">Join (safe)</button></div>
+            <div class="world"><div class="wn">Ashfall Crater</div><div class="ws"><span>Pool: 50,000 ◆</span><span>Explorers: 84</span></div><button class="a-btn sm blue" style="width:100%">Join (safe)</button></div>
+            <div class="world"><div class="wn">Frozen Abyss</div><div class="ws"><span>Pool: 50,000 ◆</span><span>Explorers: 201</span></div><button class="a-btn sm blue" style="width:100%">Join (safe)</button></div>
+            <button class="a-btn" style="margin-top:0.45rem">Refill energy (500 ◆)</button></div>
+          </div><div class="footer"><a>🏰</a><a>🏆</a><a>🛡️</a><a>🐉</a><a>🗡️</a><a class="active">⚔️</a></div>
+        </div></div>
+      </div>
+
+      <!-- ARENA -->
+      <div class="screen-wrap" data-cat="pvp">
+        <div class="screen-label"><div class="name">🗡️ Arena &amp; Raids</div><div class="route">/arena</div><div class="desc">ELO ladder, arena burn + raid stake/plunder, battle history.</div><span class="state-tag">PvP tab</span></div>
+        <div class="phone"><div class="cosmos"><div class="stars-lite"></div><div class="mini-sun"></div>
+          <div class="top-bar"><span class="coin-balance">3,100 $CUBE</span><span class="ton-connect">EQAb…9xK2</span></div>
+          <div class="content"><div class="app-card"><h1 class="a-title">Arena &amp; Raids</h1>
+            <div class="sub-card"><div class="rating">🗡️ Rating: <strong>1,148</strong></div><div class="record">14W · 9L</div><div class="record" style="color:var(--ok)">🛡️ Shielded until 4:20 PM</div><div class="record">Raids left today: 2</div></div>
+            <div class="sub-card"><div class="card-title">Pick a hero (questing heroes unavailable)</div><select class="sel" style="width:100%"><option>knight Lv7</option></select>
+              <div class="hact" style="margin-top:0.45rem"><button class="a-btn sm" style="flex:1">⚔️ Arena (10 CUBE)</button><button class="a-btn sm raid" style="flex:1">🏴‍☠️ Raid (50 CUBE + 25🍖)</button></div></div>
+            <div class="sub-card"><div class="rhead dmg">🏆 Victory vs Explorer 8812 · +18 rating · +40 XP</div><div class="a-note">Stake returned · plundered 30🪙 · 12⚙️</div></div>
+            <div class="sub-card"><div class="card-title">Recent battles</div>
+              <div class="hrow"><span>⚔️</span><span>You attacked Explorer 8812</span><span class="won">won</span><span class="delta">+18</span></div>
+              <div class="hrow"><span>🏴‍☠️</span><span>Explorer 4471 raided you</span><span class="lost">lost</span><span class="delta">-15</span><span class="lootc">-20🪙</span></div></div></div>
+          </div><div class="footer"><a>🏰</a><a>🏆</a><a>🛡️</a><a>🐉</a><a class="active">🗡️</a><a>⚔️</a></div>
+        </div></div>
+      </div>
+
+      <!-- BOSS -->
+      <div class="screen-wrap" data-cat="pvp">
+        <div class="screen-label"><div class="name">🐉 Weekly Boss</div><div class="route">/boss</div><div class="desc">One attack/day, shared damage board, tiered equipment rewards.</div><span class="state-tag">PvP tab</span></div>
+        <div class="phone"><div class="cosmos"><div class="stars-lite"></div><div class="mini-sun"></div>
+          <div class="top-bar"><span class="coin-balance">3,100 $CUBE</span><span class="ton-connect">EQAb…9xK2</span></div>
+          <div class="content"><div class="app-card"><h1 class="a-title">Weekly Boss</h1>
+            <div class="sub-card"><div class="boss-name">🐉 Gloomfang the Ancient</div><div class="boss-stats">4,800 ❤ · 120 ⚔ · 60 🛡</div><div class="board-line">Your damage: <strong>1,240</strong> · rank #8 of 214</div></div>
+            <div class="sub-card"><div class="card-title">Send a hero to deal damage (once per day)</div><div class="arow"><select class="sel"><option>knight Lv7</option></select><button class="a-btn sm">⚔️ Attack</button></div></div>
+            <div class="sub-card"><div class="rhead dmg">💥 Dealt 312 damage (+40 XP)</div><ol class="rounds"><li>🗡️ Hero hits for 44 <span class="hp">(hero 110 / boss 4756)</span></li><li>🐉 Boss hits for 38 <span class="hp">(hero 72 / boss 4756)</span></li></ol></div>
+            <a class="a-link">🛡️ Back to heroes →</a></div>
+          </div><div class="footer"><a>🏰</a><a>🏆</a><a>🛡️</a><a class="active">🐉</a><a>🗡️</a><a>⚔️</a></div>
+        </div></div>
+      </div>
+
+      <!-- TOURNAMENT -->
+      <div class="screen-wrap" data-cat="economy">
+        <div class="screen-label"><div class="name">🏅 Weekly Tournament</div><div class="route">/tournament</div><div class="desc">USDT prize pool, CUBE entry (free w/ Season Pass), rewarded ads.</div><span class="state-tag">economy tab</span></div>
+        <div class="phone"><div class="cosmos"><div class="stars-lite"></div><div class="mini-sun"></div>
+          <div class="top-bar"><span class="coin-balance">3,100 $CUBE</span><span class="ton-connect">EQAb…9xK2</span></div>
+          <div class="content"><div class="app-card"><h1 class="a-title">Weekly Tournament</h1>
+            <div class="sub-card"><span class="prize-label">Prize pool</span><span class="prize-value">142 USDT</span><span class="prize-sub">318 explorers · ends in 3d 6h</span></div>
+            <div class="a-ok" style="text-align:center;padding:0.5rem;border:1px solid rgba(153,255,204,0.3);border-radius:0.6rem;margin-bottom:0.7rem">Entered · rank 12 · 4,820 CUBE</div>
+            <div class="card-title">Leaderboard</div>
+            <div class="brow"><span class="brank">#1</span><span class="buser">Explorer 44120</span><span class="bscore">28,400</span></div>
+            <div class="brow"><span class="brank">#2</span><span class="buser">Explorer 90311</span><span class="bscore">21,050</span></div>
+            <div class="brow"><span class="brank">#3</span><span class="buser">Explorer 11872</span><span class="bscore">18,900</span></div>
+            <div class="arow" style="margin-top:0.7rem"><button class="a-btn ghost sm" style="flex:1">⚡ Watch ad</button><button class="a-btn ghost sm" style="flex:1">⭐ Season Pass</button></div></div>
+          </div><div class="footer"><a>🏰</a><a>🏆</a><a>🛡️</a><a>🐉</a><a>🗡️</a><a class="active">🏅</a></div>
+        </div></div>
+      </div>
+
+      <!-- WALLET -->
+      <div class="screen-wrap" data-cat="economy">
+        <div class="screen-label"><div class="name">👛 Wallet</div><div class="route">/wallet</div><div class="desc">xRocket USDT rail: deposit, buy energy, withdraw, free transfer.</div><span class="state-tag">economy tab</span></div>
+        <div class="phone"><div class="cosmos"><div class="stars-lite"></div><div class="mini-sun"></div>
+          <div class="top-bar"><span class="coin-balance">3,100 $CUBE</span><span class="ton-connect">EQAb…9xK2</span></div>
+          <div class="content"><div class="app-card"><h1 class="a-title">Wallet</h1>
+            <div style="margin-bottom:0.9rem"><span class="prize-label">Balance</span><span class="bal-value">12.50 USDT</span></div>
+            <div class="card-title">Deposit</div><div class="arow"><input class="field" value="1"><button class="a-btn sm">Deposit</button></div>
+            <button class="a-btn" style="margin-bottom:0.7rem">Buy Energy pack (0.5 USDT)</button>
+            <div class="card-title">Withdraw</div><div class="arow"><select class="field"><option>TON</option></select><input class="field" value="1"></div>
+            <input class="field" placeholder="address" style="margin-bottom:0.35rem"><button class="a-btn" style="margin-bottom:0.7rem">Withdraw</button>
+            <div class="card-title">Send (free)</div><div class="arow"><input class="field" placeholder="tg user id"><input class="field" value="1"></div><button class="a-btn">Send</button></div>
+          </div><div class="footer"><a>🏰</a><a>🏆</a><a>🛡️</a><a>🐉</a><a>🗡️</a><a class="active">👛</a></div>
+        </div></div>
+      </div>
+
+      <!-- LEADERBOARD -->
+      <div class="screen-wrap" data-cat="economy">
+        <div class="screen-label"><div class="name">🏆 Leaderboard</div><div class="route">/leaderboard</div><div class="desc">Global $CUBE ranking by wallet, gold/silver/bronze tiers.</div><span class="state-tag">core tab</span></div>
+        <div class="phone"><div class="cosmos"><div class="stars-lite"></div><div class="mini-sun"></div>
+          <div class="top-bar"><span class="coin-balance">3,100 $CUBE</span><span class="ton-connect">EQAb…9xK2</span></div>
+          <div class="content"><div class="app-card"><h1 class="a-title">$CUBE Leaderboard</h1>
+            <div class="grid2" style="margin-bottom:0.9rem"><div class="rc"><span class="l">Wallets</span><span class="v">4,182</span></div><div class="rc"><span class="l">Shown Points</span><span class="v">18.4M</span></div></div>
+            <div class="lbrow tier1"><span class="lbrank">Gold</span><span class="lbwallet">EQAb12…7fK2x9</span><span class="lbvotes">2.1M</span></div>
+            <div class="lbrow tier2"><span class="lbrank">Silver</span><span class="lbwallet">EQCd34…9mL4p1</span><span class="lbvotes">1.4M</span></div>
+            <div class="lbrow tier3"><span class="lbrank">Bronze</span><span class="lbwallet">EQEf56…2nR8t3</span><span class="lbvotes">980K</span></div>
+            <div class="lbrow"><span class="lbrank">#4</span><span class="lbwallet">EQGh78…5pT6v7</span><span class="lbvotes">720K</span></div>
+            <div class="lbrow"><span class="lbrank">#5</span><span class="lbwallet">EQIj90…8qW2x1</span><span class="lbvotes">540K</span></div>
+            <div class="lbrow"><span class="lbrank">#6</span><span class="lbwallet">EQKl12…3rY4z5</span><span class="lbvotes">410K</span></div></div>
+          </div><div class="footer"><a>🏰</a><a class="active">🏆</a><a>🛡️</a><a>🐉</a><a>🗡️</a><a>⚔️</a></div>
+        </div></div>
+      </div>
+
+      <!-- DAILY CLAIM (hidden) -->
+      <div class="screen-wrap" data-cat="economy">
+        <div class="screen-label"><div class="name">🏠 Daily Streak Claim</div><div class="route">/claim</div><div class="desc">60s cooldown, 10-day streak, x1–x10 multiplier.</div><span class="state-tag">hidden route</span></div>
+        <div class="phone"><div class="cosmos"><div class="stars-lite"></div><div class="mini-sun"></div>
+          <div class="top-bar"><span class="coin-balance">3,100 $CUBE</span><span class="ton-connect">EQAb…9xK2</span></div>
+          <div class="content"><div class="app-card"><h1 class="a-title">Daily Streak Claim</h1>
+            <div class="progress-bar"><div class="progress-fill" style="width:80%"></div></div>
+            <div class="ptext">80%</div><div class="ptext" style="font-weight:400;color:#ccccff;font-size:0.8rem;">Streak: 6 day(s)</div>
+            <div class="sub-card" style="margin-top:0.7rem;text-align:center;">
+              <div class="a-info">Claim multiplier: x6 (max x10)</div>
+              <div class="a-info">Claimable now: 620 $CUBE</div>
+              <div class="a-info">Rate: 10 $CUBE / minute</div>
+              <div class="a-info">Total claimed: 14,200 $CUBE</div></div>
+            <button class="a-btn blue">Claim 620 $CUBE</button></div>
+          </div><div class="footer"><a>🏰</a><a>🏆</a><a>🛡️</a><a>🐉</a><a>🗡️</a><a>⚔️</a></div>
+        </div></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- HOW TO START -->
+<section id="start">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Getting Started</div>
+      <h2>Three steps to your empire</h2>
+      <p>No app store, no seed phrase gymnastics. Open the bot and you're in.</p>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="n">1</div><h3>Open in Telegram</h3><p>Launch <b>@cube_worlds_bot</b> and tap Play. The Mini App opens right in your chat — nothing to install.</p></div>
+      <div class="step"><div class="n">2</div><h3>Connect &amp; mint</h3><p>Bind your TON wallet, generate your pixel-art NFT, and earn votes from donations to clear the mint floor.</p></div>
+      <div class="step"><div class="n">3</div><h3>Play &amp; earn</h3><p>Build your castle, recruit heroes, raid rivals, and climb the weekly tournament for real USDT payouts.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Questions</div>
+      <h2>Good to know</h2>
+    </div>
+    <div class="faq-list">
+      <details class="faq" open><summary>Where do I actually play?</summary><p>Entirely inside Telegram. This page is an information hub for players and investors — the game runs as a Mini App in <b>@cube_worlds_bot</b>. There's nothing playable on this website by design.</p></details>
+      <details class="faq"><summary>Is $CUBE a tradable token?</summary><p>No. $CUBE is a DB-only in-game currency measured in "votes." It drives NFT mint eligibility and in-game economy sinks. There is no on-chain jetton and no premature token listing.</p></details>
+      <details class="faq"><summary>Why do I need an NFT to play?</summary><p>Owning a Cube Worlds NFT gates entry to the game. You generate a pixel-art NFT in-app and clear an escalating mint floor with votes earned from daily claims, referrals and TON donations.</p></details>
+      <details class="faq"><summary>How are USDT prizes paid?</summary><p>Weekly tournaments pay real USDT via the xRocket rail. The prize pool is funded by a rewards pool that accrues 20% of net revenue, tracked in an idempotent, overdraft-proof micro-USDT ledger.</p></details>
+      <details class="faq"><summary>What can I spend money on?</summary><p>Optional: energy packs and a Telegram Stars Season Pass. You can also watch rewarded ads for free energy. Everything is designed so sinks exist before any token faucet is enabled.</p></details>
+      <details class="faq"><summary>What chain is this on?</summary><p>The Open Network (TON). NFTs, wallet binding (ton_proof), and donations are on-chain; game state is DB-canonical and on-chain-ready for the collections that are deployed.</p></details>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section>
+  <div class="wrap">
+    <div class="cta-band">
+      <h2>Ready to raise your castle?</h2>
+      <p>Join the Ancient Worlds. Mint your NFT, gather your heroes, and compete for the weekly USDT pool.</p>
+      <a class="btn btn-primary" href="https://t.me/cube_worlds_bot" target="_blank" rel="noopener" style="font-size:1.05rem;padding:0.85rem 1.75rem;">✈️ Open Cube Worlds in Telegram</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="site">
+  <div class="wrap">
+    <div class="brand"><span class="logo">🧊</span> Cube Worlds</div>
+    <div>
+      <a href="https://t.me/cube_worlds_bot" target="_blank" rel="noopener">Telegram</a>
+      <a href="#game">Game</a>
+      <a href="#economy">Economy</a>
+      <a href="#faq">FAQ</a>
+    </div>
+  </div>
+  <p class="disclaimer">
+    Cube Worlds is a game on The Open Network (TON). $CUBE is an in-game, database-only currency and is not a
+    financial instrument, security, or tradable token. NFTs and in-game items are for entertainment. Nothing on this
+    page is investment advice. Play responsibly.
+  </p>
+</footer>
+
+<script>
+  // Screen gallery category filter
+  document.querySelectorAll('.filter-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.filter-btn').forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      var f = btn.getAttribute('data-filter');
+      document.querySelectorAll('.screen-wrap').forEach(function (w) {
+        var show = f === 'all' || w.getAttribute('data-cat') === f;
+        w.classList.toggle('hidden', !show);
+      });
+    });
+  });
+</script>
+</body>
+</html>

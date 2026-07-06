@@ -156,6 +156,13 @@ export async function createServer(bot: Bot) {
   const __filename = fileURLToPath(import.meta.url)
   const __dirname = path.dirname(__filename)
   const frontendPath = path.join(__dirname, 'frontend')
+  // The public, crawler-friendly landing lives at the root; the Vue game Mini App
+  // is served under /game (Vite base '/game/'). Telegram must open /game. The
+  // landing dir also holds tonconnect-manifest.json + logo.png, which TON Connect
+  // and the manifest reference at the root origin.
+  const landingPath = path.join(__dirname, 'landing')
+
+  const isGameUrl = (url: string) => url === '/game' || url.startsWith('/game/')
 
   if (config.NODE_ENV === 'development') {
     // Load vite from the frontend's own node_modules: the frontend's
@@ -167,9 +174,11 @@ export async function createServer(bot: Bot) {
       ).href
     )) as typeof import('vite')
 
-    // run front with HMR
+    // run front with HMR — appType 'custom' so Vite only serves assets/HMR under
+    // its base and we own the HTML fallback (game vs. landing) below.
     const vite = await createViteServer({
       root: frontendPath,
+      appType: 'custom',
       server: { middlewareMode: true },
     })
 
@@ -177,27 +186,48 @@ export async function createServer(bot: Bot) {
     server.use(vite.middlewares)
 
     server.setNotFoundHandler(async (req, reply) => {
-      if (req.raw.url?.startsWith('/api/')) {
+      const url = req.raw.url || '/'
+      if (url.startsWith('/api/')) {
         return reply.status(404).send({ error: 'API route not found' })
       }
-      const url = req.raw.url || '/'
-      const indexHtml = await fs.readFile(
-        path.join(frontendPath, 'index.html'),
+      if (isGameUrl(url)) {
+        const indexHtml = await fs.readFile(
+          path.join(frontendPath, 'index.html'),
+          'utf-8',
+        )
+        const html = await vite.transformIndexHtml(url, indexHtml)
+        return reply.type('text/html').send(html)
+      }
+      // Root and everything else → the static landing page.
+      const landingHtml = await fs.readFile(
+        path.join(landingPath, 'index.html'),
         'utf-8',
       )
-      const html = await vite.transformIndexHtml(url, indexHtml)
-      reply.type('text/html').send(html)
+      return reply.type('text/html').send(landingHtml)
     })
   } else {
+    // Landing (+ root assets: manifest, logo) at the root.
     await server.register(fastifyStatic, {
-      root: path.join(frontendPath, 'dist'),
+      root: landingPath,
       prefix: '/',
     })
+    // The built game under /game (assets are emitted with the /game/ base).
+    await server.register(fastifyStatic, {
+      root: path.join(frontendPath, 'dist'),
+      prefix: '/game/',
+      decorateReply: false,
+    })
     server.setNotFoundHandler({ preHandler: [] }, (req, reply) => {
-      if (req.raw.url?.startsWith('/api/')) {
+      const url = req.raw.url || '/'
+      if (url.startsWith('/api/')) {
         return reply.status(404).send({ error: 'API route not found' })
       }
-      reply.type('text/html').sendFile('index.html')
+      if (isGameUrl(url)) {
+        return reply
+          .type('text/html')
+          .sendFile('index.html', path.join(frontendPath, 'dist'))
+      }
+      return reply.type('text/html').sendFile('index.html', landingPath)
     })
   }
 
