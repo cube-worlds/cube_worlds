@@ -176,7 +176,7 @@ export async function createServer(bot: Bot) {
     for (const candidate of candidates) {
       const abs = path.join(landingPath, candidate)
       // Guard against path traversal outside the landing dir.
-      if (!abs.startsWith(landingPath)) {
+      if (!abs.startsWith(`${landingPath}/`)) {
         continue
       }
       try {
