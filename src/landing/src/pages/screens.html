@@ -1,0 +1,280 @@
+---
+title: Screens — Cube Worlds
+description: A faithful tour of every Cube Worlds Mini App screen.
+active: screens
+extraCss: app
+---
+<!-- SCREENS GALLERY -->
+<section id="screens">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Product Tour</div>
+      <h2>Every screen, as players see it</h2>
+      <p>These are faithful mockups of the live Telegram Mini App — the same cosmic UI, balance bar and emoji navigation. The game itself runs only inside Telegram.</p>
+    </div>
+
+    <div class="filter-bar">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="onboarding">Onboarding &amp; Mint</button>
+      <button class="filter-btn" data-filter="core">Core game</button>
+      <button class="filter-btn" data-filter="pvp">Combat &amp; PvP</button>
+      <button class="filter-btn" data-filter="economy">Economy</button>
+    </div>
+
+    <div class="gallery">
+
+      <!-- MINT: not-connected -->
+      <div class="screen-wrap" data-cat="onboarding">
+        <div class="screen-label"><div class="name">🎟️ Mint — connect wallet</div><div class="route">/mint</div><div class="desc">First stop for a new player. Wallet is delivery address + donation identity.</div><span class="state-tag">state 1/9 · not-connected</span></div>
+        <div class="phone"><div class="cosmos"><div class="stars-lite"></div><div class="mini-sun"></div>
+          <div class="top-bar"><span class="coin-balance">0 $CUBE</span><span class="ton-connect">Connect</span></div>
+          <div class="content"><h2 class="a-title">🎟️ Mint your Cube Worlds NFT</h2>
+            <div class="app-card"><p class="a-lead">Connect your TON wallet to begin.</p>
+              <p class="a-note">Your wallet is both the NFT delivery address and your donation identity — use the Connect button at the top.</p></div>
+          </div><div class="footer"><a class="active">🎟️</a></div>
+        </div></div>
+      </div>
+
+      <!-- MINT: ready -->
+      <div class="screen-wrap" data-cat="onboarding">
+        <div class="screen-label"><div class="name">🎟️ Mint — ready</div><div class="route">/mint</div><div class="desc">Wallet bound. Shows floor vs. your votes and the Generate CTA.</div><span class="state-tag">state 2/9 · ready</span></div>
+        <div class="phone"><div class="cosmos"><div class="stars-lite"></div><div class="mini-sun"></div>
+          <div class="top-bar"><span class="coin-balance">1,240 $CUBE</span><span class="ton-connect">EQAb…9xK2</span></div>
+          <div class="content"><h2 class="a-title">🎟️ Mint your Cube Worlds NFT</h2>
+            <div class="app-card"><div class="a-stat-row"><span>Mint floor</span><span>2,500 votes</span></div>
+              <div class="a-stat-row"><span>Your votes</span><span>1,240</span></div>
+              <button class="a-btn">✨ Generate my NFT</button></div>
+          </div><div class="footer"><a class="active">🎟️</a></div>
+        </div></div>
+      </div>
+
+      <!-- MINT: preview -->
+      <div class="screen-wrap" data-cat="onboarding">
+        <div class="screen-label"><div class="name">🎟️ Mint — preview</div><div class="route">/mint</div><div class="desc">AI pixel-art + description generated; eligibility &amp; donate CTA.</div><span class="state-tag">state 4/9 · preview</span></div>
+        <div class="phone"><div class="cosmos"><div class="stars-lite"></div><div class="mini-sun"></div>
+          <div class="top-bar"><span class="coin-balance">1,240 $CUBE</span><span class="ton-connect">EQAb…9xK2</span></div>
+          <div class="content"><h2 class="a-title">🎟️ Mint your Cube Worlds NFT</h2>
+            <div class="app-card"><div class="preview-image">🧊</div>
+              <p class="a-note" style="font-style:italic;">A stoic cube-knight forged in the ashfall crater, banner raised.</p>
+              <div class="a-stat-row"><span>Mint floor</span><span>2,500 votes</span></div>
+              <div class="a-stat-row"><span>Your votes</span><span>1,240</span></div>
+              <p class="a-warn">💎 Donate TON to earn 1,260 more votes and qualify to mint.</p>
+              <button class="a-btn secondary">🔄 Regenerate</button></div>
+          </div><div class="footer"><a class="active">🎟️</a></div>
+        </div></div>
+      </div>
+
+      <!-- MINT: below-floor / in-queue combined states -->
+      <div class="screen-wrap" data-cat="onboarding">
+        <div class="screen-label"><div class="name">🎟️ Mint — in queue</div><div class="route">/mint</div><div class="desc">Eligible &amp; ranked; donate more TON to climb.</div><span class="state-tag">state 6/9 · in-queue</span></div>
+        <div class="phone"><div class="cosmos"><div class="stars-lite"></div><div class="mini-sun"></div>
+          <div class="top-bar"><span class="coin-balance">3,100 $CUBE</span><span class="ton-connect">EQAb…9xK2</span></div>
+          <div class="content"><h2 class="a-title">🎟️ Mint your Cube Worlds NFT</h2>
+            <div class="app-card"><p class="a-ok">✅ You're in the mint queue.</p>
+              <div class="a-stat-row"><span>Your position</span><span>#14</span></div>
+              <p class="a-note">Donate more TON to climb the queue and mint sooner.</p></div>
+            <div class="sub-card" style="margin-top:0.7rem;"><div class="card-title">Also possible</div>
+              <p class="a-warn">⏳ Eligible — your NFT is awaiting admin review.</p>
+              <p class="a-warn" style="margin-top:0.5rem;">↩️ Your draft was returned. Please regenerate it.</p></div>
+          </div><div class="footer"><a class="active">🎟️</a></div>
+        </div></div>
+      </div>
+
+      <!-- MINT: minted -->
+      <div class="screen-wrap" data-cat="onboarding">
+        <div class="screen-label"><div class="name">🎟️ Mint — minted 🎉</div><div class="route">/mint</div><div class="desc">NFT minted; gate unlocks, all game tabs appear.</div><span class="state-tag">state 9/9 · minted</span></div>
+        <div class="phone"><div class="cosmos"><div class="stars-lite"></div><div class="mini-sun"></div>
+          <div class="top-bar"><span class="coin-balance">3,100 $CUBE</span><span class="ton-connect">EQAb…9xK2</span></div>
+          <div class="content"><h2 class="a-title">🎟️ Mint your Cube Worlds NFT</h2>
+            <div class="app-card"><p class="a-ok">🎉 Your NFT is minted!</p>
+              <a class="a-link" style="color:#66ccff;">View on-chain</a>
+              <button class="a-btn">🚀 Enter the game</button></div>
+          </div><div class="footer"><a class="active">🎟️</a></div>
+        </div></div>
+      </div>
+
+      <!-- CNFT viewer -->
+      <div class="screen-wrap" data-cat="onboarding">
+        <div class="screen-label"><div class="name">🎨 NFT Viewer</div><div class="route">/cnft</div><div class="desc">Shows the owned collectible with claim / view-on-GetGems action.</div><span class="state-tag">hidden route</span></div>
+        <div class="phone"><div class="cosmos"><div class="stars-lite"></div><div class="mini-sun"></div>
+          <div class="top-bar"><span class="coin-balance">3,100 $CUBE</span><span class="ton-connect">EQAb…9xK2</span></div>
+          <div class="content"><h2 class="a-title">Your Cube Worlds NFT</h2>
+            <div class="app-card"><h2 class="a-title" style="font-size:1rem;">Diamond Cube #142</h2>
+              <div class="cnft-img">💎</div>
+              <p class="a-note" style="margin-top:0.6rem;">A crystalline guardian of the Frozen Abyss — 500K+ votes tier.</p>
+              <button class="a-btn blue">Show on GetGems</button></div>
+          </div><div class="footer"><a>🏰</a><a>🏆</a><a>🛡️</a><a>🐉</a><a>🗡️</a><a>⚔️</a></div>
+        </div></div>
+      </div>
+
+      <!-- CASTLE -->
+      <div class="screen-wrap" data-cat="core">
+        <div class="screen-label"><div class="name">🏰 Castle (Home)</div><div class="route">/</div><div class="desc">Resources, 8h production, four upgrade tracks, founder perk.</div><span class="state-tag">home tab</span></div>
+        <div class="phone"><div class="cosmos"><div class="stars-lite"></div><div class="mini-sun"></div>
+          <div class="top-bar"><span class="coin-balance">3,100 $CUBE</span><span class="ton-connect">EQAb…9xK2</span></div>
+          <div class="content"><div class="app-card"><h1 class="a-title">Your Castle</h1>
+            <div class="founder-badge">⭐ Founder — +20% production</div>
+            <div class="rgrid"><div class="rc"><span class="l">Gold</span><span class="v">820</span></div><div class="rc"><span class="l">Iron</span><span class="v">460</span></div><div class="rc"><span class="l">Mana</span><span class="v">150</span></div><div class="rc"><span class="l">Food</span><span class="v">610</span></div></div>
+            <div class="sub-card"><div class="card-title">Production</div><div class="a-ok">+72G 43I 14M 57F ready</div><button class="a-btn">Claim production</button></div>
+            <div class="track"><div><span class="tn">Mine (Lv 3)</span><span class="td">Resource production rate</span></div><button class="a-btn sm">Upgrade</button></div>
+            <div class="track"><div><span class="tn">Walls (Lv 2)</span><span class="td">PvP defense</span></div><button class="a-btn sm">Upgrade</button></div>
+            <div class="track"><div><span class="tn">Forge (Lv 1)</span><span class="td">Equipment quality</span></div><button class="a-btn sm">Upgrade</button></div>
+            <div class="track"><div><span class="tn">Tavern (Lv 2)</span><span class="td">Hero recruitment cap</span></div><button class="a-btn sm">Upgrade</button></div>
+            <a class="a-link">⚔️ Dispatch a hero on expedition →</a></div>
+          </div><div class="footer"><a class="active">🏰</a><a>🏆</a><a>🛡️</a><a>🐉</a><a>🗡️</a><a>⚔️</a></div>
+        </div></div>
+      </div>
+
+      <!-- HEROES -->
+      <div class="screen-wrap" data-cat="core">
+        <div class="screen-label"><div class="name">🛡️ Heroes</div><div class="route">/heroes</div><div class="desc">Recruit, daily dungeon, 8h quest, equipment, combat replay.</div><span class="state-tag">core tab</span></div>
+        <div class="phone"><div class="cosmos"><div class="stars-lite"></div><div class="mini-sun"></div>
+          <div class="top-bar"><span class="coin-balance">3,100 $CUBE</span><span class="ton-connect">EQAb…9xK2</span></div>
+          <div class="content"><div class="app-card"><h1 class="a-title">Heroes</h1>
+            <div class="sub-card"><div class="card-title">Recruit at the Tavern (CUBE + Gold)</div>
+              <div class="grid4"><button class="a-btn sm" style="width:100%">knight</button><button class="a-btn sm" style="width:100%">mage</button><button class="a-btn sm" style="width:100%">archer</button><button class="a-btn sm" style="width:100%">rogue</button></div></div>
+            <div class="herocard"><div class="hh"><span class="hn">knight (Lv 7) ⭐ 🔒</span><span class="hx">1,820 XP</span></div>
+              <div><span class="chip-g legendary">weapon · +9⚔</span><span class="chip-g epic">body · +6🛡</span></div>
+              <div class="hact"><button class="a-btn sm blue" style="flex:1">⚔️ Daily dungeon</button><button class="a-btn sm ghost" style="flex:1">🧭 8h quest</button></div></div>
+            <div class="herocard"><div class="hh"><span class="hn">mage (Lv 4)</span><span class="hx">540 XP</span></div>
+              <div class="hact"><span class="a-warn" style="align-self:center;font-size:0.76rem">⏳ Questing — 5h 12m</span></div></div>
+            <div class="sub-card"><div class="rhead win">🏆 Victory! (+60 XP)</div><div class="a-ok">Loot: +40G 20I 5M 30F</div>
+              <ol class="rounds"><li>🗡️ Hero hits for 28 <span class="hp">(hero 90 / enemy 52)</span></li><li>👹 Enemy hits for 14 <span class="hp">(hero 76 / enemy 52)</span></li><li>🗡️ Hero hits for 31 <span class="hp">(hero 76 / enemy 21)</span></li></ol></div>
+            <a class="a-link">🐉 Raid the weekly boss →</a></div>
+          </div><div class="footer"><a>🏰</a><a>🏆</a><a class="active">🛡️</a><a>🐉</a><a>🗡️</a><a>⚔️</a></div>
+        </div></div>
+      </div>
+
+      <!-- EXPEDITIONS -->
+      <div class="screen-wrap" data-cat="core">
+        <div class="screen-label"><div class="name">⚔️ Dispatch (Expeditions)</div><div class="route">/expeditions</div><div class="desc">Spend energy across five worlds; congestion-diluted CUBE pool.</div><span class="state-tag">core tab</span></div>
+        <div class="phone"><div class="cosmos"><div class="stars-lite"></div><div class="mini-sun"></div>
+          <div class="top-bar"><span class="coin-balance">3,100 $CUBE</span><span class="ton-connect">EQAb…9xK2</span></div>
+          <div class="content"><div class="app-card"><h1 class="a-title">Expeditions</h1>
+            <div class="sub-card"><div class="card-title" style="text-align:center">Energy: 6 / 10</div><div class="ebar"><div class="efill" style="width:60%"></div></div></div>
+            <div class="arow"><span class="a-note" style="align-self:center">Risk:</span><button class="toggle active">Safe</button><button class="toggle">Greedy</button></div>
+            <div class="world"><div class="wn">The Verdant Hollow</div><div class="ws"><span>Pool: 50,000 ◆</span><span>Explorers: 128</span></div><button class="a-btn sm blue" style="width:100%">Join (safe)</button></div>
+            <div class="world"><div class="wn">Ashfall Crater</div><div class="ws"><span>Pool: 50,000 ◆</span><span>Explorers: 84</span></div><button class="a-btn sm blue" style="width:100%">Join (safe)</button></div>
+            <div class="world"><div class="wn">Frozen Abyss</div><div class="ws"><span>Pool: 50,000 ◆</span><span>Explorers: 201</span></div><button class="a-btn sm blue" style="width:100%">Join (safe)</button></div>
+            <button class="a-btn" style="margin-top:0.45rem">Refill energy (500 ◆)</button></div>
+          </div><div class="footer"><a>🏰</a><a>🏆</a><a>🛡️</a><a>🐉</a><a>🗡️</a><a class="active">⚔️</a></div>
+        </div></div>
+      </div>
+
+      <!-- ARENA -->
+      <div class="screen-wrap" data-cat="pvp">
+        <div class="screen-label"><div class="name">🗡️ Arena &amp; Raids</div><div class="route">/arena</div><div class="desc">ELO ladder, arena burn + raid stake/plunder, battle history.</div><span class="state-tag">PvP tab</span></div>
+        <div class="phone"><div class="cosmos"><div class="stars-lite"></div><div class="mini-sun"></div>
+          <div class="top-bar"><span class="coin-balance">3,100 $CUBE</span><span class="ton-connect">EQAb…9xK2</span></div>
+          <div class="content"><div class="app-card"><h1 class="a-title">Arena &amp; Raids</h1>
+            <div class="sub-card"><div class="rating">🗡️ Rating: <strong>1,148</strong></div><div class="record">14W · 9L</div><div class="record" style="color:var(--ok)">🛡️ Shielded until 4:20 PM</div><div class="record">Raids left today: 2</div></div>
+            <div class="sub-card"><div class="card-title">Pick a hero (questing heroes unavailable)</div><select class="sel" style="width:100%"><option>knight Lv7</option></select>
+              <div class="hact" style="margin-top:0.45rem"><button class="a-btn sm" style="flex:1">⚔️ Arena (10 CUBE)</button><button class="a-btn sm raid" style="flex:1">🏴‍☠️ Raid (50 CUBE + 25🍖)</button></div></div>
+            <div class="sub-card"><div class="rhead dmg">🏆 Victory vs Explorer 8812 · +18 rating · +40 XP</div><div class="a-note">Stake returned · plundered 30🪙 · 12⚙️</div></div>
+            <div class="sub-card"><div class="card-title">Recent battles</div>
+              <div class="hrow"><span>⚔️</span><span>You attacked Explorer 8812</span><span class="won">won</span><span class="delta">+18</span></div>
+              <div class="hrow"><span>🏴‍☠️</span><span>Explorer 4471 raided you</span><span class="lost">lost</span><span class="delta">-15</span><span class="lootc">-20🪙</span></div></div></div>
+          </div><div class="footer"><a>🏰</a><a>🏆</a><a>🛡️</a><a>🐉</a><a class="active">🗡️</a><a>⚔️</a></div>
+        </div></div>
+      </div>
+
+      <!-- BOSS -->
+      <div class="screen-wrap" data-cat="pvp">
+        <div class="screen-label"><div class="name">🐉 Weekly Boss</div><div class="route">/boss</div><div class="desc">One attack/day, shared damage board, tiered equipment rewards.</div><span class="state-tag">PvP tab</span></div>
+        <div class="phone"><div class="cosmos"><div class="stars-lite"></div><div class="mini-sun"></div>
+          <div class="top-bar"><span class="coin-balance">3,100 $CUBE</span><span class="ton-connect">EQAb…9xK2</span></div>
+          <div class="content"><div class="app-card"><h1 class="a-title">Weekly Boss</h1>
+            <div class="sub-card"><div class="boss-name">🐉 Gloomfang the Ancient</div><div class="boss-stats">4,800 ❤ · 120 ⚔ · 60 🛡</div><div class="board-line">Your damage: <strong>1,240</strong> · rank #8 of 214</div></div>
+            <div class="sub-card"><div class="card-title">Send a hero to deal damage (once per day)</div><div class="arow"><select class="sel"><option>knight Lv7</option></select><button class="a-btn sm">⚔️ Attack</button></div></div>
+            <div class="sub-card"><div class="rhead dmg">💥 Dealt 312 damage (+40 XP)</div><ol class="rounds"><li>🗡️ Hero hits for 44 <span class="hp">(hero 110 / boss 4756)</span></li><li>🐉 Boss hits for 38 <span class="hp">(hero 72 / boss 4756)</span></li></ol></div>
+            <a class="a-link">🛡️ Back to heroes →</a></div>
+          </div><div class="footer"><a>🏰</a><a>🏆</a><a>🛡️</a><a class="active">🐉</a><a>🗡️</a><a>⚔️</a></div>
+        </div></div>
+      </div>
+
+      <!-- TOURNAMENT -->
+      <div class="screen-wrap" data-cat="economy">
+        <div class="screen-label"><div class="name">🏅 Weekly Tournament</div><div class="route">/tournament</div><div class="desc">USDT prize pool, CUBE entry (free w/ Season Pass), rewarded ads.</div><span class="state-tag">economy tab</span></div>
+        <div class="phone"><div class="cosmos"><div class="stars-lite"></div><div class="mini-sun"></div>
+          <div class="top-bar"><span class="coin-balance">3,100 $CUBE</span><span class="ton-connect">EQAb…9xK2</span></div>
+          <div class="content"><div class="app-card"><h1 class="a-title">Weekly Tournament</h1>
+            <div class="sub-card"><span class="prize-label">Prize pool</span><span class="prize-value">142 USDT</span><span class="prize-sub">318 explorers · ends in 3d 6h</span></div>
+            <div class="a-ok" style="text-align:center;padding:0.5rem;border:1px solid rgba(153,255,204,0.3);border-radius:0.6rem;margin-bottom:0.7rem">Entered · rank 12 · 4,820 CUBE</div>
+            <div class="card-title">Leaderboard</div>
+            <div class="brow"><span class="brank">#1</span><span class="buser">Explorer 44120</span><span class="bscore">28,400</span></div>
+            <div class="brow"><span class="brank">#2</span><span class="buser">Explorer 90311</span><span class="bscore">21,050</span></div>
+            <div class="brow"><span class="brank">#3</span><span class="buser">Explorer 11872</span><span class="bscore">18,900</span></div>
+            <div class="arow" style="margin-top:0.7rem"><button class="a-btn ghost sm" style="flex:1">⚡ Watch ad</button><button class="a-btn ghost sm" style="flex:1">⭐ Season Pass</button></div></div>
+          </div><div class="footer"><a>🏰</a><a>🏆</a><a>🛡️</a><a>🐉</a><a>🗡️</a><a class="active">🏅</a></div>
+        </div></div>
+      </div>
+
+      <!-- WALLET -->
+      <div class="screen-wrap" data-cat="economy">
+        <div class="screen-label"><div class="name">👛 Wallet</div><div class="route">/wallet</div><div class="desc">xRocket USDT rail: deposit, buy energy, withdraw, free transfer.</div><span class="state-tag">economy tab</span></div>
+        <div class="phone"><div class="cosmos"><div class="stars-lite"></div><div class="mini-sun"></div>
+          <div class="top-bar"><span class="coin-balance">3,100 $CUBE</span><span class="ton-connect">EQAb…9xK2</span></div>
+          <div class="content"><div class="app-card"><h1 class="a-title">Wallet</h1>
+            <div style="margin-bottom:0.9rem"><span class="prize-label">Balance</span><span class="bal-value">12.50 USDT</span></div>
+            <div class="card-title">Deposit</div><div class="arow"><input class="field" value="1"><button class="a-btn sm">Deposit</button></div>
+            <button class="a-btn" style="margin-bottom:0.7rem">Buy Energy pack (0.5 USDT)</button>
+            <div class="card-title">Withdraw</div><div class="arow"><select class="field"><option>TON</option></select><input class="field" value="1"></div>
+            <input class="field" placeholder="address" style="margin-bottom:0.35rem"><button class="a-btn" style="margin-bottom:0.7rem">Withdraw</button>
+            <div class="card-title">Send (free)</div><div class="arow"><input class="field" placeholder="tg user id"><input class="field" value="1"></div><button class="a-btn">Send</button></div>
+          </div><div class="footer"><a>🏰</a><a>🏆</a><a>🛡️</a><a>🐉</a><a>🗡️</a><a class="active">👛</a></div>
+        </div></div>
+      </div>
+
+      <!-- LEADERBOARD -->
+      <div class="screen-wrap" data-cat="economy">
+        <div class="screen-label"><div class="name">🏆 Leaderboard</div><div class="route">/leaderboard</div><div class="desc">Global $CUBE ranking by wallet, gold/silver/bronze tiers.</div><span class="state-tag">core tab</span></div>
+        <div class="phone"><div class="cosmos"><div class="stars-lite"></div><div class="mini-sun"></div>
+          <div class="top-bar"><span class="coin-balance">3,100 $CUBE</span><span class="ton-connect">EQAb…9xK2</span></div>
+          <div class="content"><div class="app-card"><h1 class="a-title">$CUBE Leaderboard</h1>
+            <div class="grid2" style="margin-bottom:0.9rem"><div class="rc"><span class="l">Wallets</span><span class="v">4,182</span></div><div class="rc"><span class="l">Shown Points</span><span class="v">18.4M</span></div></div>
+            <div class="lbrow tier1"><span class="lbrank">Gold</span><span class="lbwallet">EQAb12…7fK2x9</span><span class="lbvotes">2.1M</span></div>
+            <div class="lbrow tier2"><span class="lbrank">Silver</span><span class="lbwallet">EQCd34…9mL4p1</span><span class="lbvotes">1.4M</span></div>
+            <div class="lbrow tier3"><span class="lbrank">Bronze</span><span class="lbwallet">EQEf56…2nR8t3</span><span class="lbvotes">980K</span></div>
+            <div class="lbrow"><span class="lbrank">#4</span><span class="lbwallet">EQGh78…5pT6v7</span><span class="lbvotes">720K</span></div>
+            <div class="lbrow"><span class="lbrank">#5</span><span class="lbwallet">EQIj90…8qW2x1</span><span class="lbvotes">540K</span></div>
+            <div class="lbrow"><span class="lbrank">#6</span><span class="lbwallet">EQKl12…3rY4z5</span><span class="lbvotes">410K</span></div></div>
+          </div><div class="footer"><a>🏰</a><a class="active">🏆</a><a>🛡️</a><a>🐉</a><a>🗡️</a><a>⚔️</a></div>
+        </div></div>
+      </div>
+
+      <!-- DAILY CLAIM (hidden) -->
+      <div class="screen-wrap" data-cat="economy">
+        <div class="screen-label"><div class="name">🏠 Daily Streak Claim</div><div class="route">/claim</div><div class="desc">60s cooldown, 10-day streak, x1–x10 multiplier.</div><span class="state-tag">hidden route</span></div>
+        <div class="phone"><div class="cosmos"><div class="stars-lite"></div><div class="mini-sun"></div>
+          <div class="top-bar"><span class="coin-balance">3,100 $CUBE</span><span class="ton-connect">EQAb…9xK2</span></div>
+          <div class="content"><div class="app-card"><h1 class="a-title">Daily Streak Claim</h1>
+            <div class="progress-bar"><div class="progress-fill" style="width:80%"></div></div>
+            <div class="ptext">80%</div><div class="ptext" style="font-weight:400;color:#ccccff;font-size:0.8rem;">Streak: 6 day(s)</div>
+            <div class="sub-card" style="margin-top:0.7rem;text-align:center;">
+              <div class="a-info">Claim multiplier: x6 (max x10)</div>
+              <div class="a-info">Claimable now: 620 $CUBE</div>
+              <div class="a-info">Rate: 10 $CUBE / minute</div>
+              <div class="a-info">Total claimed: 14,200 $CUBE</div></div>
+            <button class="a-btn blue">Claim 620 $CUBE</button></div>
+          </div><div class="footer"><a>🏰</a><a>🏆</a><a>🛡️</a><a>🐉</a><a>🗡️</a><a>⚔️</a></div>
+        </div></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<script>
+  // Screen gallery category filter
+  document.querySelectorAll('.filter-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.filter-btn').forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      var f = btn.getAttribute('data-filter');
+      document.querySelectorAll('.screen-wrap').forEach(function (w) {
+        var show = f === 'all' || w.getAttribute('data-cat') === f;
+        w.classList.toggle('hidden', !show);
+      });
+    });
+  });
+</script>
