@@ -36,7 +36,7 @@
     "test:coverage": "NODE_ENV=test node --import tsx --test --experimental-test-coverage --test-coverage-include='src/**/*.ts' --test-coverage-exclude='src/**/*.test.ts' --test-coverage-exclude='src/frontend/**' $(find src -name '*.test.ts' -not -path 'src/frontend/*')"
   },
   "dependencies": {
-    "@fastify/cors": "^11.2.0",
+    "@fastify/cors": "^11.3.0",
     "@fastify/helmet": "^13.0.2",
     "@fastify/middie": "^9.1.0",
     "@fastify/rate-limit": "^11.1.0",
