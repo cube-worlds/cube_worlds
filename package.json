@@ -40,7 +40,7 @@
     "@fastify/helmet": "^13.0.2",
     "@fastify/middie": "^9.1.0",
     "@fastify/rate-limit": "^11.1.0",
-    "@fastify/static": "^9.0.0",
+    "@fastify/static": "^9.3.0",
     "@grammyjs/auto-chat-action": "0.1.1",
     "@grammyjs/auto-retry": "^2.0.2",
     "@grammyjs/hydrate": "^1.7.0",
