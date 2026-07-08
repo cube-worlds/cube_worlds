@@ -83,7 +83,7 @@
     "prettier": "3.9.4",
     "prettier-plugin-organize-imports": "4.3.0",
     "tsc-watch": "7.2.1",
-    "typescript": "6.0.3",
+    "typescript": "7.0.2",
     "vite": "^8.0.16"
   },
   "overrides": {
