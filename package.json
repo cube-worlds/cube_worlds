@@ -37,7 +37,7 @@
   },
   "dependencies": {
     "@fastify/cors": "^11.2.0",
-    "@fastify/helmet": "^13.0.2",
+    "@fastify/helmet": "^13.1.0",
     "@fastify/middie": "^9.1.0",
     "@fastify/rate-limit": "^11.1.0",
     "@fastify/static": "^9.0.0",
