@@ -210,6 +210,14 @@ async function run() {
       }
     })
 
+    await step('GET /tonconnect-manifest.json follows WEB_APP_URL origin', async () => {
+      const response = await fetch(`${BASE}/tonconnect-manifest.json`)
+      expect(response.ok, `HTTP ${response.status}`)
+      const body = await response.json() as Record<string, unknown>
+      expect(body.url === BASE, `url=${body.url}`)
+      expect(body.iconUrl === `${BASE}/logo.png`, `iconUrl=${body.iconUrl}`)
+    })
+
     await step('GET /api/public/metrics returns numeric counters', async () => {
       const response = await fetch(`${BASE}/api/public/metrics`)
       expect(response.ok, `HTTP ${response.status}`)

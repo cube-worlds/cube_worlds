@@ -138,6 +138,14 @@ export async function createServer(bot: Bot) {
     starsTopupVotesPerStar: config.STARS_TOPUP_VOTES_PER_STAR,
   }))
 
+  // TON Connect manifest. Wallets sign ton_proof over this url's host and
+  // set-wallet checks it against WEB_APP_URL, so it must follow the deploy
+  // origin (staging vs prod) instead of being a static landing file.
+  server.get('/tonconnect-manifest.json', async () => {
+    const origin = new URL(config.WEB_APP_URL).origin
+    return { url: origin, name: 'Cube Worlds', iconUrl: `${origin}/logo.png` }
+  })
+
   const __filename = fileURLToPath(import.meta.url)
   const __dirname = path.dirname(__filename)
   const frontendPath = path.join(__dirname, 'frontend')

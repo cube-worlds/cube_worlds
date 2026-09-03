@@ -1,5 +1,5 @@
 # Kamal deploy config for cube-worlds-bot — single Node container: grammY
-# Telegram bot (webhook mode) + Fastify HTTP server + Vue Mini App served at /.
+# Telegram bot (webhook mode) + Fastify HTTP server + landing at / + React Mini App at /game.
 # Stateful: MongoDB (shared platform mongo, DB cube-worlds-bot) + 488M of per-NFT assets
 # on the host volume /srv/cube_worlds/data (mounted /usr/src/data).
 # Lift-and-shift of production main @ 8a53660 (apex cubeworlds.club, apex-only).
@@ -27,7 +27,7 @@ proxy:
   app_port: 80                    # matches EXPOSE 80 / BOT_SERVER_PORT default
   ssl: true
   healthcheck:
-    path: /                       # Fastify serves the Vue index.html (200) at /.
+    path: /                       # Fastify serves the landing index.html (200) at /.
                                   # NOTE (Phase C): the app calls mongoose.connect at boot and
                                   # only listens after it resolves — so it cannot become healthy
                                   # until it can reach `mongo` on platform_net. The post-deploy
@@ -60,7 +60,8 @@ env:
   secret:                         # decrypted from SOPS via .kamal/secrets (Phase B)
     - MONGO                       # full URI incl. app-user creds (axveer mongo requires auth)
     - BOT_TOKEN
-    - BOT_WEBHOOK                 # https://cubeworlds.club/<BOT_TOKEN> — token-in-path webhook
+    - BOT_WEBHOOK                 # https://cubeworlds.club/telegram/webhook (v3: fixed path + secret)
+    - BOT_WEBHOOK_SECRET
     - MNEMONICS                   # TON collection-owner wallet seed — highest sensitivity
     - PINATA_API_KEY
     - PINATA_API_SECRET
