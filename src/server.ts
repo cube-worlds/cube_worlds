@@ -20,6 +20,7 @@ import nftHandler from './backend/nft-handler'
 import { createPassHandler } from './backend/pass'
 import publicMetricsHandler from './backend/public-metrics'
 import setWalletHandler from './backend/set-wallet-handler'
+import { createTopupInvoiceHandler } from './backend/topup-invoice'
 import walletNonceHandler from './backend/wallet-nonce-handler'
 import { config } from './config'
 
@@ -120,6 +121,7 @@ export async function createServer(bot: Bot) {
   await server.register(balancesHandler, { prefix: '/api/users' })
   await server.register(leaderboardHandler, { prefix: '/api/users' })
   await server.register(claimHandler, { prefix: '/api/users' })
+  await server.register(createTopupInvoiceHandler(bot.api), { prefix: '/api/users' })
 
   await server.register(publicMetricsHandler, { prefix: '/api/public' })
 
