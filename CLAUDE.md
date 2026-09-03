@@ -13,7 +13,7 @@ $CUBE is **DB-only** (`User.votes` + append-only `Balance` ledger are canonical;
 
 ## $CUBE sources
 - **Daily claim** (cooldown + streak ×multiplier) — `/api/users/claim`, `/claim/status`.
-- **Referrals** — `/start` param → `referId` on `/api/auth/login`.
+- **Referrals** — `/start` param → `referId` on `/api/auth/login` stores `referalId`; the referrer is credited `REFERRAL_MINT_REWARD_VOTES` (default 200) **when the invitee's pass is minted** — human-gated ⇒ unfarmable. Wired inside the approve path (`rewardReferrer` dep, non-fatal, at-most-once via the mint CAS).
 - **TON donations** — watcher (`subscription-core.ts`/`subscription.ts`) credits votes for TON sent **from the bound wallet** (`findUserByAddress` → `addPoints(..., Donation)`). Donation target address = `COLLECTION_OWNER`, exposed via `GET /api/public/config`.
 - **Telegram Stars top-up** — `POST /api/users/topup/invoice` (pure `topup-invoice-handler.ts` + composer `topup-invoice.ts`, `createInvoiceLink` currency `XTR`); bot `topup` feature handles `pre_checkout_query` + `successful_payment`; payload `cube-topup:<userId>:<stars>:<votes>` round-trips through Telegram (tamper-proof, honors the quoted rate `STARS_TOPUP_VOTES_PER_STAR`, default 10/⭐). Idempotent on `telegram_payment_charge_id` via unique `StarsPurchase.chargeId` — record-then-credit, replay is a no-op.
 
@@ -27,6 +27,7 @@ npm --prefix src/frontend run dev                # Optional: frontend-only vite 
 npm run build:all                                # Backend (tsc) + landing + frontend (vite)
 npm run lint && npm run typecheck && npm run test:backend  # all quality checks
 NODE_ENV=test node --import tsx --test src/backend/mint-handler.test.ts  # single test file
+npm run smoke:api                                # boots the REAL app (STAGING, fake secrets, throwaway Mongo) and drives the API end-to-end; SMOKE_MONGO_URI overrides mongodb-memory-server
 ```
 
 ## Frontend (React, `src/frontend`)
@@ -61,7 +62,7 @@ export function buildFooHandler(deps = createDefaultDependencies()) {
 Reference tests: `mint-handler.test.ts` (route handler), `topup-handler.test.ts` (bot payment logic), `queue-approval-handler.test.ts` (state machine).
 
 ## Auth
-All authenticated endpoints validate Telegram's `initData` (HMAC + 24h expiry) → `user.id` → MongoDB. `POST /api/auth/login` upserts (`findOrCreateUser`) and returns `{ balance, minted, mintState, wallet }`.
+All authenticated endpoints validate Telegram's `initData` (HMAC + 24h expiry) → `user.id` → MongoDB. `POST /api/auth/login` upserts (`findOrCreateUser`), **syncs `user.name` from initData** (`username` → `first_name` fallback — nothing else sets it for webview-only users; admin captions + `data/<name>/` folders rely on it), and returns `{ balance, minted, mintState, wallet }`.
 
 ### Wallet binding (TON Connect ton_proof)
 1. `POST /api/auth/wallet-nonce` → stateless HMAC payload (`<userId>:<expiresAtMs>:<rand>:<hmac(BOT_TOKEN)>`, 5-min TTL).
@@ -80,6 +81,7 @@ Features (`src/bot/index.ts`): start, help, queue (admin: `/queue` browser + App
 - Rate limits per route in `server.ts` (`/api/mint/generate` 6/min — it's a paid Stability call).
 
 ## Deploy notes
-- Production still runs **v1**; this tree replaces it wholesale on cutover. Before deploy: verify prod `users` collection fields against the v3 `User` model (v1-era `votes`/`wallet`/`minted` carry over; v2-only collections never existed in prod).
+- Production still runs **v1**; this tree replaces it wholesale on cutover. Before deploy: `CHECK_MONGO_URI=<prod> npx tsx scripts/check-prod-users.ts` — read-only; blocks on duplicate wallets/ids (v3 unique indexes), non-BigInt-castable votes, unknown states; warns on stuck mint claims, missing names, old-host `data/` paths.
 - `STAGING=true` boots API-only (no tx loop, no Telegram engagement).
-- Stale env keys from v2 (`XROCKET_*`, `ADSGRAM_*`, `SEASON_PASS_*`, `MINT_FLOOR_*`, …) are ignored by the config schema; new optional keys: `GENERATION_TRY_COST_VOTES`, `STARS_TOPUP_VOTES_PER_STAR`.
+- Stale env keys from v2 (`XROCKET_*`, `ADSGRAM_*`, `SEASON_PASS_*`, `MINT_FLOOR_*`, …) are ignored by the config schema; new optional keys: `GENERATION_TRY_COST_VOTES`, `STARS_TOPUP_VOTES_PER_STAR`, `REFERRAL_MINT_REWARD_VOTES`.
+- Pre-deploy: `npm run smoke:api` (all secrets overridden with fakes — it can never hit a paid API or the live bot).

@@ -34,6 +34,7 @@ export function login(referId?: string): Promise<LoginResponse> {
 export interface PublicConfig {
   botName: string
   donationAddress: string
+  referralRewardVotes: number
 }
 
 export async function publicConfig(): Promise<PublicConfig> {

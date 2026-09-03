@@ -18,7 +18,9 @@ import { logHandle } from '#root/common/helpers/logging'
 import { NftCollection } from '#root/common/helpers/nft-collection'
 import { NftItem } from '#root/common/helpers/nft-item'
 import { adminIndex } from '#root/common/helpers/telegram'
+import { BalanceChangeType } from '#root/common/models/Balance'
 import {
+  addPoints,
   claimUserForMint,
   countUsers,
   findUserById,
@@ -26,6 +28,7 @@ import {
   releaseMintClaim,
   setUserRework,
 } from '#root/common/models/User'
+import { config } from '#root/config'
 import { logger } from '#root/logger'
 import { buildQueueApproval } from './queue-approval-handler'
 
@@ -75,6 +78,24 @@ function approvalDependencies(ctx: Context): QueueApprovalDependencies {
     },
     markMinted: markUserMinted,
     setRework: setUserRework,
+    // Credit the inviter once the invitee's pass is minted (human-gated, so
+    // the reward can't be farmed with throwaway accounts).
+    rewardReferrer: async (user) => {
+      const reward = BigInt(config.REFERRAL_MINT_REWARD_VOTES)
+      if (reward <= 0n) return
+      const invitee = await findUserById(user.id)
+      const referrerId = invitee?.referalId
+      if (!referrerId) return
+      await addPoints(referrerId, reward, BalanceChangeType.Referral)
+      try {
+        await ctx.api.sendMessage(
+          referrerId,
+          `🎁 ${user.name ? `@${user.name}` : 'A friend you invited'} minted their pass — +${reward} $CUBE for you!`,
+        )
+      } catch {
+        // referrer blocked the bot — the credit still stands
+      }
+    },
     notifyApproved: async (user, nftUrl) => {
       await ctx.api.sendMessage(
         user.id,

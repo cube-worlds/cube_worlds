@@ -119,10 +119,12 @@ export async function createServer(bot: Bot) {
   await server.register(publicMetricsHandler, { prefix: '/api/public' })
 
   // Static app config the webview needs before/without auth: the bot name
-  // (referral links) and the donation address (TON → $CUBE watcher target).
+  // (referral links), the donation address (TON → $CUBE watcher target), and
+  // the referral reward shown in the EARN tab.
   server.get('/api/public/config', async () => ({
     botName: config.BOT_NAME,
     donationAddress: config.COLLECTION_OWNER,
+    referralRewardVotes: config.REFERRAL_MINT_REWARD_VOTES,
   }))
 
   const __filename = fileURLToPath(import.meta.url)

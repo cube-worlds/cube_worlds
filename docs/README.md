@@ -1,60 +1,33 @@
 # Cube Worlds — Documentation Index
 
-Research, design, and planning docs for the Cube Worlds Telegram Mini App.
+Dated research and planning archives for the Cube Worlds Telegram Mini App.
 
 For system architecture and code structure, see [../ARCHITECTURE.md](../ARCHITECTURE.md) at the repo root. For **current** project state (feature-by-feature), see [../CLAUDE.md](../CLAUDE.md).
 
-> **Note (2026-06-14):** most docs here are point-in-time research/design (May 2026), pre-dating the **DB-only $CUBE** pivot. Each carries a status banner. Key reversal: $CUBE is permanently DB-only (no on-chain jetton), and the CUBE→SATOSHI exchange was removed. `ECONOMY.md` is kept current.
+> **Note (2026-07-13, v3 reset):** everything in this folder is a point-in-time
+> artifact from the v1/v2 era. v2 (the ancient-worlds ARPG these docs plan for) was
+> built but never shipped and was removed in the v3 reset — the product is now
+> **mint-pass-first** (see the repo root docs). `ANCIENT_WORLDS_PLAN.md` and
+> `ECONOMY.md` were deleted with v2 (recoverable from git history). The research
+> trilogy below remains useful as market/mechanics reference; read its Cube-Worlds
+> recommendations as historical.
 
-## Primary plan
-
-### [ANCIENT_WORLDS_PLAN.md](ANCIENT_WORLDS_PLAN.md) — Game design, contracts, roadmap
-Synthesis layer on top of the research trilogy. Lays out an ancient-world ARPG/4X (inspired by Diablo II / Lineage II / HOMM3) reshaped as a casual TMA with castles, PvP/PvE, an 8-hour activity window, a (now DB-only) resource economy, and the entry NFT as game pass. Covers game loop, TON contract list, Phase A–F roadmap mapped to existing files, and risks. Phases A–C slice 1 have shipped — see the status banner atop the doc.
-- **Start here** if you want the playable shape and build order.
-
-### [ECONOMY.md](ECONOMY.md) — Financial model & tokenomics
-The economy research extracted from the plan. 5-year revenue projection, ARPU cohort breakdown, Stars/TonConnect/Adsgram rail comparison, $CUBE + resource-jetton topology, sink discipline, operator + player earnings model, anti-Sybil layered defense, May 2026 reference numbers.
-- **Start here** if you want the financial model and tokenomics rules.
-- Cites May 2026 Stars + TMA benchmarks.
-
-## Research trilogy
-
-Three companion research documents cover the Web3 game design space and land in concrete, file-mapped recommendations for Cube Worlds. Read in order if you're new; jump to the relevant doc otherwise.
+## Research trilogy (archives, compiled May 2026)
 
 ### 1. [MARKET_RESEARCH.md](MARKET_RESEARCH.md) — Telegram crypto-game landscape
-The 2024–2026 Telegram crypto-game market: what worked (Catizen, Fanton, Notcoin's pivot), what collapsed (Hamster Kombat, DOGS, most tap-to-earn), and why. Includes a 4-phase plan mapped to Cube Worlds' existing code.
-- **Start here if** you want the big picture and the strategic frame.
-- **Cube Worlds plan** in Part 3: phased roadmap from CNFT-as-multiplier to season pass to clans.
+The 2024–2026 Telegram crypto-game market: what worked (Catizen, Fanton, Notcoin's pivot), what collapsed (Hamster Kombat, DOGS, most tap-to-earn), and why.
 
 ### 2. [NFT_INTERACTIONS.md](NFT_INTERACTIONS.md) — NFT mechanics across all chains
-A catalog of 20 NFT interaction patterns (breeding, fusion, evolution, rentals, soulbound, dynamic, staking, …) with cross-chain game examples (Axie, Gods Unchained, Splinterlands, Big Time, Fanton, Pixels, etc.) and a top-5 prioritization for Cube Worlds.
-- **Start here if** you're designing the NFT mechanic layer specifically.
-- **Cube Worlds catalog** in Part 4: CNFT-as-multiplier → achievement SBTs → burn-to-upgrade fusion → CNFT rental → season access pass.
+A catalog of 20 NFT interaction patterns (breeding, fusion, evolution, rentals, soulbound, dynamic, staking, …) with cross-chain game examples. Relevant again whenever World I starts using the pass for gameplay.
 
 ### 3. [TOKEN_INTERACTIONS.md](TOKEN_INTERACTIONS.md) — Fungible-token mechanics across all chains
-Sources, sinks, utility patterns, and economy models (single-token vs dual-token vs off-chain-points-then-TGE) with the survivor games' lessons. Anchored on the (then) structural problem: Cube Worlds had 4 token sources and exactly 1 sink.
-- **Start here if** you're tuning the CUBE economy.
-- **Partly superseded:** its "add 3 sinks first" recommendation shipped; its "then promote CUBE to on-chain jetton" recommendation was **reversed** — $CUBE stays DB-only. See the doc's banner.
+Sources, sinks, utility patterns, and economy models with the survivor games' lessons. Its "keep $CUBE off-chain, sinks before faucets" thinking is the lineage of the v3 pay-per-try economy.
 
-## Engineering backlog
+## Backlog archive
 
-### [FUTURE_DEVELOPMENT.md](FUTURE_DEVELOPMENT.md) — Concrete TODO list
-Numbered items spanning security hardening, critical fixes, feature improvements, and technical debt. Each item has a priority and effort estimate. This is the "what to ship next" list; the research docs are the "why".
+### [FUTURE_DEVELOPMENT.md](FUTURE_DEVELOPMENT.md) — v1/v2-era TODO list
+Numbered ideas spanning security hardening, fixes, and features, written before the pivots. Kept as an idea quarry; statuses inside are stale.
 
-## How they fit together
+## Working artifacts
 
-```
-MARKET_RESEARCH ──┐
-                  ├──> ECONOMY.md ────────┐
-TOKEN_INTERACTIONS┤                       ├──> ANCIENT_WORLDS_PLAN ──> Phases A–F (build order)
-NFT_INTERACTIONS ─┘                       │
-                                          └──> FUTURE_DEVELOPMENT.md (short-term backlog)
-```
-
-- Strategy comes from MARKET_RESEARCH.
-- Mechanic choices come from NFT_INTERACTIONS + TOKEN_INTERACTIONS.
-- Financial model and tokenomics live in ECONOMY.
-- Game design + contracts + roadmap live in ANCIENT_WORLDS_PLAN.
-- Concrete sprint items live in FUTURE_DEVELOPMENT.
-
-The three research docs cross-link directly — opening any one surfaces the full set.
+`superpowers/` holds dated plan/spec documents from past working sessions (e.g. the TMA-only bot entry design).

@@ -13,6 +13,7 @@ type ResolvedUser = NonNullable<
 interface StubUser {
   id: number
   language: string
+  name?: string
   wallet?: string
   referalId?: number
   votes: bigint
@@ -327,4 +328,63 @@ test('POST /api/auth/login rejects oversized initData', async (t) => {
 
   assert.equal(response.statusCode, 200)
   assert.equal(response.json().error, 'Invalid request body')
+})
+
+// name sync — webview users have no other code path that sets `name`
+
+test('POST /api/auth/login syncs the Telegram username into user.name', async (t) => {
+  const ctx = await createAuthTestContext({
+    parseInitData: () =>
+      ({ user: { id: 1001, username: 'alice', first_name: 'Alice' } } as InitData),
+  })
+  t.after(async () => {
+    await ctx.app.close()
+  })
+
+  await ctx.app.inject({
+    method: 'POST',
+    url: '/api/auth/login',
+    payload: { initData: 'signed' },
+  })
+
+  const user = ctx.users.get(1001)!
+  assert.equal(user.name, 'alice')
+  assert.equal(user.saveCalls, 1, 'saved once for the name sync')
+})
+
+test('POST /api/auth/login falls back to first_name when there is no username', async (t) => {
+  const ctx = await createAuthTestContext({
+    parseInitData: () =>
+      ({ user: { id: 1001, first_name: 'Alice' } } as InitData),
+  })
+  t.after(async () => {
+    await ctx.app.close()
+  })
+
+  await ctx.app.inject({
+    method: 'POST',
+    url: '/api/auth/login',
+    payload: { initData: 'signed' },
+  })
+
+  assert.equal(ctx.users.get(1001)!.name, 'Alice')
+})
+
+test('POST /api/auth/login does not save when the name is already current', async (t) => {
+  const ctx = await createAuthTestContext({
+    parseInitData: () =>
+      ({ user: { id: 1001, username: 'alice' } } as InitData),
+  })
+  ctx.users.get(1001)!.name = 'alice'
+  t.after(async () => {
+    await ctx.app.close()
+  })
+
+  await ctx.app.inject({
+    method: 'POST',
+    url: '/api/auth/login',
+    payload: { initData: 'signed' },
+  })
+
+  assert.equal(ctx.users.get(1001)!.saveCalls, 0, 'no redundant save')
 })

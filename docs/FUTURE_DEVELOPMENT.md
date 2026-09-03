@@ -1,5 +1,11 @@
 # Future Development Ideas
 
+> **Status note (2026-07-13, v3 reset).** The v2 ancient-worlds build this list fed
+> into was deleted without shipping — the product is now mint-pass-first (see
+> [`../CLAUDE.md`](../CLAUDE.md)). Anything below referencing castles, heroes,
+> tournaments, the USDT rail, Season Pass, or ads describes removed systems. Kept
+> purely as an idea quarry for World I.
+
 > **Status note (2026-06-14).** Written before the DB-only $CUBE pivot and the
 > ancient-worlds build-out. Several "New Features" below have since shipped in some form
 > (achievements/CNFT tiers, seasonal events via the weekly tournament & boss week, push

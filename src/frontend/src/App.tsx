@@ -95,11 +95,11 @@ export function App() {
             ENTERING THE REALM…
           </div>
         )}
-        {user && minted && <PassView />}
-        {user && !minted && tab === 'forge' && (
-          <MintFlow onBalance={setBalance} onMinted={() => setMinted(true)} />
-        )}
-        {user && !minted && tab === 'earn' && (
+        {user && tab === 'forge'
+          && (minted
+            ? <PassView />
+            : <MintFlow onBalance={setBalance} onMinted={() => setMinted(true)} />)}
+        {user && tab === 'earn' && (
           <EarnPanel
             balance={balance}
             userId={user.id}
@@ -111,7 +111,7 @@ export function App() {
         )}
       </main>
 
-      {user && !minted && (
+      {user && (
         <nav
           style={{
             position: 'fixed',
@@ -123,7 +123,11 @@ export function App() {
             borderTop: '2px solid var(--cw-border-dark)',
           }}
         >
-          <TabButton label="⚒ FORGE" active={tab === 'forge'} onClick={() => setTab('forge')} />
+          <TabButton
+            label={minted ? '💎 PASS' : '⚒ FORGE'}
+            active={tab === 'forge'}
+            onClick={() => setTab('forge')}
+          />
           <TabButton label="⛏ EARN" active={tab === 'earn'} onClick={() => setTab('earn')} />
         </nav>
       )}

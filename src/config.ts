@@ -73,6 +73,9 @@ function createConfigFromEnvironment(environment: NodeJS.ProcessEnv) {
     GENERATION_TRY_COST_VOTES: z.number().int().default(100),
     // Telegram Stars top-up: $CUBE (votes) credited per 1 Star. Tunable.
     STARS_TOPUP_VOTES_PER_STAR: z.number().int().default(10),
+    // $CUBE credited to the referrer when an invited user's pass is minted.
+    // Mint approval is human-gated, which makes this reward unfarmable. 0 ⇒ off.
+    REFERRAL_MINT_REWARD_VOTES: z.number().int().default(200),
   })
 
   if (config.BOT_MODE === 'webhook') {

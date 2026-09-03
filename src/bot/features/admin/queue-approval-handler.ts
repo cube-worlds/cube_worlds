@@ -30,6 +30,9 @@ export interface QueueApprovalDependencies {
   setRework: (userId: number) => Promise<void>
   notifyApproved: (user: ApprovalUser, nftUrl: string) => Promise<void>
   notifyDeclined: (user: ApprovalUser) => Promise<void>
+  // Credit the inviter (if any) after the invitee's pass is minted. Runs at
+  // most once per user (the CAS claim gates the whole approve path).
+  rewardReferrer: (user: ApprovalUser) => Promise<void>
   logError: (message: string) => void
 }
 
@@ -76,6 +79,14 @@ export function buildQueueApproval(deps: QueueApprovalDependencies) {
     // From here the NFT exists on-chain: NEVER release the claim. A markMinted
     // failure must bias to false-error (manual reconcile), never a double-mint.
     await deps.markMinted(user.id, nftUrl, imageHash, jsonHash)
+    // Referral payout is a bonus — it must never fail an approved mint.
+    try {
+      await deps.rewardReferrer(user)
+    } catch (err) {
+      deps.logError(
+        `Referral reward failed for ${user.id}: ${(err as Error).message}`,
+      )
+    }
     await deps.notifyApproved(user, nftUrl)
     return { ok: true, nftUrl }
   }

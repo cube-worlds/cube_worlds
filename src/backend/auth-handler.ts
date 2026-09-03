@@ -74,6 +74,15 @@ export function buildAuthHandler(
           const user = await dependencies.findOrCreateUser(tgUserId)
           if (!user) return { error: 'User not found' }
 
+          // Sync the display name from Telegram — nothing else sets it for
+          // webview-only users, and admin captions + data folders rely on it.
+          const tgName
+            = parsedData.user?.username ?? parsedData.user?.first_name
+          if (tgName && user.name !== tgName) {
+            user.name = tgName
+            await user.save()
+          }
+
           const userAlreadyInvited = user.wallet || user.referalId
           if (referId && !userAlreadyInvited) {
             const receiverId = Number(referId)

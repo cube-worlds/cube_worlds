@@ -23,18 +23,23 @@ try {
     )
   }
 
-  try {
-    await syncBotCommands(bot.api)
-    const menuButton = await setMenuButton(bot.api)
-    if (menuButton.changed) {
-      logger.info(
-        `Menu button updated: ${menuButton.previousUrl ?? '(none)'} → ${menuButton.url}`,
-      )
-    } else {
-      logger.info(`Menu button already current (${menuButton.url})`)
+  // NEVER in staging: with the production BOT_TOKEN this would repoint the
+  // LIVE bot's menu button at the staging WEB_APP_URL. Staging must not touch
+  // Telegram at all.
+  if (!config.STAGING) {
+    try {
+      await syncBotCommands(bot.api)
+      const menuButton = await setMenuButton(bot.api)
+      if (menuButton.changed) {
+        logger.info(
+          `Menu button updated: ${menuButton.previousUrl ?? '(none)'} → ${menuButton.url}`,
+        )
+      } else {
+        logger.info(`Menu button already current (${menuButton.url})`)
+      }
+    } catch (error) {
+      logger.warn({ err: error }, 'Failed to sync bot commands or menu button')
     }
-  } catch (error) {
-    logger.warn({ err: error }, 'Failed to sync bot commands or menu button')
   }
 
   const server = await createServer(bot)
