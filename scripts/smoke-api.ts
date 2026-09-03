@@ -38,6 +38,7 @@ function signInitData(botToken: string, user: object): string {
   params.set('auth_date', String(Math.floor(Date.now() / 1000)))
   params.set('query_id', 'AASmokeQueryId')
   params.set('user', JSON.stringify(user))
+  params.set('signature', 'smoke-fake-signature')
   const pairs = [...params.entries()].map(([k, v]) => `${k}=${v}`).sort()
   const secret = crypto
     .createHmac('sha256', 'WebAppData')
