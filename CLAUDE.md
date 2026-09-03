@@ -38,7 +38,7 @@ npm run smoke:api                                # boots the REAL app (STAGING, 
 - No Buffer polyfill needed anymore — the frontend no longer imports `@ton/core` (the old `polyfills.ts` died with the Vue app).
 
 ## Critical Gotchas
-- **Tests use Node.js built-in test runner** (`node --test`), not Jest/Vitest. 511 tests / 62 files; run `npm run test:coverage` for the report.
+- **Tests use Node.js built-in test runner** (`node --test`), not Jest/Vitest. 512 tests / 62 files; run `npm run test:coverage` for the report.
 - **`NODE_ENV=test` and config**: `src/config.ts` is a Proxy that throws on any property read in test mode. Tests must not transitively import `#root/config`. Handlers needing config/bot/chain deps are split `foo-handler.ts` (pure, testable) + `foo.ts` (composer). Composers taking the bot: `createMintHandler(bot.api)`, `createAvatarHandler(bot)`, `createTopupInvoiceHandler(bot.api)` — wired in `server.ts`.
 - **`folderPath()`/`userFilePath()`** from `src/common/helpers/files.ts` for all user-derived file paths — sanitizes and guards against traversal out of `./data/`.
 - **Claim locking**: in-process promise chain (`claimLocks` Map) — single-process only.

@@ -63,7 +63,7 @@ export function buildAdminChatCommands(): BotCommand[] {
 }
 
 export function buildSyncBotCommands(deps: SyncCommandsDependencies) {
-  return async function syncBotCommands(api: BotApiLike): Promise<void> {
+  return async function syncBotCommands(api: BotApiLike): Promise<{ skippedAdmins: number[] }> {
     await api.setMyCommands(
       buildPrivateChatCommands(deps.defaultLocale, deps.translate),
       { scope: { type: 'all_private_chats' } },
@@ -106,15 +106,24 @@ export function buildSyncBotCommands(deps: SyncCommandsDependencies) {
       ),
     )
 
+    // Telegram answers 400 "chat not found" for an admin who never opened
+    // this bot (e.g. a fresh staging bot). Skip them instead of aborting the
+    // sync — the rest of the admins and everything above still applies.
+    const skipped: number[] = []
     for (const adminId of deps.botAdmins) {
-      await api.setMyCommands(
-        [
-          ...buildPrivateChatCommands(deps.defaultLocale, deps.translate),
-          ...buildAdminChatCommands(),
-        ],
-        { scope: { type: 'chat', chat_id: adminId } },
-      )
+      try {
+        await api.setMyCommands(
+          [
+            ...buildPrivateChatCommands(deps.defaultLocale, deps.translate),
+            ...buildAdminChatCommands(),
+          ],
+          { scope: { type: 'chat', chat_id: adminId } },
+        )
+      } catch {
+        skipped.push(adminId)
+      }
     }
+    return { skippedAdmins: skipped }
   }
 }
 
