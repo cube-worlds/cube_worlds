@@ -94,7 +94,7 @@ export function buildSetWalletHandler(
         // in the handler; only ill-typed/oversized bodies hit AJV.
         attachValidation: true,
       },
-      async (request) => {
+      async (request, reply) => {
         if (request.validationError) {
           return { error: 'Invalid request body' }
         }
@@ -135,9 +135,14 @@ export function buildSetWalletHandler(
           const bounceable = verification.boundAddress
           const existingOwner = await dependencies.findUserByWallet(bounceable)
           if (existingOwner && existingOwner.id !== user.id) {
-            return { error: 'Wallet already linked to another account' }
+            return reply.code(409).send({
+              error: 'Wallet already linked to another account',
+              code: 'wallet_taken',
+            })
           }
 
+          // A different wallet cannot hold the pass we snapshotted.
+          if (user.wallet !== bounceable) user.pass = undefined
           user.wallet = bounceable
           await user.save()
 
