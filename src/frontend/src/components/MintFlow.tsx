@@ -8,17 +8,24 @@ import {
   submitDraft,
   uploadAvatar,
 } from '../api'
-import { useWalletBind } from '../hooks/useWalletBind'
 import { haptic } from '../telegram'
 
 const REVIEW_POLL_MS = 12_000
 
 interface MintFlowProps {
+  username: string | null
   onBalance: (votes: string) => void
-  onMinted: () => void
+  // REFRESH on the username gate re-runs /api/auth/login.
+  onRefreshLogin: () => void
+  // Submit needs a bound wallet; App shows WalletScreen and returns here.
+  onNeedWallet: () => void
+  // Minted frame → ENTER WORLD I → App runs the pass scan.
+  onEnterWorld: () => void
+  onEarn: () => void
+  onBack: () => void
 }
 
-export function MintFlow({ onBalance, onMinted }: MintFlowProps) {
+export function MintFlow({ username, onBalance, onRefreshLogin, onNeedWallet, onEnterWorld, onEarn, onBack }: MintFlowProps) {
   const [status, setStatus] = useState<MintStatus | null>(null)
   const [picking, setPicking] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -32,8 +39,7 @@ export function MintFlow({ onBalance, onMinted }: MintFlowProps) {
     }
     setStatus(next)
     onBalance(next.yourVotes)
-    if (next.minted) onMinted()
-  }, [onBalance, onMinted])
+  }, [onBalance])
 
   useEffect(() => {
     void refresh()
@@ -45,8 +51,6 @@ export function MintFlow({ onBalance, onMinted }: MintFlowProps) {
     const timer = setInterval(() => void refresh(), REVIEW_POLL_MS)
     return () => clearInterval(timer)
   }, [status?.state, status?.minted, refresh])
-
-  const { bindWallet } = useWalletBind(() => void refresh())
 
   async function onGenerate() {
     if (!status || busy) return
@@ -89,10 +93,47 @@ export function MintFlow({ onBalance, onMinted }: MintFlowProps) {
     }
   }
 
+  // Username gate: the pass is stamped with @username, no fallback.
+  if (!username) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: '20px 20px 24px' }}>
+        <button type="button" className="px-back" onClick={onBack}>‹ BACK</button>
+        <div className="px-title" style={{ fontSize: 14, lineHeight: 1.6 }}>SET A @USERNAME FIRST</div>
+        <div className="px-body" style={{ color: 'var(--cw-text)', fontSize: 19 }}>
+          Your pass is stamped with your Telegram @username. Set one in Telegram Settings → Username, then come back.
+        </div>
+        <button type="button" className="px-btn" onClick={onRefreshLogin}>REFRESH</button>
+      </div>
+    )
+  }
+
   if (!status) {
     return (
       <div className="px-pulse px-label" style={{ textAlign: 'center', paddingTop: 120 }}>
         LOADING…
+      </div>
+    )
+  }
+
+  if (status.minted) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: 24, textAlign: 'center' }}>
+        <div className="px-step" style={{ letterSpacing: 2 }}>PASS MINTED</div>
+        {status.image && (
+          <img src={status.image} alt="your pass" style={{ width: 180, height: 180, imageRendering: 'pixelated', border: '4px solid var(--cw-gold)', boxShadow: '0 0 0 4px var(--cw-gold-deep)' }} />
+        )}
+        <div className="px-title" style={{ fontSize: 14, lineHeight: 1.7 }}>
+          WELCOME,
+          <br />
+          HOLDER
+        </div>
+        <div className="px-body" style={{ color: 'var(--cw-text)', fontSize: 19 }}>
+          Your pass is in your wallet. The gates of World I are open.
+        </div>
+        <button type="button" className="px-btn" onClick={onEnterWorld}>ENTER WORLD I</button>
+        {status.nftUrl && (
+          <a href={status.nftUrl} target="_blank" rel="noreferrer" className="px-label">VIEW ON GETGEMS ›</a>
+        )}
       </div>
     )
   }
@@ -105,7 +146,7 @@ export function MintFlow({ onBalance, onMinted }: MintFlowProps) {
           await refresh()
         }}
         canCancel={Boolean(status.avatar)}
-        onCancel={() => setPicking(false)}
+        onCancel={() => (status.avatar ? setPicking(false) : onBack())}
       />
     )
   }
@@ -120,18 +161,19 @@ export function MintFlow({ onBalance, onMinted }: MintFlowProps) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: '18px 16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <button type="button" className="px-back" onClick={onBack}>‹ BACK</button>
+        <div className="px-step">{hasDraft ? 'FORGE · 2/3' : 'FORGE · 1/3'}</div>
+      </div>
       <div style={{ textAlign: 'center' }}>
         <div className="px-title" style={{ fontSize: 13 }}>FORGE YOUR PASS</div>
         <div className="px-body" style={{ marginTop: 8 }}>
-          Every generation try burns $CUBE. Submit the one you love.
+          {`Stamped @${username}. Every try burns $CUBE. Submit the one you love.`}
         </div>
       </div>
 
       {declined && (
-        <div
-          className="px-card"
-          style={{ borderColor: 'var(--cw-red)', padding: '10px 12px', textAlign: 'center' }}
-        >
+        <div className="px-card" style={{ borderColor: 'var(--cw-red)', padding: '10px 12px', textAlign: 'center' }}>
           <span style={{ color: 'var(--cw-red-bright)', fontSize: 18 }}>
             DECLINED — forge another look and resubmit
           </span>
@@ -147,43 +189,27 @@ export function MintFlow({ onBalance, onMinted }: MintFlowProps) {
       )}
 
       {notice && (
-        <div style={{ textAlign: 'center', fontSize: 18, color: 'var(--cw-red-bright)' }}>
-          {notice}
-        </div>
+        <div style={{ textAlign: 'center', fontSize: 18, color: 'var(--cw-red-bright)' }}>{notice}</div>
       )}
 
-      <button
-        type="button"
-        className="px-btn"
-        disabled={busy || !status.canAfford}
-        onClick={() => void onGenerate()}
-      >
-        {busy ? 'WORKING…' : tryLabel}
+      <button type="button" className="px-btn" disabled={busy || !status.canAfford} onClick={() => void onGenerate()}>
+        {busy ? 'FORGING…' : tryLabel}
       </button>
       {!status.canAfford && (
-        <div style={{ textAlign: 'center', fontSize: 18, color: 'var(--cw-text-dim)' }}>
-          Not enough $CUBE — earn some in the EARN tab
-        </div>
+        <button type="button" className="px-btn-blue" onClick={onEarn}>
+          NOT ENOUGH $CUBE · EARN SOME ›
+        </button>
       )}
 
       {hasDraft
         && (status.hasWallet
           ? (
-              <button
-                type="button"
-                className="px-btn"
-                disabled={busy}
-                onClick={() => void onSubmit()}
-              >
+              <button type="button" className="px-btn" disabled={busy} onClick={() => void onSubmit()}>
                 SUBMIT FOR MINT
               </button>
             )
           : (
-              <button
-                type="button"
-                className="px-btn-ghost"
-                onClick={() => void bindWallet()}
-              >
+              <button type="button" className="px-btn-ghost" onClick={onNeedWallet}>
                 CONNECT WALLET TO SUBMIT
               </button>
             ))}
