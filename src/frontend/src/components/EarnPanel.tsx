@@ -1,10 +1,12 @@
-import type { ClaimStatus, PublicConfig } from '../api'
+import type { PublicConfig } from '../api'
 import { useTonConnectUI } from '@tonconnect/ui-react'
-import { useCallback, useEffect, useState } from 'react'
-import { claimDaily, claimStatus, topupInvoice } from '../api'
+import { useState } from 'react'
+import { topupInvoice } from '../api'
 import { useWalletBind } from '../hooks/useWalletBind'
 import { haptic, openInvoice, openShare } from '../telegram'
+import { DailyClaim } from './DailyClaim'
 
+// Three pack sizes; $CUBE per pack is derived from the flat config rate.
 const STARS_PACKS = [100, 500, 1000]
 const TON_PACKS: Array<{ label: string, nano: string }> = [
   { label: '1 TON', nano: '1000000000' },
@@ -29,46 +31,10 @@ export function EarnPanel({
   onBalance,
   onWalletBound,
 }: EarnPanelProps) {
-  const [claim, setClaim] = useState<ClaimStatus | null>(null)
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
   const [tonConnectUI] = useTonConnectUI()
   const { bindWallet } = useWalletBind(onWalletBound)
-
-  const refreshClaim = useCallback(async () => {
-    try {
-      const status = await claimStatus()
-      if (!status.error) setClaim(status)
-    } catch {
-      // keep the previous snapshot
-    }
-  }, [])
-
-  useEffect(() => {
-    void refreshClaim()
-    const timer = setInterval(() => void refreshClaim(), 30_000)
-    return () => clearInterval(timer)
-  }, [refreshClaim])
-
-  async function onClaim() {
-    if (busy) return
-    setBusy(true)
-    setNotice(null)
-    try {
-      const result = await claimDaily()
-      if (result.error) {
-        setNotice(result.error)
-      } else {
-        onBalance(result.balance)
-        haptic('success')
-      }
-      await refreshClaim()
-    } catch {
-      setNotice('Network error — try again')
-    } finally {
-      setBusy(false)
-    }
-  }
 
   async function onTopup(stars: number) {
     if (busy) return
@@ -127,43 +93,7 @@ export function EarnPanel({
       )}
 
       <Card title="DAILY CLAIM">
-        {claim
-          ? (
-              claim.canClaim
-                ? (
-                    <button
-                      type="button"
-                      className="px-btn"
-                      disabled={busy}
-                      onClick={() => void onClaim()}
-                    >
-                      {`CLAIM ${claim.rawClaimAmount} $CUBE`}
-                    </button>
-                  )
-                : (
-                    <>
-                      <Progress percent={claim.progressPercent} />
-                      <div className="px-body" style={{ textAlign: 'center', marginTop: 8 }}>
-                        next claim in
-                        {' '}
-                        {formatSeconds(claim.secondsUntilClaim)}
-                      </div>
-                    </>
-                  )
-            )
-          : (
-              <div className="px-pulse px-label" style={{ textAlign: 'center' }}>…</div>
-            )}
-        {claim && (
-          <div className="px-body" style={{ textAlign: 'center', marginTop: 8 }}>
-            streak
-            {' '}
-            {claim.streakDays}
-            {' '}
-            day(s) · multiplier ×
-            {claim.claimMultiplier}
-          </div>
-        )}
+        <DailyClaim onBalance={onBalance} />
       </Card>
 
       <Card title="INVITE FRIENDS">
@@ -189,11 +119,14 @@ export function EarnPanel({
               key={stars}
               type="button"
               className="px-btn-ghost"
-              disabled={busy}
-              style={{ flex: 1, color: 'var(--cw-gold)' }}
+              disabled={busy || !config}
+              style={{ flex: 1, color: 'var(--cw-gold)', padding: '10px 0' }}
               onClick={() => void onTopup(stars)}
             >
               {`⭐ ${stars}`}
+              <div style={{ fontFamily: 'var(--font-body)', fontSize: 16, color: 'var(--cw-text-dim)', marginTop: 4 }}>
+                {config ? `${(stars * config.starsTopupVotesPerStar).toLocaleString('en-US')} $CUBE` : '…'}
+              </div>
             </button>
           ))}
         </div>
@@ -238,37 +171,4 @@ function Card({ title, children }: { title: string, children: React.ReactNode })
       {children}
     </div>
   )
-}
-
-function Progress({ percent }: { percent: number }) {
-  return (
-    <div
-      style={{
-        height: 10,
-        background: 'var(--cw-border-dark)',
-        border: '2px solid var(--cw-border)',
-        position: 'relative',
-      }}
-    >
-      <div
-        style={{
-          position: 'absolute',
-          left: 0,
-          top: 0,
-          bottom: 0,
-          width: `${Math.min(100, Math.max(0, percent))}%`,
-          background: 'var(--cw-gold-dark)',
-        }}
-      />
-    </div>
-  )
-}
-
-function formatSeconds(total: number): string {
-  const h = Math.floor(total / 3600)
-  const m = Math.floor((total % 3600) / 60)
-  const s = total % 60
-  if (h > 0) return `${h}h ${m}m`
-  if (m > 0) return `${m}m ${s}s`
-  return `${s}s`
 }
