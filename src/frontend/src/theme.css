@@ -168,3 +168,82 @@ a {
 a:hover {
   color: var(--cw-gold);
 }
+
+/* v4 additions: balance tick, progress bar fill, spinner, step/back chrome. */
+@keyframes cwTick {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-18px);
+  }
+}
+
+@keyframes cwBar {
+  0% {
+    width: 0;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+@keyframes cwSpin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Blue secondary CTA (wallet actions, getgems). */
+.px-btn-blue {
+  display: block;
+  width: 100%;
+  padding: 16px 0;
+  cursor: pointer;
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  color: #fff;
+  text-align: center;
+  text-decoration: none;
+  background: var(--cw-blue);
+  border: 0;
+  border-radius: 0;
+  box-shadow: 0 5px 0 #24478f;
+}
+
+.px-btn-blue:active {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 #24478f;
+}
+
+.px-back {
+  padding: 0;
+  cursor: pointer;
+  font-family: var(--font-pixel);
+  font-size: 9px;
+  color: var(--cw-text-dim);
+  background: none;
+  border: 0;
+}
+
+.px-step {
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  color: var(--cw-text-dim);
+}
+
+.px-spin {
+  width: 44px;
+  height: 44px;
+  border: 5px solid var(--cw-border);
+  border-top-color: var(--cw-gold);
+  animation: cwSpin 0.9s steps(8) infinite;
+}
