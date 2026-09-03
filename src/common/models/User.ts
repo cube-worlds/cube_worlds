@@ -23,6 +23,26 @@ export enum UserState {
   Rework = 'Rework',
 }
 
+// Snapshot of the Cube Worlds NFT the user plays as. Written only by
+// /api/pass/select (on-chain ownership check); revalidated hourly on login.
+@modelOptions({ schemaOptions: { _id: false } })
+export class UserPass {
+  @prop({ type: Number, required: true })
+  index!: number
+
+  @prop({ type: String, required: true })
+  address!: string
+
+  @prop({ type: String, required: true })
+  name!: string
+
+  @prop({ type: String, required: true, default: '' })
+  image!: string
+
+  @prop({ type: Date, required: true })
+  verifiedAt!: Date
+}
+
 @modelOptions({ schemaOptions: { timestamps: true, id: false } })
 export class User extends TimeStamps {
   @prop({ type: Number, required: true, unique: true })
@@ -62,6 +82,9 @@ export class User extends TimeStamps {
 
   @prop({ type: String, index: { unique: true, sparse: true } })
   wallet?: string
+
+  @prop({ type: () => UserPass })
+  pass?: UserPass
 
   @prop({ type: Number })
   lastSendedPlace?: number // for notification purposes
@@ -257,6 +280,23 @@ export async function markUserMinted(
       },
     },
   )
+}
+
+// Store (or refresh) the pass snapshot after an on-chain ownership check.
+export async function setUserPass(
+  userId: number,
+  pass: { index: number, address: string, name: string, image: string },
+  verifiedAt: Date,
+): Promise<void> {
+  await UserModel.findOneAndUpdate(
+    { id: userId },
+    { $set: { pass: { ...pass, verifiedAt } } },
+  )
+}
+
+// Drop the snapshot when the NFT is no longer in the bound wallet.
+export async function clearUserPass(userId: number): Promise<void> {
+  await UserModel.findOneAndUpdate({ id: userId }, { $unset: { pass: 1 } })
 }
 
 // Move a draft back to Rework (admin returned it for changes).
