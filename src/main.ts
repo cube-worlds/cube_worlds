@@ -27,8 +27,8 @@ try {
   // LIVE bot's menu button at the staging WEB_APP_URL. Staging must not touch
   // Telegram at all.
   if (!config.STAGING) {
+    // Menu button first: it must not depend on the command sync succeeding.
     try {
-      await syncBotCommands(bot.api)
       const menuButton = await setMenuButton(bot.api)
       if (menuButton.changed) {
         logger.info(
@@ -38,7 +38,17 @@ try {
         logger.info(`Menu button already current (${menuButton.url})`)
       }
     } catch (error) {
-      logger.warn({ err: error }, 'Failed to sync bot commands or menu button')
+      logger.warn({ err: error }, 'Failed to set menu button')
+    }
+    try {
+      const { skippedAdmins } = await syncBotCommands(bot.api)
+      if (skippedAdmins.length > 0) {
+        logger.warn(
+          `Admin commands skipped for ${skippedAdmins.join(', ')} (chat not found — admin never started this bot)`,
+        )
+      }
+    } catch (error) {
+      logger.warn({ err: error }, 'Failed to sync bot commands')
     }
   }
 

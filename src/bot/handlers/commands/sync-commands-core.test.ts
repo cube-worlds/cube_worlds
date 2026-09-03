@@ -229,3 +229,26 @@ test('buildSetMenuButton updates when only the label differs', async () => {
   assert.equal(stub.setChatMenuButtonCalls.length, 1)
   assert.equal(result.changed, true)
 })
+
+test('syncBotCommands skips admins whose chat is unknown to Telegram and keeps going', async () => {
+  const stub = makeApiStub()
+  const original = stub.api.setMyCommands
+  stub.api.setMyCommands = async (commands, options) => {
+    if (options?.scope?.type === 'chat' && options.scope.chat_id === 111) {
+      throw new Error('Bad Request: chat not found')
+    }
+    return original(commands, options)
+  }
+  const sync = buildSyncBotCommands({
+    botAdmins: [111, 222],
+    locales: ['en'],
+    defaultLocale: 'en',
+    translate: fakeTranslate,
+  })
+
+  const result = await sync(stub.api)
+
+  assert.deepEqual(result.skippedAdmins, [111])
+  const chatCalls = stub.setMyCommandsCalls.filter(c => c.options?.scope?.type === 'chat')
+  assert.equal(chatCalls.length, 1)
+})
