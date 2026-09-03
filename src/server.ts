@@ -10,31 +10,16 @@ import fastifyStatic from '@fastify/static'
 import fastify from 'fastify'
 import { webhookCallback } from 'grammy'
 import { logger, loggerOptions } from '#root/logger'
-import adRewardHandler from './backend/ad-reward'
 import authHandler from './backend/auth-handler'
+import { createAvatarHandler } from './backend/avatar'
 import balancesHandler from './backend/balances-handler'
-import bossHandler from './backend/boss-handler'
-import castleUpgradeHandler from './backend/castle-upgrade-handler'
 import claimHandler from './backend/claim-handler'
-import dungeonHandler from './backend/dungeon-handler'
-import energyHandler from './backend/energy-handler'
-import equipmentHandler from './backend/equipment-handler'
-import expeditionHandler from './backend/expedition-handler'
-import heroHandler from './backend/hero-handler'
 import leaderboardHandler from './backend/leaderboard-handler'
-import mintHandler from './backend/mint'
+import { createMintHandler } from './backend/mint'
 import nftHandler from './backend/nft-handler'
-import productionHandler from './backend/production-handler'
 import publicMetricsHandler from './backend/public-metrics'
-import pvpHandler from './backend/pvp-handler'
-import questHandler from './backend/quest-handler'
-import { createSeasonPassInvoiceHandler } from './backend/season-pass-invoice'
 import setWalletHandler from './backend/set-wallet-handler'
-import tournamentHandler from './backend/tournament'
-import walletHandler from './backend/wallet'
 import walletNonceHandler from './backend/wallet-nonce-handler'
-import walletWebhookHandler from './backend/wallet-webhook'
-import worldsHandler from './backend/worlds-handler'
 import { config } from './config'
 
 const ROUTE_RATE_LIMITS: Record<string, { max: number, timeWindow: string }> = {
@@ -45,20 +30,14 @@ const ROUTE_RATE_LIMITS: Record<string, { max: number, timeWindow: string }> = {
   '/api/users/claim/status': { max: 30, timeWindow: '1 minute' },
   '/api/users/leaderboard': { max: 60, timeWindow: '1 minute' },
   '/api/users/balances': { max: 60, timeWindow: '1 minute' },
-  '/api/game/worlds': { max: 60, timeWindow: '1 minute' },
-  '/api/game/expedition': { max: 30, timeWindow: '1 minute' },
-  '/api/game/energy/refill': { max: 20, timeWindow: '1 minute' },
-  '/api/game/tournament': { max: 60, timeWindow: '1 minute' },
-  '/api/game/tournament/enter': { max: 15, timeWindow: '1 minute' },
-  '/api/game/ad-nonce': { max: 20, timeWindow: '1 minute' },
-  '/api/game/ad-reward': { max: 60, timeWindow: '1 minute' }, // S2S; the nonce is the real gate
-  '/api/game/season-pass/invoice': { max: 15, timeWindow: '1 minute' },
-  '/api/wallet/webhook': { max: 120, timeWindow: '1 minute' },
-  '/api/wallet/balance': { max: 60, timeWindow: '1 minute' },
-  '/api/wallet/invoice': { max: 20, timeWindow: '1 minute' },
-  '/api/wallet/buy-energy': { max: 30, timeWindow: '1 minute' },
-  '/api/wallet/withdraw': { max: 10, timeWindow: '1 minute' },
-  '/api/wallet/transfer': { max: 15, timeWindow: '1 minute' },
+  // Mint flow. /generate is the expensive one (paid Stability call).
+  '/api/mint/quote': { max: 60, timeWindow: '1 minute' },
+  '/api/mint/status': { max: 60, timeWindow: '1 minute' },
+  '/api/mint/generate': { max: 6, timeWindow: '1 minute' },
+  '/api/mint/submit': { max: 10, timeWindow: '1 minute' },
+  '/api/mint/avatars': { max: 20, timeWindow: '1 minute' },
+  '/api/mint/avatar/select': { max: 20, timeWindow: '1 minute' },
+  '/api/mint/avatar/upload': { max: 10, timeWindow: '1 minute' },
 }
 
 export async function createServer(bot: Bot) {
@@ -126,7 +105,8 @@ export async function createServer(bot: Bot) {
   })
 
   await server.register(authHandler, { prefix: '/api/auth' })
-  await server.register(mintHandler, { prefix: '/api/mint' })
+  await server.register(createMintHandler(bot.api), { prefix: '/api/mint' })
+  await server.register(createAvatarHandler(bot), { prefix: '/api/mint' })
   await server.register(setWalletHandler, { prefix: '/api/auth' })
   await server.register(walletNonceHandler, { prefix: '/api/auth' })
 
@@ -138,23 +118,12 @@ export async function createServer(bot: Bot) {
 
   await server.register(publicMetricsHandler, { prefix: '/api/public' })
 
-  await server.register(worldsHandler, { prefix: '/api/game' })
-  await server.register(productionHandler, { prefix: '/api/game' })
-  await server.register(castleUpgradeHandler, { prefix: '/api/game' })
-  await server.register(heroHandler, { prefix: '/api/game' })
-  await server.register(dungeonHandler, { prefix: '/api/game' })
-  await server.register(equipmentHandler, { prefix: '/api/game' })
-  await server.register(questHandler, { prefix: '/api/game' })
-  await server.register(bossHandler, { prefix: '/api/game' })
-  await server.register(expeditionHandler, { prefix: '/api/game' })
-  await server.register(energyHandler, { prefix: '/api/game' })
-  await server.register(pvpHandler, { prefix: '/api/game' })
-  await server.register(tournamentHandler, { prefix: '/api/game' })
-  await server.register(adRewardHandler, { prefix: '/api/game' })
-  await server.register(createSeasonPassInvoiceHandler(bot.api), { prefix: '/api/game' })
-
-  await server.register(walletWebhookHandler, { prefix: '/api/wallet' })
-  await server.register(walletHandler, { prefix: '/api/wallet' })
+  // Static app config the webview needs before/without auth: the bot name
+  // (referral links) and the donation address (TON → $CUBE watcher target).
+  server.get('/api/public/config', async () => ({
+    botName: config.BOT_NAME,
+    donationAddress: config.COLLECTION_OWNER,
+  }))
 
   const __filename = fileURLToPath(import.meta.url)
   const __dirname = path.dirname(__filename)

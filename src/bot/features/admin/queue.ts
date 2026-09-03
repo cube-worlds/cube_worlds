@@ -20,14 +20,12 @@ import { NftItem } from '#root/common/helpers/nft-item'
 import { adminIndex } from '#root/common/helpers/telegram'
 import {
   claimUserForMint,
-  countMinted,
   countUsers,
   findUserById,
   markUserMinted,
   releaseMintClaim,
   setUserRework,
 } from '#root/common/models/User'
-import { config } from '#root/config'
 import { logger } from '#root/logger'
 import { buildQueueApproval } from './queue-approval-handler'
 
@@ -42,20 +40,10 @@ feature.command('queue', logHandle('command-queue'), async (ctx) => {
   })
 })
 
-function floorParamsFromConfig() {
-  return {
-    base: BigInt(config.MINT_FLOOR_BASE_VOTES),
-    step: BigInt(config.MINT_FLOOR_STEP_VOTES),
-    cap: BigInt(config.MINT_FLOOR_CAP_VOTES),
-  }
-}
-
 // Build the chain/IPFS-backed approval deps bound to this admin's context.
 function approvalDependencies(ctx: Context): QueueApprovalDependencies {
   const admIndex = adminIndex(ctx.dbuser.id)
   return {
-    floorParams: floorParamsFromConfig,
-    countMinted,
     claimForMint: claimUserForMint,
     releaseClaim: releaseMintClaim,
     pinToIpfs: async (user) => {
@@ -94,12 +82,12 @@ function approvalDependencies(ctx: Context): QueueApprovalDependencies {
       )
       await ctx.reply(`✅ Minted for @${user.name}: ${nftUrl}`)
     },
-    notifyReturned: async (user) => {
+    notifyDeclined: async (user) => {
       await ctx.api.sendMessage(
         user.id,
-        '↩️ Your NFT draft was returned. Open the app to regenerate it.',
+        '❌ Your NFT draft was declined. Open the app to generate a new one and resubmit.',
       )
-      await ctx.reply(`↩️ Returned @${user.name} to work`)
+      await ctx.reply(`❌ Declined @${user.name}`)
     },
     logError: (message) => logger.error(message),
   }
@@ -131,7 +119,7 @@ feature.callbackQuery(
         nftDescription: user.nftDescription,
       }
 
-      const { approve, returnToWork } = buildQueueApproval(
+      const { approve, decline } = buildQueueApproval(
         approvalDependencies(ctx),
       )
 
@@ -139,9 +127,9 @@ feature.callbackQuery(
         await ctx.reply('💥 Mint started!')
         const result = await approve(approvalUser)
         if (!result.ok) await ctx.reply(`🚫 Approve failed: ${result.reason}`)
-      } else if (action === MintAction.Return) {
-        const result = await returnToWork(approvalUser)
-        if (!result.ok) await ctx.reply(`🚫 Return failed: ${result.reason}`)
+      } else if (action === MintAction.Decline) {
+        const result = await decline(approvalUser)
+        if (!result.ok) await ctx.reply(`🚫 Decline failed: ${result.reason}`)
       }
     } catch (error) {
       ctx.logger.error(error)
