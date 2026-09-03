@@ -123,13 +123,16 @@ export async function createServer(bot: Bot) {
 
   await server.register(publicMetricsHandler, { prefix: '/api/public' })
 
-  // Static app config the webview needs before/without auth: the bot name
-  // (referral links), the donation address (TON → $CUBE watcher target), and
-  // the referral reward shown in the EARN tab.
+  // Static app config the webview needs before/without auth: bot name
+  // (referral links), donation target, collection (getgems links) and the
+  // economy numbers the UI renders — never hard-coded client-side.
   server.get('/api/public/config', async () => ({
     botName: config.BOT_NAME,
     donationAddress: config.COLLECTION_OWNER,
-    referralRewardVotes: config.REFERRAL_MINT_REWARD_VOTES,
+    collectionAddress: config.COLLECTION_ADDRESS,
+    generationTryCostVotes: config.GENERATION_TRY_COST_VOTES,
+    referralMintRewardVotes: config.REFERRAL_MINT_REWARD_VOTES,
+    starsTopupVotesPerStar: config.STARS_TOPUP_VOTES_PER_STAR,
   }))
 
   const __filename = fileURLToPath(import.meta.url)

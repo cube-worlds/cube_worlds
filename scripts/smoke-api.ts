@@ -197,13 +197,16 @@ async function run() {
     let tryCost = 0n
     let balanceAfterClaim = 0n
 
-    await step('GET /api/public/config exposes bot name, donation address, referral reward', async () => {
+    await step('GET /api/public/config exposes bot name, addresses and economy numbers', async () => {
       const response = await fetch(`${BASE}/api/public/config`)
       expect(response.ok, `HTTP ${response.status}`)
       const body = await response.json() as Record<string, unknown>
       expect(body.botName === 'cube_worlds_bot', `botName=${body.botName}`)
       expect(body.donationAddress === 'EQSmokeOwner', `donationAddress=${body.donationAddress}`)
-      expect(typeof body.referralRewardVotes === 'number', 'referralRewardVotes missing')
+      expect(body.collectionAddress === 'EQSmokeCollection', `collectionAddress=${body.collectionAddress}`)
+      for (const key of ['generationTryCostVotes', 'referralMintRewardVotes', 'starsTopupVotesPerStar']) {
+        expect(typeof body[key] === 'number', `${key} missing`)
+      }
     })
 
     await step('GET /api/public/metrics returns numeric counters', async () => {
