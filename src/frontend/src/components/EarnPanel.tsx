@@ -169,7 +169,7 @@ export function EarnPanel({
       <Card title="INVITE FRIENDS">
         <div className="px-body" style={{ textAlign: 'center', marginBottom: 10 }}>
           {config
-            ? `+${config.referralRewardVotes} $CUBE when an invited friend mints their pass`
+            ? `+${config.referralMintRewardVotes} $CUBE when an invited friend mints their pass`
             : 'Invited friends earn you $CUBE when they mint'}
         </div>
         <button

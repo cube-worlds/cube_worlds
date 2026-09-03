@@ -3,18 +3,30 @@
 
 import { getInitData } from './telegram'
 
+// Non-2xx responses still carry our `{ error, code }` envelope (400/403/409/
+// 502 from the pass and wallet routes, 429 from the rate limiter). Only a
+// non-JSON body is a transport failure.
 async function post<T>(url: string, body: Record<string, unknown> = {}): Promise<T> {
   const response = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ initData: getInitData(), ...body }),
   })
-  if (!response.ok) throw new Error(`HTTP ${response.status}`)
-  return response.json() as Promise<T>
+  const json = await response.json().catch(() => null)
+  if (json === null) throw new Error(`HTTP ${response.status}`)
+  return json as T
 }
 
 export interface ApiError {
   error?: string
+  code?: string
+}
+
+export interface Pass {
+  index: number
+  address: string
+  name: string
+  image: string
 }
 
 export interface LoginResponse extends ApiError {
@@ -25,6 +37,9 @@ export interface LoginResponse extends ApiError {
   balance: string
   minted: boolean
   mintState: string
+  holder: boolean
+  pass: Pass | null
+  username: string | null
 }
 
 export function login(referId?: string): Promise<LoginResponse> {
@@ -34,7 +49,10 @@ export function login(referId?: string): Promise<LoginResponse> {
 export interface PublicConfig {
   botName: string
   donationAddress: string
-  referralRewardVotes: number
+  collectionAddress: string
+  generationTryCostVotes: number
+  referralMintRewardVotes: number
+  starsTopupVotesPerStar: number
 }
 
 export async function publicConfig(): Promise<PublicConfig> {
@@ -176,4 +194,16 @@ export interface SetWalletResponse extends ApiError {
 
 export function setWallet(body: SetWalletBody): Promise<SetWalletResponse> {
   return post('/api/auth/set-wallet', { ...body })
+}
+
+export interface ScanResponse extends ApiError {
+  passes: Pass[]
+}
+
+export function scanPasses(): Promise<ScanResponse> {
+  return post('/api/pass/scan')
+}
+
+export function selectPass(index: number): Promise<LoginResponse> {
+  return post('/api/pass/select', { index })
 }
