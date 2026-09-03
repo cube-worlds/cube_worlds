@@ -2,7 +2,7 @@
 
 [![Telegram](https://img.shields.io/badge/Telegram-@cube__worlds__bot-26A5E4?logo=telegram&logoColor=white)](https://t.me/cube_worlds_bot)
 [![CI](https://github.com/cube-worlds/cube_worlds/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/cube-worlds/cube_worlds/actions/workflows/main.yml)
-![Tests](https://img.shields.io/badge/tests-495%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-511%20passing-brightgreen)
 ![Node](https://img.shields.io/badge/node-%E2%89%A522-339933?logo=node.js&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
 ![TON](https://img.shields.io/badge/TON-blockchain-0098EA?logo=tonkeeper&logoColor=white)
@@ -20,7 +20,7 @@ A Telegram Mini App on the TON blockchain. **v3 is mint-pass-first**: turn your 
 - 🪙 **DB-only $CUBE** — `User.votes` + the append-only `Balance` ledger are canonical; no on-chain jetton. Faucets: daily claim streak, referrals (rewarded when the invitee's pass is minted), TON donations from the bound wallet, Telegram Stars top-up. Sink: generation tries.
 - 🔐 **Cryptographic wallet binding** — TON Connect `ton_proof` (Ed25519 over a stateless HMAC nonce); donations are credited by an on-chain watcher matched to the bound wallet.
 - 📱 **React Mini App** — Vite + React 19 + TonConnect, pixel design system (Press Start 2P / VT323, dark purple + gold), served under `/game`; a static landing owns the root.
-- 🧪 **Tested + smoke-tested** — 495 tests on the Node.js built-in runner, plus `npm run smoke:api`: boots the real app with fake secrets against a throwaway Mongo and drives the API end-to-end.
+- 🧪 **Tested + smoke-tested** — 511 tests on the Node.js built-in runner, plus `npm run smoke:api`: boots the real app with fake secrets against a throwaway Mongo and drives the API end-to-end.
 
 ## 🏗️ Architecture
 
@@ -85,7 +85,7 @@ The Telegram Mini App URL must point at **`/game`** — the landing owns the roo
 | `npm run build:all`           | Backend (`tsc`) + landing + frontend (`vite build`).                 |
 | `npm run lint`                | Lint with @antfu/eslint-config.                                      |
 | `npm run typecheck`           | `tsc --noEmit` strict.                                               |
-| `npm run test:backend`        | 495 tests (Node built-in test runner).                               |
+| `npm run test:backend`        | 511 tests (Node built-in test runner).                               |
 | `npm run test:coverage`       | Coverage via Node's `--experimental-test-coverage`.                  |
 | `npm run smoke:api`           | Boots the real app (STAGING, fake secrets, throwaway Mongo) and drives the API end-to-end. `SMOKE_MONGO_URI` overrides the memory server. |
 | `CHECK_MONGO_URI=… npx tsx scripts/check-prod-users.ts` | Read-only pre-cutover check of a v1 production database against the v3 models. |
@@ -123,6 +123,17 @@ docs/                   # dated research archives (market, NFT/token interaction
 ```
 
 > v2 (the ancient-worlds ARPG: castles, heroes, PvP, tournaments, USDT rail) was built but never shipped; it was removed in the v3 reset and lives in git history. `removed-commands.ts` still catches the old slash commands and points users to the Mini App.
+
+## 🚢 Deploy
+
+Both environments run on the same host via [Kamal](https://kamal-deploy.org) (`config/deploy.yml`; secrets come from the sibling infra repo's SOPS files through `.kamal/secrets-common`). Kamal builds from the committed `HEAD`, so commit first.
+
+| Command                    | Target                                                                    |
+|----------------------------|---------------------------------------------------------------------------|
+| `kamal deploy -d staging`  | **Staging** — @cubeworldsbot at https://staging.cubeworlds.club. Own DB + data volume, same chain keys/admins as prod (an admin Approve there mints a real NFT). |
+| `kamal deploy`             | **Production** — cubeworlds.club. Currently still on v1; run the pre-deploy gates below first. |
+
+Staging is the place to try the current `main` as a real Telegram bot; production only moves when you run the plain `kamal deploy`.
 
 ## 📚 Further Reading
 

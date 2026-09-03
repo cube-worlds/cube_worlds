@@ -153,7 +153,7 @@ NODE_ENV=test node --import tsx --test src/backend/mint-handler.test.ts
 
 ## Testing
 
-- **Runner:** Node.js built-in (`node --test`) — not Jest/Vitest. 495 tests.
+- **Runner:** Node.js built-in (`node --test`) — not Jest/Vitest. 511 tests.
 - **Command:** `npm run test:backend`
 - **Pattern:** DI mock injection. See `mint-handler.test.ts` for reference.
 - **Before finishing any change:**
