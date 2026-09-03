@@ -1,8 +1,11 @@
 import type { InitData } from '@telegram-apps/init-data-node'
 import type { FastifyInstance } from 'fastify'
-import { findOrCreateUser, findUserById } from '#root/common/models/User'
+import type { Pass } from './login-payload'
+import { clearUserPass, findOrCreateUser, findUserById, setUserPass } from '#root/common/models/User'
 import { logger } from '#root/logger'
 import { defaultParseInitData, defaultValidateInitData } from './init-data'
+import { loginPayload } from './login-payload'
+import { verifyPassOwnership } from './pass'
 import { safeErrorResponse } from './safe-error'
 
 interface Body {
@@ -11,6 +14,9 @@ interface Body {
 }
 
 type ExistingUser = NonNullable<Awaited<ReturnType<typeof findUserById>>>
+
+// Re-check on-chain ownership at most once an hour per login.
+export const PASS_REVALIDATE_MS = 60 * 60 * 1000
 
 export interface AuthHandlerDependencies {
   validateInitData: (initData: string) => void
@@ -21,6 +27,9 @@ export interface AuthHandlerDependencies {
   info: (message: string) => void
   error: (message: string) => void
   logError: (message: string) => void
+  verifyPassOwnership: (passAddress: string, ownerAddress: string) => Promise<boolean>
+  setUserPass: (userId: number, pass: Pass, verifiedAt: Date) => Promise<void>
+  clearUserPass: (userId: number) => Promise<void>
 }
 
 function createDefaultDependencies(): AuthHandlerDependencies {
@@ -32,6 +41,9 @@ function createDefaultDependencies(): AuthHandlerDependencies {
     info: logger.info.bind(logger),
     error: logger.error.bind(logger),
     logError: logger.error.bind(logger),
+    verifyPassOwnership,
+    setUserPass,
+    clearUserPass,
   }
 }
 
@@ -74,6 +86,15 @@ export function buildAuthHandler(
           const user = await dependencies.findOrCreateUser(tgUserId)
           if (!user) return { error: 'User not found' }
 
+          // Sync the display name from Telegram — nothing else sets it for
+          // webview-only users, and admin captions + data folders rely on it.
+          const tgName
+            = parsedData.user?.username ?? parsedData.user?.first_name
+          if (tgName && user.name !== tgName) {
+            user.name = tgName
+            await user.save()
+          }
+
           const userAlreadyInvited = user.wallet || user.referalId
           if (referId && !userAlreadyInvited) {
             const receiverId = Number(referId)
@@ -87,14 +108,31 @@ export function buildAuthHandler(
             }
           }
 
+          // Hourly ownership revalidation. Provider failure keeps the pass —
+          // never lock a holder out on a toncenter outage.
+          const pass = user.pass
+          if (pass && Date.now() - pass.verifiedAt.getTime() > PASS_REVALIDATE_MS) {
+            try {
+              const owned = user.wallet
+                ? await dependencies.verifyPassOwnership(pass.address, user.wallet)
+                : false
+              if (owned) {
+                // Persist the refresh; the in-memory `pass` is discarded
+                // right after this request (loginPayload doesn't echo
+                // verifiedAt), so it doesn't need updating here — and
+                // mutating the caller's object in place is best avoided.
+                await dependencies.setUserPass(user.id, pass, new Date())
+              } else {
+                await dependencies.clearUserPass(user.id)
+                user.pass = undefined
+              }
+            } catch (err) {
+              dependencies.error(`Pass revalidation skipped for ${user.id}: ${(err as Error).message}`)
+            }
+          }
+
           return {
-            id: user.id,
-            language: user.language,
-            wallet: user.wallet,
-            referalId: user.referalId,
-            balance: user.votes.toString(),
-            minted: user.minted,
-            mintState: user.state,
+            ...loginPayload(user, parsedData.user?.username ?? null),
             ip: request.ip,
           }
         } catch (err) {

@@ -69,35 +69,13 @@ function createConfigFromEnvironment(environment: NodeJS.ProcessEnv) {
     OPENAI_API_KEY: z.string(),
     TELEMETREE_API_KEY: z.string(),
     TELEMETREE_PROJECT_ID: z.string(),
-    XROCKET_API_KEY: z.string().default(''),
-    XROCKET_BASE_URL: z.string().url().default('https://pay.testnet.xrocket.exchange/api'),
-    // Adsgram rewarded ads. Empty block id / secret ⇒ ads disabled.
-    ADSGRAM_BLOCK_ID: z.string().default(''),
-    ADSGRAM_REWARD_SECRET: z.string().default(''),
-    // Estimated net USD value of one verified rewarded-ad view; drives the
-    // rewards-pool accrual. Tunable — see docs/ECONOMY.md.
-    AD_REVENUE_PER_VIEW_USDT: z.number().default(0.003),
-    // Season Pass (Telegram Stars): price in Stars (XTR), 30-day subscription.
-    SEASON_PASS_STARS: z.number().int().default(150),
-    // Estimated net USD value of one Season Pass charge (for the accrual).
-    SEASON_PASS_REVENUE_USDT: z.number().default(1.8),
-    // Rewards pool share of net revenue, in basis points (2000 = 20%). Invariant.
-    REWARDS_POOL_BPS: z.number().int().default(2000),
-    // Production gate: the expedition CUBE faucet stays OFF until enabled. Flip
-    // to true only once the three sinks are live (refill, weight-boost,
-    // tournament entry).
-    EXPEDITION_FAUCET_ENABLED: z.boolean().default(false),
-    // Castle NFT collection (TEP-62). Empty ⇒ castle minting disabled.
-    CASTLE_COLLECTION_ADDRESS: z.string().default(''),
-    // Hero NFT collection (TEP-62). Empty ⇒ hero minting disabled.
-    HERO_COLLECTION_ADDRESS: z.string().default(''),
-    // Equipment NFT collection (TEP-62, transferable). Empty ⇒ minting disabled.
-    EQUIPMENT_COLLECTION_ADDRESS: z.string().default(''),
-    // Escalating NFT-mint eligibility floor (in votes): floor(n) = min(base + step*n, cap),
-    // where n = number of NFTs already minted. Donate TON → votes to clear it. Tunable.
-    MINT_FLOOR_BASE_VOTES: z.number().int().default(0),
-    MINT_FLOOR_STEP_VOTES: z.number().int().default(500),
-    MINT_FLOOR_CAP_VOTES: z.number().int().default(100000),
+    // Price of one NFT-image generation try, in $CUBE (votes). Tunable.
+    GENERATION_TRY_COST_VOTES: z.number().int().default(100),
+    // Telegram Stars top-up: $CUBE (votes) credited per 1 Star. Tunable.
+    STARS_TOPUP_VOTES_PER_STAR: z.number().int().default(10),
+    // $CUBE credited to the referrer when an invited user's pass is minted.
+    // Mint approval is human-gated, which makes this reward unfarmable. 0 ⇒ off.
+    REFERRAL_MINT_REWARD_VOTES: z.number().int().default(200),
   })
 
   if (config.BOT_MODE === 'webhook') {

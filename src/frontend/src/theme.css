@@ -1,0 +1,249 @@
+/* Cube Worlds pixel theme — tokens and shared components, extracted from the
+   design handoff (Cube Worlds.dc.html): Press Start 2P + VT323, dark purple
+   backgrounds, gold accents, hard edges (no border radius anywhere). */
+
+:root {
+  --cw-bg: #08060c;
+  --cw-bg-panel: #171020;
+  --cw-bg-panel-2: #241a2e;
+  --cw-bg-deep: #0d0a12;
+  --cw-border: #2a2137;
+  --cw-border-dark: #1c1526;
+  --cw-gold: #e8c95a;
+  --cw-gold-dark: #c9a227;
+  --cw-gold-deep: #5a3d10;
+  --cw-gold-shadow: #3a2708;
+  --cw-text: #cbbfd8;
+  --cw-text-dim: #8f82a3;
+  --cw-text-faint: #6f6486;
+  --cw-red: #c22b1e;
+  --cw-red-bright: #ff4a3a;
+  --cw-purple: #8a4ad8;
+  --cw-blue: #3a6fd8;
+  --cw-green: #6a9a4a;
+  --font-pixel: 'Press Start 2P', monospace;
+  --font-body: 'VT323', monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: var(--cw-bg);
+  color: var(--cw-text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: none;
+  user-select: none;
+}
+
+@keyframes cwPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@keyframes cwFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes cwTorch {
+  0%,
+  100% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(0.92);
+  }
+}
+
+.px-title {
+  font-family: var(--font-pixel);
+  color: var(--cw-gold);
+  letter-spacing: 1px;
+}
+
+.px-label {
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  color: var(--cw-text-dim);
+  letter-spacing: 1px;
+}
+
+.px-body {
+  font-family: var(--font-body);
+  font-size: 18px;
+  color: var(--cw-text-dim);
+  line-height: 1.25;
+}
+
+/* Primary gold CTA — hard pixel shadow, presses down on tap. */
+.px-btn {
+  display: block;
+  width: 100%;
+  padding: 15px 0;
+  cursor: pointer;
+  font-family: var(--font-pixel);
+  font-size: 12px;
+  color: #1a1206;
+  text-align: center;
+  background: linear-gradient(180deg, #e8c95a 0%, #c9a227 60%, #a07d18 100%);
+  border: 3px solid var(--cw-gold-deep);
+  border-radius: 0;
+  box-shadow: 0 4px 0 var(--cw-gold-shadow);
+}
+
+.px-btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--cw-gold-shadow);
+}
+
+.px-btn:disabled {
+  cursor: default;
+  filter: grayscale(0.7) brightness(0.65);
+  transform: none;
+  box-shadow: 0 4px 0 var(--cw-gold-shadow);
+}
+
+/* Secondary button — dark panel with border. */
+.px-btn-ghost {
+  display: block;
+  width: 100%;
+  padding: 13px 0;
+  cursor: pointer;
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  color: var(--cw-text-dim);
+  text-align: center;
+  background: var(--cw-bg-panel);
+  border: 2px solid var(--cw-border);
+  border-radius: 0;
+}
+
+.px-btn-ghost:active {
+  transform: translateY(2px);
+}
+
+.px-btn-ghost:disabled {
+  cursor: default;
+  opacity: 0.45;
+  transform: none;
+}
+
+.px-card {
+  background: var(--cw-bg-panel);
+  border: 2px solid var(--cw-border);
+}
+
+.px-pulse {
+  animation: cwPulse 1.6s steps(2) infinite;
+}
+
+.px-float {
+  animation: cwFloat 3.4s ease-in-out infinite;
+}
+
+a {
+  color: var(--cw-gold-dark);
+}
+
+a:hover {
+  color: var(--cw-gold);
+}
+
+/* v4 additions: balance tick, progress bar fill, spinner, step/back chrome. */
+@keyframes cwTick {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-18px);
+  }
+}
+
+@keyframes cwBar {
+  0% {
+    width: 0;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+@keyframes cwSpin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Blue secondary CTA (wallet actions, getgems). */
+.px-btn-blue {
+  display: block;
+  width: 100%;
+  padding: 16px 0;
+  cursor: pointer;
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  color: #fff;
+  text-align: center;
+  text-decoration: none;
+  background: var(--cw-blue);
+  border: 0;
+  border-radius: 0;
+  box-shadow: 0 5px 0 #24478f;
+}
+
+.px-btn-blue:active {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 #24478f;
+}
+
+.px-back {
+  padding: 0;
+  cursor: pointer;
+  font-family: var(--font-pixel);
+  font-size: 9px;
+  color: var(--cw-text-dim);
+  background: none;
+  border: 0;
+}
+
+.px-step {
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  color: var(--cw-text-dim);
+}
+
+.px-spin {
+  width: 44px;
+  height: 44px;
+  border: 5px solid var(--cw-border);
+  border-top-color: var(--cw-gold);
+  animation: cwSpin 0.9s steps(8) infinite;
+}

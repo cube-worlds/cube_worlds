@@ -18,9 +18,10 @@ import { logHandle } from '#root/common/helpers/logging'
 import { NftCollection } from '#root/common/helpers/nft-collection'
 import { NftItem } from '#root/common/helpers/nft-item'
 import { adminIndex } from '#root/common/helpers/telegram'
+import { BalanceChangeType } from '#root/common/models/Balance'
 import {
+  addPoints,
   claimUserForMint,
-  countMinted,
   countUsers,
   findUserById,
   markUserMinted,
@@ -42,20 +43,10 @@ feature.command('queue', logHandle('command-queue'), async (ctx) => {
   })
 })
 
-function floorParamsFromConfig() {
-  return {
-    base: BigInt(config.MINT_FLOOR_BASE_VOTES),
-    step: BigInt(config.MINT_FLOOR_STEP_VOTES),
-    cap: BigInt(config.MINT_FLOOR_CAP_VOTES),
-  }
-}
-
 // Build the chain/IPFS-backed approval deps bound to this admin's context.
 function approvalDependencies(ctx: Context): QueueApprovalDependencies {
   const admIndex = adminIndex(ctx.dbuser.id)
   return {
-    floorParams: floorParamsFromConfig,
-    countMinted,
     claimForMint: claimUserForMint,
     releaseClaim: releaseMintClaim,
     pinToIpfs: async (user) => {
@@ -87,6 +78,24 @@ function approvalDependencies(ctx: Context): QueueApprovalDependencies {
     },
     markMinted: markUserMinted,
     setRework: setUserRework,
+    // Credit the inviter once the invitee's pass is minted (human-gated, so
+    // the reward can't be farmed with throwaway accounts).
+    rewardReferrer: async (user) => {
+      const reward = BigInt(config.REFERRAL_MINT_REWARD_VOTES)
+      if (reward <= 0n) return
+      const invitee = await findUserById(user.id)
+      const referrerId = invitee?.referalId
+      if (!referrerId) return
+      await addPoints(referrerId, reward, BalanceChangeType.Referral)
+      try {
+        await ctx.api.sendMessage(
+          referrerId,
+          `🎁 ${user.name ? `@${user.name}` : 'A friend you invited'} minted their pass — +${reward} $CUBE for you!`,
+        )
+      } catch {
+        // referrer blocked the bot — the credit still stands
+      }
+    },
     notifyApproved: async (user, nftUrl) => {
       await ctx.api.sendMessage(
         user.id,
@@ -94,12 +103,12 @@ function approvalDependencies(ctx: Context): QueueApprovalDependencies {
       )
       await ctx.reply(`✅ Minted for @${user.name}: ${nftUrl}`)
     },
-    notifyReturned: async (user) => {
+    notifyDeclined: async (user) => {
       await ctx.api.sendMessage(
         user.id,
-        '↩️ Your NFT draft was returned. Open the app to regenerate it.',
+        '❌ Your NFT draft was declined. Open the app to generate a new one and resubmit.',
       )
-      await ctx.reply(`↩️ Returned @${user.name} to work`)
+      await ctx.reply(`❌ Declined @${user.name}`)
     },
     logError: (message) => logger.error(message),
   }
@@ -131,7 +140,7 @@ feature.callbackQuery(
         nftDescription: user.nftDescription,
       }
 
-      const { approve, returnToWork } = buildQueueApproval(
+      const { approve, decline } = buildQueueApproval(
         approvalDependencies(ctx),
       )
 
@@ -139,9 +148,9 @@ feature.callbackQuery(
         await ctx.reply('💥 Mint started!')
         const result = await approve(approvalUser)
         if (!result.ok) await ctx.reply(`🚫 Approve failed: ${result.reason}`)
-      } else if (action === MintAction.Return) {
-        const result = await returnToWork(approvalUser)
-        if (!result.ok) await ctx.reply(`🚫 Return failed: ${result.reason}`)
+      } else if (action === MintAction.Decline) {
+        const result = await decline(approvalUser)
+        if (!result.ok) await ctx.reply(`🚫 Decline failed: ${result.reason}`)
       }
     } catch (error) {
       ctx.logger.error(error)

@@ -7,8 +7,6 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { buildQueueApproval } from '#root/bot/features/admin/queue-approval-handler'
 
-const FLOOR = { base: 0n, step: 500n, cap: 100_000n }
-
 interface Recorder {
   deps: QueueApprovalDependencies
   mintCalls: number
@@ -17,16 +15,17 @@ interface Recorder {
   releaseCalls: number[]
   reworkCalls: number[]
   notifiedApproved: number[]
-  notifiedReturned: number[]
+  notifiedDeclined: number[]
+  referralRewards: number[]
   errors: string[]
 }
 
 interface Overrides {
-  mintedCount?: number
   // claimForMint behaviour: by default true once then false (simulating CAS).
   claimForMint?: () => Promise<boolean>
   mintThrows?: boolean
   pinThrows?: boolean
+  rewardThrows?: boolean
 }
 
 function makeDeps(overrides: Overrides = {}): Recorder {
@@ -35,7 +34,8 @@ function makeDeps(overrides: Overrides = {}): Recorder {
   const releaseCalls: number[] = []
   const reworkCalls: number[] = []
   const notifiedApproved: number[] = []
-  const notifiedReturned: number[] = []
+  const notifiedDeclined: number[] = []
+  const referralRewards: number[] = []
   const errors: string[] = []
   const rec: Partial<Recorder> = {
     mintCalls: 0,
@@ -44,13 +44,12 @@ function makeDeps(overrides: Overrides = {}): Recorder {
     releaseCalls,
     reworkCalls,
     notifiedApproved,
-    notifiedReturned,
+    notifiedDeclined,
+    referralRewards,
     errors,
   }
 
   const deps: QueueApprovalDependencies = {
-    floorParams: () => FLOOR,
-    countMinted: async () => overrides.mintedCount ?? 0,
     claimForMint:
       overrides.claimForMint
       ?? (async () => {
@@ -80,8 +79,12 @@ function makeDeps(overrides: Overrides = {}): Recorder {
     notifyApproved: async (user) => {
       notifiedApproved.push(user.id)
     },
-    notifyReturned: async (user) => {
-      notifiedReturned.push(user.id)
+    notifyDeclined: async (user) => {
+      notifiedDeclined.push(user.id)
+    },
+    rewardReferrer: async (user) => {
+      if (overrides.rewardThrows) throw new Error('referrer gone')
+      referralRewards.push(user.id)
     },
     logError: (m) => errors.push(m),
   }
@@ -90,7 +93,7 @@ function makeDeps(overrides: Overrides = {}): Recorder {
   return rec as Recorder
 }
 
-function eligibleUser(overrides: Partial<ApprovalUser> = {}): ApprovalUser {
+function submittedUser(overrides: Partial<ApprovalUser> = {}): ApprovalUser {
   return {
     id: 1001,
     name: 'alice',
@@ -105,19 +108,32 @@ function eligibleUser(overrides: Partial<ApprovalUser> = {}): ApprovalUser {
 
 // APPROVE — happy path
 
-test('approve pins, mints on-chain, flips minted, and notifies', async () => {
+test('approve pins, mints on-chain, flips minted, rewards the referrer, and notifies', async () => {
   const rec = makeDeps()
   const { approve } = buildQueueApproval(rec.deps)
 
-  const result = await approve(eligibleUser())
+  const result = await approve(submittedUser())
 
   assert.deepEqual(result, { ok: true, nftUrl: 'https://getgems.io/nft/xyz' })
   assert.equal(rec.mintCalls, 1)
   assert.deepEqual(rec.markMintedCalls, [
     { userId: 1001, nftUrl: 'https://getgems.io/nft/xyz' },
   ])
+  assert.deepEqual(rec.referralRewards, [1001], 'referrer rewarded once')
   assert.deepEqual(rec.notifiedApproved, [1001])
   assert.equal(rec.releaseCalls.length, 0, 'no release on success')
+})
+
+test('a referral-reward failure never fails the approved mint', async () => {
+  const rec = makeDeps({ rewardThrows: true })
+  const { approve } = buildQueueApproval(rec.deps)
+
+  const result = await approve(submittedUser())
+
+  assert.equal(result.ok, true, 'mint stays approved')
+  assert.deepEqual(rec.notifiedApproved, [1001], 'user still notified')
+  assert.equal(rec.errors.length, 1)
+  assert.match(rec.errors[0], /Referral reward failed/)
 })
 
 // APPROVE — re-entrancy: double approve mints exactly once
@@ -125,7 +141,7 @@ test('approve pins, mints on-chain, flips minted, and notifies', async () => {
 test('approve is idempotent — a second approve does NOT mint again', async () => {
   const rec = makeDeps() // claimForMint: true once, then false
   const { approve } = buildQueueApproval(rec.deps)
-  const user = eligibleUser()
+  const user = submittedUser()
 
   const first = await approve(user)
   const second = await approve(user)
@@ -142,18 +158,8 @@ test('approve refuses an already-minted user and never mints', async () => {
   const rec = makeDeps()
   const { approve } = buildQueueApproval(rec.deps)
 
-  const result = await approve(eligibleUser({ minted: true }))
+  const result = await approve(submittedUser({ minted: true }))
   assert.deepEqual(result, { ok: false, reason: 'already-minted' })
-  assert.equal(rec.mintCalls, 0)
-})
-
-test('approve refuses a below-floor user (server-side eligibility re-check)', async () => {
-  // 10 minted → floor 5000; user has 4999 → below floor
-  const rec = makeDeps({ mintedCount: 10 })
-  const { approve } = buildQueueApproval(rec.deps)
-
-  const result = await approve(eligibleUser({ votes: 4_999n }))
-  assert.deepEqual(result, { ok: false, reason: 'below-floor' })
   assert.equal(rec.mintCalls, 0)
 })
 
@@ -161,8 +167,17 @@ test('approve refuses a user with no bound wallet', async () => {
   const rec = makeDeps()
   const { approve } = buildQueueApproval(rec.deps)
 
-  const result = await approve(eligibleUser({ wallet: undefined }))
+  const result = await approve(submittedUser({ wallet: undefined }))
   assert.deepEqual(result, { ok: false, reason: 'no-wallet' })
+  assert.equal(rec.mintCalls, 0)
+})
+
+test('approve refuses a user without a draft', async () => {
+  const rec = makeDeps()
+  const { approve } = buildQueueApproval(rec.deps)
+
+  const result = await approve(submittedUser({ image: undefined }))
+  assert.deepEqual(result, { ok: false, reason: 'no-draft' })
   assert.equal(rec.mintCalls, 0)
 })
 
@@ -172,30 +187,32 @@ test('approve releases the claim when the on-chain mint throws', async () => {
   const rec = makeDeps({ mintThrows: true })
   const { approve } = buildQueueApproval(rec.deps)
 
-  const result = await approve(eligibleUser())
+  const result = await approve(submittedUser())
   assert.equal(result.ok, false)
   assert.deepEqual(rec.releaseCalls, [1001], 'claim released for retry')
   assert.equal(rec.markMintedCalls.length, 0, 'never flips minted on mint failure')
+  assert.equal(rec.referralRewards.length, 0, 'no reward without a mint')
 })
 
-// RETURN — sets Rework, never mints
+// DECLINE — sets Rework, never mints
 
-test('returnToWork sets Rework and does NOT mint', async () => {
+test('decline sets Rework and does NOT mint', async () => {
   const rec = makeDeps()
-  const { returnToWork } = buildQueueApproval(rec.deps)
+  const { decline } = buildQueueApproval(rec.deps)
 
-  const result = await returnToWork(eligibleUser())
+  const result = await decline(submittedUser())
   assert.deepEqual(result, { ok: true })
   assert.deepEqual(rec.reworkCalls, [1001])
-  assert.deepEqual(rec.notifiedReturned, [1001])
-  assert.equal(rec.mintCalls, 0, 'return never mints')
+  assert.deepEqual(rec.notifiedDeclined, [1001])
+  assert.equal(rec.mintCalls, 0, 'decline never mints')
+  assert.equal(rec.referralRewards.length, 0, 'decline never rewards')
 })
 
-test('returnToWork refuses an already-minted user', async () => {
+test('decline refuses an already-minted user', async () => {
   const rec = makeDeps()
-  const { returnToWork } = buildQueueApproval(rec.deps)
+  const { decline } = buildQueueApproval(rec.deps)
 
-  const result = await returnToWork(eligibleUser({ minted: true }))
+  const result = await decline(submittedUser({ minted: true }))
   assert.deepEqual(result, { ok: false, reason: 'already-minted' })
   assert.deepEqual(rec.reworkCalls, [], 'no Rework transition for minted user')
 })

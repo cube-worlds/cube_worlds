@@ -5,7 +5,7 @@ description: Privacy policy for Cube Worlds — what data we collect, how it is 
 
 # Privacy Policy
 
-_Last updated: 2026-07-06_
+_Last updated: 2026-07-13_
 
 ## Who we are
 
@@ -17,8 +17,9 @@ When you play Cube Worlds, we collect and store the following information:
 
 - **Telegram identity.** Your Telegram user ID and username, passed by the Telegram Mini App API when you open the bot. We do not receive your phone number or email address from Telegram.
 - **TON wallet address.** If you choose to connect a TON wallet (required for NFT minting and donation crediting), we store the wallet address after you supply a cryptographic proof of ownership (ton_proof). You are never required to share a seed phrase or private key.
-- **Gameplay and ledger records.** Your in-game state — $CUBE balance, resource balances, NFT status, hero levels, expedition history, dungeon runs, arena matches, tournament entries, and similar gameplay data — is stored in our database to operate the game.
-- **Transaction records.** USDT deposit and withdrawal records processed through the xRocket payment rail, Telegram Stars Season Pass charges, and TON donation amounts credited to your account.
+- **Source and generated images.** The Telegram profile photo you select or the image you upload becomes the source for NFT generation and is stored on our server, along with the generated drafts, until your pass is minted or you replace them.
+- **Gameplay and ledger records.** Your in-game state — $CUBE balance, claim streak, referral relations, NFT/mint status, and the append-only $CUBE ledger — is stored in our database to operate the game.
+- **Transaction records.** Telegram Stars top-up charges (including Telegram's payment charge ID) and TON donation amounts credited to your account.
 - **Technical logs.** Standard server request logs (IP address, timestamp, endpoint) retained for up to 30 days for security and debugging.
 
 ## How we use your data
@@ -26,7 +27,7 @@ When you play Cube Worlds, we collect and store the following information:
 We use the data described above solely to:
 
 - Operate and personalise your Cube Worlds gameplay experience.
-- Process payments and prize payouts.
+- Process payments.
 - Prevent abuse, fraud, and cheating.
 - Comply with legal obligations if required.
 
@@ -34,9 +35,9 @@ We use the data described above solely to:
 
 We do **not** sell, rent, or trade your personal data to third parties. We share data only as needed to operate the game:
 
-- **xRocket** (Telegram payment processor) — for USDT deposit/withdrawal processing.
-- **Adsgram** — receives only an anonymous reward confirmation when you view a rewarded ad; no personal identifiers are shared.
-- **Stability AI / OpenAI** — your NFT generation request is sent to generate pixel art and a description. No personally identifying information is included in these requests beyond the request itself.
+- **Telegram** — Stars payments are processed entirely by Telegram; we receive only the payment confirmation.
+- **Stability AI / OpenAI** — your selected source image and display name are sent to generate the pixel art and its description. No other personal identifiers are included in these requests.
+- **Pinata (IPFS)** — approved pass images and metadata are pinned to IPFS as part of NFT minting; anything minted on-chain is public by nature.
 
 ## Data retention
 

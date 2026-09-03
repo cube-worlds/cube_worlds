@@ -1,15 +1,20 @@
+import type { Api } from 'grammy'
 import type { MintHandlerDependencies, MintUser } from './mint-handler'
+import fs from 'node:fs/promises'
+import path from 'node:path'
 import { ChatGPTAPI } from 'chatgpt'
+import { InputFile } from 'grammy'
+import { approveDeclineKeyboard } from '#root/bot/keyboards/queue-menu'
 import {
   ClipGuidancePreset,
   generate,
   SDSampler,
 } from '#root/common/helpers/generation'
-import { adminIndex } from '#root/common/helpers/telegram'
+import { BalanceChangeType } from '#root/common/models/Balance'
 import {
-  countMinted,
+  addPoints,
+  debitVotes,
   findUserById,
-  placeInLine,
   UserState,
 } from '#root/common/models/User'
 import { config } from '#root/config'
@@ -27,11 +32,42 @@ function toMintUser(user: NonNullable<Awaited<ReturnType<typeof findUserById>>>)
     image: user.image,
     description: user.nftDescription,
     avatar: user.avatar,
+    wallet: user.wallet,
     name: user.name,
   }
 }
 
-function createDefaultDependencies(): MintHandlerDependencies {
+const MIME_BY_EXT: Record<string, string> = {
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
+}
+
+async function readImageDataUrl(filePath: string): Promise<string | null> {
+  try {
+    const buf = await fs.readFile(filePath)
+    const mime = MIME_BY_EXT[path.extname(filePath).toLowerCase()] ?? 'image/png'
+    return `data:${mime};base64,${buf.toString('base64')}`
+  } catch {
+    return null
+  }
+}
+
+function adminCaption(user: MintUser): string {
+  const name = user.name ? `@${user.name}` : String(user.id)
+  return [
+    '🖼 Mint request',
+    `User: ${name} (${user.id})`,
+    `Votes: ${user.votes}`,
+    `Wallet: ${user.wallet ?? '—'}`,
+    '',
+    user.description ?? '',
+  ].join('\n')
+}
+
+function createDefaultDependencies(api: Api): MintHandlerDependencies {
+  const tryCost = () => BigInt(config.GENERATION_TRY_COST_VOTES)
   return {
     validateInitData: defaultValidateInitData,
     parseInitData: defaultParseInitData,
@@ -39,19 +75,18 @@ function createDefaultDependencies(): MintHandlerDependencies {
       const user = await findUserById(id)
       return user ? toMintUser(user) : null
     },
-    countMinted,
-    queuePosition: placeInLine,
-    floorParams: () => ({
-      base: BigInt(config.MINT_FLOOR_BASE_VOTES),
-      step: BigInt(config.MINT_FLOOR_STEP_VOTES),
-      cap: BigInt(config.MINT_FLOOR_CAP_VOTES),
-    }),
-    // Semi-auto pixel-art generation from the user's avatar (Stability AI).
+    tryCost,
+    debitTry: (userId) =>
+      debitVotes(userId, tryCost(), BalanceChangeType.Generation),
+    refundTry: async (userId) => {
+      await addPoints(userId, tryCost(), BalanceChangeType.Generation)
+    },
+    // Semi-auto pixel-art generation from the user's chosen avatar (Stability AI).
     generateImage: async (user) => {
       if (!user.avatar) throw new Error('No avatar to generate from')
       return generate(
         user.avatar,
-        adminIndex(user.id),
+        0,
         user.name ?? String(user.id),
         '',
         '',
@@ -84,14 +119,34 @@ function createDefaultDependencies(): MintHandlerDependencies {
       if (!user) throw new Error('User not found')
       user.image = image
       user.nftDescription = description
-      // Queue for admin review; also clears a prior Rework return.
+      // A fresh draft is private until the user submits it; this also clears a
+      // prior admin decline (Rework).
+      user.state = UserState.WaitNothing
+      await user.save()
+    },
+    submitDraft: async (userId) => {
+      const user = await findUserById(userId)
+      if (!user) throw new Error('User not found')
       user.state = UserState.Submited
       await user.save()
     },
+    // Push the submitted draft to every admin with Approve / Decline buttons.
+    notifyAdmins: async (user) => {
+      if (!user.image) throw new Error('No draft image to send')
+      const caption = adminCaption(user)
+      const reply_markup = approveDeclineKeyboard(user.id)
+      for (const adminId of config.BOT_ADMINS) {
+        const photo = user.image.startsWith('http')
+          ? user.image
+          : new InputFile(user.image)
+        await api.sendPhoto(adminId, photo, { caption, reply_markup })
+      }
+    },
+    readImageDataUrl,
     logError: (message) => logger.error(message),
   }
 }
 
-const mintHandler = buildMintHandler(createDefaultDependencies())
-
-export default mintHandler
+export function createMintHandler(api: Api) {
+  return buildMintHandler(createDefaultDependencies(api))
+}

@@ -4,8 +4,7 @@ import { Menu } from '@grammyjs/menu'
 import { InputFile } from 'grammy'
 import { MintAction, mintActionData } from '#root/bot/callback-data/mint-action'
 import { linkToIPFSGateway } from '#root/common/helpers/ipfs'
-import { eligibleQueue } from '#root/common/models/User'
-import { config } from '#root/config'
+import { findQueue } from '#root/common/models/User'
 
 export function photoCaption(user: User) {
   return `@[${user.name}](tg://user?id=${user.id})
@@ -19,8 +18,9 @@ Minted: ${user.minted ? '✅' : '❌'} ${user.nftUrl ? `[NFT](${user.nftUrl})` :
 `
 }
 
-// Admin-facing keyboard: exactly two actions, Approve / Return-to-work.
-function approveReturnKeyboard(userId: number) {
+// Admin-facing keyboard: exactly two actions, Approve / Decline. Shared by the
+// /queue browser and the push notification sent on user submit.
+export function approveDeclineKeyboard(userId: number) {
   return {
     inline_keyboard: [
       [
@@ -32,9 +32,9 @@ function approveReturnKeyboard(userId: number) {
           }),
         },
         {
-          text: '↩️ Return to work',
+          text: '❌ Decline',
           callback_data: mintActionData.pack({
-            action: MintAction.Return,
+            action: MintAction.Decline,
             userId,
           }),
         },
@@ -43,11 +43,11 @@ function approveReturnKeyboard(userId: number) {
   }
 }
 
-// Send the auto-generated draft (image + description) with the two-button
-// Approve/Return keyboard. The image was produced in the webview (user.image).
+// Send the submitted draft (image + description) with the two-button
+// Approve/Decline keyboard. The image was produced in the webview (user.image).
 export async function sendQueueEntry(context: Context, user: UserDoc) {
   const caption = photoCaption(user)
-  const reply_markup = approveReturnKeyboard(user.id)
+  const reply_markup = approveDeclineKeyboard(user.id)
   if (user.image) {
     const photo = user.image.startsWith('http')
       ? user.image
@@ -62,18 +62,10 @@ export async function sendQueueEntry(context: Context, user: UserDoc) {
   }
 }
 
-function floorParamsFromConfig() {
-  return {
-    base: BigInt(config.MINT_FLOOR_BASE_VOTES),
-    step: BigInt(config.MINT_FLOOR_STEP_VOTES),
-    cap: BigInt(config.MINT_FLOOR_CAP_VOTES),
-  }
-}
-
-// Lists only eligible (votes ≥ floor), un-minted, Submited users, ranked by
-// votes desc; clicking one opens its draft with Approve / Return.
+// Lists un-minted Submited users, ranked by votes desc; clicking one opens its
+// draft with Approve / Decline.
 export const queueMenu = new Menu('queue').dynamic(async (_ctx, range) => {
-  const users = await eligibleQueue(floorParamsFromConfig())
+  const users = await findQueue()
   for (const user of users) {
     range
       .text(`(${user.votes}) ${user.name ?? user.wallet}`, async (ctx) => {

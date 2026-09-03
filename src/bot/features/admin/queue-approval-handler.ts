@@ -1,7 +1,4 @@
-import type { MintFloorParams } from '#root/common/helpers/mint-floor'
-import { mintFloorVotes } from '#root/common/helpers/mint-floor'
-
-// Read snapshot of the fields the approve/return transitions need. Decoupled
+// Read snapshot of the fields the approve/decline transitions need. Decoupled
 // from the Mongoose doc so the transition logic is pure + unit-testable.
 export interface ApprovalUser {
   id: number
@@ -14,8 +11,6 @@ export interface ApprovalUser {
 }
 
 export interface QueueApprovalDependencies {
-  floorParams: () => MintFloorParams
-  countMinted: () => Promise<number>
   // Atomic CAS into the minting guard. Returns true only for the first caller;
   // a concurrent / repeat approve loses and gets false (single-mint guarantee).
   claimForMint: (userId: number) => Promise<boolean>
@@ -34,7 +29,10 @@ export interface QueueApprovalDependencies {
   ) => Promise<void>
   setRework: (userId: number) => Promise<void>
   notifyApproved: (user: ApprovalUser, nftUrl: string) => Promise<void>
-  notifyReturned: (user: ApprovalUser) => Promise<void>
+  notifyDeclined: (user: ApprovalUser) => Promise<void>
+  // Credit the inviter (if any) after the invitee's pass is minted. Runs at
+  // most once per user (the CAS claim gates the whole approve path).
+  rewardReferrer: (user: ApprovalUser) => Promise<void>
   logError: (message: string) => void
 }
 
@@ -42,7 +40,7 @@ export type ApproveResult =
   | { ok: true, nftUrl: string }
   | { ok: false, reason: string }
 
-export type ReturnResult =
+export type DeclineResult =
   | { ok: true }
   | { ok: false, reason: string }
 
@@ -55,10 +53,6 @@ export function buildQueueApproval(deps: QueueApprovalDependencies) {
     if (!user.image || !user.nftDescription) {
       return { ok: false, reason: 'no-draft' }
     }
-    // Server-side eligibility re-check at approval time — the floor may have
-    // risen since the user generated; never mint below it.
-    const floor = mintFloorVotes(await deps.countMinted(), deps.floorParams())
-    if (user.votes < floor) return { ok: false, reason: 'below-floor' }
 
     // CAS-claim the mint. A second concurrent/repeat approve loses here, so the
     // expensive pin + on-chain mint runs exactly once.
@@ -85,18 +79,26 @@ export function buildQueueApproval(deps: QueueApprovalDependencies) {
     // From here the NFT exists on-chain: NEVER release the claim. A markMinted
     // failure must bias to false-error (manual reconcile), never a double-mint.
     await deps.markMinted(user.id, nftUrl, imageHash, jsonHash)
+    // Referral payout is a bonus — it must never fail an approved mint.
+    try {
+      await deps.rewardReferrer(user)
+    } catch (err) {
+      deps.logError(
+        `Referral reward failed for ${user.id}: ${(err as Error).message}`,
+      )
+    }
     await deps.notifyApproved(user, nftUrl)
     return { ok: true, nftUrl }
   }
 
-  // Return-to-work = move the draft to Rework so the user regenerates. Never
-  // mints, never touches the chain.
-  async function returnToWork(user: ApprovalUser): Promise<ReturnResult> {
+  // Decline = move the draft to Rework so the user can regenerate and resubmit.
+  // Never mints, never touches the chain. Paid tries stay spent.
+  async function decline(user: ApprovalUser): Promise<DeclineResult> {
     if (user.minted) return { ok: false, reason: 'already-minted' }
     await deps.setRework(user.id)
-    await deps.notifyReturned(user)
+    await deps.notifyDeclined(user)
     return { ok: true }
   }
 
-  return { approve, returnToWork }
+  return { approve, decline }
 }

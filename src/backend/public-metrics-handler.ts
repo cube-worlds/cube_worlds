@@ -3,7 +3,6 @@ import type { FastifyInstance } from 'fastify'
 export interface PublicMetrics {
   players: number
   minted: number
-  paidOutMicroUsdt: string
   activeWeek: number
 }
 
@@ -18,7 +17,7 @@ function createDefaultDependencies(): PublicMetricsHandlerDependencies {
   // keep this module free of any #root/config transitive import.
   return {
     fetchMetrics: () =>
-      Promise.resolve({ players: 0, minted: 0, paidOutMicroUsdt: '0', activeWeek: 0 }),
+      Promise.resolve({ players: 0, minted: 0, activeWeek: 0 }),
     now: () => Date.now(),
     cacheTtlMs: 60_000,
   }

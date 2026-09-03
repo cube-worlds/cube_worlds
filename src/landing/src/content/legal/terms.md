@@ -5,7 +5,7 @@ description: Terms of service for Cube Worlds — an entertainment game on Teleg
 
 # Terms of Service
 
-_Last updated: 2026-07-06_
+_Last updated: 2026-07-13_
 
 ## 1. Acceptance
 
@@ -17,20 +17,20 @@ Cube Worlds is an **entertainment product** — a video game. Nothing on this si
 
 ## 3. $CUBE is not a security or tradable asset
 
-**$CUBE is a DB-only in-game currency** measured in "votes." It exists solely within the Cube Worlds game database to gate NFT minting eligibility and power in-game economy mechanics.
+**$CUBE is a DB-only in-game currency** measured in "votes." It exists solely within the Cube Worlds game database and is spent on gameplay actions such as NFT-image generation tries.
 
 - $CUBE has no on-chain representation, no market price, and no exchange listing.
 - $CUBE cannot be withdrawn, bridged, or transferred outside the game.
 - $CUBE has no guaranteed monetary value.
-- Purchasing energy packs, a Season Pass, or making TON donations may earn $CUBE as a gameplay mechanic — these are entertainment purchases, not investments.
+- Telegram Stars top-ups and TON donations may credit $CUBE as a gameplay mechanic — these are entertainment purchases, not investments.
 
 ## 4. NFTs
 
-Cube Worlds NFTs (Mint, Castle, Hero, Equipment collections) are on-chain TON assets that gate access to game features. Owning an NFT grants game access as described in the game itself. NFTs are **not** investments and carry no promise of financial return.
+Cube Worlds NFTs are on-chain TON assets that gate access to game features. Owning an NFT grants game access as described in the game itself. NFTs are **not** investments and carry no promise of financial return. Submitted NFT drafts are subject to human review and may be approved or declined at our sole discretion; $CUBE spent on generation tries is not refunded on decline.
 
-## 5. USDT prizes
+## 5. Purchases
 
-Weekly tournament prize pools are funded by a portion of in-game revenue and distributed via the xRocket payment rail. Prize amounts depend on revenue collected and the number of participants in a given week. We do not guarantee any specific prize amount. USDT payments are processed by xRocket; their terms apply to withdrawals.
+Telegram Stars top-ups are processed by Telegram; Telegram's terms apply to those payments. Generation tries are consumable digital content delivered immediately on use and are non-refundable once consumed. TON donations are voluntary and non-refundable.
 
 ## 6. No warranties
 

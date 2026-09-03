@@ -13,11 +13,13 @@ type ResolvedUser = NonNullable<
 interface StubUser {
   id: number
   language: string
+  name?: string
   wallet?: string
   referalId?: number
   votes: bigint
   minted: boolean
   state: string
+  pass?: { index: number, address: string, name: string, image: string, verifiedAt: Date }
   saveCalls: number
   save: () => Promise<void>
 }
@@ -28,6 +30,9 @@ interface AuthTestContext {
   infoLogs: string[]
   errorLogs: string[]
   unhandledErrorLogs: string[]
+  verifyCalls: Array<{ passAddress: string, ownerAddress: string }>
+  setPassCalls: Array<{ userId: number, index: number, verifiedAt: Date }>
+  clearPassCalls: number[]
 }
 
 function toResolvedUser(user: StubUser): ResolvedUser {
@@ -60,10 +65,13 @@ async function createAuthTestContext(
   const infoLogs: string[] = []
   const errorLogs: string[] = []
   const unhandledErrorLogs: string[] = []
+  const verifyCalls: Array<{ passAddress: string, ownerAddress: string }> = []
+  const setPassCalls: Array<{ userId: number, index: number, verifiedAt: Date }> = []
+  const clearPassCalls: number[] = []
 
   const dependencies: AuthHandlerDependencies = {
     validateInitData: () => {},
-    parseInitData: () => ({ user: { id: 1001 } } as InitData),
+    parseInitData: () => ({ user: { id: 1001, username: 'alice' } } as InitData),
     findUserById: async (id: number) => {
       const user = users.get(id)
       return user ? toResolvedUser(user) : null
@@ -86,6 +94,16 @@ async function createAuthTestContext(
     logError: (message: string) => {
       unhandledErrorLogs.push(message)
     },
+    verifyPassOwnership: async (passAddress: string, ownerAddress: string) => {
+      verifyCalls.push({ passAddress, ownerAddress })
+      return true
+    },
+    setUserPass: async (userId, pass, verifiedAt) => {
+      setPassCalls.push({ userId, index: pass.index, verifiedAt })
+    },
+    clearUserPass: async (userId) => {
+      clearPassCalls.push(userId)
+    },
     ...overrides,
   }
 
@@ -98,6 +116,9 @@ async function createAuthTestContext(
     infoLogs,
     errorLogs,
     unhandledErrorLogs,
+    verifyCalls,
+    setPassCalls,
+    clearPassCalls,
   }
 }
 
@@ -257,7 +278,9 @@ test('POST /api/auth/login skips referral when user already has a wallet', async
 })
 
 test('POST /api/auth/login assigns referral when eligible', async (t) => {
-  const mainUser = createStubUser({ id: 1001, referalId: undefined, wallet: undefined })
+  // Name already matches the default stub `parseInitData` username so the
+  // name-sync path doesn't add an extra save() beyond the referral one.
+  const mainUser = createStubUser({ id: 1001, name: 'alice', referalId: undefined, wallet: undefined })
   const receiver = createStubUser({ id: 7777 })
 
   const users = new Map<number, StubUser>([
@@ -327,4 +350,138 @@ test('POST /api/auth/login rejects oversized initData', async (t) => {
 
   assert.equal(response.statusCode, 200)
   assert.equal(response.json().error, 'Invalid request body')
+})
+
+// name sync — webview users have no other code path that sets `name`
+
+test('POST /api/auth/login syncs the Telegram username into user.name', async (t) => {
+  const ctx = await createAuthTestContext({
+    parseInitData: () =>
+      ({ user: { id: 1001, username: 'alice', first_name: 'Alice' } } as InitData),
+  })
+  t.after(async () => {
+    await ctx.app.close()
+  })
+
+  await ctx.app.inject({
+    method: 'POST',
+    url: '/api/auth/login',
+    payload: { initData: 'signed' },
+  })
+
+  const user = ctx.users.get(1001)!
+  assert.equal(user.name, 'alice')
+  assert.equal(user.saveCalls, 1, 'saved once for the name sync')
+})
+
+test('POST /api/auth/login falls back to first_name when there is no username', async (t) => {
+  const ctx = await createAuthTestContext({
+    parseInitData: () =>
+      ({ user: { id: 1001, first_name: 'Alice' } } as InitData),
+  })
+  t.after(async () => {
+    await ctx.app.close()
+  })
+
+  await ctx.app.inject({
+    method: 'POST',
+    url: '/api/auth/login',
+    payload: { initData: 'signed' },
+  })
+
+  assert.equal(ctx.users.get(1001)!.name, 'Alice')
+})
+
+test('POST /api/auth/login does not save when the name is already current', async (t) => {
+  const ctx = await createAuthTestContext({
+    parseInitData: () =>
+      ({ user: { id: 1001, username: 'alice' } } as InitData),
+  })
+  ctx.users.get(1001)!.name = 'alice'
+  t.after(async () => {
+    await ctx.app.close()
+  })
+
+  await ctx.app.inject({
+    method: 'POST',
+    url: '/api/auth/login',
+    payload: { initData: 'signed' },
+  })
+
+  assert.equal(ctx.users.get(1001)!.saveCalls, 0, 'no redundant save')
+})
+
+const HOUR = 60 * 60 * 1000
+const FRESH_PASS = { index: 7, address: 'EQ_A', name: 'alice', image: '', verifiedAt: new Date() }
+const STALE_PASS = { ...FRESH_PASS, verifiedAt: new Date(Date.now() - 2 * HOUR) }
+
+test('login returns holder=false, pass=null and the Telegram username for a newcomer', async (t) => {
+  const ctx = await createAuthTestContext()
+  t.after(() => ctx.app.close())
+  const res = await ctx.app.inject({ method: 'POST', url: '/api/auth/login', payload: { initData: 'x' } })
+  const body = res.json()
+  assert.equal(body.holder, false)
+  assert.equal(body.pass, null)
+  assert.equal(body.username, 'alice')
+  assert.deepEqual(ctx.verifyCalls, [])
+})
+
+test('login returns username=null when Telegram has no @username', async (t) => {
+  const ctx = await createAuthTestContext({
+    parseInitData: () => ({ user: { id: 1001, first_name: 'Ann' } } as InitData),
+  })
+  t.after(() => ctx.app.close())
+  const res = await ctx.app.inject({ method: 'POST', url: '/api/auth/login', payload: { initData: 'x' } })
+  assert.equal(res.json().username, null)
+})
+
+test('login with a fresh pass is a holder and does not touch the chain', async (t) => {
+  const ctx = await createAuthTestContext()
+  t.after(() => ctx.app.close())
+  ctx.users.get(1001)!.wallet = 'EQ_WALLET'
+  ctx.users.get(1001)!.pass = FRESH_PASS
+  const res = await ctx.app.inject({ method: 'POST', url: '/api/auth/login', payload: { initData: 'x' } })
+  const body = res.json()
+  assert.equal(body.holder, true)
+  assert.equal(body.pass.index, 7)
+  assert.deepEqual(ctx.verifyCalls, [])
+})
+
+test('login with a stale pass still owned bumps verifiedAt', async (t) => {
+  const ctx = await createAuthTestContext()
+  t.after(() => ctx.app.close())
+  ctx.users.get(1001)!.wallet = 'EQ_WALLET'
+  ctx.users.get(1001)!.pass = STALE_PASS
+  const res = await ctx.app.inject({ method: 'POST', url: '/api/auth/login', payload: { initData: 'x' } })
+  assert.equal(res.json().holder, true)
+  assert.deepEqual(ctx.verifyCalls, [{ passAddress: 'EQ_A', ownerAddress: 'EQ_WALLET' }])
+  assert.equal(ctx.setPassCalls.length, 1)
+  assert.equal(ctx.setPassCalls[0].index, 7)
+  assert.ok(ctx.setPassCalls[0].verifiedAt.getTime() > STALE_PASS.verifiedAt.getTime())
+  assert.deepEqual(ctx.clearPassCalls, [])
+})
+
+test('login with a stale pass that left the wallet clears it', async (t) => {
+  const ctx = await createAuthTestContext({ verifyPassOwnership: async () => false })
+  t.after(() => ctx.app.close())
+  ctx.users.get(1001)!.wallet = 'EQ_WALLET'
+  ctx.users.get(1001)!.pass = STALE_PASS
+  const res = await ctx.app.inject({ method: 'POST', url: '/api/auth/login', payload: { initData: 'x' } })
+  const body = res.json()
+  assert.equal(body.holder, false)
+  assert.equal(body.pass, null)
+  assert.deepEqual(ctx.clearPassCalls, [1001])
+})
+
+test('login keeps a stale pass when the provider fails', async (t) => {
+  const ctx = await createAuthTestContext({
+    verifyPassOwnership: async () => { throw new Error('toncenter down') },
+  })
+  t.after(() => ctx.app.close())
+  ctx.users.get(1001)!.wallet = 'EQ_WALLET'
+  ctx.users.get(1001)!.pass = STALE_PASS
+  const res = await ctx.app.inject({ method: 'POST', url: '/api/auth/login', payload: { initData: 'x' } })
+  assert.equal(res.json().holder, true)
+  assert.deepEqual(ctx.clearPassCalls, [])
+  assert.ok(ctx.errorLogs.some((m) => /toncenter down/.test(m)))
 })

@@ -12,9 +12,9 @@ import {
   parametersFeature,
   queueFeature,
   removedCommandsFeature,
-  seasonPassFeature,
   startFeature,
   statsFeature,
+  topupFeature,
   transactionFeature,
   unhandledFeature,
   whalesFeature,
@@ -73,7 +73,7 @@ export function createBot(token: string, options: Options) {
   protectedBot.use(lineFeature)
   protectedBot.use(transactionFeature)
   protectedBot.use(userFeature)
-  protectedBot.use(seasonPassFeature)
+  protectedBot.use(topupFeature)
 
   // catches deleted commands; must be after all kept features
   protectedBot.use(removedCommandsFeature)

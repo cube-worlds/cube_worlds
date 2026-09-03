@@ -17,6 +17,7 @@ type ResolvedUser = NonNullable<
 interface StubUser {
   id: number
   wallet?: string
+  pass?: { index: number }
   saveCalls: number
   save: () => Promise<void>
 }
@@ -186,11 +187,9 @@ test('POST /api/auth/set-wallet rejects wallet linked to another user', async (t
     payload: VALID_PROOF_BODY,
   })
 
-  assert.equal(response.statusCode, 200)
-  assert.equal(
-    response.json().error,
-    'Wallet already linked to another account',
-  )
+  assert.equal(response.statusCode, 409)
+  assert.equal(response.json().code, 'wallet_taken')
+  assert.equal(response.json().error, 'Wallet already linked to another account')
   assert.equal(ctx.user.wallet, undefined)
   assert.equal(ctx.user.saveCalls, 0)
 })
@@ -334,4 +333,24 @@ test('POST /api/auth/set-wallet rejects ill-shaped proof', async (t) => {
 
   assert.equal(response.statusCode, 200)
   assert.equal(response.json().error, 'Invalid request body')
+})
+
+test('POST /api/auth/set-wallet clears the pass snapshot when the address changes', async (t) => {
+  const ctx = await createSetWalletTestContext()
+  t.after(() => ctx.app.close())
+  ctx.user.wallet = 'EQ_OLD_ADDRESS'
+  ctx.user.pass = { index: 7 }
+  const response = await ctx.app.inject({ method: 'POST', url: '/api/auth/set-wallet', payload: VALID_PROOF_BODY })
+  assert.equal(response.statusCode, 200)
+  assert.equal(ctx.user.wallet, 'EQ_BOUNCEABLE_ADDRESS')
+  assert.equal(ctx.user.pass, undefined)
+})
+
+test('POST /api/auth/set-wallet keeps the pass when re-binding the same address', async (t) => {
+  const ctx = await createSetWalletTestContext()
+  t.after(() => ctx.app.close())
+  ctx.user.wallet = 'EQ_BOUNCEABLE_ADDRESS'
+  ctx.user.pass = { index: 7 }
+  await ctx.app.inject({ method: 'POST', url: '/api/auth/set-wallet', payload: VALID_PROOF_BODY })
+  assert.deepEqual(ctx.user.pass, { index: 7 })
 })

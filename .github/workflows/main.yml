@@ -21,6 +21,7 @@ jobs:
       - run: npm --prefix src/frontend ci
       - run: npm run lint
       - run: npm run typecheck
+      - run: npm --prefix src/frontend run build
 
   backend-tests:
     runs-on: ubuntu-latest
@@ -35,3 +36,15 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - run: npm ci
       - run: npm run test:backend
+
+  # Boots the real app (STAGING, fake secrets, throwaway Mongo) and drives the
+  # API end-to-end — catches wiring/serialization breaks unit tests can't see.
+  api-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22.x
+      - run: npm ci
+      - run: npm run smoke:api

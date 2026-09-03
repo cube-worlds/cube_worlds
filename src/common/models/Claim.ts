@@ -353,7 +353,20 @@ export async function ensureClaimUniquenessMigration(): Promise<{
   // Replace any pre-existing non-unique `user` index with the unique one.
   // Mongoose's startup auto-create may have failed silently if duplicates
   // were present, so handle the upgrade explicitly here.
-  const indexes = await ClaimModel.collection.indexes()
+  //
+  // On a brand-new DB the `claims` namespace hasn't been created yet (no
+  // Claim doc was ever written), so `collection.indexes()` throws
+  // NamespaceNotFound (code 26) instead of returning []. That's equivalent
+  // to "no legacy index" — skip straight to createIndex below, which
+  // implicitly creates the collection.
+  let indexes: Awaited<ReturnType<typeof ClaimModel.collection.indexes>> = []
+  try {
+    indexes = await ClaimModel.collection.indexes()
+  } catch (err) {
+    if ((err as { code?: number }).code !== 26) {
+      throw err
+    }
+  }
   const userIndex = indexes.find((idx) => {
     const keys = Object.keys(idx.key)
     return keys.length === 1 && keys[0] === 'user'

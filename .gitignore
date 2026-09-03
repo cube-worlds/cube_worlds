@@ -143,3 +143,10 @@ data/
 *.db-journal
 .claude
 coverage.lcov
+
+# macOS
+.DS_Store
+
+# design handoff archives (not checked in)
+*.zip
+.worktrees/

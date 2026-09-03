@@ -1,8 +1,8 @@
 import { createCallbackData } from 'callback-data'
 
-// Admin queue actions on a specific user's mint draft: approve (pin + mint) or
-// return-to-work (back to Rework). userId is carried so the callback is
-// self-contained and not tied to mutable admin session state.
+// Admin actions on a specific user's mint draft: approve (pin + mint) or
+// decline (back to Rework — the user may regenerate and resubmit). userId is
+// carried so the callback is self-contained and not tied to admin session state.
 export const mintActionData = createCallbackData('mint-action', {
   action: String,
   userId: Number,
@@ -10,5 +10,5 @@ export const mintActionData = createCallbackData('mint-action', {
 
 export enum MintAction {
   Approve = 'approve',
-  Return = 'return',
+  Decline = 'decline',
 }

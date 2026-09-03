@@ -14,12 +14,8 @@ export enum BalanceChangeType {
   Task = 6,
   Claim = 7,
   Trade = 8, // legacy (was the on-chain jetton exchange, removed)
-  Expedition = 9, // CUBE faucet: expedition payout
-  Spend = 10, // CUBE sink: energy refill / weight-boost
-  CastleUpgrade = 11, // CUBE sink: castle upgrade track (100% burn)
-  Recruit = 12, // CUBE sink: Tavern hero recruitment
-  ArenaEntry = 13, // CUBE sink: arena 1v1 entry fee (100% burn)
-  RaidStake = 14, // CUBE sink: raid stake — burned on loss, refunded on win
+  Generation = 9, // CUBE sink: paid NFT-image generation try
+  StarsTopup = 10, // CUBE faucet: purchased with Telegram Stars
 }
 
 export function getBalanceChangeTypeName(
@@ -91,27 +87,4 @@ export async function getUserBalanceRecords(
   count: number = 20,
 ): Promise<Balance[]> {
   return BalanceModel.find({ userId }).sort({ createdAt: -1 }).limit(count)
-}
-
-// Tournament scoring: sum of CUBE earned from expeditions in [since, until) per
-// user, restricted to the given user set. Returns a Map keyed by userId. Used by
-// both the live tournament leaderboard and the weekly settlement worker.
-export async function sumExpeditionCubeByUser(
-  since: Date,
-  until: Date,
-  userIds: number[],
-): Promise<Map<number, bigint>> {
-  if (userIds.length === 0)
-    return new Map()
-  const rows = await BalanceModel.aggregate<{ _id: number, amount: bigint }>([
-    {
-      $match: {
-        type: BalanceChangeType.Expedition,
-        userId: { $in: userIds },
-        createdAt: { $gte: since, $lt: until },
-      },
-    },
-    { $group: { _id: '$userId', amount: { $sum: '$amount' } } },
-  ])
-  return new Map(rows.map(r => [r._id, BigInt(r.amount ?? 0)]))
 }
