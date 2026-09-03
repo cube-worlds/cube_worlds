@@ -289,6 +289,28 @@ async function run() {
       expect(typeof body.error === 'string' && (body.error as string).length > 0, 'expected an error envelope, not a crash')
     })
 
+    await step('POST /api/pass/scan without a bound wallet returns 400 wallet_required', async () => {
+      const response = await fetch(`${BASE}/api/pass/scan`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ initData }),
+      })
+      expect(response.status === 400, `HTTP ${response.status}`)
+      const body = await response.json() as Record<string, unknown>
+      expect(body.code === 'wallet_required', `code=${body.code}`)
+    })
+
+    await step('POST /api/pass/select without a bound wallet returns 400 wallet_required', async () => {
+      const response = await fetch(`${BASE}/api/pass/select`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ initData, index: 0 }),
+      })
+      expect(response.status === 400, `HTTP ${response.status}`)
+      const body = await response.json() as Record<string, unknown>
+      expect(body.code === 'wallet_required', `code=${body.code}`)
+    })
+
     await step('unknown API route returns the 404 envelope', async () => {
       const response = await fetch(`${BASE}/api/definitely-not-a-route`)
       expect(response.status === 404, `HTTP ${response.status}`)

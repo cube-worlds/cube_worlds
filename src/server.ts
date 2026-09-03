@@ -17,6 +17,7 @@ import claimHandler from './backend/claim-handler'
 import leaderboardHandler from './backend/leaderboard-handler'
 import { createMintHandler } from './backend/mint'
 import nftHandler from './backend/nft-handler'
+import { createPassHandler } from './backend/pass'
 import publicMetricsHandler from './backend/public-metrics'
 import setWalletHandler from './backend/set-wallet-handler'
 import walletNonceHandler from './backend/wallet-nonce-handler'
@@ -38,6 +39,9 @@ const ROUTE_RATE_LIMITS: Record<string, { max: number, timeWindow: string }> = {
   '/api/mint/avatars': { max: 20, timeWindow: '1 minute' },
   '/api/mint/avatar/select': { max: 20, timeWindow: '1 minute' },
   '/api/mint/avatar/upload': { max: 10, timeWindow: '1 minute' },
+  // Pass scan hits toncenter; keep it tight.
+  '/api/pass/scan': { max: 10, timeWindow: '1 minute' },
+  '/api/pass/select': { max: 10, timeWindow: '1 minute' },
 }
 
 export async function createServer(bot: Bot) {
@@ -109,6 +113,7 @@ export async function createServer(bot: Bot) {
   await server.register(createAvatarHandler(bot), { prefix: '/api/mint' })
   await server.register(setWalletHandler, { prefix: '/api/auth' })
   await server.register(walletNonceHandler, { prefix: '/api/auth' })
+  await server.register(createPassHandler(), { prefix: '/api/pass' })
 
   await server.register(nftHandler, { prefix: '/api/nft' })
 
