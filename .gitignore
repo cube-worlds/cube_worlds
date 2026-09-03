@@ -149,3 +149,4 @@ coverage.lcov
 
 # design handoff archives (not checked in)
 *.zip
+.worktrees/
