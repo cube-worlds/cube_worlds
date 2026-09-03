@@ -13,14 +13,21 @@ const STARS = [
   { x: 160, y: 220, dur: 2.6 },
 ]
 
-export function TitleScreen({ onEnter }: { onEnter: () => void }) {
+interface TitleScreenProps {
+  phase: 'loading' | 'ready' | 'error'
+  error?: string
+  onEnter: () => void
+  onRetry: () => void
+}
+
+export function TitleScreen({ phase, error, onEnter, onRetry }: TitleScreenProps) {
   return (
     <div
-      onClick={onEnter}
+      onClick={phase === 'ready' ? onEnter : undefined}
       style={{
         position: 'fixed',
         inset: 0,
-        cursor: 'pointer',
+        cursor: phase === 'ready' ? 'pointer' : 'default',
         overflow: 'hidden',
         background:
           'linear-gradient(180deg, #0a0714 0%, #140d1e 45%, #241226 78%, #3d1a1c 100%)',
@@ -120,20 +127,34 @@ export function TitleScreen({ onEnter }: { onEnter: () => void }) {
         </div>
       </div>
 
-      <div
-        className="px-pulse"
-        style={{
-          position: 'absolute',
-          bottom: 118,
-          left: 0,
-          right: 0,
-          textAlign: 'center',
-          fontFamily: 'var(--font-pixel)',
-          fontSize: 11,
-          color: '#cbbfd8',
-        }}
-      >
-        TAP TO ENTER
+      <div style={{ position: 'absolute', bottom: 118, left: 16, right: 16, textAlign: 'center' }}>
+        {phase === 'loading' && (
+          <div className="px-pulse" style={{ fontFamily: 'var(--font-pixel)', fontSize: 11, color: '#cbbfd8' }}>
+            ENTERING THE REALM…
+          </div>
+        )}
+        {phase === 'ready' && (
+          <div className="px-pulse" style={{ fontFamily: 'var(--font-pixel)', fontSize: 11, color: '#cbbfd8' }}>
+            TAP TO ENTER
+          </div>
+        )}
+        {phase === 'error' && (
+          <div className="px-card" style={{ borderColor: 'var(--cw-red)', padding: 12 }}>
+            <div className="px-label" style={{ color: 'var(--cw-red-bright)' }}>REALM UNREACHABLE</div>
+            <div className="px-body" style={{ marginTop: 6 }}>{error ?? 'Open the app from Telegram.'}</div>
+            <button
+              type="button"
+              className="px-btn"
+              style={{ marginTop: 10, padding: '10px 0', fontSize: 9 }}
+              onClick={(event) => {
+                event.stopPropagation()
+                onRetry()
+              }}
+            >
+              RETRY
+            </button>
+          </div>
+        )}
       </div>
 
       <div
