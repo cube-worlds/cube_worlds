@@ -32,6 +32,7 @@ const ROUTE_RATE_LIMITS: Record<string, { max: number, timeWindow: string }> = {
   '/api/users/claim/status': { max: 30, timeWindow: '1 minute' },
   '/api/users/leaderboard': { max: 60, timeWindow: '1 minute' },
   '/api/users/balances': { max: 60, timeWindow: '1 minute' },
+  '/api/users/topup/invoice': { max: 10, timeWindow: '1 minute' },
   // Mint flow. /generate is the expensive one (paid Stability call).
   '/api/mint/quote': { max: 60, timeWindow: '1 minute' },
   '/api/mint/status': { max: 60, timeWindow: '1 minute' },

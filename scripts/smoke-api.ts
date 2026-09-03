@@ -297,6 +297,7 @@ async function run() {
     await step('POST /api/users/topup/invoice fails safely on the fake bot token', async () => {
       const body = await post<Record<string, unknown>>('/api/users/topup/invoice', { initData, stars: 50 })
       expect(typeof body.error === 'string' && (body.error as string).length > 0, 'expected an error envelope, not a crash')
+      expect(body.error !== 'API route not found', `route not registered: ${body.error}`)
     })
 
     await step('POST /api/pass/scan without a bound wallet returns 400 wallet_required', async () => {

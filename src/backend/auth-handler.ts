@@ -5,7 +5,7 @@ import { clearUserPass, findOrCreateUser, findUserById, setUserPass } from '#roo
 import { logger } from '#root/logger'
 import { defaultParseInitData, defaultValidateInitData } from './init-data'
 import { loginPayload } from './login-payload'
-import { listPassesFromToncenter } from './pass'
+import { verifyPassOwnership } from './pass'
 import { safeErrorResponse } from './safe-error'
 
 interface Body {
@@ -27,7 +27,7 @@ export interface AuthHandlerDependencies {
   info: (message: string) => void
   error: (message: string) => void
   logError: (message: string) => void
-  listPasses: (ownerAddress: string) => Promise<Pass[]>
+  verifyPassOwnership: (passAddress: string, ownerAddress: string) => Promise<boolean>
   setUserPass: (userId: number, pass: Pass, verifiedAt: Date) => Promise<void>
   clearUserPass: (userId: number) => Promise<void>
 }
@@ -41,7 +41,7 @@ function createDefaultDependencies(): AuthHandlerDependencies {
     info: logger.info.bind(logger),
     error: logger.error.bind(logger),
     logError: logger.error.bind(logger),
-    listPasses: listPassesFromToncenter,
+    verifyPassOwnership,
     setUserPass,
     clearUserPass,
   }
@@ -114,7 +114,7 @@ export function buildAuthHandler(
           if (pass && Date.now() - pass.verifiedAt.getTime() > PASS_REVALIDATE_MS) {
             try {
               const owned = user.wallet
-                ? (await dependencies.listPasses(user.wallet)).some((p) => p.index === pass.index)
+                ? await dependencies.verifyPassOwnership(pass.address, user.wallet)
                 : false
               if (owned) {
                 // Persist the refresh; the in-memory `pass` is discarded

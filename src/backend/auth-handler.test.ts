@@ -30,7 +30,7 @@ interface AuthTestContext {
   infoLogs: string[]
   errorLogs: string[]
   unhandledErrorLogs: string[]
-  listCalls: string[]
+  verifyCalls: Array<{ passAddress: string, ownerAddress: string }>
   setPassCalls: Array<{ userId: number, index: number, verifiedAt: Date }>
   clearPassCalls: number[]
 }
@@ -65,7 +65,7 @@ async function createAuthTestContext(
   const infoLogs: string[] = []
   const errorLogs: string[] = []
   const unhandledErrorLogs: string[] = []
-  const listCalls: string[] = []
+  const verifyCalls: Array<{ passAddress: string, ownerAddress: string }> = []
   const setPassCalls: Array<{ userId: number, index: number, verifiedAt: Date }> = []
   const clearPassCalls: number[] = []
 
@@ -94,9 +94,9 @@ async function createAuthTestContext(
     logError: (message: string) => {
       unhandledErrorLogs.push(message)
     },
-    listPasses: async (owner: string) => {
-      listCalls.push(owner)
-      return [{ index: 7, address: 'EQ_A', name: 'alice', image: '' }]
+    verifyPassOwnership: async (passAddress: string, ownerAddress: string) => {
+      verifyCalls.push({ passAddress, ownerAddress })
+      return true
     },
     setUserPass: async (userId, pass, verifiedAt) => {
       setPassCalls.push({ userId, index: pass.index, verifiedAt })
@@ -116,7 +116,7 @@ async function createAuthTestContext(
     infoLogs,
     errorLogs,
     unhandledErrorLogs,
-    listCalls,
+    verifyCalls,
     setPassCalls,
     clearPassCalls,
   }
@@ -423,7 +423,7 @@ test('login returns holder=false, pass=null and the Telegram username for a newc
   assert.equal(body.holder, false)
   assert.equal(body.pass, null)
   assert.equal(body.username, 'alice')
-  assert.deepEqual(ctx.listCalls, [])
+  assert.deepEqual(ctx.verifyCalls, [])
 })
 
 test('login returns username=null when Telegram has no @username', async (t) => {
@@ -444,7 +444,7 @@ test('login with a fresh pass is a holder and does not touch the chain', async (
   const body = res.json()
   assert.equal(body.holder, true)
   assert.equal(body.pass.index, 7)
-  assert.deepEqual(ctx.listCalls, [])
+  assert.deepEqual(ctx.verifyCalls, [])
 })
 
 test('login with a stale pass still owned bumps verifiedAt', async (t) => {
@@ -454,7 +454,7 @@ test('login with a stale pass still owned bumps verifiedAt', async (t) => {
   ctx.users.get(1001)!.pass = STALE_PASS
   const res = await ctx.app.inject({ method: 'POST', url: '/api/auth/login', payload: { initData: 'x' } })
   assert.equal(res.json().holder, true)
-  assert.deepEqual(ctx.listCalls, ['EQ_WALLET'])
+  assert.deepEqual(ctx.verifyCalls, [{ passAddress: 'EQ_A', ownerAddress: 'EQ_WALLET' }])
   assert.equal(ctx.setPassCalls.length, 1)
   assert.equal(ctx.setPassCalls[0].index, 7)
   assert.ok(ctx.setPassCalls[0].verifiedAt.getTime() > STALE_PASS.verifiedAt.getTime())
@@ -462,7 +462,7 @@ test('login with a stale pass still owned bumps verifiedAt', async (t) => {
 })
 
 test('login with a stale pass that left the wallet clears it', async (t) => {
-  const ctx = await createAuthTestContext({ listPasses: async () => [] })
+  const ctx = await createAuthTestContext({ verifyPassOwnership: async () => false })
   t.after(() => ctx.app.close())
   ctx.users.get(1001)!.wallet = 'EQ_WALLET'
   ctx.users.get(1001)!.pass = STALE_PASS
@@ -475,7 +475,7 @@ test('login with a stale pass that left the wallet clears it', async (t) => {
 
 test('login keeps a stale pass when the provider fails', async (t) => {
   const ctx = await createAuthTestContext({
-    listPasses: async () => { throw new Error('toncenter down') },
+    verifyPassOwnership: async () => { throw new Error('toncenter down') },
   })
   t.after(() => ctx.app.close())
   ctx.users.get(1001)!.wallet = 'EQ_WALLET'

@@ -20,7 +20,7 @@ export interface PassHandlerDependencies {
 
 // Subset of toncenter v3 GET /api/v3/nft/items we read.
 export interface NftItemsResponse {
-  nft_items: Array<{ address: string, index: string }>
+  nft_items: Array<{ address: string, index: string, owner_address?: string }>
   metadata?: Record<string, { token_info?: Array<{ name?: string, image?: string }> }>
 }
 
@@ -138,7 +138,19 @@ export function buildPassHandler(dependencies: PassHandlerDependencies) {
           }
           const verifiedAt = new Date()
           await dependencies.setUserPass(user.id, found, verifiedAt)
-          return loginPayload({ ...user, pass: { ...found, verifiedAt } }, username)
+          return loginPayload(
+            {
+              id: user.id,
+              language: user.language,
+              wallet: user.wallet,
+              referalId: user.referalId,
+              votes: user.votes,
+              minted: user.minted,
+              state: user.state,
+              pass: { ...found, verifiedAt },
+            },
+            username,
+          )
         } catch (err) {
           return safeErrorResponse(err, dependencies.logError)
         }

@@ -290,7 +290,7 @@ export async function setUserPass(
 ): Promise<void> {
   await UserModel.findOneAndUpdate(
     { id: userId },
-    { $set: { pass: { ...pass, verifiedAt } } },
+    { $set: { pass: { index: pass.index, address: pass.address, name: pass.name, image: pass.image, verifiedAt } } },
   )
 }
 
