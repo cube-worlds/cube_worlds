@@ -87,3 +87,5 @@ Features (`src/bot/index.ts`): start, help, queue (admin: `/queue` browser + App
 - `STAGING=true` boots API-only (no tx loop, no Telegram engagement).
 - Stale env keys from v2 (`XROCKET_*`, `ADSGRAM_*`, `SEASON_PASS_*`, `MINT_FLOOR_*`, …) are ignored by the config schema; new optional keys: `GENERATION_TRY_COST_VOTES`, `STARS_TOPUP_VOTES_PER_STAR`, `REFERRAL_MINT_REWARD_VOTES`.
 - Pre-deploy: `npm run smoke:api` (all secrets overridden with fakes — it can never hit a paid API or the live bot).
+- **Staging bot**: `kamal deploy -d staging` → @cubeworldsbot at https://staging.cubeworlds.club (`config/deploy.staging.yml` + `.kamal/secrets.staging`; own service name/DB `cube-worlds-bot-staging`/volume `/srv/cube_worlds_staging/data`). Shares chain keys + admins with prod, so an admin Approve there mints a real NFT.
+- `/tonconnect-manifest.json` is generated from `WEB_APP_URL` (ton_proof domain check), not a static landing file.
