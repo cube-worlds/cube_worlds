@@ -9,7 +9,7 @@ $CUBE is **DB-only** (`User.votes` + append-only `Balance` ledger are canonical;
 2. **Paid generation tries** — `POST /api/mint/generate` debits `GENERATION_TRY_COST_VOTES` (default 100) per try via `debitVotes` CAS (`BalanceChangeType.Generation`); Stability pixel-art img2img + ChatGPT description; **refund on generation failure** (`addPoints` same type). Draft is private (state → `WaitNothing`, clears a decline) until the user submits. No floor, no eligibility queue — pay-per-try is the anti-spam (the v2 escalating floor / `mint-floor.ts` was removed).
 3. **Submit** — `POST /api/mint/submit` (requires draft + bound wallet) flips state → `Submited` and **pushes the image to every admin** (`config.BOT_ADMINS`) with ✅ Approve / ❌ Decline inline buttons. Notify failures never fail the submit (admins still have `/queue`).
 4. **Admin verdict** — `mint-action.ts` callback (`MintAction.Approve|Decline`) → pure `queue-approval-handler.ts`: Approve = CAS `claimUserForMint` (double-approve mints exactly once) → IPFS pin → `NftItem.deployNFT` → mint-before-flip → `markUserMinted`; Decline = `setUserRework` + user notification (paid tries stay spent; user regenerates and resubmits).
-5. **Gate** — minted users see the Pass view ("World I coming soon"); `/api/mint/status` drives the whole webview state machine (returns images as base64 data URLs).
+5. **Gate (v4)** — entry to the game requires **holding a Cube Worlds NFT in the bound wallet**. `POST /api/pass/scan` lists the wallet's collection items via toncenter v3 (`pass.ts` composer, pure `pass-handler.ts`, cap 20); `POST /api/pass/select { index }` re-checks ownership (403 `not_owned`) and stores `User.pass` (`{ index, address, name, image, verifiedAt }`). Login returns `holder`/`pass`/`username` and revalidates ownership when `verifiedAt` is older than 1 h (gone → `$unset pass`; provider error → keep, log). Rebinding to a different wallet clears `pass`. `/api/mint/status` still drives the forge; minted users press ENTER WORLD I → scan.
 
 ## $CUBE sources
 - **Daily claim** (cooldown + streak ×multiplier) — `/api/users/claim`, `/claim/status`.
@@ -33,12 +33,12 @@ npm run smoke:api                                # boots the REAL app (STAGING, 
 ## Frontend (React, `src/frontend`)
 - Vite 8 + React 19 + TypeScript + `@tonconnect/ui-react`; served under **/game** (landing owns the root; Telegram Mini App URL must point at /game).
 - Design system from the "Cube Worlds Game Screens" handoff (zip in repo root): Press Start 2P + VT323 (Google Fonts), dark-purple palette + gold, hard pixel edges — tokens and shared classes in `src/theme.css` (`.px-btn`, `.px-card`, `.px-label`…).
-- Screens: `TitleScreen` (splash) → tabs **FORGE** (`MintFlow`: avatar picker / stage / generate / submit / under-review / declined) and **EARN** (`EarnPanel`: claim, referral share, Stars packs, TON donate) → `PassView` once minted.
+- Screens (`App.tsx` state machine): `TitleScreen` (loading/ready/error+RETRY) → holder ? `Hub` : `Fork` → `MintFlow` (username gate: no @username = no forge; wallet at submit via `WalletScreen`; minted → ENTER WORLD I) | `WalletScreen` (idle/connecting/rejected/bound/taken) → `PassScan` (scanning/found picker/none/not-indexed/failed) → `Hub` tabs HUB · HERO (`HeroTab`, SWITCH PASS) · EARN (`EarnPanel`, numbers from `/api/public/config`). `DailyClaim` is shared by Hub and EARN.
 - Wallet binding (`hooks/useWalletBind.ts`): nonce → `setConnectRequestParameters({ tonProof })` → modal → `onStatusChange` proof → `POST /api/auth/set-wallet`. Each rebind disconnects first (fresh nonce, proof only arrives during connect).
 - No Buffer polyfill needed anymore — the frontend no longer imports `@ton/core` (the old `polyfills.ts` died with the Vue app).
 
 ## Critical Gotchas
-- **Tests use Node.js built-in test runner** (`node --test`), not Jest/Vitest. 491 tests / 61 files; run `npm run test:coverage` for the report.
+- **Tests use Node.js built-in test runner** (`node --test`), not Jest/Vitest. 511 tests / 62 files; run `npm run test:coverage` for the report.
 - **`NODE_ENV=test` and config**: `src/config.ts` is a Proxy that throws on any property read in test mode. Tests must not transitively import `#root/config`. Handlers needing config/bot/chain deps are split `foo-handler.ts` (pure, testable) + `foo.ts` (composer). Composers taking the bot: `createMintHandler(bot.api)`, `createAvatarHandler(bot)`, `createTopupInvoiceHandler(bot.api)` — wired in `server.ts`.
 - **`folderPath()`/`userFilePath()`** from `src/common/helpers/files.ts` for all user-derived file paths — sanitizes and guards against traversal out of `./data/`.
 - **Claim locking**: in-process promise chain (`claimLocks` Map) — single-process only.
@@ -68,6 +68,7 @@ All authenticated endpoints validate Telegram's `initData` (HMAC + 24h expiry) �
 1. `POST /api/auth/wallet-nonce` → stateless HMAC payload (`<userId>:<expiresAtMs>:<rand>:<hmac(BOT_TOKEN)>`, 5-min TTL).
 2. Frontend passes it via `setConnectRequestParameters` before opening the wallet modal.
 3. `POST /api/auth/set-wallet` (`ton-proof.ts → verifyProof`): payload HMAC + expiry + userId match, wallet timestamp ±5 min, domain = host of `WEB_APP_URL`, address hash = `Cell.fromBoc(walletStateInit)[0].hash()`, Ed25519 signature over the canonical TON Connect message.
+4. `set-wallet` answers **409 `wallet_taken`** when the address belongs to another account; the frontend `post()` helper returns JSON envelopes for non-2xx so `code` reaches the UI.
 
 ## Bot
 Middleware order: `autoRetry → updateLogger (dev) → autoChatAction → hydrate → session → slapReaction → i18n → attachUser → queueMenu → [features]`.
@@ -79,6 +80,7 @@ Features (`src/bot/index.ts`): start, help, queue (admin: `/queue` browser + App
 - Random strings: `node:crypto.randomBytes`.
 - Upload boundary: mime allowlist (JPEG/PNG) + 8 MB multipart limit + jimp re-encode to PNG (strips whatever the client claimed the file was).
 - Rate limits per route in `server.ts` (`/api/mint/generate` 6/min — it's a paid Stability call).
+- Rate limits: `/api/pass/scan` and `/api/pass/select` 10/min (toncenter call).
 
 ## Deploy notes
 - Production still runs **v1**; this tree replaces it wholesale on cutover. Before deploy: `CHECK_MONGO_URI=<prod> npx tsx scripts/check-prod-users.ts` — read-only; blocks on duplicate wallets/ids (v3 unique indexes), non-BigInt-castable votes, unknown states; warns on stuck mint claims, missing names, old-host `data/` paths.
