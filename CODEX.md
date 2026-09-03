@@ -75,7 +75,7 @@ refund-on-failure. No mint floor and no eligibility queue — pay-per-try is the
 
 ## Useful Commands
 - `npm run lint` / `npm run typecheck` — quality gates
-- `npm run test:backend` — full backend suite (Node.js test runner, 495 tests)
+- `npm run test:backend` — full backend suite (Node.js test runner, 511 tests)
 - `npm run smoke:api` — boots the real app (STAGING, fake secrets, throwaway Mongo) and drives the API
 - `CHECK_MONGO_URI=… npx tsx scripts/check-prod-users.ts` — read-only v1-prod-DB compatibility check
 - `npm run build:all` — backend + landing + frontend

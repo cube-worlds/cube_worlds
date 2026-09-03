@@ -42,8 +42,8 @@
 4. Sync bot commands and the Mini App menu button (non-fatal)
 5. Create Fastify HTTP server (register all API handlers)
 6. Register shutdown handlers (SIGINT/SIGTERM)
-7. `STAGING=true` → just listen (no Telegram engagement, no tx loop) — for validating a
-   new deployment next to the live instance
+7. `STAGING=true` → just listen (no Telegram engagement, no tx loop) — used by the API
+   smoke test; the real staging bot runs with it off
 8. Otherwise: start the TON transaction watcher (donations → $CUBE), then the bot
    (polling in dev, webhook in prod)
 
@@ -125,7 +125,12 @@ returns `{ balance, minted, mintState, wallet }`.
 - **Build:** `npm run build:all` → tsc (backend) + landing generator + vite (frontend).
 - **Production:** multi-stage Docker image (Node 22 slim; builder compiles the frontend
   and landing, runner installs prod deps only — `tsx` is a prod dependency and runs
-  `src/` directly) behind an nginx reverse proxy.
+  `src/` directly) behind kamal-proxy. Deployed with Kamal: `kamal deploy` → production
+  (cubeworlds.club), `kamal deploy -d staging` → the staging bot @cubeworldsbot at
+  staging.cubeworlds.club (`config/deploy.staging.yml`: own service name, Mongo DB and
+  data volume; `.kamal/secrets.staging` overrides only the bot token, webhook and DB).
+  `/tonconnect-manifest.json` is generated from `WEB_APP_URL` so ton_proof's domain
+  check holds on either host.
 - **Pre-deploy gates:** `npm run smoke:api` (boots the real app with fake secrets against
   a throwaway Mongo and drives the API end-to-end) and
   `CHECK_MONGO_URI=… npx tsx scripts/check-prod-users.ts` (read-only v1-database
