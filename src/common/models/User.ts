@@ -4,7 +4,7 @@ import type {
   ClipGuidancePreset,
   SDSampler,
 } from '#root/common/helpers/generation'
-import { getModelForClass, modelOptions, prop } from '@typegoose/typegoose'
+import { getModelForClass, index, modelOptions, prop, Severity } from '@typegoose/typegoose'
 import { TimeStamps } from '@typegoose/typegoose/lib/defaultClasses'
 import {
   addChangeBalanceRecord,
@@ -25,7 +25,7 @@ export enum UserState {
 
 // Snapshot of the Cube Worlds NFT the user plays as. Written only by
 // /api/pass/select (on-chain ownership check); revalidated hourly on login.
-@modelOptions({ schemaOptions: { _id: false } })
+@modelOptions({ schemaOptions: { _id: false }, options: { allowMixed: Severity.ALLOW } })
 export class UserPass {
   @prop({ type: Number, required: true })
   index!: number
@@ -41,8 +41,30 @@ export class UserPass {
 
   @prop({ type: Date, required: true })
   verifiedAt!: Date
+
+  // All 120 on-chain personality traits (name → 1..10). Filled at pass select,
+  // backfilled by /api/world/state for passes that predate Bali.
+  @prop({ type: () => Object })
+  traits?: Record<string, number>
 }
 
+// Public reputation from Bali pair/commons games. Bumped at window resolution.
+@modelOptions({ schemaOptions: { _id: false } })
+export class UserRep {
+  @prop({ type: Number, required: true, default: 0 })
+  helped!: number
+
+  @prop({ type: Number, required: true, default: 0 })
+  stole!: number
+
+  @prop({ type: Number, required: true, default: 0 })
+  gave!: number
+
+  @prop({ type: Number, required: true, default: 0 })
+  took!: number
+}
+
+@index({ 'pass.index': 1 })
 @modelOptions({ schemaOptions: { timestamps: true, id: false } })
 export class User extends TimeStamps {
   @prop({ type: Number, required: true, unique: true })
@@ -85,6 +107,9 @@ export class User extends TimeStamps {
 
   @prop({ type: () => UserPass })
   pass?: UserPass
+
+  @prop({ type: () => UserRep })
+  rep?: UserRep
 
   @prop({ type: Number })
   lastSendedPlace?: number // for notification purposes
@@ -285,13 +310,40 @@ export async function markUserMinted(
 // Store (or refresh) the pass snapshot after an on-chain ownership check.
 export async function setUserPass(
   userId: number,
-  pass: { index: number, address: string, name: string, image: string },
+  pass: { index: number, address: string, name: string, image: string, traits?: Record<string, number> },
   verifiedAt: Date,
 ): Promise<void> {
-  await UserModel.findOneAndUpdate(
-    { id: userId },
-    { $set: { pass: { index: pass.index, address: pass.address, name: pass.name, image: pass.image, verifiedAt } } },
-  )
+  const next: Record<string, unknown> = { index: pass.index, address: pass.address, name: pass.name, image: pass.image, verifiedAt }
+  if (pass.traits) next.traits = pass.traits
+  const existing = pass.traits ? null : await UserModel.findOne({ id: userId }, { 'pass.traits': 1 }).lean()
+  const keep = (existing as { pass?: { traits?: Record<string, number> } } | null)?.pass?.traits
+  if (keep) next.traits = keep
+  await UserModel.findOneAndUpdate({ id: userId }, { $set: { pass: next } })
+}
+
+export async function setPassTraits(userId: number, traits: Record<string, number>): Promise<void> {
+  await UserModel.findOneAndUpdate({ id: userId, pass: { $exists: true } }, { $set: { 'pass.traits': traits } })
+}
+
+export async function bumpRep(
+  userId: number,
+  delta: { helped?: number, stole?: number, gave?: number, took?: number },
+): Promise<void> {
+  const inc: Record<string, number> = {}
+  for (const [key, value] of Object.entries(delta)) {
+    if (value) inc[`rep.${key}`] = value
+  }
+  if (Object.keys(inc).length === 0) return
+  await UserModel.findOneAndUpdate({ id: userId }, { $inc: inc })
+}
+
+export async function findUserByPassIndex(index: number): Promise<UserDoc | null> {
+  return UserModel.findOne({ 'pass.index': index }) as unknown as Promise<UserDoc | null>
+}
+
+export async function findUsersByIds(ids: number[]): Promise<UserDoc[]> {
+  if (ids.length === 0) return []
+  return UserModel.find({ id: { $in: ids } }) as unknown as Promise<UserDoc[]>
 }
 
 // Drop the snapshot when the NFT is no longer in the bound wallet.
