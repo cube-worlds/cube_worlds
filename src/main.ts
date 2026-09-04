@@ -8,6 +8,7 @@ import { createBot } from '#root/bot/index'
 import { ensureClaimUniquenessMigration } from '#root/common/models/Claim'
 import { createInitialBalancesIfNotExists } from '#root/common/models/User'
 import { config } from '#root/config'
+import { startResolver } from '#root/game/resolver-start'
 import { logger } from '#root/logger'
 import { createServer } from '#root/server'
 import { Subscription } from '#root/subscription'
@@ -52,10 +53,12 @@ try {
     }
   }
 
+  let resolver: ReturnType<typeof startResolver> | undefined
   const server = await createServer(bot)
 
   async function shutdown() {
     logger.info('shutdown')
+    resolver?.stop()
     await server.close()
     await bot.stop()
   }
@@ -83,6 +86,9 @@ try {
     const subscription = new Subscription(bot)
 
     void subscription.startProcessTransactions()
+
+    // Bali: closes past 8h windows every minute, pays visits, pings players.
+    resolver = startResolver(bot.api)
 
     if (config.BOT_MODE === 'webhook') {
       // to prevent receiving updates before the bot is ready

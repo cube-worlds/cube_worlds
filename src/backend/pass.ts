@@ -68,6 +68,24 @@ export async function fetchTraitsFromContent(contentUri: string): Promise<Record
   return parseTraits(json.attributes)
 }
 
+// Backfill for passes selected before Bali: item → content uri → traits.
+export async function loadTraitsForPassAddress(passAddress: string): Promise<Record<string, number>> {
+  const TONCENTER = config.TESTNET
+    ? 'https://testnet.toncenter.com'
+    : 'https://toncenter.com'
+  const url = new URL(`${TONCENTER}/api/v3/nft/items`)
+  url.searchParams.set('address', passAddress)
+  const response = await fetch(url, {
+    headers: { 'X-Api-Key': config.TONCENTER_API_KEY },
+    signal: AbortSignal.timeout(10_000),
+  })
+  if (!response.ok) throw new Error(`toncenter nft/items ${response.status}`)
+  const body = (await response.json()) as NftItemsResponse
+  const uri = body.nft_items[0]?.content?.uri
+  if (!uri) throw new Error('pass has no content uri')
+  return fetchTraitsFromContent(uri)
+}
+
 export function createPassHandler() {
   return buildPassHandler({
     validateInitData: defaultValidateInitData,
