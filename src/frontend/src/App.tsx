@@ -1,6 +1,7 @@
 import type { LoginResponse, PublicConfig } from './api'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { login, publicConfig } from './api'
+import { BaliTab } from './components/BaliTab'
 import { EarnPanel } from './components/EarnPanel'
 import { Fork } from './components/Fork'
 import { HeroTab } from './components/HeroTab'
@@ -23,7 +24,7 @@ type Screen =
   | { name: 'earn' } // pre-hub EARN reached from the forge
   | { name: 'wallet', reason: 'forge' | 'pass' }
   | { name: 'scan' }
-  | { name: 'hub', tab: 'hub' | 'hero' | 'earn' }
+  | { name: 'hub', tab: 'hub' | 'bali' | 'hero' | 'earn' }
 
 type Phase = 'loading' | 'ready' | 'error'
 
@@ -34,11 +35,17 @@ export function App() {
   const [config, setConfig] = useState<PublicConfig | null>(null)
   const [balance, setBalance] = useState('0')
   const [error, setError] = useState<string | undefined>()
+  const [{ bali, meet, referId }] = useState(() => {
+    const start = getStartParam()
+    const bali = start?.startsWith('bali_') ? start.slice(5) : null
+    const meet = start?.startsWith('meet_') ? start.slice(5) : null
+    return { bali, meet, referId: bali || meet ? undefined : start }
+  })
 
   const boot = useCallback(() => {
     setPhase('loading')
     setError(undefined)
-    void Promise.all([publicConfig(), login(getStartParam())])
+    void Promise.all([publicConfig(), login(referId)])
       .then(([cfg, result]) => {
         if (result.error) {
           setError(result.error)
@@ -54,7 +61,7 @@ export function App() {
         setError('Cannot reach the realm — open the app from Telegram')
         setPhase('error')
       })
-  }, [])
+  }, [referId])
 
   useEffect(() => {
     expand()
@@ -81,7 +88,7 @@ export function App() {
         onEnter={() => {
           if (!user) return
           haptic('light')
-          setScreen(user.holder ? { name: 'hub', tab: 'hub' } : { name: 'fork' })
+          setScreen(user.holder ? { name: 'hub', tab: bali || meet ? 'bali' : 'hub' } : { name: 'fork' })
         }}
       />
     )
@@ -89,7 +96,7 @@ export function App() {
 
   const goForge = () => setScreen({ name: 'forge' })
   const goScan = () => setScreen({ name: 'scan' })
-  const goHub = (tab: 'hub' | 'hero' | 'earn' = 'hub') => setScreen({ name: 'hub', tab })
+  const goHub = (tab: 'hub' | 'bali' | 'hero' | 'earn' = 'hub') => setScreen({ name: 'hub', tab })
 
   let body: React.ReactNode
   switch (screen.name) {
@@ -183,7 +190,9 @@ export function App() {
         break
       }
       if (screen.tab === 'hub') {
-        body = <Hub pass={user.pass} username={user.username} onBalance={setBalance} onHero={() => goHub('hero')} onEarn={() => goHub('earn')} />
+        body = <Hub pass={user.pass} username={user.username} onBalance={setBalance} onBali={() => goHub('bali')} onHero={() => goHub('hero')} onEarn={() => goHub('earn')} />
+      } else if (screen.tab === 'bali') {
+        body = <BaliTab botName={config?.botName ?? ''} startPlace={bali} inviteCode={meet} onBalance={setBalance} />
       } else if (screen.tab === 'hero') {
         body = <HeroTab pass={user.pass} wallet={user.wallet} collectionAddress={config?.collectionAddress} onSwitchPass={goScan} />
       } else {
@@ -217,6 +226,7 @@ export function App() {
       {inHub && (
         <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, display: 'flex', background: 'var(--cw-bg)', borderTop: '2px solid var(--cw-border-dark)' }}>
           <TabButton label="⌂ HUB" active={screen.tab === 'hub'} onClick={() => goHub('hub')} />
+          <TabButton label="🌴 BALI" active={screen.tab === 'bali'} onClick={() => goHub('bali')} />
           <TabButton label="▣ HERO" active={screen.tab === 'hero'} onClick={() => goHub('hero')} />
           <TabButton label="◆ EARN" active={screen.tab === 'earn'} onClick={() => goHub('earn')} />
         </nav>
