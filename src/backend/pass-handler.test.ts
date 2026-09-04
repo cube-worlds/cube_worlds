@@ -70,7 +70,11 @@ test('POST /api/pass/scan lists passes for the bound wallet', async (t) => {
   t.after(() => ctx.app.close())
   const res = await ctx.app.inject({ method: 'POST', url: '/api/pass/scan', payload: { initData: 'x' } })
   assert.equal(res.statusCode, 200)
-  assert.deepEqual(res.json().passes, [PASS_A, PASS_B])
+  assert.deepEqual(res.json().passes, [
+    { index: PASS_A.index, address: PASS_A.address, name: PASS_A.name, image: PASS_A.image },
+    { index: PASS_B.index, address: PASS_B.address, name: PASS_B.name, image: PASS_B.image },
+  ])
+  assert.equal(res.json().passes[0].contentUri, undefined)
   assert.deepEqual(ctx.listCalls, ['EQ_WALLET'])
 })
 

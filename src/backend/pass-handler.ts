@@ -90,7 +90,8 @@ export function buildPassHandler(dependencies: PassHandlerDependencies) {
           }
           try {
             const passes = await dependencies.listPasses(auth.user.wallet)
-            return { passes: passes.slice(0, MAX_PASSES) }
+            const publicPasses = passes.slice(0, MAX_PASSES).map(({ index, address, name, image }) => ({ index, address, name, image }))
+            return { passes: publicPasses }
           } catch (err) {
             dependencies.logError(`Pass scan failed for ${auth.user.id}: ${(err as Error).message}`)
             return reply.code(502).send({ error: 'Could not read the wallet, try again', code: 'scan_failed' })
