@@ -10,13 +10,15 @@
  *   - duplicate `wallet` values  → the v3 unique sparse index cannot build
  *   - duplicate `id` values      → same, for the primary user index
  *   - `votes` that cannot cast to BigInt (fractional doubles, strings, NaN)
- *   - `state` values outside the v3 enum
+ *   - `state` values outside the v3 enum (v1's WaitWallet/WaitDescription only warn: boot resets them)
  * Everything else is reported as a warning.
  */
 import process from 'node:process'
 import mongoose from 'mongoose'
 
 const ALLOWED_STATES = new Set(['WaitNothing', 'Submited', 'Rework'])
+// v1 mid-mint states: main.ts resets them to WaitNothing at boot (ensureLegacyStateMigration).
+const MIGRATED_STATES = new Set(['WaitWallet', 'WaitDescription'])
 const SAMPLE_SIZE = 1000
 
 let blocking = 0
@@ -109,7 +111,10 @@ async function run() {
     ]).toArray()
     console.log(`  values: ${states.map((s) => `${s._id ?? '(missing)'}×${s.count}`).join(', ')}`)
     for (const s of states) {
-      if (s._id !== null && s._id !== undefined && !ALLOWED_STATES.has(String(s._id))) {
+      if (s._id === null || s._id === undefined || ALLOWED_STATES.has(String(s._id))) continue
+      if (MIGRATED_STATES.has(String(s._id))) {
+        warn(`${s.count} doc(s) in v1 state '${s._id}' — reset to WaitNothing at first v3 boot`)
+      } else {
         block(`${s.count} doc(s) with unknown state '${s._id}' — v3 enum is WaitNothing|Submited|Rework`)
       }
     }

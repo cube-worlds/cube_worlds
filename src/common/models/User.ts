@@ -177,6 +177,18 @@ const UserModel = getModelForClass(User)
 // which collides with our Telegram numeric `id` field. Override at the type level.
 export type UserDoc = Omit<DocumentType<User>, 'id'> & { id: number }
 
+// v1 mid-mint states that v3 no longer has. Those users simply restart the
+// forge (pick avatar → generate → submit). Idempotent; runs at boot.
+export const LEGACY_MINT_STATES = ['WaitWallet', 'WaitDescription'] as const
+
+export async function ensureLegacyStateMigration(): Promise<number> {
+  const res = await UserModel.updateMany(
+    { state: { $in: LEGACY_MINT_STATES as unknown as UserState[] } },
+    { $set: { state: UserState.WaitNothing } },
+  )
+  return res.modifiedCount
+}
+
 export async function findOrCreateUser(id: number): Promise<UserDoc | null> {
   const isEmptyRecords = (await countUserBalanceRecords(id)) === 0
   if (isEmptyRecords) {
