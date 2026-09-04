@@ -2,6 +2,7 @@ import type { Pass, VisitView } from '../api'
 import { useEffect, useState } from 'react'
 import { worldState } from '../api'
 import { DailyClaim } from './DailyClaim'
+import { PassPeek } from './PassPeek'
 import { PassImage } from './PassScan'
 
 interface HubProps {
@@ -16,6 +17,7 @@ interface HubProps {
 // Hub shell: hero card, daily claim, BALI activity, shortcuts.
 export function Hub({ pass, username, onBalance, onBali, onHero, onEarn }: HubProps) {
   const [outcome, setOutcome] = useState<VisitView | null>(null)
+  const [peek, setPeek] = useState<number | null>(null)
   useEffect(() => {
     void worldState().then((s) => {
       if (s.error || !s.lastOutcome) return
@@ -44,9 +46,13 @@ export function Hub({ pass, username, onBalance, onBali, onHero, onEarn }: HubPr
           {Number(outcome.payout) > 0 && (
             <div className="px-label" style={{ fontSize: 7, color: 'var(--cw-green)' }}>{`+${outcome.payout} $CUBE`}</div>
           )}
+          {outcome.partnerPass !== null && (
+            <button type="button" className="px-btn-ghost" onClick={() => setPeek(outcome.partnerPass)}>{`VIEW PASS #${outcome.partnerPass}`}</button>
+          )}
           <button type="button" className="px-btn-ghost" onClick={() => { sessionStorage.setItem('cw.lastOutcomeSeen', outcome.id); setOutcome(null) }}>OK</button>
         </div>
       )}
+      {peek !== null && <PassPeek index={peek} onClose={() => setPeek(null)} />}
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         <div className="px-card" style={{ boxShadow: '0 4px 0 var(--cw-border-dark)', padding: 12 }}>

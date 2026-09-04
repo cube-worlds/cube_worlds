@@ -30,6 +30,10 @@ class Visit {
   @prop({ type: Number })
   partnerId?: number
 
+  // Pass index of whoever the engine paired us with, set at resolution.
+  @prop({ type: Number })
+  partnerPass?: number
+
   @prop({ type: Boolean, required: true, default: false })
   resolved!: boolean
 
@@ -54,6 +58,7 @@ export interface VisitRecord {
   stake: bigint
   inviteCode?: string
   partnerId?: number
+  partnerPass?: number
   resolved: boolean
   payout?: bigint
   outcome?: string
@@ -70,6 +75,7 @@ function toRecord(doc: Visit & { _id: unknown }): VisitRecord {
     stake: BigInt(doc.stake),
     inviteCode: doc.inviteCode,
     partnerId: doc.partnerId,
+    partnerPass: doc.partnerPass,
     resolved: doc.resolved,
     payout: doc.payout === undefined ? undefined : BigInt(doc.payout),
     outcome: doc.outcome,
@@ -148,10 +154,10 @@ export async function setPartner(visitId: string, partnerId: number): Promise<vo
   await VisitModel.updateOne({ _id: visitId }, { $set: { partnerId } })
 }
 
-export async function resolveVisitOnce(visitId: string, payout: bigint, outcome: string): Promise<boolean> {
+export async function resolveVisitOnce(visitId: string, payout: bigint, outcome: string, partnerPass?: number): Promise<boolean> {
   const updated = await VisitModel.findOneAndUpdate(
     { _id: visitId, resolved: false },
-    { $set: { resolved: true, payout, outcome } },
+    { $set: { resolved: true, payout, outcome, ...(partnerPass === undefined ? {} : { partnerPass }) } },
     { new: true },
   ).lean()
   return updated !== null

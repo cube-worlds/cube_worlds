@@ -239,7 +239,7 @@ test('/history lists resolved visits with string amounts', async (t) => {
   t.after(() => ctx.app.close())
   ctx.visits.push({ id: 'r1', userId: 1001, windowId: W - 1, place: 'ubud', move: null, stake: 100n, resolved: true, payout: 750n, outcome: 'Ubud · 2 visitors · your share 750' })
   const res = await post(ctx, '/history', { limit: 10 })
-  assert.deepEqual(res.json().visits[0], { id: 'r1', windowId: W - 1, place: 'ubud', move: null, stake: '100', partnerId: null, resolved: true, payout: '750', outcome: 'Ubud · 2 visitors · your share 750' })
+  assert.deepEqual(res.json().visits[0], { id: 'r1', windowId: W - 1, place: 'ubud', move: null, stake: '100', partnerId: null, partnerPass: null, resolved: true, payout: '750', outcome: 'Ubud · 2 visitors · your share 750' })
 })
 
 test('/history clamps limit to 1..50', async (t) => {

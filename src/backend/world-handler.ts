@@ -52,6 +52,7 @@ export interface VisitView {
   move: Move | null
   stake: string
   partnerId: number | null
+  partnerPass: number | null
   inviteCode?: string
   resolved: boolean
   payout: string | null
@@ -66,6 +67,7 @@ export function visitView(v: VisitRecord, own: boolean): VisitView {
     move: v.move,
     stake: v.stake.toString(),
     partnerId: v.partnerId ?? null,
+    partnerPass: v.partnerPass ?? null,
     ...(own && v.inviteCode ? { inviteCode: v.inviteCode } : {}),
     resolved: v.resolved,
     payout: v.payout === undefined ? null : v.payout.toString(),
