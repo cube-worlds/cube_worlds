@@ -19,7 +19,11 @@ const WindowModel = getModelForClass(Window)
 const STALE_RESOLVING_MS = 10 * 60 * 1000
 
 export async function claimWindow(windowId: number, nowMs: number): Promise<boolean> {
-  await WindowModel.updateOne({ windowId }, { $setOnInsert: { windowId, status: 'open' } }, { upsert: true })
+  try {
+    await WindowModel.updateOne({ windowId }, { $setOnInsert: { windowId, status: 'open' } }, { upsert: true })
+  } catch (error) {
+    if ((error as { code?: number }).code !== 11000) throw error
+  }
   const claimed = await WindowModel.findOneAndUpdate(
     {
       windowId,
