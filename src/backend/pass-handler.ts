@@ -16,11 +16,12 @@ export interface PassHandlerDependencies {
   listPasses: (ownerAddress: string) => Promise<Pass[]>
   setUserPass: (userId: number, pass: Pass, verifiedAt: Date) => Promise<void>
   logError: (message: string) => void
+  fetchTraits: (contentUri: string) => Promise<Record<string, number>>
 }
 
 // Subset of toncenter v3 GET /api/v3/nft/items we read.
 export interface NftItemsResponse {
-  nft_items: Array<{ address: string, index: string, owner_address?: string }>
+  nft_items: Array<{ address: string, index: string, owner_address?: string, content?: { uri?: string } }>
   metadata?: Record<string, { token_info?: Array<{ name?: string, image?: string }> }>
 }
 
@@ -42,6 +43,7 @@ export function parseNftItems(body: NftItemsResponse): Pass[] {
       address: Address.parse(item.address).toString({ bounceable: true }),
       name: info?.name ?? `Pass #${index}`,
       image: publicImageUrl(info?.image),
+      contentUri: item.content?.uri,
     }
   })
 }
@@ -136,8 +138,17 @@ export function buildPassHandler(dependencies: PassHandlerDependencies) {
           if (!found) {
             return reply.code(403).send({ error: 'This pass is not in your wallet', code: 'not_owned' })
           }
+          let traits: Record<string, number> | undefined
+          if (found.contentUri) {
+            try {
+              traits = await dependencies.fetchTraits(found.contentUri)
+            } catch (err) {
+              dependencies.logError(`Trait fetch failed for pass ${found.index}: ${(err as Error).message}`)
+            }
+          }
           const verifiedAt = new Date()
-          await dependencies.setUserPass(user.id, found, verifiedAt)
+          const stored: Pass = { index: found.index, address: found.address, name: found.name, image: found.image, ...(traits ? { traits } : {}) }
+          await dependencies.setUserPass(user.id, stored, verifiedAt)
           return loginPayload(
             {
               id: user.id,
@@ -147,7 +158,7 @@ export function buildPassHandler(dependencies: PassHandlerDependencies) {
               votes: user.votes,
               minted: user.minted,
               state: user.state,
-              pass: { ...found, verifiedAt },
+              pass: { ...stored, verifiedAt },
             },
             username,
           )

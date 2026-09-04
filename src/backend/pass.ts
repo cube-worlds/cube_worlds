@@ -3,6 +3,7 @@ import type { NftItemsResponse } from './pass-handler'
 import { Address } from '@ton/core'
 import { findUserById, setUserPass } from '#root/common/models/User'
 import { config } from '#root/config'
+import { parseTraits } from '#root/game/traits'
 import { logger } from '#root/logger'
 import { defaultParseInitData, defaultValidateInitData } from './init-data'
 import { buildPassHandler, MAX_PASSES, parseNftItems } from './pass-handler'
@@ -54,6 +55,19 @@ export async function verifyPassOwnership(passAddress: string, ownerAddress: str
   return Address.parse(item.owner_address).toString({ bounceable: true }) === ownerAddress
 }
 
+const PUBLIC_IPFS_GATEWAY = 'https://ipfs.io/ipfs/'
+
+// The item content JSON holds the 120 personality traits under `attributes`.
+export async function fetchTraitsFromContent(contentUri: string): Promise<Record<string, number>> {
+  const url = contentUri.startsWith('ipfs://')
+    ? `${PUBLIC_IPFS_GATEWAY}${contentUri.slice('ipfs://'.length)}`
+    : contentUri
+  const response = await fetch(url, { signal: AbortSignal.timeout(10_000) })
+  if (!response.ok) throw new Error(`content json ${response.status}`)
+  const json = (await response.json()) as { attributes?: unknown }
+  return parseTraits(json.attributes)
+}
+
 export function createPassHandler() {
   return buildPassHandler({
     validateInitData: defaultValidateInitData,
@@ -62,5 +76,6 @@ export function createPassHandler() {
     listPasses: listPassesFromToncenter,
     setUserPass,
     logError: (message) => logger.error(message),
+    fetchTraits: fetchTraitsFromContent,
   })
 }
