@@ -1,11 +1,21 @@
+import type { FastifyInstance } from 'fastify'
 import type { Pass } from './login-payload'
 import type { NftItemsResponse } from './pass-handler'
 import { Address } from '@ton/core'
+import { folderPath } from '#root/common/helpers/files'
 import { findUserById, setUserPass } from '#root/common/models/User'
 import { config } from '#root/config'
 import { parseTraits } from '#root/game/traits'
 import { logger } from '#root/logger'
 import { defaultParseInitData, defaultValidateInitData } from './init-data'
+import {
+  buildIpfsCache,
+  IPFS_CACHE_FOLDER,
+  isValidCidPath,
+  MAX_CACHE_BYTES,
+  MAX_IMAGE_BYTES,
+} from './ipfs-cache'
+import { passImageCidPath } from './login-payload'
 import { buildPassHandler, MAX_PASSES, parseNftItems } from './pass-handler'
 
 // Cube Worlds NFTs held by `ownerAddress` via toncenter v3 (already filtered
@@ -57,20 +67,38 @@ export async function verifyPassOwnership(passAddress: string, ownerAddress: str
   return Address.parse(item.owner_address).toString({ bounceable: true }) === ownerAddress
 }
 
-const PUBLIC_IPFS_GATEWAY = 'https://ipfs.io/ipfs/'
+// Gateways in fallback order — the first one that answers wins. Any single
+// one of them will 429 under real traffic, which is why nothing (browser or
+// server) may depend on one gateway alone.
+const IPFS_GATEWAYS = [
+  'https://gateway.pinata.cloud/ipfs/',
+  'https://ipfs.io/ipfs/',
+  'https://dweb.link/ipfs/',
+]
 
 // The item content JSON holds the 120 personality traits under `attributes`.
 export async function fetchTraitsFromContent(contentUri: string): Promise<Record<string, number>> {
   if (!contentUri.startsWith('ipfs://') && !contentUri.startsWith('https://')) {
     throw new Error('unsupported content uri scheme')
   }
-  const url = contentUri.startsWith('ipfs://')
-    ? `${PUBLIC_IPFS_GATEWAY}${contentUri.slice('ipfs://'.length)}`
-    : contentUri
-  const response = await fetch(url, { signal: AbortSignal.timeout(10_000) })
-  if (!response.ok) throw new Error(`content json ${response.status}`)
-  const json = (await response.json()) as { attributes?: unknown }
-  return parseTraits(json.attributes)
+  const urls = contentUri.startsWith('ipfs://')
+    ? IPFS_GATEWAYS.map((gateway) => `${gateway}${contentUri.slice('ipfs://'.length)}`)
+    : [contentUri]
+  const failures: string[] = []
+  for (const url of urls) {
+    try {
+      const response = await fetch(url, { signal: AbortSignal.timeout(10_000) })
+      if (!response.ok) {
+        failures.push(`${url} ${response.status}`)
+        continue
+      }
+      const json = (await response.json()) as { attributes?: unknown }
+      return parseTraits(json.attributes)
+    } catch (err) {
+      failures.push(`${url} ${(err as Error).message}`)
+    }
+  }
+  throw new Error(`content json unreachable: ${failures.join(', ')}`)
 }
 
 // Backfill for passes selected before Bali: item → content uri → traits.
@@ -81,14 +109,58 @@ export async function loadTraitsForPassAddress(passAddress: string): Promise<Rec
   return fetchTraitsFromContent(uri)
 }
 
+function createIpfsCache() {
+  return buildIpfsCache({
+    fetch,
+    gateways: IPFS_GATEWAYS,
+    // folderPath() creates ./data/ipfs and guards it against traversal.
+    cacheDir: folderPath(IPFS_CACHE_FOLDER),
+    maxImageBytes: MAX_IMAGE_BYTES,
+    maxCacheBytes: MAX_CACHE_BYTES,
+    timeoutMs: 15_000,
+    logError: (message) => logger.error(message),
+  })
+}
+
 export function createPassHandler() {
-  return buildPassHandler({
+  const cache = createIpfsCache()
+  // Every screen that lists passes renders their images right away, so pull
+  // them into the cache as the response goes out instead of making the first
+  // <img> wait on a cold gateway.
+  const listAndWarmPasses = async (ownerAddress: string): Promise<Pass[]> => {
+    const passes = await listPassesFromToncenter(ownerAddress)
+    cache.warm(passes.map((pass) => passImageCidPath(pass.image) ?? ''))
+    return passes
+  }
+
+  const passRoutes = buildPassHandler({
     validateInitData: defaultValidateInitData,
     parseInitData: defaultParseInitData,
     findUser: findUserById,
-    listPasses: listPassesFromToncenter,
+    listPasses: listAndWarmPasses,
     setUserPass,
     logError: (message) => logger.error(message),
     fetchTraits: fetchTraitsFromContent,
   })
+
+  return async function passPlugin(fastify: FastifyInstance) {
+    await fastify.register(passRoutes)
+
+    fastify.get<{ Params: { '*': string } }>('/image/*', async (request, reply) => {
+      const cidPath = request.params['*']
+      if (!isValidCidPath(cidPath)) {
+        return reply.code(400).send({ error: 'Invalid image path' })
+      }
+      try {
+        const { buffer, contentType } = await cache.get(cidPath)
+        return reply
+          .type(contentType)
+          .header('cache-control', 'public, max-age=31536000, immutable')
+          .send(buffer)
+      } catch (err) {
+        logger.error(`IPFS image fetch failed: ${(err as Error).message}`)
+        return reply.code(502).send({ error: 'Image unavailable' })
+      }
+    })
+  }
 }

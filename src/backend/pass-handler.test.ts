@@ -5,6 +5,7 @@ import type { PassHandlerDependencies } from '#root/backend/pass-handler'
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import fastify from 'fastify'
+import { passImageCidPath, passImageUrl } from '#root/backend/login-payload'
 import { buildPassHandler, MAX_PASSES, parseNftItems } from '#root/backend/pass-handler'
 
 const PASS_A: Pass = { index: 7, address: 'EQ_A', name: 'alice', image: 'https://ipfs.io/ipfs/imgA', contentUri: 'ipfs://QmA' }
@@ -176,8 +177,27 @@ test('parseNftItems maps toncenter v3 items, metadata and ipfs images', () => {
   assert.equal(passes.length, 2)
   assert.equal(passes[0].index, 12)
   assert.equal(passes[0].name, 'alice')
-  assert.equal(passes[0].image, 'https://ipfs.io/ipfs/QmImg')
+  assert.equal(passes[0].image, '/api/pass/image/QmImg')
   assert.match(passes[0].address, /^EQ/)
   assert.equal(passes[1].name, 'Pass #13')
   assert.equal(passes[1].image, '')
+})
+
+test('passImageUrl routes ipfs uris and legacy gateway urls through the proxy', () => {
+  assert.equal(passImageUrl('ipfs://QmImg'), '/api/pass/image/QmImg')
+  assert.equal(passImageUrl('ipfs://QmImg/pic.png'), '/api/pass/image/QmImg/pic.png')
+  // Rows written before the proxy existed.
+  assert.equal(passImageUrl('https://ipfs.io/ipfs/QmImg'), '/api/pass/image/QmImg')
+  // Idempotent: a proxy path stays a proxy path.
+  assert.equal(passImageUrl('/api/pass/image/QmImg'), '/api/pass/image/QmImg')
+  assert.equal(passImageUrl('https://cdn.example/pic.png'), 'https://cdn.example/pic.png')
+  assert.equal(passImageUrl(''), '')
+  assert.equal(passImageUrl(undefined), '')
+})
+
+test('passImageCidPath recovers the CID the proxy will fetch', () => {
+  assert.equal(passImageCidPath('/api/pass/image/QmImg/pic.png'), 'QmImg/pic.png')
+  assert.equal(passImageCidPath('https://cdn.example/pic.png'), null)
+  assert.equal(passImageCidPath(''), null)
+  assert.equal(passImageCidPath(undefined), null)
 })

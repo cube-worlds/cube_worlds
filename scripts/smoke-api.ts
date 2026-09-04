@@ -336,6 +336,14 @@ async function run() {
       expect(body.code === 'wallet_required', `code=${body.code}`)
     })
 
+    // Only the guard — the happy path would hit a public IPFS gateway.
+    await step('GET /api/pass/image rejects a traversal path', async () => {
+      const response = await fetch(`${BASE}/api/pass/image/..%2F..%2Fetc%2Fpasswd`)
+      expect(response.status === 400, `HTTP ${response.status}`)
+      const body = await response.json() as Record<string, unknown>
+      expect(body.error === 'Invalid image path', `error=${body.error}`)
+    })
+
     await step('POST /api/world/state without a pass returns 403 holder_required', async () => {
       const res = await fetch(`${BASE}/api/world/state`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ initData }) })
       expect(res.status === 403, `status=${res.status}`)
