@@ -16,6 +16,8 @@ export enum BalanceChangeType {
   Trade = 8, // legacy (was the on-chain jetton exchange, removed)
   Generation = 9, // CUBE sink: paid NFT-image generation try
   StarsTopup = 10, // CUBE faucet: purchased with Telegram Stars
+  Stake = 11, // CUBE sink: Bali visit stake/fee (negative) or refund (positive)
+  Payout = 12, // CUBE faucet: Bali window payout
 }
 
 export function getBalanceChangeTypeName(
