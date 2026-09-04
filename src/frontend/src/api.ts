@@ -207,3 +207,72 @@ export function scanPasses(): Promise<ScanResponse> {
 export function selectPass(index: number): Promise<LoginResponse> {
   return post('/api/pass/select', { index })
 }
+
+export interface PlaceView {
+  id: string
+  name: string
+  lat: number
+  lon: number
+  engine: 'rest' | 'minority' | 'split-steal' | 'commons' | 'soon'
+  open: boolean
+  traits: Array<{ name: string, value: number }>
+  weight: number
+  stake: string
+  pot: string
+  bonus: string
+  lastCrowd: number
+  pool?: string
+}
+
+export interface VisitView {
+  id: string
+  windowId: number
+  place: string
+  move: 'help' | 'steal' | 'give' | 'take' | null
+  stake: string
+  partnerId: number | null
+  inviteCode?: string
+  resolved: boolean
+  payout: string | null
+  outcome: string | null
+}
+
+export interface Rep { helped: number, stole: number, gave: number, took: number }
+
+export interface WorldState extends ApiError {
+  windowId: number
+  endsAt: number
+  places: PlaceView[]
+  myVisit: VisitView | null
+  rep: Rep
+  lastOutcome: VisitView | null
+  balance: string
+}
+
+export function worldState(): Promise<WorldState> {
+  return post('/api/world/state')
+}
+
+export function worldVisit(place: string, move?: string, inviteCode?: string): Promise<VisitView & ApiError> {
+  return post('/api/world/visit', { place, ...(move ? { move } : {}), ...(inviteCode ? { inviteCode } : {}) })
+}
+
+export function worldHistory(limit = 20): Promise<{ visits: VisitView[] } & ApiError> {
+  return post('/api/world/history', { limit })
+}
+
+export interface PassPublic extends ApiError {
+  index: number
+  name: string
+  image: string
+  rep: Rep
+  weights: Array<{ place: string, weight: number }>
+  top: Array<{ name: string, value: number }>
+}
+
+export async function worldPass(index: number): Promise<PassPublic> {
+  const response = await fetch(`/api/world/pass/${index}`)
+  const json = await response.json().catch(() => null)
+  if (json === null) throw new Error(`HTTP ${response.status}`)
+  return json as PassPublic
+}

@@ -12,6 +12,7 @@ import {
   parametersFeature,
   queueFeature,
   removedCommandsFeature,
+  resolveFeature,
   startFeature,
   statsFeature,
   topupFeature,
@@ -73,6 +74,7 @@ export function createBot(token: string, options: Options) {
   protectedBot.use(lineFeature)
   protectedBot.use(transactionFeature)
   protectedBot.use(userFeature)
+  protectedBot.use(resolveFeature)
   protectedBot.use(topupFeature)
 
   // catches deleted commands; must be after all kept features

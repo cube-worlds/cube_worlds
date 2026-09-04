@@ -3,7 +3,13 @@
  * Live API smoke test — boots the REAL app (STAGING mode) against a throwaway
  * MongoDB and drives the v3 flow over HTTP: login (name sync), avatar upload
  * (multipart + jimp normalize), daily claim, paid generation (debit → the fake
- * Stability key fails → refund), submit guards, top-up invoice, public config.
+ * Stability key fails → refund), submit guards, top-up invoice, public config,
+ * and the Bali holder gate (`/api/world/*` refuses a non-holder with 403
+ * `holder_required` before any debit; the public pass route works for anyone).
+ *
+ * The smoke user never holds a pass (no chain, no bound wallet), so the
+ * `Stake` → `Payout` ledger path can't be exercised here — that's covered by
+ * `resolver.test.ts` and `world-handler.test.ts` instead.
  *
  * All secrets are overridden with fakes, so no external paid API can ever be
  * hit and no real bot/webhook is touched (STAGING=true skips Telegram).
@@ -328,6 +334,25 @@ async function run() {
       expect(response.status === 400, `HTTP ${response.status}`)
       const body = await response.json() as Record<string, unknown>
       expect(body.code === 'wallet_required', `code=${body.code}`)
+    })
+
+    await step('POST /api/world/state without a pass returns 403 holder_required', async () => {
+      const res = await fetch(`${BASE}/api/world/state`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ initData }) })
+      expect(res.status === 403, `status=${res.status}`)
+      const body = await res.json() as { code?: string }
+      expect(body.code === 'holder_required', `code=${body.code}`)
+    })
+
+    await step('POST /api/world/visit without a pass is refused before any debit', async () => {
+      const res = await fetch(`${BASE}/api/world/visit`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ initData, place: 'ubud' }) })
+      expect(res.status === 403, `status=${res.status}`)
+      const login = await post<Record<string, unknown>>('/api/auth/login', { initData })
+      expect(BigInt(login.balance as string) === balanceAfterClaim, 'balance moved without a pass')
+    })
+
+    await step('GET /api/world/pass/:index is public and 404 for an unplayed pass', async () => {
+      const res = await fetch(`${BASE}/api/world/pass/999999`)
+      expect(res.status === 404, `status=${res.status}`)
     })
 
     await step('unknown API route returns the 404 envelope', async () => {

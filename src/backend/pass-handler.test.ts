@@ -7,7 +7,7 @@ import test from 'node:test'
 import fastify from 'fastify'
 import { buildPassHandler, MAX_PASSES, parseNftItems } from '#root/backend/pass-handler'
 
-const PASS_A: Pass = { index: 7, address: 'EQ_A', name: 'alice', image: 'https://ipfs.io/ipfs/imgA' }
+const PASS_A: Pass = { index: 7, address: 'EQ_A', name: 'alice', image: 'https://ipfs.io/ipfs/imgA', contentUri: 'ipfs://QmA' }
 const PASS_B: Pass = { index: 9, address: 'EQ_B', name: 'bob', image: '' }
 
 interface Ctx {
@@ -48,6 +48,7 @@ async function createCtx(
     logError: (message) => {
       errors.push(message)
     },
+    fetchTraits: async () => ({}),
     ...overrides,
   }
   const app = fastify()
@@ -69,7 +70,11 @@ test('POST /api/pass/scan lists passes for the bound wallet', async (t) => {
   t.after(() => ctx.app.close())
   const res = await ctx.app.inject({ method: 'POST', url: '/api/pass/scan', payload: { initData: 'x' } })
   assert.equal(res.statusCode, 200)
-  assert.deepEqual(res.json().passes, [PASS_A, PASS_B])
+  assert.deepEqual(res.json().passes, [
+    { index: PASS_A.index, address: PASS_A.address, name: PASS_A.name, image: PASS_A.image },
+    { index: PASS_B.index, address: PASS_B.address, name: PASS_B.name, image: PASS_B.image },
+  ])
+  assert.equal(res.json().passes[0].contentUri, undefined)
   assert.deepEqual(ctx.listCalls, ['EQ_WALLET'])
 })
 
@@ -122,6 +127,39 @@ test('POST /api/pass/select rejects a non-integer index with the error envelope'
   const res = await ctx.app.inject({ method: 'POST', url: '/api/pass/select', payload: { initData: 'x', index: 'nine' } })
   assert.equal(res.statusCode, 400)
   assert.equal(res.json().error, 'Invalid request body')
+})
+
+test('parseNftItems keeps the content uri for trait fetching', () => {
+  const passes = parseNftItems({
+    nft_items: [{ address: `0:${'a'.repeat(64)}`, index: '3', content: { uri: 'ipfs://QmX' } }],
+  })
+  assert.equal(passes[0].contentUri, 'ipfs://QmX')
+})
+
+test('POST /api/pass/select fetches traits and stores them on the pass', async (t) => {
+  const traitCalls: string[] = []
+  const ctx = await createCtx({
+    listPasses: async () => [{ ...PASS_A, contentUri: 'ipfs://QmA' }],
+    fetchTraits: async (uri) => {
+      traitCalls.push(uri)
+      return { Courage: 9 }
+    },
+  })
+  t.after(() => ctx.app.close())
+  const res = await ctx.app.inject({ method: 'POST', url: '/api/pass/select', payload: { initData: 'x', index: 7 } })
+  assert.equal(res.statusCode, 200)
+  assert.deepEqual(traitCalls, ['ipfs://QmA'])
+  assert.deepEqual(ctx.setCalls[0].pass.traits, { Courage: 9 })
+  assert.equal(res.json().pass.traits, undefined)
+})
+
+test('POST /api/pass/select still succeeds when the trait fetch fails', async (t) => {
+  const ctx = await createCtx({ fetchTraits: async () => { throw new Error('ipfs down') } })
+  t.after(() => ctx.app.close())
+  const res = await ctx.app.inject({ method: 'POST', url: '/api/pass/select', payload: { initData: 'x', index: 7 } })
+  assert.equal(res.statusCode, 200)
+  assert.equal(ctx.setCalls[0].pass.traits, undefined)
+  assert.match(ctx.errors[0], /ipfs down/)
 })
 
 test('parseNftItems maps toncenter v3 items, metadata and ipfs images', () => {

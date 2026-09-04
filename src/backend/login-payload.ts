@@ -6,6 +6,9 @@ export interface Pass {
   address: string
   name: string
   image: string
+  // Internal: item content JSON (ipfs://…) used to fetch traits. Never sent to clients.
+  contentUri?: string
+  traits?: Record<string, number>
 }
 
 export interface PassSnapshot extends Pass {

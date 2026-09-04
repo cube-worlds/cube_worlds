@@ -11,6 +11,9 @@ $CUBE is **DB-only** (`User.votes` + append-only `Balance` ledger are canonical;
 4. **Admin verdict** — `mint-action.ts` callback (`MintAction.Approve|Decline`) → pure `queue-approval-handler.ts`: Approve = CAS `claimUserForMint` (double-approve mints exactly once) → IPFS pin → `NftItem.deployNFT` → mint-before-flip → `markUserMinted`; Decline = `setUserRework` + user notification (paid tries stay spent; user regenerates and resubmits).
 5. **Gate (v4)** — entry to the game requires **holding a Cube Worlds NFT in the bound wallet**. `POST /api/pass/scan` lists the wallet's collection items via toncenter v3 (`pass.ts` composer, pure `pass-handler.ts`, cap 20); `POST /api/pass/select { index }` re-checks ownership (403 `not_owned`) and stores `User.pass` (`{ index, address, name, image, verifiedAt }`). Login returns `holder`/`pass`/`username` and revalidates ownership when `verifiedAt` is older than 1 h (gone → `$unset pass`; provider error → keep, log). Rebinding to a different wallet clears `pass`. `/api/mint/status` still drives the forge; minted users press ENTER WORLD I → scan.
 
+## Bali (the game, slice 1)
+Every place is one game-theory engine reading the pass's 120 on-chain traits (`User.pass.traits`, fetched from the item content JSON at `/api/pass/select`, backfilled by `/api/world/state`). One `Visit` per holder per 8-hour window (`windowId = floor(now / 8h)`, UTC). Stake is debited on commit via `debitVotes` (`BalanceChangeType.Stake`), payout credited once at resolution (`Payout`; refunds are positive `Stake` rows). Places and numbers: `src/game/places.ts` (14 places, 8 open). Engines are pure: `src/game/engines/{minority,split-steal,commons}.ts`. Resolver: `src/game/resolver.ts` (pure, DI) + `resolver-start.ts` (60 s tick, not in STAGING mode) — claims a `Window` lock, CAS-resolves each visit before paying (at-most-once), bumps `User.rep`, notifies via bot (non-fatal). API: `/api/world/state|visit|history` (holder-gated, 403 `holder_required`) and public `GET /api/world/pass/:index`. Deep links: `startapp=bali_<place>` and `startapp=meet_<inviteCode>` (Canggu pair invite). Admin `/resolve` forces the current window on staging/dev only.
+
 ## $CUBE sources
 - **Daily claim** (cooldown + streak ×multiplier) — `/api/users/claim`, `/claim/status`.
 - **Referrals** — `/start` param → `referId` on `/api/auth/login` stores `referalId`; the referrer is credited `REFERRAL_MINT_REWARD_VOTES` (default 200) **when the invitee's pass is minted** — human-gated ⇒ unfarmable. Wired inside the approve path (`rewardReferrer` dep, non-fatal, at-most-once via the mint CAS).
@@ -38,7 +41,7 @@ npm run smoke:api                                # boots the REAL app (STAGING, 
 - No Buffer polyfill needed anymore — the frontend no longer imports `@ton/core` (the old `polyfills.ts` died with the Vue app).
 
 ## Critical Gotchas
-- **Tests use Node.js built-in test runner** (`node --test`), not Jest/Vitest. 512 tests / 62 files; run `npm run test:coverage` for the report.
+- **Tests use Node.js built-in test runner** (`node --test`), not Jest/Vitest. 568 tests / 66 files; run `npm run test:coverage` for the report.
 - **`NODE_ENV=test` and config**: `src/config.ts` is a Proxy that throws on any property read in test mode. Tests must not transitively import `#root/config`. Handlers needing config/bot/chain deps are split `foo-handler.ts` (pure, testable) + `foo.ts` (composer). Composers taking the bot: `createMintHandler(bot.api)`, `createAvatarHandler(bot)`, `createTopupInvoiceHandler(bot.api)` — wired in `server.ts`.
 - **`folderPath()`/`userFilePath()`** from `src/common/helpers/files.ts` for all user-derived file paths — sanitizes and guards against traversal out of `./data/`.
 - **Claim locking**: in-process promise chain (`claimLocks` Map) — single-process only.
@@ -73,7 +76,7 @@ All authenticated endpoints validate Telegram's `initData` (HMAC + 24h expiry) �
 ## Bot
 Middleware order: `autoRetry → updateLogger (dev) → autoChatAction → hydrate → session → slapReaction → i18n → attachUser → queueMenu → [features]`.
 
-Features (`src/bot/index.ts`): start, help, queue (admin: `/queue` browser + Approve/Decline callbacks), parameters (admin), collection (admin), stats, whales, line, transaction (admin), user (admin), **topup** (Stars `pre_checkout_query` + `successful_payment`), then `removedCommandsFeature` (points `/dice`, `/mint`, `/play`… to the Mini App) and `unhandledFeature` last.
+Features (`src/bot/index.ts`): start, help, queue (admin: `/queue` browser + Approve/Decline callbacks), parameters (admin), collection (admin), stats, whales, line, transaction (admin), user (admin), resolve (admin: `/resolve` forces the current Bali window on staging/dev), **topup** (Stars `pre_checkout_query` + `successful_payment`), then `removedCommandsFeature` (points `/dice`, `/mint`, `/play`… to the Mini App) and `unhandledFeature` last.
 
 ## Security
 - Leaderboard pagination: limit 1–100, skip ≥ 0.
@@ -81,6 +84,7 @@ Features (`src/bot/index.ts`): start, help, queue (admin: `/queue` browser + App
 - Upload boundary: mime allowlist (JPEG/PNG) + 8 MB multipart limit + jimp re-encode to PNG (strips whatever the client claimed the file was).
 - Rate limits per route in `server.ts` (`/api/mint/generate` 6/min — it's a paid Stability call).
 - Rate limits: `/api/pass/scan` and `/api/pass/select` 10/min (toncenter call).
+- Rate limits: `/api/world/*` — `state` 60/min, `visit` 10/min, `history` 30/min, `pass/:index` (public) 60/min.
 
 ## Deploy notes
 - Production still runs **v1**; this tree replaces it wholesale on cutover. Before deploy: `CHECK_MONGO_URI=<prod> npx tsx scripts/check-prod-users.ts` — read-only; blocks on duplicate wallets/ids (v3 unique indexes), non-BigInt-castable votes, unknown states; warns on stuck mint claims, missing names, old-host `data/` paths.

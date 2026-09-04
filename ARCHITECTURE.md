@@ -67,6 +67,26 @@
 5. **Gate** — `POST /api/mint/status` drives the whole webview state machine (images
    returned as base64 data URLs); minted users see the Pass view ("World I coming soon").
 
+### Bali windows
+Every place is one game-theory engine reading the pass's 120 on-chain traits
+(`User.pass.traits`, fetched from the item content JSON at `/api/pass/select`,
+backfilled by `/api/world/state`). One `Visit` per holder per 8-hour window
+(`windowId = floor(now / 8h)`, UTC). Stake is debited on commit via `debitVotes`
+(`BalanceChangeType.Stake`), payout credited once at resolution (`Payout`; refunds
+are positive `Stake` rows). Places and numbers: `src/game/places.ts` (14 places, 8
+open). Engines are pure: `src/game/engines/{minority,split-steal,commons}.ts`.
+Resolver: `src/game/resolver.ts` (pure, DI) + `resolver-start.ts` (60 s tick, not in
+STAGING mode) — claims a `Window` lock, CAS-resolves each visit before paying
+(at-most-once), bumps `User.rep`, notifies via bot (non-fatal). API:
+`/api/world/state|visit|history` (holder-gated, 403 `holder_required`) and public
+`GET /api/world/pass/:index`. Deep links: `startapp=bali_<place>` and
+`startapp=meet_<inviteCode>` (Canggu pair invite). Admin `/resolve` forces the
+current window on staging/dev only.
+
+Sequence: visit → debit → `Visit` row → tick → `claimWindow` → engines →
+`resolveVisitOnce` → `addPoints` → `bumpRep` → `setPool` → notify →
+`markWindowResolved`.
+
 ### $CUBE faucets
 - **Daily claim** — `POST /api/users/claim`: initData validation → per-user in-process
   lock → streak multiplier → `addPoints`.

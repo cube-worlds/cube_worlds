@@ -22,6 +22,7 @@ import publicMetricsHandler from './backend/public-metrics'
 import setWalletHandler from './backend/set-wallet-handler'
 import { createTopupInvoiceHandler } from './backend/topup-invoice'
 import walletNonceHandler from './backend/wallet-nonce-handler'
+import { createWorldHandler } from './backend/world'
 import { config } from './config'
 
 const ROUTE_RATE_LIMITS: Record<string, { max: number, timeWindow: string }> = {
@@ -44,6 +45,10 @@ const ROUTE_RATE_LIMITS: Record<string, { max: number, timeWindow: string }> = {
   // Pass scan hits toncenter; keep it tight.
   '/api/pass/scan': { max: 10, timeWindow: '1 minute' },
   '/api/pass/select': { max: 10, timeWindow: '1 minute' },
+  '/api/world/state': { max: 60, timeWindow: '1 minute' },
+  '/api/world/visit': { max: 10, timeWindow: '1 minute' },
+  '/api/world/history': { max: 30, timeWindow: '1 minute' },
+  '/api/world/pass/:index': { max: 60, timeWindow: '1 minute' },
 }
 
 export async function createServer(bot: Bot) {
@@ -116,6 +121,7 @@ export async function createServer(bot: Bot) {
   await server.register(setWalletHandler, { prefix: '/api/auth' })
   await server.register(walletNonceHandler, { prefix: '/api/auth' })
   await server.register(createPassHandler(), { prefix: '/api/pass' })
+  await server.register(createWorldHandler(), { prefix: '/api/world' })
 
   await server.register(nftHandler, { prefix: '/api/nft' })
 

@@ -3,6 +3,7 @@ import type { NftItemsResponse } from './pass-handler'
 import { Address } from '@ton/core'
 import { findUserById, setUserPass } from '#root/common/models/User'
 import { config } from '#root/config'
+import { parseTraits } from '#root/game/traits'
 import { logger } from '#root/logger'
 import { defaultParseInitData, defaultValidateInitData } from './init-data'
 import { buildPassHandler, MAX_PASSES, parseNftItems } from './pass-handler'
@@ -32,10 +33,10 @@ export async function listPassesFromToncenter(ownerAddress: string): Promise<Pas
   return parseNftItems((await response.json()) as NftItemsResponse)
 }
 
-// Single-item ownership check for revalidation — unlike listPassesFromToncenter
-// (capped at MAX_PASSES for the scan picker), this must work for wallets
-// holding more than MAX_PASSES Cube Worlds NFTs.
-export async function verifyPassOwnership(passAddress: string, ownerAddress: string): Promise<boolean> {
+// Single-item lookup by address — unlike listPassesFromToncenter (capped at
+// MAX_PASSES for the scan picker), this must work for wallets holding more
+// than MAX_PASSES Cube Worlds NFTs.
+async function fetchNftItem(passAddress: string): Promise<NftItemsResponse['nft_items'][0] | undefined> {
   const TONCENTER = config.TESTNET
     ? 'https://testnet.toncenter.com'
     : 'https://toncenter.com'
@@ -45,13 +46,39 @@ export async function verifyPassOwnership(passAddress: string, ownerAddress: str
     headers: { 'X-Api-Key': config.TONCENTER_API_KEY },
     signal: AbortSignal.timeout(10_000),
   })
-  if (!response.ok) {
-    throw new Error(`toncenter nft/items ${response.status}`)
-  }
+  if (!response.ok) throw new Error(`toncenter nft/items ${response.status}`)
   const body = (await response.json()) as NftItemsResponse
-  const item = body.nft_items[0]
+  return body.nft_items[0]
+}
+
+export async function verifyPassOwnership(passAddress: string, ownerAddress: string): Promise<boolean> {
+  const item = await fetchNftItem(passAddress)
   if (!item?.owner_address) return false
   return Address.parse(item.owner_address).toString({ bounceable: true }) === ownerAddress
+}
+
+const PUBLIC_IPFS_GATEWAY = 'https://ipfs.io/ipfs/'
+
+// The item content JSON holds the 120 personality traits under `attributes`.
+export async function fetchTraitsFromContent(contentUri: string): Promise<Record<string, number>> {
+  if (!contentUri.startsWith('ipfs://') && !contentUri.startsWith('https://')) {
+    throw new Error('unsupported content uri scheme')
+  }
+  const url = contentUri.startsWith('ipfs://')
+    ? `${PUBLIC_IPFS_GATEWAY}${contentUri.slice('ipfs://'.length)}`
+    : contentUri
+  const response = await fetch(url, { signal: AbortSignal.timeout(10_000) })
+  if (!response.ok) throw new Error(`content json ${response.status}`)
+  const json = (await response.json()) as { attributes?: unknown }
+  return parseTraits(json.attributes)
+}
+
+// Backfill for passes selected before Bali: item → content uri → traits.
+export async function loadTraitsForPassAddress(passAddress: string): Promise<Record<string, number>> {
+  const item = await fetchNftItem(passAddress)
+  const uri = item?.content?.uri
+  if (!uri) throw new Error('pass has no content uri')
+  return fetchTraitsFromContent(uri)
 }
 
 export function createPassHandler() {
@@ -62,5 +89,6 @@ export function createPassHandler() {
     listPasses: listPassesFromToncenter,
     setUserPass,
     logError: (message) => logger.error(message),
+    fetchTraits: fetchTraitsFromContent,
   })
 }
