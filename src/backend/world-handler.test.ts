@@ -205,22 +205,34 @@ test('/visit at Canggu with an invite binds both partners', async (t) => {
   assert.equal(ctx.visits[0].partnerId, 1001)
 })
 
-test('/visit with a dead invite is 410 and nothing is debited', async (t) => {
+test('/visit with a dead invite is 410 and the stake is refunded', async (t) => {
   const ctx = await createCtx()
   t.after(() => ctx.app.close())
   const res = await post(ctx, '/visit', { place: 'canggu', move: 'help', inviteCode: 'NOPE' })
   assert.equal(res.statusCode, 410)
   assert.equal(res.json().code, 'invite_expired')
-  assert.deepEqual(ctx.debits, [])
+  assert.deepEqual(ctx.debits, [[1001, 200n, BalanceChangeType.Stake]])
+  assert.deepEqual(ctx.credits, [[1001, 200n, BalanceChangeType.Stake]])
 })
 
-test('/visit with a taken invite is 409 invite_taken', async (t) => {
+test('/visit with a taken invite is 409 invite_taken and the stake is refunded', async (t) => {
   const ctx = await createCtx()
   t.after(() => ctx.app.close())
   ctx.visits.push({ id: 'host', userId: 2002, windowId: W, place: 'canggu', move: 'help', stake: 200n, inviteCode: 'HOST1', partnerId: 3003, resolved: false })
   const res = await post(ctx, '/visit', { place: 'canggu', move: 'help', inviteCode: 'HOST1' })
   assert.equal(res.statusCode, 409)
   assert.equal(res.json().code, 'invite_taken')
+  assert.deepEqual(ctx.credits, [[1001, 200n, BalanceChangeType.Stake]])
+})
+
+test('/visit with an invite but insufficient balance is 402 and never binds the invite', async (t) => {
+  const ctx = await createCtx({}, { votes: 50n })
+  t.after(() => ctx.app.close())
+  ctx.visits.push({ id: 'host', userId: 2002, windowId: W, place: 'canggu', move: 'help', stake: 200n, inviteCode: 'HOST1', resolved: false })
+  const res = await post(ctx, '/visit', { place: 'canggu', move: 'help', inviteCode: 'HOST1' })
+  assert.equal(res.statusCode, 402)
+  assert.equal(res.json().code, 'no_cube')
+  assert.equal(ctx.visits[0].partnerId, undefined)
 })
 
 test('/history lists resolved visits with string amounts', async (t) => {

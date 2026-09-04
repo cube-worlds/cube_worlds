@@ -197,21 +197,30 @@ export function buildWorldHandler(deps: WorldHandlerDependencies) {
             return reply.code(409).send({ error: 'You already went somewhere this window', code: 'already_visited' })
           }
 
-          let hostId: number | undefined
-          if (inviteCode) {
-            if (place.engine !== 'split-steal') {
-              return reply.code(400).send({ error: 'Invites only work at Canggu', code: 'bad_place' })
-            }
-            const bound = await deps.bindInvite(windowId, place.id, inviteCode, user.id)
-            if (bound === 'expired') return reply.code(410).send({ error: 'That meet link has expired', code: 'invite_expired' })
-            if (bound === 'taken') return reply.code(409).send({ error: 'Someone already took that meet', code: 'invite_taken' })
-            hostId = bound.hostId
+          if (inviteCode && place.engine !== 'split-steal') {
+            return reply.code(400).send({ error: 'Invites only work at Canggu', code: 'bad_place' })
           }
 
           const left = await deps.debitVotes(user.id, place.stake, BalanceChangeType.Stake)
           if (left === null) {
             return reply.code(402).send({ error: `You need ${place.stake} $CUBE for ${place.name}`, code: 'no_cube', stake: place.stake.toString() })
           }
+
+          let hostId: number | undefined
+          if (inviteCode) {
+            // Bind after the debit so a joiner who can't pay never strands the host's invite.
+            const bound = await deps.bindInvite(windowId, place.id, inviteCode, user.id)
+            if (bound === 'expired') {
+              await deps.addPoints(user.id, place.stake, BalanceChangeType.Stake)
+              return reply.code(410).send({ error: 'That meet link has expired', code: 'invite_expired' })
+            }
+            if (bound === 'taken') {
+              await deps.addPoints(user.id, place.stake, BalanceChangeType.Stake)
+              return reply.code(409).send({ error: 'Someone already took that meet', code: 'invite_taken' })
+            }
+            hostId = bound.hostId
+          }
+
           const created = await deps.createVisit({
             userId: user.id,
             windowId,
