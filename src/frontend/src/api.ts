@@ -231,6 +231,7 @@ export interface VisitView {
   move: 'help' | 'steal' | 'give' | 'take' | null
   stake: string
   partnerId: number | null
+  partnerPass: number | null
   inviteCode?: string
   resolved: boolean
   payout: string | null

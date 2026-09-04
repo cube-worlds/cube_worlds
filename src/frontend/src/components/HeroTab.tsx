@@ -1,6 +1,5 @@
-import type { Pass, PassPublic } from '../api'
-import { useEffect, useState } from 'react'
-import { worldPass } from '../api'
+import type { Pass } from '../api'
+import { PassPublicBlock, usePublicPass } from './PassPeek'
 import { PassImage } from './PassScan'
 import { shortAddress } from './WalletScreen'
 
@@ -13,10 +12,7 @@ interface HeroTabProps {
 
 // Pass detail, on-chain links, Bali reputation and top traits.
 export function HeroTab({ pass, wallet, collectionAddress, onSwitchPass }: HeroTabProps) {
-  const [pub, setPub] = useState<PassPublic | null>(null)
-  useEffect(() => {
-    void worldPass(pass.index).then(p => { if (!p.error) setPub(p) }).catch(() => {})
-  }, [pass.index])
+  const pub = usePublicPass(pass.index)
 
   const getgems = collectionAddress
     ? `https://getgems.io/collection/${collectionAddress}/${pass.address}`
@@ -45,16 +41,7 @@ export function HeroTab({ pass, wallet, collectionAddress, onSwitchPass }: HeroT
         </div>
       </div>
 
-      {pub && (
-        <div style={{ background: 'var(--cw-bg-deep)', border: '2px solid var(--cw-border-dark)', padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <div className="px-label" style={{ fontSize: 7 }}>REPUTATION</div>
-          <div className="px-body" style={{ fontSize: 16 }}>{`helped ${pub.rep.helped} · stole ${pub.rep.stole} · gave ${pub.rep.gave} · took ${pub.rep.took}`}</div>
-          <div className="px-label" style={{ fontSize: 7 }}>TOP TRAITS</div>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            {pub.top.map(t => <span key={t.name} className="px-label" style={{ fontSize: 7, border: '1px solid var(--cw-border)', padding: '4px 6px' }}>{`${t.name.toUpperCase()} ${t.value}`}</span>)}
-          </div>
-        </div>
-      )}
+      {pub && <PassPublicBlock pub={pub} />}
 
       <button type="button" className="px-btn-ghost" onClick={onSwitchPass}>SWITCH PASS</button>
     </div>

@@ -28,9 +28,9 @@ export function createResolver(api: Api) {
     bumpRep,
     getPool,
     setPool,
-    traitsOf: async (ids) => {
+    holdersOf: async (ids) => {
       const users = await findUsersByIds(ids)
-      return new Map(users.map(u => [u.id, u.pass?.traits]))
+      return new Map(users.map(u => [u.id, { traits: u.pass?.traits, pass: u.pass ? { index: u.pass.index, name: u.pass.name } : undefined }]))
     },
     notify: async (userId, text, place) => {
       await api.sendMessage(userId, `🌴 ${text}`, {
