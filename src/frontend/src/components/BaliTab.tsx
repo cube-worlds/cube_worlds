@@ -49,7 +49,10 @@ export function BaliTab({ botName, startPlace, inviteCode, onBalance }: BaliTabP
     if (!inviteCode) return
     const match = /^(\d+)-/.exec(inviteCode)
     if (!match) return
-    void worldPass(Number(match[1])).then(p => setInvite(i => (i ? { ...i, host: { name: p.name, index: p.index } } : i))).catch(() => {})
+    void worldPass(Number(match[1])).then((p) => {
+      if (p.error) return
+      setInvite(i => (i ? { ...i, host: { name: p.name, index: p.index } } : i))
+    }).catch(() => {})
   }, [inviteCode])
 
   const visit = async (move?: string) => {

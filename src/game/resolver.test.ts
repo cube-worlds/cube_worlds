@@ -35,7 +35,7 @@ function harness(visits: VisitRecord[], overrides: Partial<ResolverDependencies>
     addPoints: async (u, a, r) => { h.paid.push([u, a, r]) },
     bumpRep: async (u, d) => { h.reps.push([u, d]) },
     getPool: async (place, seed) => h.pools[place] ?? seed,
-    setPool: async (place, pool) => { h.pools[place] = pool },
+    setPool: async (place, pool) => { h.pools[place] = pool; return true },
     traitsOf: async ids => new Map(ids.map(id => [id, { Deceptiveness: id === 1 ? 10 : 1 }])),
     notify: async (u, text, place) => { h.notified.push([u, text, place]) },
     rng: () => 0,
@@ -114,4 +114,10 @@ test('visits at a closed or rest place are refunded', async () => {
   const h = harness([visit(1, 'kuta'), visit(2, 'sanur')])
   await buildResolver(h.deps).resolveWindow(W)
   assert.deepEqual(h.paid.map(p => [p[0], p[1], p[2]]), [[1, 100n, BalanceChangeType.Stake], [2, 100n, BalanceChangeType.Stake]])
+})
+
+test('a visit the engine returned no outcome for is refunded, not stranded', async () => {
+  const h = harness([visit(1, 'besakih', null)])
+  await buildResolver(h.deps).resolveWindow(W)
+  assert.deepEqual(h.paid.map(p => [p[0], p[1], p[2]]), [[1, 100n, BalanceChangeType.Stake]])
 })

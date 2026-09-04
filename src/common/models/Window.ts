@@ -41,3 +41,7 @@ export async function claimWindow(windowId: number, nowMs: number): Promise<bool
 export async function markWindowResolved(windowId: number): Promise<void> {
   await WindowModel.updateOne({ windowId }, { $set: { status: 'resolved' } })
 }
+
+export async function markWindowOpen(windowId: number): Promise<void> {
+  await WindowModel.updateOne({ windowId }, { $set: { status: 'open' } })
+}

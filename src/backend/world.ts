@@ -19,7 +19,7 @@ import {
 import { PLACES } from '#root/game/places'
 import { logger } from '#root/logger'
 import { defaultParseInitData, defaultValidateInitData } from './init-data'
-import { fetchTraitsFromContent, loadTraitsForPassAddress } from './pass'
+import { loadTraitsForPassAddress } from './pass'
 import { buildWorldHandler } from './world-handler'
 
 export function createWorldHandler() {
@@ -40,7 +40,6 @@ export function createWorldHandler() {
     createVisit,
     bindInvite,
     setPartner,
-    fetchTraits: fetchTraitsFromContent,
     loadTraitsForPass: loadTraitsForPassAddress,
     setPassTraits,
     randomCode: () => randomBytes(6).toString('base64url'),

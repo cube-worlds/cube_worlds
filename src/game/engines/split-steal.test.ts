@@ -64,6 +64,7 @@ test('odd one out is refunded', () => {
   const refunded = Object.values(out).find(o => o.outcome === 'Canggu · nobody came · refunded 200')
   assert.ok(refunded)
   assert.equal(refunded.payout, 200n)
+  assert.equal(refunded.refund, true)
   assert.equal(refunded.rep, undefined)
 })
 

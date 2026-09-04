@@ -41,7 +41,9 @@ export function Hub({ pass, username, onBalance, onBali, onHero, onEarn }: HubPr
         <div className="px-card" style={{ borderColor: 'var(--cw-gold)', padding: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
           <div className="px-label" style={{ fontSize: 7 }}>LAST WINDOW</div>
           <div className="px-body" style={{ fontSize: 16 }}>{outcome.outcome}</div>
-          <div className="px-label" style={{ fontSize: 7, color: Number(outcome.payout) > 0 ? 'var(--cw-green)' : 'var(--cw-text-dim)' }}>{`+${outcome.payout ?? 0} $CUBE`}</div>
+          {Number(outcome.payout) > 0 && (
+            <div className="px-label" style={{ fontSize: 7, color: 'var(--cw-green)' }}>{`+${outcome.payout} $CUBE`}</div>
+          )}
           <button type="button" className="px-btn-ghost" onClick={() => { sessionStorage.setItem('cw.lastOutcomeSeen', outcome.id); setOutcome(null) }}>OK</button>
         </div>
       )}

@@ -63,7 +63,7 @@ export function resolveSplitSteal(
     }
   }
   for (const v of alone) {
-    outcomes.push({ userId: v.userId, payout: stake, outcome: `${placeName} · nobody came · refunded ${stake}` })
+    outcomes.push({ userId: v.userId, payout: stake, outcome: `${placeName} · nobody came · refunded ${stake}`, refund: true })
   }
   return { outcomes }
 }

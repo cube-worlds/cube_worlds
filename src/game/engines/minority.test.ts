@@ -14,9 +14,15 @@ test('splits the pot by weight', () => {
   assert.equal(outcomes[0].outcome, 'Ubud · 2 visitors · your share 500')
 })
 
-test('integer division burns the remainder', () => {
+test('uneven weight ratios split proportionally', () => {
   const { outcomes } = resolveMinority('Ubud', [visit(3), visit(4)], 1500n, weightOf)
   assert.deepEqual(outcomes.map(o => o.payout), [700n, 800n])
+})
+
+test('integer division burns the remainder', () => {
+  const w: Record<number, number> = { 1: 1, 2: 1, 3: 1 }
+  const { outcomes } = resolveMinority('Ubud', [visit(1), visit(2), visit(3)], 100n, id => w[id])
+  assert.deepEqual(outcomes.map(o => o.payout), [33n, 33n, 33n])
 })
 
 test('equal weights split equally', () => {

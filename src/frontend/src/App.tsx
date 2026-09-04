@@ -16,7 +16,8 @@ import { expand, getStartParam, haptic } from './telegram'
 // fork → forge | wallet(pass)
 // forge → wallet(forge) → forge ; forge(minted) → scan
 // wallet(pass) → scan → hub
-// hub: tabs hub · hero · earn ; hero → SWITCH PASS → scan
+// hub: tabs hub · bali · hero · earn ; hero → SWITCH PASS → scan
+// startapp bali_<place> → bali tab ; meet_<code> → bali tab with an invite
 type Screen =
   | { name: 'title' }
   | { name: 'fork' }

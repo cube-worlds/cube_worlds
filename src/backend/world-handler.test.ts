@@ -67,7 +67,6 @@ async function createCtx(overrides: Partial<WorldHandlerDependencies> = {}, user
       return { hostId: host.userId }
     },
     setPartner: async (id, partnerId) => { const v = visits.find(x => x.id === id); if (v) v.partnerId = partnerId },
-    fetchTraits: async () => ({}),
     loadTraitsForPass: async () => ({ Courage: 9 }),
     setPassTraits: async (userId, traits) => { ctx.traitsSet.push([userId, traits]) },
     randomCode: () => 'CODE1234',

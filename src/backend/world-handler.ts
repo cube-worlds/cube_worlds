@@ -31,7 +31,6 @@ export interface WorldHandlerDependencies {
   createVisit: (input: { userId: number, windowId: number, place: string, move: Move | null, stake: bigint, inviteCode?: string }) => Promise<VisitRecord | 'duplicate'>
   bindInvite: (windowId: number, place: string, inviteCode: string, joinerId: number) => Promise<{ hostId: number } | 'expired' | 'taken'>
   setPartner: (visitId: string, partnerId: number) => Promise<void>
-  fetchTraits: (contentUri: string) => Promise<Record<string, number>>
   loadTraitsForPass: (passAddress: string) => Promise<Record<string, number>>
   setPassTraits: (userId: number, traits: Record<string, number>) => Promise<void>
   randomCode: () => string
@@ -39,6 +38,11 @@ export interface WorldHandlerDependencies {
 }
 
 const EMPTY_REP = { helped: 0, stole: 0, gave: 0, took: 0 }
+
+// ponytail: in-process load shedding only (like the claim locks) — a failed
+// backfill is retried on the next process anyway, so no persistence needed.
+const TRAIT_BACKFILL_COOLDOWN_MS = 60_000
+const traitBackfillCooldown = new Map<number, number>()
 
 export interface VisitView {
   id: string
@@ -97,12 +101,15 @@ export function buildWorldHandler(deps: WorldHandlerDependencies) {
 
   async function traitsFor(user: Holder): Promise<Record<string, number> | undefined> {
     if (user.pass.traits) return user.pass.traits
+    const now = deps.now()
+    if ((traitBackfillCooldown.get(user.id) ?? 0) > now) return undefined
     try {
       const traits = await deps.loadTraitsForPass(user.pass.address)
       await deps.setPassTraits(user.id, traits)
       return traits
     } catch (err) {
       deps.logError(`Trait backfill failed for ${user.id}: ${(err as Error).message}`)
+      traitBackfillCooldown.set(user.id, now + TRAIT_BACKFILL_COOLDOWN_MS)
       return undefined
     }
   }

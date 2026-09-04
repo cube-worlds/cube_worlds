@@ -20,7 +20,7 @@ export interface ResolverDependencies {
   addPoints: (userId: number, amount: bigint, reason: BalanceChangeType) => Promise<unknown>
   bumpRep: (userId: number, delta: RepDelta) => Promise<void>
   getPool: (place: string, seed: bigint) => Promise<bigint>
-  setPool: (place: string, pool: bigint) => Promise<void>
+  setPool: (place: string, pool: bigint, windowId: number) => Promise<boolean>
   traitsOf: (userIds: number[]) => Promise<Map<number, Traits | undefined>>
   notify: (userId: number, text: string, place: string) => Promise<void>
   rng: () => number
@@ -51,7 +51,7 @@ export function buildResolver(deps: ResolverDependencies) {
     }
   }
 
-  async function settle(visit: VisitRecord, outcome: EngineOutcome & { refund?: boolean }, place: string) {
+  async function settle(visit: VisitRecord, outcome: EngineOutcome, place: string) {
     const won = await deps.resolveVisitOnce(visit.id, outcome.payout, outcome.outcome)
     if (!won) return false
     if (outcome.payout > 0n) {
@@ -78,13 +78,22 @@ export function buildResolver(deps: ResolverDependencies) {
       const place = deps.places.find(p => p.id === placeId)
         ?? { id: placeId, name: placeId, engine: 'soon' as const, traits: [], stake: 0n, pot: 0n, seed: 0n, bonus: 0n, open: false, lat: 0, lon: 0 }
       const result = await runEngine(place, placeVisits, traits)
+      if (result.pool !== undefined) await deps.setPool(place.id, result.pool, windowId)
       const byUser = new Map(placeVisits.map(v => [v.userId, v]))
+      const settledIds = new Set<number>()
       for (const outcome of result.outcomes) {
         const visit = byUser.get(outcome.userId)
         if (!visit) continue
+        settledIds.add(outcome.userId)
         if (await settle(visit, outcome, place.id)) paid += 1
       }
-      if (result.pool !== undefined) await deps.setPool(place.id, result.pool)
+      // An engine that returned no outcome for a visit would strand its stake
+      // once the window closes — refund instead.
+      for (const visit of placeVisits) {
+        if (settledIds.has(visit.userId)) continue
+        const fallback = { userId: visit.userId, payout: visit.stake, outcome: `${place.name} · unresolved · refunded ${visit.stake}`, refund: true }
+        if (await settle(visit, fallback, place.id)) paid += 1
+      }
     }
     await deps.markWindowResolved(windowId)
     return paid
