@@ -87,7 +87,7 @@ Features (`src/bot/index.ts`): start, help, queue (admin: `/queue` browser + App
 - Rate limits: `/api/world/*` — `state` 60/min, `visit` 10/min, `history` 30/min, `pass/:index` (public) 60/min.
 
 ## Deploy notes
-- Production still runs **v1**; this tree replaces it wholesale on cutover. Before deploy: `CHECK_MONGO_URI=<prod> npx tsx scripts/check-prod-users.ts` — read-only; blocks on duplicate wallets/ids (v3 unique indexes), non-BigInt-castable votes, unknown states; warns on stuck mint claims, missing names, old-host `data/` paths.
+- Production still runs **v1**; this tree replaces it wholesale on cutover. Before deploy: `CHECK_MONGO_URI=<prod> npx tsx scripts/check-prod-users.ts` — read-only; blocks on duplicate wallets/ids (v3 unique indexes), non-BigInt-castable votes, unknown states; warns on v1 `WaitWallet`/`WaitDescription` (reset to `WaitNothing` at boot by `ensureLegacyStateMigration`), stuck mint claims, missing names, old-host `data/` paths.
 - `STAGING=true` boots API-only (no tx loop, no Telegram engagement).
 - Stale env keys from v2 (`XROCKET_*`, `ADSGRAM_*`, `SEASON_PASS_*`, `MINT_FLOOR_*`, …) are ignored by the config schema; new optional keys: `GENERATION_TRY_COST_VOTES`, `STARS_TOPUP_VOTES_PER_STAR`, `REFERRAL_MINT_REWARD_VOTES`.
 - Pre-deploy: `npm run smoke:api` (all secrets overridden with fakes — it can never hit a paid API or the live bot).

@@ -6,7 +6,7 @@ import { onShutdown } from 'node-graceful-shutdown'
 import { setMenuButton, syncBotCommands } from '#root/bot/handlers/commands/sync-commands'
 import { createBot } from '#root/bot/index'
 import { ensureClaimUniquenessMigration } from '#root/common/models/Claim'
-import { createInitialBalancesIfNotExists } from '#root/common/models/User'
+import { createInitialBalancesIfNotExists, ensureLegacyStateMigration } from '#root/common/models/User'
 import { config } from '#root/config'
 import { startResolver } from '#root/game/resolver-start'
 import { logger } from '#root/logger'
@@ -17,6 +17,8 @@ try {
   await mongoose.connect(config.MONGO)
   const bot = createBot(config.BOT_TOKEN, {})
   await createInitialBalancesIfNotExists()
+  const legacyStates = await ensureLegacyStateMigration()
+  if (legacyStates > 0) logger.info(`State migration: reset ${legacyStates} v1 mid-mint user(s) to WaitNothing`)
   const migration = await ensureClaimUniquenessMigration()
   if (migration.duplicateGroups > 0) {
     logger.info(
