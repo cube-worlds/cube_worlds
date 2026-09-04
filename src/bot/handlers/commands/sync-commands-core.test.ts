@@ -60,7 +60,7 @@ test('buildAdminChatCommands returns the trimmed admin set with inline English d
   const out = buildAdminChatCommands()
   assert.deepEqual(
     out.map(c => c.command),
-    ['stats', 'queue', 'line', 'transaction', 'collection', 'user',
+    ['stats', 'queue', 'line', 'transaction', 'collection', 'user', 'resolve',
       'positive', 'negative', 'strength', 'scale', 'steps', 'preset', 'sampler'],
   )
   out.forEach(c => assert.ok(c.description.length > 0))

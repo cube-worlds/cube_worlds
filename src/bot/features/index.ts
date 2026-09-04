@@ -1,6 +1,7 @@
 export * from './admin/collection'
 export * from './admin/parameters'
 export * from './admin/queue'
+export * from './admin/resolve'
 export * from './admin/transaction'
 export * from './help'
 export * from './line'
