@@ -45,6 +45,8 @@ const ROUTE_RATE_LIMITS: Record<string, { max: number, timeWindow: string }> = {
   // Pass scan hits toncenter; keep it tight.
   '/api/pass/scan': { max: 10, timeWindow: '1 minute' },
   '/api/pass/select': { max: 10, timeWindow: '1 minute' },
+  // Cached on disk after the first hit; a scan renders up to MAX_PASSES.
+  '/api/pass/image/*': { max: 60, timeWindow: '1 minute' },
   '/api/world/state': { max: 60, timeWindow: '1 minute' },
   '/api/world/visit': { max: 10, timeWindow: '1 minute' },
   '/api/world/history': { max: 30, timeWindow: '1 minute' },

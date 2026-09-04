@@ -5,6 +5,7 @@ import type { Move, PlaceDef } from '#root/game/places'
 import { BalanceChangeType } from '#root/common/models/Balance'
 import { movesFor, windowEndsAt, windowIdAt } from '#root/game/places'
 import { topTraits, traitOf, weightOf } from '#root/game/traits'
+import { passImageUrl } from './login-payload'
 import { safeErrorResponse } from './safe-error'
 
 export interface WorldUser {
@@ -290,7 +291,7 @@ export function buildWorldHandler(deps: WorldHandlerDependencies) {
           return {
             index: owner.pass.index,
             name: owner.pass.name,
-            image: owner.pass.image,
+            image: passImageUrl(owner.pass.image),
             rep: owner.rep ?? EMPTY_REP,
             weights: deps.places.filter(p => p.open && p.engine !== 'rest').map(p => ({ place: p.id, weight: weightOf(traits, p.traits) })),
             top: traits ? topTraits(traits, 5) : [],

@@ -2,11 +2,10 @@ import type { InitData } from '@telegram-apps/init-data-node'
 import type { FastifyInstance } from 'fastify'
 import type { LoginUser, Pass } from './login-payload'
 import { Address } from '@ton/core'
-import { loginPayload } from './login-payload'
+import { loginPayload, passImageUrl } from './login-payload'
 import { safeErrorResponse } from './safe-error'
 
 export const MAX_PASSES = 20
-const PUBLIC_IPFS_GATEWAY = 'https://ipfs.io/ipfs/'
 
 export interface PassHandlerDependencies {
   validateInitData: (initData: string) => void
@@ -25,13 +24,6 @@ export interface NftItemsResponse {
   metadata?: Record<string, { token_info?: Array<{ name?: string, image?: string }> }>
 }
 
-function publicImageUrl(uri: string | undefined): string {
-  if (!uri) return ''
-  return uri.startsWith('ipfs://')
-    ? `${PUBLIC_IPFS_GATEWAY}${uri.slice('ipfs://'.length)}`
-    : uri
-}
-
 // ponytail: trusts toncenter's indexed metadata; if a fresh mint shows up as
 // "Pass #N" with no image, add a fallback fetch of the item content JSON here.
 export function parseNftItems(body: NftItemsResponse): Pass[] {
@@ -42,7 +34,7 @@ export function parseNftItems(body: NftItemsResponse): Pass[] {
       index,
       address: Address.parse(item.address).toString({ bounceable: true }),
       name: info?.name ?? `Pass #${index}`,
-      image: publicImageUrl(info?.image),
+      image: passImageUrl(info?.image),
       contentUri: item.content?.uri,
     }
   })
