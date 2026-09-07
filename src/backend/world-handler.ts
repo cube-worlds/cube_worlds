@@ -3,7 +3,7 @@ import type { FastifyInstance, FastifyReply } from 'fastify'
 import type { VisitRecord } from '#root/common/models/Visit'
 import type { Move, PlaceDef } from '#root/game/places'
 import { BalanceChangeType } from '#root/common/models/Balance'
-import { movesFor, windowEndsAt, windowIdAt } from '#root/game/places'
+import { ALL_MOVES, movesFor, stakeFor, windowEndsAt, windowIdAt } from '#root/game/places'
 import { topTraits, traitOf, weightOf } from '#root/game/traits'
 import { passImageUrl } from './login-payload'
 import { safeErrorResponse } from './safe-error'
@@ -152,6 +152,8 @@ export function buildWorldHandler(deps: WorldHandlerDependencies) {
               stake: place.stake.toString(),
               pot: place.pot.toString(),
               bonus: place.bonus.toString(),
+              moves: movesFor(place.engine),
+              ...(place.bids ? { bids: place.bids.map(String) } : {}),
               lastCrowd: crowd[place.id] ?? 0,
               ...(pool === undefined ? {} : { pool: pool.toString() }),
             })
@@ -181,7 +183,7 @@ export function buildWorldHandler(deps: WorldHandlerDependencies) {
             properties: {
               initData: { type: 'string', maxLength: 8192 },
               place: { type: 'string', maxLength: 32 },
-              move: { type: 'string', enum: ['help', 'steal', 'give', 'take'] },
+              move: { type: 'string', enum: ALL_MOVES },
               inviteCode: { type: 'string', maxLength: 32 },
             },
           },
@@ -211,9 +213,10 @@ export function buildWorldHandler(deps: WorldHandlerDependencies) {
             return reply.code(400).send({ error: 'Invites only work at Canggu', code: 'bad_place' })
           }
 
-          const left = await deps.debitVotes(user.id, place.stake, BalanceChangeType.Stake)
+          const stake = stakeFor(place, move ?? null)
+          const left = await deps.debitVotes(user.id, stake, BalanceChangeType.Stake)
           if (left === null) {
-            return reply.code(402).send({ error: `You need ${place.stake} $CUBE for ${place.name}`, code: 'no_cube', stake: place.stake.toString() })
+            return reply.code(402).send({ error: `You need ${stake} $CUBE for ${place.name}`, code: 'no_cube', stake: stake.toString() })
           }
 
           let hostId: number | undefined
@@ -221,11 +224,11 @@ export function buildWorldHandler(deps: WorldHandlerDependencies) {
             // Bind after the debit so a joiner who can't pay never strands the host's invite.
             const bound = await deps.bindInvite(windowId, place.id, inviteCode, user.id)
             if (bound === 'expired') {
-              await deps.addPoints(user.id, place.stake, BalanceChangeType.Stake)
+              await deps.addPoints(user.id, stake, BalanceChangeType.Stake)
               return reply.code(410).send({ error: 'That meet link has expired', code: 'invite_expired' })
             }
             if (bound === 'taken') {
-              await deps.addPoints(user.id, place.stake, BalanceChangeType.Stake)
+              await deps.addPoints(user.id, stake, BalanceChangeType.Stake)
               return reply.code(409).send({ error: 'Someone already took that meet', code: 'invite_taken' })
             }
             hostId = bound.hostId
@@ -236,12 +239,12 @@ export function buildWorldHandler(deps: WorldHandlerDependencies) {
             windowId,
             place: place.id,
             move: move ?? null,
-            stake: place.stake,
+            stake,
             // `<passIndex>-<random>`: the meet landing reads the host's public pass from the prefix.
             inviteCode: place.engine === 'split-steal' && !inviteCode ? `${user.pass.index}-${deps.randomCode()}` : undefined,
           })
           if (created === 'duplicate') {
-            await deps.addPoints(user.id, place.stake, BalanceChangeType.Stake)
+            await deps.addPoints(user.id, stake, BalanceChangeType.Stake)
             return reply.code(409).send({ error: 'You already went somewhere this window', code: 'already_visited' })
           }
           if (hostId !== undefined) {
