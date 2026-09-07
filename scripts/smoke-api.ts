@@ -1,4 +1,4 @@
-/* eslint-disable no-console */
+ 
 /**
  * Live API smoke test — boots the REAL app (STAGING mode) against a throwaway
  * MongoDB and drives the v3 flow over HTTP: login (name sync), avatar upload

@@ -1,4 +1,4 @@
-/* eslint-disable no-console */
+ 
 /**
  * Read-only pre-cutover check: does the production (v1-era) database fit the
  * v3 models? Run it against a prod replica, dump, or the live DB — it only

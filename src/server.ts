@@ -54,13 +54,15 @@ const ROUTE_RATE_LIMITS: Record<string, { max: number, timeWindow: string }> = {
 }
 
 export async function createServer(bot: Bot) {
-  // Bounded `trustProxy` — defaults to 1 hop in prod, 0 in dev. With
-  // `trustProxy: true` a client reaching the Node port directly could spoof
-  // X-Forwarded-For and defeat the per-IP rate limit; the bounded form only
-  // honors the N rightmost entries (i.e. the actual reverse proxies).
+  // `trustProxy` — off in dev (0 hops), on in prod. fastify ≥ 5.12 refuses a
+  // bare hop count (it cannot validate the immediate peer, so it fails closed
+  // and trusts nothing — per-IP rate limits would key on the proxy). Trust the
+  // private ranges instead: kamal-proxy talks to Node over the docker bridge,
+  // while a client hitting the port from the internet is a public peer and its
+  // X-Forwarded-For is ignored.
   const server = fastify({
     logger: loggerOptions,
-    trustProxy: config.TRUSTED_PROXY_HOPS,
+    trustProxy: config.TRUSTED_PROXY_HOPS > 0 && 'loopback, linklocal, uniquelocal',
   })
 
   // Enable Express-style middleware in Fastify

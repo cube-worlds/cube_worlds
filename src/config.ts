@@ -44,11 +44,11 @@ function createConfigFromEnvironment(environment: NodeJS.ProcessEnv) {
     STAGING: z.boolean().default(false),
     WEB_APP_URL: z.string().url(),
     ALLOWED_ORIGINS: z.array(z.string()).default([]),
-    // Number of proxy hops to trust for X-Forwarded-For. Set this to match
-    // your deployment: 1 for a single proxy (nginx, k8s ingress, Cloudflare
-    // alone), 2 for stacked proxies. Leaving it at 0 means every request's
-    // IP resolves to the immediate TCP peer, which makes per-IP rate limits
-    // global — but is the safe choice if no proxy is present.
+    // 0 = no proxy: every request's IP is the immediate TCP peer (per-IP rate
+    // limits become global). > 0 = behind a reverse proxy: X-Forwarded-For is
+    // honored when the peer is a private/loopback address (kamal-proxy, nginx,
+    // k8s ingress). The exact count no longer matters — fastify ≥ 5.12
+    // rejects hop-count-only trust — it is kept for env compatibility.
     TRUSTED_PROXY_HOPS: {
       schema: z.number().int().min(0).max(10),
       defaults: {
