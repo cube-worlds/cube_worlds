@@ -11,8 +11,11 @@ export function windowEndsAt(windowId: number): number {
   return (windowId + 1) * WINDOW_MS
 }
 
-export type Engine = 'rest' | 'minority' | 'split-steal' | 'commons' | 'soon'
+export type Engine = 'rest' | 'minority' | 'split-steal' | 'commons'
+  | 'hawk-dove' | 'heist' | 'all-pay' | 'volunteer' | 'stag-hunt' | 'ultimatum' | 'soon'
 export type Move = 'help' | 'steal' | 'give' | 'take'
+  | 'hawk' | 'dove' | 'loyal' | 'betray' | 'bid1' | 'bid2' | 'bid3'
+  | 'dive' | 'wait' | 'stag' | 'hare' | 'fair' | 'greedy' | 'strict'
 
 export interface PlaceDef {
   id: string
@@ -21,20 +24,35 @@ export interface PlaceDef {
   lon: number
   engine: Engine
   traits: readonly string[]
-  // minority: fee per visitor; split-steal / commons: stake per visitor
+  // fee / stake per visitor (all-pay: the lowest bid tier)
   stake: bigint
-  // minority: pot per window (minted only if someone came)
+  // minority / heist / stag-hunt: minted pot; all-pay: prize cap
   pot: bigint
   // commons: initial pool
   seed: bigint
-  // split-steal: world bonus on help/help
+  // split-steal: world bonus on help/help; ultimatum: bonus on a struck deal
   bonus: bigint
+  // all-pay: fixed bid tiers for bid1..bid3
+  bids?: readonly bigint[]
   open: boolean
 }
 
 export const COMMONS_GROWTH_PERCENT = 20
 export const COMMONS_GROWTH_CAP = 2000n
 export const COMMONS_TAKE_CAP_MULTIPLIER = 3n
+export const HAWK_DOVE_BONUS = 20n // dove/dove: world bonus each
+export const HAWK_DOVE_YIELD = 50n // what a dove keeps against a hawk
+export const HAWK_DOVE_FIGHT_PRIZE = 50n // hawk/hawk: winner's take, the rest burns
+export const HEIST_POT = 1000n
+export const ALL_PAY_POT_CAP = 3000n
+export const VOLUNTEER_BONUS = 50n
+export const VOLUNTEER_COST = 30n
+export const VOLUNTEER_HERO = 200n
+export const STAG_THRESHOLD = 3
+export const STAG_POT = 1500n
+export const HARE_BONUS = 20n
+export const ULTIMATUM_BONUS = 100n
+export const ULTIMATUM_GREEDY_SHARE = 250n
 
 function place(p: Omit<PlaceDef, 'stake' | 'pot' | 'seed' | 'bonus' | 'open'> & Partial<PlaceDef>): PlaceDef {
   return { stake: 0n, pot: 0n, seed: 0n, bonus: 0n, open: p.engine !== 'soon', ...p }
@@ -49,12 +67,12 @@ export const PLACES: readonly PlaceDef[] = [
   place({ id: 'canggu', name: 'Canggu', lat: -8.648, lon: 115.139, engine: 'split-steal', traits: ['Deceptiveness', 'Perception', 'Skepticism'], stake: 200n, bonus: 50n }),
   place({ id: 'besakih', name: 'Besakih', lat: -8.374, lon: 115.451, engine: 'commons', traits: ['Generosity', 'Integrity', 'Restraint'], stake: 100n, seed: 5000n }),
   place({ id: 'lembongan', name: 'Nusa Lembongan', lat: -8.680, lon: 115.448, engine: 'commons', traits: ['Industry', 'Meticulousness', 'Restraint'], stake: 50n, seed: 5000n }),
-  place({ id: 'kuta', name: 'Kuta', lat: -8.718, lon: 115.169, engine: 'soon', traits: ['Aggression', 'Courage', 'Physicality'] }),
-  place({ id: 'uluwatu', name: 'Uluwatu', lat: -8.829, lon: 115.085, engine: 'soon', traits: ['Deceptiveness', 'Perception', 'Courage'] }),
-  place({ id: 'seminyak', name: 'Seminyak', lat: -8.690, lon: 115.168, engine: 'soon', traits: ['Narcissism', 'Self-Esteem', 'Decorum'] }),
-  place({ id: 'amed', name: 'Amed', lat: -8.337, lon: 115.654, engine: 'soon', traits: ['Courage', 'Health', 'Coordination'] }),
-  place({ id: 'penida', name: 'Nusa Penida', lat: -8.728, lon: 115.544, engine: 'soon', traits: ['Adventurousness', 'Willingness', 'Courage'] }),
-  place({ id: 'gili', name: 'Gili Trawangan', lat: -8.350, lon: 116.040, engine: 'soon', traits: ['Generosity', 'Judiciousness', 'Selfishness'] }),
+  place({ id: 'kuta', name: 'Kuta', lat: -8.718, lon: 115.169, engine: 'hawk-dove', traits: ['Aggression', 'Courage', 'Physicality'], stake: 100n }),
+  place({ id: 'uluwatu', name: 'Uluwatu', lat: -8.829, lon: 115.085, engine: 'heist', traits: ['Deceptiveness', 'Perception', 'Courage'], stake: 100n, pot: HEIST_POT }),
+  place({ id: 'seminyak', name: 'Seminyak', lat: -8.690, lon: 115.168, engine: 'all-pay', traits: ['Narcissism', 'Self-Esteem', 'Decorum'], stake: 200n, bids: [200n, 1000n, 5000n], pot: ALL_PAY_POT_CAP }),
+  place({ id: 'amed', name: 'Amed', lat: -8.337, lon: 115.654, engine: 'volunteer', traits: ['Courage', 'Health', 'Coordination'], stake: 100n }),
+  place({ id: 'penida', name: 'Nusa Penida', lat: -8.728, lon: 115.544, engine: 'stag-hunt', traits: ['Adventurousness', 'Willingness', 'Courage'], stake: 100n, pot: STAG_POT }),
+  place({ id: 'gili', name: 'Gili Trawangan', lat: -8.350, lon: 116.040, engine: 'ultimatum', traits: ['Generosity', 'Judiciousness', 'Selfishness'], stake: 100n, bonus: ULTIMATUM_BONUS }),
 ]
 
 export function findPlace(id: string): PlaceDef | undefined {
@@ -66,7 +84,21 @@ const MOVES: Record<Engine, readonly Move[]> = {
   'minority': [],
   'split-steal': ['help', 'steal'],
   'commons': ['give', 'take'],
+  'hawk-dove': ['hawk', 'dove'],
+  'heist': ['loyal', 'betray'],
+  'all-pay': ['bid1', 'bid2', 'bid3'],
+  'volunteer': ['dive', 'wait'],
+  'stag-hunt': ['stag', 'hare'],
+  'ultimatum': ['fair', 'greedy', 'strict'],
   'soon': [],
+}
+
+export const ALL_MOVES: readonly Move[] = [...new Set(Object.values(MOVES).flat())]
+
+// What a visit costs: the bid tier at an all-pay place, the flat stake elsewhere.
+export function stakeFor(place: PlaceDef, move: Move | null): bigint {
+  if (place.bids && move?.startsWith('bid')) return place.bids[Number(move.slice(3)) - 1] ?? place.stake
+  return place.stake
 }
 
 export function movesFor(engine: Engine): readonly Move[] {

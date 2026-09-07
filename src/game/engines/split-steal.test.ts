@@ -2,7 +2,8 @@
 import type { EngineVisit } from '#root/game/engines/types'
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { pairVisits, resolveSplitSteal } from '#root/game/engines/split-steal'
+import { pairVisits } from '#root/game/engines/helpers'
+import { resolveSplitSteal } from '#root/game/engines/split-steal'
 
 const traits: Record<number, Record<string, number>> = {
   1: { Deceptiveness: 8, Perception: 3, Skepticism: 3 },
