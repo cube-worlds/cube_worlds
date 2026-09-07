@@ -213,8 +213,11 @@ export interface PlaceView {
   name: string
   lat: number
   lon: number
-  engine: 'rest' | 'minority' | 'split-steal' | 'commons' | 'soon'
+  engine: 'rest' | 'minority' | 'split-steal' | 'commons'
+    | 'hawk-dove' | 'heist' | 'all-pay' | 'volunteer' | 'stag-hunt' | 'ultimatum' | 'soon'
   open: boolean
+  moves: string[]
+  bids?: string[]
   traits: Array<{ name: string, value: number }>
   weight: number
   stake: string

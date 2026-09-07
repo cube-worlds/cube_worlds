@@ -3,9 +3,15 @@ import type { EngineOutcome, EngineResult, EngineVisit, RepDelta } from '#root/g
 import type { PlaceDef } from '#root/game/places'
 import type { Traits } from '#root/game/traits'
 import { BalanceChangeType } from '#root/common/models/Balance'
+import { resolveAllPay } from '#root/game/engines/all-pay'
 import { resolveCommons } from '#root/game/engines/commons'
+import { resolveHawkDove } from '#root/game/engines/hawk-dove'
+import { resolveHeist } from '#root/game/engines/heist'
 import { resolveMinority } from '#root/game/engines/minority'
 import { resolveSplitSteal } from '#root/game/engines/split-steal'
+import { resolveStagHunt } from '#root/game/engines/stag-hunt'
+import { resolveUltimatum } from '#root/game/engines/ultimatum'
+import { resolveVolunteer } from '#root/game/engines/volunteer'
 import { windowIdAt } from '#root/game/places'
 import { traitOf, weightOf } from '#root/game/traits'
 
@@ -47,6 +53,18 @@ export function buildResolver(deps: ResolverDependencies) {
         const pool = await deps.getPool(place.id, place.seed)
         return resolveCommons(place.name, engineVisits, place.stake, place.seed, pool, weight)
       }
+      case 'hawk-dove':
+        return resolveHawkDove(place.name, engineVisits, place.stake, weight, deps.rng)
+      case 'heist':
+        return resolveHeist(place.name, engineVisits, place.stake, place.pot, weight, trait)
+      case 'all-pay':
+        return resolveAllPay(place.name, engineVisits, place.pot, weight, deps.rng)
+      case 'volunteer':
+        return resolveVolunteer(place.name, engineVisits, place.stake, weight, deps.rng)
+      case 'stag-hunt':
+        return resolveStagHunt(place.name, engineVisits, place.stake, place.pot, weight)
+      case 'ultimatum':
+        return resolveUltimatum(place.name, engineVisits, place.stake, place.bonus, weight, deps.rng)
       default:
         // rest / soon: nothing to play — give the stake back.
         return { outcomes: visits.map(v => ({ userId: v.userId, payout: v.stake, outcome: `${place.name} · closed · refunded ${v.stake}`, refund: true })) }

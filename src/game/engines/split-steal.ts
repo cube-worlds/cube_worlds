@@ -1,32 +1,8 @@
 import type { EngineOutcome, EngineResult, EngineVisit, TraitOf } from './types'
+import { pairVisits } from './helpers'
 
 // Prisoner's dilemma in pairs. Traits: a thief whose Deceptiveness beats the
 // victim's best of Perception/Skepticism keeps the steal off the public record.
-
-export function pairVisits(
-  visits: EngineVisit[],
-  rng: () => number,
-): { pairs: Array<[EngineVisit, EngineVisit]>, alone: EngineVisit[] } {
-  const byUser = new Map(visits.map(v => [v.userId, v]))
-  const used = new Set<number>()
-  const pairs: Array<[EngineVisit, EngineVisit]> = []
-  for (const a of visits) {
-    if (used.has(a.userId) || a.partnerId === undefined) continue
-    const b = byUser.get(a.partnerId)
-    if (!b || used.has(b.userId) || b.partnerId !== a.userId) continue
-    used.add(a.userId)
-    used.add(b.userId)
-    pairs.push([a, b])
-  }
-  const rest = visits.filter(v => !used.has(v.userId))
-  for (let i = rest.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1))
-    ;[rest[i], rest[j]] = [rest[j], rest[i]]
-  }
-  for (let i = 0; i + 1 < rest.length; i += 2) pairs.push([rest[i], rest[i + 1]])
-  const alone = rest.length % 2 === 1 ? [rest[rest.length - 1]] : []
-  return { pairs, alone }
-}
 
 function concealed(thief: number, victim: number, traitOf: TraitOf): boolean {
   const eye = Math.max(traitOf(victim, 'Perception'), traitOf(victim, 'Skepticism'))

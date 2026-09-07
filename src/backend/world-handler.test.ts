@@ -139,7 +139,8 @@ test('/visit at a trail debits the fee and creates the visit', async (t) => {
 })
 
 test('/visit rejects unknown, closed and rest places', async (t) => {
-  const ctx = await createCtx()
+  const closed = PLACES.map(p => (p.id === 'kuta' ? { ...p, engine: 'soon' as const, open: false } : p))
+  const ctx = await createCtx({ places: closed })
   t.after(() => ctx.app.close())
   for (const place of ['nowhere', 'kuta', 'sanur']) {
     const res = await post(ctx, '/visit', { place })
@@ -155,7 +156,38 @@ test('/visit validates the move per engine', async (t) => {
   assert.equal((await post(ctx, '/visit', { place: 'canggu' })).json().code, 'bad_move')
   assert.equal((await post(ctx, '/visit', { place: 'canggu', move: 'give' })).json().code, 'bad_move')
   assert.equal((await post(ctx, '/visit', { place: 'ubud', move: 'help' })).json().code, 'bad_move')
+  assert.equal((await post(ctx, '/visit', { place: 'kuta', move: 'bid3' })).json().code, 'bad_move')
+  assert.equal((await post(ctx, '/visit', { place: 'kuta', move: 'help' })).json().code, 'bad_move')
+  assert.equal((await post(ctx, '/visit', { place: 'seminyak', move: 'hawk' })).json().code, 'bad_move')
   assert.deepEqual(ctx.debits, [])
+})
+
+test('/visit at Seminyak debits the bid tier, and quotes it on 402', async (t) => {
+  const ctx = await createCtx({}, { votes: 1200n })
+  t.after(() => ctx.app.close())
+  const poor = await post(ctx, '/visit', { place: 'seminyak', move: 'bid3' })
+  assert.equal(poor.statusCode, 402)
+  assert.equal(poor.json().stake, '5000')
+  assert.match(poor.json().error, /5000/)
+  const res = await post(ctx, '/visit', { place: 'seminyak', move: 'bid2' })
+  assert.equal(res.statusCode, 201)
+  assert.equal(res.json().stake, '1000')
+  assert.deepEqual(ctx.debits.map(d => d[1]), [5000n, 1000n])
+  assert.equal(ctx.user.votes, 200n)
+})
+
+test('/state lists moves per place and bid tiers at Seminyak', async (t) => {
+  const ctx = await createCtx()
+  t.after(() => ctx.app.close())
+  const places = (await post(ctx, '/state')).json().places
+  const seminyak = places.find((p: { id: string }) => p.id === 'seminyak')
+  assert.deepEqual(seminyak.moves, ['bid1', 'bid2', 'bid3'])
+  assert.deepEqual(seminyak.bids, ['200', '1000', '5000'])
+  const kuta = places.find((p: { id: string }) => p.id === 'kuta')
+  assert.deepEqual(kuta.moves, ['hawk', 'dove'])
+  assert.equal(kuta.bids, undefined)
+  assert.equal(kuta.open, true)
+  assert.equal(places.filter((p: { open: boolean }) => p.open).length, 14)
 })
 
 test('/visit answers 402 no_cube when the stake is not covered', async (t) => {
@@ -258,7 +290,7 @@ test('GET /pass/:index is public and exposes rep, weights and top traits', async
   assert.equal(body.name, 'alice')
   assert.deepEqual(body.rep, { helped: 1, stole: 0, gave: 2, took: 0 })
   assert.deepEqual(body.weights.find((w: { place: string }) => w.place === 'ubud'), { place: 'ubud', weight: 30 })
-  assert.equal(body.weights.length, 7)
+  assert.equal(body.weights.length, 13)
   assert.equal(body.top.length, 4)
   assert.equal((await ctx.app.inject({ method: 'GET', url: '/api/world/pass/8' })).statusCode, 404)
 })

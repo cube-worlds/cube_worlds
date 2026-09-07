@@ -73,8 +73,10 @@ Every place is one game-theory engine reading the pass's 120 on-chain traits
 backfilled by `/api/world/state`). One `Visit` per holder per 8-hour window
 (`windowId = floor(now / 8h)`, UTC). Stake is debited on commit via `debitVotes`
 (`BalanceChangeType.Stake`), payout credited once at resolution (`Payout`; refunds
-are positive `Stake` rows). Places and numbers: `src/game/places.ts` (14 places, 8
-open). Engines are pure: `src/game/engines/{minority,split-steal,commons}.ts`.
+are positive `Stake` rows). Places and numbers: `src/game/places.ts` (14 places, all
+open). Engines are pure, one per file in `src/game/engines/`: minority, split-steal,
+commons, hawk-dove, heist, all-pay (Seminyak's fixed bid tiers via `stakeFor`),
+volunteer, stag-hunt, ultimatum; `helpers.ts` holds pairing/shuffle/weight-split.
 Resolver: `src/game/resolver.ts` (pure, DI) + `resolver-start.ts` (60 s tick, not in
 STAGING mode) — claims a `Window` lock, CAS-resolves each visit before paying
 (at-most-once), bumps `User.rep`, notifies via bot (non-fatal). API:

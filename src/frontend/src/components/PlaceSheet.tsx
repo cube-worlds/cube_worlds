@@ -22,6 +22,12 @@ const RULES: Record<PlaceView['engine'], string> = {
   'minority': 'A fixed pot split by your weight among everyone who comes. Fewer visitors, bigger share.',
   'split-steal': 'You meet one other holder. HELP: both keep the stake plus a bonus. STEAL: take both stakes — unless they steal too, then both burn.',
   'commons': 'GIVE feeds the temple pool and pays you its growth. TAKE draws a share. Too many takers and the temple is plundered.',
+  'hawk-dove': 'You meet one other holder. DOVE vs DOVE share the prize plus a bonus. HAWK takes most of it from a dove. HAWK vs HAWK fight: the heavier one usually wins a sliver, the rest burns.',
+  'heist': 'Everyone here is one crew. LOYAL splits the loot and a pot by weight. BETRAY takes a double share — but if betrayers outnumber the loyal, the guards wake up and nobody gets a thing.',
+  'all-pay': 'An auction where every bid is spent. The highest bid takes the prize (capped), ties go to weight. Everything else burns.',
+  'volunteer': 'The reef needs one diver. DIVE costs you a little and the heaviest diver is the hero. WAIT earns more than a diver — unless nobody dives and every stake burns.',
+  'stag-hunt': 'HARE is a safe small win. STAG pays a weight share of the pot only if three or more hunt — fewer and the stag hunters go home empty.',
+  'ultimatum': 'You meet one other holder; the heavier one proposes. FAIR offers half. GREEDY offers crumbs. STRICT offers half and rejects greed — then the whole pot burns.',
   'soon': 'Opens soon.',
 }
 
@@ -36,8 +42,9 @@ export function PlaceSheet({ place, myVisit, endsAt, botName, inviteHost, invite
   const [move, setMove] = useState<string | null>(null)
   const here = myVisit?.place === place.id
   const elsewhere = myVisit && !here
-  const moves = place.engine === 'split-steal' ? ['help', 'steal'] : place.engine === 'commons' ? ['give', 'take'] : []
+  const moves = place.moves
   const label = place.engine === 'minority' ? 'FEE' : 'STAKE'
+  const moveLabel = (m: string) => (m.startsWith('bid') && place.bids ? `BID ${place.bids[Number(m.slice(3)) - 1]}` : m.toUpperCase())
 
   return (
     <div className="px-card" style={{ position: 'fixed', left: 0, right: 0, bottom: 62, padding: 14, display: 'flex', flexDirection: 'column', gap: 10, borderTop: '3px solid var(--cw-gold-deep)', maxHeight: '70vh', overflowY: 'auto' }}>
@@ -52,8 +59,8 @@ export function PlaceSheet({ place, myVisit, endsAt, botName, inviteHost, invite
       {place.engine !== 'rest' && place.open && (
         <>
           <div className="px-label" style={{ fontSize: 7, color: 'var(--cw-text-dim)' }}>
-            {`${label} ${place.stake}`}
-            {place.engine === 'minority' ? ` · POT ${place.pot}` : ''}
+            {place.engine === 'all-pay' ? `PRIZE CAP ${place.pot}` : `${label} ${place.stake}`}
+            {place.engine === 'minority' || place.engine === 'heist' || place.engine === 'stag-hunt' ? ` · POT ${place.pot}` : ''}
             {place.pool ? ` · POOL ${place.pool}` : ''}
             {` · LAST WINDOW ${place.lastCrowd} HERE`}
           </div>
@@ -86,7 +93,7 @@ export function PlaceSheet({ place, myVisit, endsAt, botName, inviteHost, invite
           {moves.length === 0
             ? <button type="button" className="px-btn" disabled={busy} onClick={() => onVisit()}>GO</button>
             : moves.map(m => (
-                <button key={m} type="button" className={move === m ? 'px-btn' : 'px-btn-ghost'} disabled={busy} onClick={() => { setMove(m); onVisit(m) }}>{m.toUpperCase()}</button>
+                <button key={m} type="button" className={move === m ? 'px-btn' : 'px-btn-ghost'} disabled={busy} onClick={() => { setMove(m); onVisit(m) }}>{moveLabel(m)}</button>
               ))}
         </div>
       )}

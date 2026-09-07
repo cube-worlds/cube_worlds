@@ -111,7 +111,8 @@ test('tick resolves every past window oldest first and logs per-window errors', 
 })
 
 test('visits at a closed or rest place are refunded', async () => {
-  const h = harness([visit(1, 'kuta'), visit(2, 'sanur')])
+  const closed = PLACES.map(p => (p.id === 'kuta' ? { ...p, engine: 'soon' as const, open: false } : p))
+  const h = harness([visit(1, 'kuta'), visit(2, 'sanur')], { places: closed })
   await buildResolver(h.deps).resolveWindow(W)
   assert.deepEqual(h.paid.map(p => [p[0], p[1], p[2]]), [[1, 100n, BalanceChangeType.Stake], [2, 100n, BalanceChangeType.Stake]])
 })
@@ -132,4 +133,42 @@ test('split-steal outcomes name the partner and store their pass index', async (
   const [v3, v4] = [3, 4].map(u => [...h.store.values()].find(v => v.userId === u))
   assert.equal(v3?.partnerPass, 40)
   assert.equal(v4?.partnerPass, 30)
+})
+
+test('slice-2 engines are dispatched by place', async () => {
+  const h = harness([
+    visit(1, 'kuta', 'dove'),
+    visit(2, 'kuta', 'dove'),
+    visit(3, 'uluwatu', 'loyal'),
+    visit(4, 'uluwatu', 'loyal'),
+    visit(5, 'amed', 'dive'),
+    visit(6, 'penida', 'hare'),
+    visit(7, 'gili', 'fair'),
+    visit(8, 'gili', 'greedy'),
+  ])
+  await buildResolver(h.deps).resolveWindow(W)
+  const paid = Object.fromEntries(h.paid.map(p => [p[0], [p[1], p[2]]]))
+  assert.deepEqual(paid[1], [120n, BalanceChangeType.Payout])
+  assert.deepEqual(paid[2], [120n, BalanceChangeType.Payout])
+  assert.deepEqual(paid[3], [600n, BalanceChangeType.Payout]) // (200 + 1000) / 2
+  assert.deepEqual(paid[5], [200n, BalanceChangeType.Payout]) // lone diver is the hero
+  assert.deepEqual(paid[6], [120n, BalanceChangeType.Payout])
+  assert.deepEqual(paid[7], [50n, BalanceChangeType.Payout]) // equal weight; rng 0 shuffles 8 first and makes them propose greedy
+  assert.deepEqual(paid[8], [250n, BalanceChangeType.Payout])
+  assert.ok(h.notified.find(n => n[0] === 1)![1].endsWith('· with Cube #20'))
+})
+
+test('all-pay: a lone bidder is refunded as a Stake row, losers are told who won', async () => {
+  const alone = harness([visit(1, 'seminyak', 'bid3', { stake: 5000n })])
+  await buildResolver(alone.deps).resolveWindow(W)
+  assert.deepEqual(alone.paid, [[1, 5000n, BalanceChangeType.Stake]])
+
+  const h = harness([visit(1, 'seminyak', 'bid1', { stake: 200n }), visit(2, 'seminyak', 'bid3', { stake: 5000n })])
+  await buildResolver(h.deps).resolveWindow(W)
+  assert.deepEqual(h.paid, [[2, 3000n, BalanceChangeType.Payout]])
+  const loser = h.notified.find(n => n[0] === 1)!
+  assert.equal(loser[1], 'Seminyak · outbid · lost 200 · with Cube #20')
+  const byUser = (id: number) => [...h.store.values()].find(v => v.userId === id)!
+  assert.equal(byUser(2).partnerPass, undefined)
+  assert.equal(byUser(1).partnerPass, 20)
 })
