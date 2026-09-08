@@ -8,6 +8,7 @@ import fastify from 'fastify'
 import { buildClaimHandler } from '#root/backend/claim-handler'
 import { ClientError } from '#root/common/errors'
 import { BalanceChangeType } from '#root/common/models/Balance'
+import { getClaimStatus } from '#root/common/models/Claim'
 
 type ResolvedUser = NonNullable<
   Awaited<ReturnType<ClaimHandlerDependencies['findUserById']>>
@@ -168,6 +169,77 @@ test('POST /api/users/claim does not add points when claimed amount is zero', as
   assert.equal(body.claimedAmount, 0)
   assert.equal(body.balance, '500')
   assert.equal(ctx.addPointsCalls.length, 0)
+})
+
+// The daily-claim card (hub + EARN) reads exactly these keys off the claim
+// responses — see `interface ClaimStatus` in src/frontend/src/api.ts. The
+// other tests stub getClaimStatus, so only these two wire the real one:
+// renaming a field server-side used to ship "CLAIM +undefined" to the UI.
+const FRONTEND_CLAIM_STATUS_FIELDS = [
+  'canClaim',
+  'hasNeverClaimed',
+  'streakDays',
+  'claimMultiplier',
+  'nextClaimAmount',
+  'progressPercent',
+  'secondsUntilClaim',
+] as const
+
+function freshClaim(): ResolvedClaim {
+  return {
+    streakDays: 0,
+    lastClaimAmount: 0,
+    lastClaimDate: new Date(0),
+    totalClaimed: 0,
+    fractionalCarry: 0,
+  } as ResolvedClaim
+}
+
+test('POST /api/users/claim/status returns every field the frontend reads', async (t) => {
+  const ctx = await createTestContext({
+    findOrCreateClaim: async () => freshClaim(),
+    getClaimStatus,
+  })
+  t.after(async () => {
+    await ctx.app.close()
+  })
+
+  const response = await ctx.app.inject({
+    method: 'POST',
+    url: '/api/users/claim/status',
+    payload: { initData: 'signed-telegram-payload' },
+  })
+  const body = response.json()
+
+  for (const field of FRONTEND_CLAIM_STATUS_FIELDS) {
+    assert.notEqual(body[field], undefined, `missing ${field}`)
+  }
+  assert.equal(body.canClaim, true)
+  assert.ok(body.nextClaimAmount > 0)
+})
+
+test('POST /api/users/claim returns the status fields plus the claim result', async (t) => {
+  const ctx = await createTestContext({
+    findOrCreateClaim: async () => freshClaim(),
+    getClaimStatus,
+  })
+  t.after(async () => {
+    await ctx.app.close()
+  })
+
+  const response = await ctx.app.inject({
+    method: 'POST',
+    url: '/api/users/claim',
+    payload: { initData: 'signed-telegram-payload' },
+  })
+  const body = response.json()
+
+  for (const field of FRONTEND_CLAIM_STATUS_FIELDS) {
+    assert.notEqual(body[field], undefined, `missing ${field}`)
+  }
+  assert.equal(body.claimedAmount, 10)
+  assert.equal(body.balance, '510')
+  assert.equal(typeof body.message, 'string')
 })
 
 test('POST /api/users/claim/status returns validation error for empty initData', async (t) => {

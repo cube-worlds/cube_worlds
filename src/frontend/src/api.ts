@@ -137,7 +137,7 @@ export interface ClaimStatus extends ApiError {
   hasNeverClaimed: boolean
   streakDays: number
   claimMultiplier: number
-  rawClaimAmount: number
+  nextClaimAmount: number
   progressPercent: number
   secondsUntilClaim: number
 }
@@ -231,7 +231,8 @@ export interface VisitView {
   id: string
   windowId: number
   place: string
-  move: 'help' | 'steal' | 'give' | 'take' | null
+  // Any engine move — see `moves`/`bids` on PlaceView; only rendered as text.
+  move: string | null
   stake: string
   partnerId: number | null
   partnerPass: number | null
