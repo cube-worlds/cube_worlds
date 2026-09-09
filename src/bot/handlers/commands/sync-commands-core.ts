@@ -53,6 +53,7 @@ export function buildAdminChatCommands(): BotCommand[] {
     { command: 'collection', description: '🖼 Collection' },
     { command: 'user', description: '🙍🏻‍♂️ Info about user' },
     { command: 'resolve', description: '🌴 Resolve Bali window' },
+    { command: 'treasury', description: '🏦 Bali treasuries' },
     { command: 'positive', description: '👍 Positive prompt' },
     { command: 'negative', description: '👎 Negative prompt' },
     { command: 'strength', description: '💪 Strength for images' },
