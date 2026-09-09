@@ -1,8 +1,12 @@
 import type { EngineOutcome, EngineResult, EngineVisit, TraitOf } from './types'
-import { pairVisits } from './helpers'
+import { pairVisits, treasury } from './helpers'
 
 // Prisoner's dilemma in pairs. Traits: a thief whose Deceptiveness beats the
 // victim's best of Perception/Skepticism keeps the steal off the public record.
+//
+// The help/help bonus is the one payout that exceeds the pair's own stakes, so
+// it is funded from the treasury and shared out across however many pairs
+// cooperated this window — a whole room agreeing to help can no longer print.
 
 function concealed(thief: number, victim: number, traitOf: TraitOf): boolean {
   const eye = Math.max(traitOf(victim, 'Perception'), traitOf(victim, 'Skepticism'))
@@ -13,11 +17,18 @@ export function resolveSplitSteal(
   placeName: string,
   visits: EngineVisit[],
   stake: bigint,
-  bonus: bigint,
+  bonusCap: bigint,
+  grant: bigint,
+  pool: bigint,
   traitOf: TraitOf,
   rng: () => number,
 ): EngineResult {
   const { pairs, alone } = pairVisits(visits, rng)
+  const coop = pairs.filter(([a, b]) => a.move !== 'steal' && b.move !== 'steal')
+  // Split the grant over the cooperating heads, never above the headline bonus.
+  const perHead = coop.length > 0 ? grant / (2n * BigInt(coop.length)) : 0n
+  const bonus = perHead < bonusCap ? perHead : bonusCap
+
   const outcomes: EngineOutcome[] = []
   for (const [a, b] of pairs) {
     const aSteals = a.move === 'steal'
@@ -39,7 +50,7 @@ export function resolveSplitSteal(
     }
   }
   for (const v of alone) {
-    outcomes.push({ userId: v.userId, payout: stake, outcome: `${placeName} · nobody came · refunded ${stake}`, refund: true })
+    outcomes.push({ userId: v.userId, payout: v.stake, outcome: `${placeName} · nobody came · refunded ${v.stake}`, refund: true })
   }
-  return { outcomes }
+  return treasury(outcomes, visits, pool)
 }

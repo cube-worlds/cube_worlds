@@ -9,7 +9,7 @@ const weights: Record<number, number> = { 1: 10, 2: 10, 3: 20 }
 const traits: Record<number, Record<string, number>> = { 1: { Perception: 8 }, 2: { Perception: 4 }, 3: { Deceptiveness: 9 }, 4: { Deceptiveness: 2 } }
 const weightOf = (id: number) => weights[id] ?? 10
 const traitOf = (id: number, name: string) => traits[id]?.[name] ?? 5
-const run = (visits: EngineVisit[]) => resolveHeist('Uluwatu', visits, 100n, 1000n, weightOf, traitOf)
+const run = (visits: EngineVisit[]) => resolveHeist('Uluwatu', visits, 1000n, 5000n, weightOf, traitOf)
 
 test('crew of one is refunded', () => {
   const { outcomes } = run([v(1, 'loyal')])

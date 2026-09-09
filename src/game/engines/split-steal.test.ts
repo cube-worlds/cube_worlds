@@ -19,7 +19,7 @@ const byUser = (r: ReturnType<typeof resolveSplitSteal>) =>
   Object.fromEntries(r.outcomes.map(o => [o.userId, o]))
 
 test('help/help pays stake + bonus and records helped', () => {
-  const out = byUser(resolveSplitSteal('Canggu', [v(1, 'help'), v(2, 'help')], 200n, 50n, traitOf, noShuffle))
+  const out = byUser(resolveSplitSteal('Canggu', [v(1, 'help'), v(2, 'help')], 200n, 50n, 1000n, 5000n, traitOf, noShuffle))
   assert.equal(out[1].payout, 250n)
   assert.equal(out[2].payout, 250n)
   assert.deepEqual(out[1].rep, { helped: 1 })
@@ -27,7 +27,7 @@ test('help/help pays stake + bonus and records helped', () => {
 })
 
 test('steal/help: thief takes both stakes, victim gets 0', () => {
-  const out = byUser(resolveSplitSteal('Canggu', [v(2, 'steal'), v(1, 'help')], 200n, 50n, traitOf, noShuffle))
+  const out = byUser(resolveSplitSteal('Canggu', [v(2, 'steal'), v(1, 'help')], 200n, 50n, 1000n, 5000n, traitOf, noShuffle))
   assert.equal(out[2].payout, 400n)
   assert.equal(out[1].payout, 0n)
   assert.equal(out[1].outcome, 'Canggu · you were robbed · 0')
@@ -39,7 +39,7 @@ test('steal/help: thief takes both stakes, victim gets 0', () => {
 
 test("steal is concealed when Deceptiveness beats the victim's eye", () => {
   // thief 1 (D=8) vs victim 2 (max(P=7,S=3)=7 < 8) → concealed
-  const out = byUser(resolveSplitSteal('Canggu', [v(1, 'steal'), v(2, 'help')], 200n, 50n, traitOf, noShuffle))
+  const out = byUser(resolveSplitSteal('Canggu', [v(1, 'steal'), v(2, 'help')], 200n, 50n, 1000n, 5000n, traitOf, noShuffle))
   assert.equal(out[1].payout, 400n)
   assert.equal(out[1].rep, undefined)
 })
@@ -48,12 +48,12 @@ test('concealment boundary: equal eye records the steal', () => {
   // thief 3 (D=7) vs victim 3-clone with max(P,S)=7 → 7 ≥ 7 → recorded
   const victimEye: Record<string, number> = { Perception: 7, Skepticism: 1 }
   const eye = (id: number, name: string) => (id === 9 ? victimEye[name] ?? 5 : traitOf(id, name))
-  const out = byUser(resolveSplitSteal('Canggu', [v(3, 'steal'), v(9, 'help')], 200n, 50n, eye, noShuffle))
+  const out = byUser(resolveSplitSteal('Canggu', [v(3, 'steal'), v(9, 'help')], 200n, 50n, 1000n, 5000n, eye, noShuffle))
   assert.deepEqual(out[3].rep, { stole: 1 })
 })
 
 test('steal/steal burns both stakes and records both', () => {
-  const out = byUser(resolveSplitSteal('Canggu', [v(1, 'steal'), v(2, 'steal')], 200n, 50n, traitOf, noShuffle))
+  const out = byUser(resolveSplitSteal('Canggu', [v(1, 'steal'), v(2, 'steal')], 200n, 50n, 1000n, 5000n, traitOf, noShuffle))
   assert.equal(out[1].payout, 0n)
   assert.equal(out[2].payout, 0n)
   assert.deepEqual(out[1].rep, { stole: 1 })
@@ -61,7 +61,7 @@ test('steal/steal burns both stakes and records both', () => {
 })
 
 test('odd one out is refunded', () => {
-  const out = byUser(resolveSplitSteal('Canggu', [v(1, 'help'), v(2, 'help'), v(4, 'steal')], 200n, 50n, traitOf, noShuffle))
+  const out = byUser(resolveSplitSteal('Canggu', [v(1, 'help'), v(2, 'help'), v(4, 'steal')], 200n, 50n, 1000n, 5000n, traitOf, noShuffle))
   const refunded = Object.values(out).find(o => o.outcome === 'Canggu · nobody came · refunded 200')
   assert.ok(refunded)
   assert.equal(refunded.payout, 200n)
