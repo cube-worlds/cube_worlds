@@ -41,10 +41,24 @@ function fail(status: number) {
   }
 }
 
-// warm() is fire-and-forget; give its promise chain (fetch → write → evict)
-// a few turns of the loop to land.
-async function settle(): Promise<void> {
-  for (let i = 0; i < 20; i += 1) await new Promise((resolve) => setImmediate(resolve))
+// warm() is fire-and-forget, and its chain (gateway fetches → write → evict)
+// contains real threadpool I/O — so a fixed number of loop turns is not a
+// barrier at all. Under CI load the chain outran the old 20-turn drain and
+// the assertions read an empty result. Poll for the observable effect and
+// let the caller's own assertion report a genuine hang once time runs out.
+async function settle(done: () => boolean | Promise<boolean>): Promise<void> {
+  const deadline = Date.now() + 5000
+  while (Date.now() < deadline) {
+    await new Promise((resolve) => setImmediate(resolve))
+    if (await done()) return
+  }
+}
+
+// Warm is only truly finished once the entry exists under its FINAL name —
+// waiting on the fetch call instead would let a get() race the pending write
+// and re-fetch, which is exactly what these tests are checking against.
+function cached(dir: string, name: string): () => Promise<boolean> {
+  return () => fs.access(path.join(dir, name)).then(() => true, () => false)
 }
 
 async function createHarness(
@@ -217,7 +231,7 @@ test('warm pulls images in the background and swallows failures', async (t) => {
   t.after(() => fs.rm(h.dir, { recursive: true, force: true }))
 
   h.cache.warm(['QmA', '', '../escape'])
-  await settle()
+  await settle(() => h.errors.length > 0)
   assert.equal(h.errors.length, 1, 'only the valid CID is attempted')
   assert.match(h.errors[0], /IPFS warm failed.*QmA/)
 })
@@ -227,7 +241,7 @@ test('warm caches what a later get would have fetched', async (t) => {
   t.after(() => fs.rm(h.dir, { recursive: true, force: true }))
 
   h.cache.warm(['QmImg'])
-  await settle()
+  await settle(cached(h.dir, 'QmImg'))
   const image = await h.cache.get('QmImg')
   assert.deepEqual(image.buffer, PNG)
   assert.equal(h.calls.length, 1, 'warm already paid for the fetch')
