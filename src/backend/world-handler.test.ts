@@ -133,7 +133,7 @@ test('/state survives a failed trait backfill', async (t) => {
 test('/visit at a trail debits the fee and creates the visit', async (t) => {
   const ctx = await createCtx()
   t.after(() => ctx.app.close())
-  const res = await post(ctx, '/visit', { place: 'ubud' })
+  const res = await post(ctx, '/visit', { place: 'ubud', move: 'sunrise' })
   assert.equal(res.statusCode, 201)
   assert.deepEqual(ctx.debits, [[1001, 100n, BalanceChangeType.Stake]])
   assert.equal(res.json().place, 'ubud')
@@ -196,7 +196,7 @@ test('/state lists moves per place and bid tiers at Seminyak', async (t) => {
 test('/visit answers 402 no_cube when the stake is not covered', async (t) => {
   const ctx = await createCtx({}, { votes: 50n })
   t.after(() => ctx.app.close())
-  const res = await post(ctx, '/visit', { place: 'ubud' })
+  const res = await post(ctx, '/visit', { place: 'ubud', move: 'sunrise' })
   assert.equal(res.statusCode, 402)
   assert.equal(res.json().code, 'no_cube')
 })
@@ -204,8 +204,8 @@ test('/visit answers 402 no_cube when the stake is not covered', async (t) => {
 test('/visit answers 409 already_visited and never double-debits', async (t) => {
   const ctx = await createCtx()
   t.after(() => ctx.app.close())
-  await post(ctx, '/visit', { place: 'ubud' })
-  const res = await post(ctx, '/visit', { place: 'lovina' })
+  await post(ctx, '/visit', { place: 'ubud', move: 'sunrise' })
+  const res = await post(ctx, '/visit', { place: 'lovina', move: 'sunrise' })
   assert.equal(res.statusCode, 409)
   assert.equal(res.json().code, 'already_visited')
   assert.equal(ctx.debits.length, 1)
@@ -214,8 +214,8 @@ test('/visit answers 409 already_visited and never double-debits', async (t) => 
 test('/visit refunds when the unique index catches a race', async (t) => {
   const ctx = await createCtx({ findVisit: async () => null })
   t.after(() => ctx.app.close())
-  await post(ctx, '/visit', { place: 'ubud' })
-  const res = await post(ctx, '/visit', { place: 'ubud' })
+  await post(ctx, '/visit', { place: 'ubud', move: 'sunrise' })
+  const res = await post(ctx, '/visit', { place: 'ubud', move: 'sunrise' })
   assert.equal(res.statusCode, 409)
   assert.deepEqual(ctx.credits, [[1001, 100n, BalanceChangeType.Stake]])
 })

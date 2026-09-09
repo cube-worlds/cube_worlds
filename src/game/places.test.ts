@@ -27,7 +27,7 @@ test('findPlace and movesFor', () => {
   assert.equal(findPlace('nowhere'), undefined)
   assert.deepEqual(movesFor('split-steal'), ['help', 'steal'])
   assert.deepEqual(movesFor('commons'), ['give', 'take'])
-  assert.deepEqual(movesFor('minority'), [])
+  assert.deepEqual(movesFor('minority'), ['sunrise', 'sunset'])
   assert.deepEqual(movesFor('rest'), [])
 })
 
@@ -47,6 +47,6 @@ test('moves per slice-2 engine, ALL_MOVES is the deduped union', () => {
   assert.deepEqual(movesFor('volunteer'), ['dive', 'wait'])
   assert.deepEqual(movesFor('stag-hunt'), ['stag', 'hare'])
   assert.deepEqual(movesFor('ultimatum'), ['fair', 'greedy', 'strict'])
-  assert.equal(ALL_MOVES.length, 18)
-  assert.equal(new Set(ALL_MOVES).size, 18)
+  assert.equal(ALL_MOVES.length, 20)
+  assert.equal(new Set(ALL_MOVES).size, 20)
 })

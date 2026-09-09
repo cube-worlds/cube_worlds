@@ -19,7 +19,7 @@ interface PlaceSheetProps {
 
 const RULES: Record<PlaceView['engine'], string> = {
   'rest': 'Stay in. Claim your daily $CUBE. No risk, no crowd.',
-  'minority': 'The stakes in the room plus a pot from the treasury, split by your weight among everyone who comes. Fewer visitors, bigger share.',
+  'minority': 'Two shrines. The one with FEWER pilgrims is blessed — its side splits the room\'s stakes plus a pot from the treasury, by weight. The crowded shrine gets nothing. A dead heat refunds everyone.',
   'split-steal': 'You meet one other holder. HELP: both keep the stake plus a bonus. STEAL: take both stakes — unless they steal too, then both burn.',
   'commons': 'GIVE feeds the temple treasury and pays you its growth out of it. TAKE draws a share. Too many takers and the temple is plundered.',
   'hawk-dove': 'You meet one other holder. DOVE vs DOVE share the prize plus a bonus. HAWK takes most of it from a dove. HAWK vs HAWK fight: the heavier one usually wins a sliver, the rest burns.',
@@ -57,7 +57,6 @@ export function PlaceSheet({ place, myVisit, endsAt, botName, inviteHost, invite
   const here = myVisit?.place === place.id
   const elsewhere = myVisit && !here
   const moves = place.moves
-  const label = place.engine === 'minority' ? 'FEE' : 'STAKE'
   const moveLabel = (m: string) => (m.startsWith('bid') && place.bids ? `BID ${place.bids[Number(m.slice(3)) - 1]}` : m.toUpperCase())
   const pot = potNow(place)
 
@@ -74,7 +73,7 @@ export function PlaceSheet({ place, myVisit, endsAt, botName, inviteHost, invite
       {place.engine !== 'rest' && place.open && (
         <>
           <div className="px-label" style={{ fontSize: 7, color: 'var(--cw-text-dim)' }}>
-            {place.engine === 'all-pay' ? `PRIZE CAP ${place.pot}` : `${label} ${place.stake}`}
+            {place.engine === 'all-pay' ? `PRIZE CAP ${place.pot}` : `STAKE ${place.stake}`}
             {pot ? ` · POT ${pot.now}${pot.capped ? ` OF ${place.pot}` : ''}` : ''}
             {` · TREASURY ${place.pool}`}
             {` · LAST WINDOW ${place.lastCrowd} HERE`}
