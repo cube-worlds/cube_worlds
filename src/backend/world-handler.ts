@@ -23,7 +23,7 @@ export interface WorldHandlerDependencies {
   now: () => number
   places: readonly PlaceDef[]
   countVisitsByPlace: (windowId: number) => Promise<Record<string, number>>
-  getPool: (place: string, seed: bigint) => Promise<bigint>
+  getPools: () => Promise<Map<string, bigint>>
   findVisit: (userId: number, windowId: number) => Promise<VisitRecord | null>
   lastResolvedVisit: (userId: number) => Promise<VisitRecord | null>
   findResolvedVisits: (userId: number, limit: number) => Promise<VisitRecord[]>
@@ -132,14 +132,17 @@ export function buildWorldHandler(deps: WorldHandlerDependencies) {
           if (!user) return reply
           const windowId = windowIdAt(deps.now())
           const traits = await traitsFor(user)
-          const [crowd, myVisit, lastOutcome] = await Promise.all([
+          const [crowd, myVisit, lastOutcome, pools] = await Promise.all([
             deps.countVisitsByPlace(windowId - 1),
             deps.findVisit(user.id, windowId),
             deps.lastResolvedVisit(user.id),
+            deps.getPools(),
           ])
           const places = []
           for (const place of deps.places) {
-            const pool = place.engine === 'commons' ? await deps.getPool(place.id, place.seed) : undefined
+            // Every place has a treasury now, and a drained one pays a smaller
+            // prize — so show it rather than letting the pot shrink silently.
+            const pool = pools.get(place.id) ?? place.seed
             places.push({
               id: place.id,
               name: place.name,
@@ -155,7 +158,7 @@ export function buildWorldHandler(deps: WorldHandlerDependencies) {
               moves: movesFor(place.engine),
               ...(place.bids ? { bids: place.bids.map(String) } : {}),
               lastCrowd: crowd[place.id] ?? 0,
-              ...(pool === undefined ? {} : { pool: pool.toString() }),
+              pool: pool.toString(),
             })
           }
           return {

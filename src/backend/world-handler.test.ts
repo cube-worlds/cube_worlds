@@ -41,7 +41,7 @@ async function createCtx(overrides: Partial<WorldHandlerDependencies> = {}, user
     now: () => NOW,
     places: PLACES,
     countVisitsByPlace: async () => ({ ubud: 3 }),
-    getPool: async (_p, seed) => seed + 1n,
+    getPools: async () => new Map([['besakih', 4200n]]),
     findVisit: async (userId, windowId) => visits.find(v => v.userId === userId && v.windowId === windowId) ?? null,
     lastResolvedVisit: async userId => visits.find(v => v.userId === userId && v.resolved) ?? null,
     findResolvedVisits: async (userId, limit) => visits.filter(v => v.userId === userId && v.resolved).slice(0, limit),
@@ -103,8 +103,11 @@ test('/state returns the window, places with weights, last crowd, pools and my r
   assert.equal(ubud.stake, '100')
   assert.equal(ubud.pot, '1500')
   assert.deepEqual(ubud.traits, [{ name: 'Artistry', value: 10 }, { name: 'Imagination', value: 10 }, { name: 'Charm', value: 10 }])
+  // Every place reports its treasury now, not just the two commons places —
+  // a place with no PlaceState document yet falls back to its seed.
+  assert.equal(ubud.pool, '5000')
   const besakih = body.places.find((p: { id: string }) => p.id === 'besakih')
-  assert.equal(besakih.pool, '5001')
+  assert.equal(besakih.pool, '4200')
   assert.equal(body.myVisit, null)
   assert.equal(body.balance, '1000')
   assert.deepEqual(body.rep, { helped: 1, stole: 0, gave: 2, took: 0 })

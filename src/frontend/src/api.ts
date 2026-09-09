@@ -224,7 +224,7 @@ export interface PlaceView {
   pot: string
   bonus: string
   lastCrowd: number
-  pool?: string
+  pool: string
 }
 
 export interface VisitView {
