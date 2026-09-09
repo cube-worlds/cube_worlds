@@ -1,16 +1,21 @@
 import type { LoginResponse, PublicConfig } from './api'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { login, publicConfig } from './api'
 import { BaliTab } from './components/BaliTab'
-import { EarnPanel } from './components/EarnPanel'
 import { Fork } from './components/Fork'
 import { HeroTab } from './components/HeroTab'
 import { Hub } from './components/Hub'
 import { MintFlow } from './components/MintFlow'
 import { PassScan } from './components/PassScan'
 import { TitleScreen } from './components/TitleScreen'
-import { WalletScreen } from './components/WalletScreen'
 import { expand, getStartParam, haptic } from './telegram'
+
+// ~400 kB of TON Connect — two thirds of the bundle — and nothing on the boot
+// path needs it. These three are the only modules that reach it, so they share
+// one async chunk that loads when a wallet screen is first opened.
+const TonConnectGate = lazy(() => import('./components/TonConnectGate'))
+const WalletScreen = lazy(() => import('./components/WalletScreen').then((m) => ({ default: m.WalletScreen })))
+const EarnPanel = lazy(() => import('./components/EarnPanel').then((m) => ({ default: m.EarnPanel })))
 
 // title → holder ? hub : fork
 // fork → forge | wallet(pass)
@@ -36,6 +41,7 @@ export function App() {
   const [config, setConfig] = useState<PublicConfig | null>(null)
   const [balance, setBalance] = useState('0')
   const [error, setError] = useState<string | undefined>()
+  const [tonMounted, setTonMounted] = useState(false)
   const [{ bali, meet, referId }] = useState(() => {
     const start = getStartParam()
     const bali = start?.startsWith('bali_') ? start.slice(5) : null
@@ -57,6 +63,9 @@ export function App() {
         setUser(result)
         setBalance(result.balance)
         setPhase('ready')
+        // Warm the TON Connect chunk now that the boot requests are done, so
+        // pressing CONNECT later doesn't wait on a cold fetch.
+        void import('./components/TonConnectGate')
       })
       .catch(() => {
         setError('Cannot reach the realm — open the app from Telegram')
@@ -68,6 +77,20 @@ export function App() {
     expand()
     boot()
   }, [boot])
+
+  // The only screens that call into TON Connect. WalletScreen also stands in
+  // for `scan` when no wallet is bound yet, hence the second clause.
+  const needsTon
+    = screen.name === 'wallet'
+      || screen.name === 'earn'
+      || (screen.name === 'scan' && !user?.wallet)
+      || (screen.name === 'hub' && screen.tab === 'earn')
+
+  // Sticky: once the provider is up it stays up. Unmounting it would destroy
+  // the TonConnectUI instance and the wallet connection along with it.
+  useEffect(() => {
+    if (needsTon) setTonMounted(true)
+  }, [needsTon])
 
   // Re-login (username gate REFRESH, wallet bound). Keeps the current screen.
   const refreshLogin = useCallback(() => {
@@ -221,7 +244,13 @@ export function App() {
       </header>
 
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', paddingBottom: inHub ? 70 : 0 }}>
-        {body}
+        {needsTon || tonMounted
+          ? (
+              <Suspense fallback={<div className="px-label" style={{ padding: 24, color: 'var(--cw-text-dim)' }}>LOADING WALLET…</div>}>
+                <TonConnectGate>{body}</TonConnectGate>
+              </Suspense>
+            )
+          : body}
       </main>
 
       {inHub && (

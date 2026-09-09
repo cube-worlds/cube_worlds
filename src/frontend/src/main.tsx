@@ -1,15 +1,13 @@
-import { TonConnectUIProvider } from '@tonconnect/ui-react'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { App } from './App'
 import './theme.css'
 
-const manifestUrl = `${window.location.origin}/tonconnect-manifest.json`
-
+// TonConnectUIProvider used to live here, which pulled the whole TON Connect
+// stack into the entry chunk. It now sits in the lazy TonConnectGate that
+// App.tsx mounts around the wallet screens only.
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <TonConnectUIProvider manifestUrl={manifestUrl}>
-      <App />
-    </TonConnectUIProvider>
+    <App />
   </StrictMode>,
 )

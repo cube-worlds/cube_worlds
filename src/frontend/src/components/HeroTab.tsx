@@ -1,7 +1,7 @@
 import type { Pass } from '../api'
+import { shortAddress } from '../format'
 import { PassPublicBlock, usePublicPass } from './PassPeek'
 import { PassImage } from './PassScan'
-import { shortAddress } from './WalletScreen'
 
 interface HeroTabProps {
   pass: Pass
