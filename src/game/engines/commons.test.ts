@@ -16,17 +16,17 @@ test('gives enter, growth pays givers by weight, takers draw from the pool', () 
   assert.equal(out[1].payout, 260n)
   assert.equal(out[2].payout, 780n)
   assert.equal(out[3].payout, 300n)
-  assert.equal(r.pool, 4900n)
+  assert.equal(r.pool, 3860n)
   assert.deepEqual(out[1].rep, { gave: 1 })
   assert.deepEqual(out[3].rep, { took: 1 })
-  assert.equal(out[1].outcome, 'Besakih · you gave · +260 growth · pool 4900')
-  assert.equal(out[3].outcome, 'Besakih · you took · +300 · pool 4900')
+  assert.equal(out[1].outcome, 'Besakih · you gave · +260 growth · pool 3860')
+  assert.equal(out[3].outcome, 'Besakih · you took · +300 · pool 3860')
 })
 
 test('growth is capped', () => {
   const r = resolveCommons('Besakih', [v(1, 'give')], 100n, 5000n, 20000n, weightOf)
   assert.equal(byUser(r)[1].payout, 2000n)
-  assert.equal(r.pool, 20100n)
+  assert.equal(r.pool, 18100n)
 })
 
 test('no givers → no growth minted', () => {

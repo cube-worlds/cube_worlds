@@ -1,9 +1,13 @@
 import type { EngineOutcome, EngineResult, EngineVisit, WeightOf } from './types'
 import { COMMONS_GROWTH_CAP, COMMONS_GROWTH_PERCENT, COMMONS_TAKE_CAP_MULTIPLIER } from '#root/game/places'
 
-// Public-goods pool that persists across windows. Givers are paid the pool's
-// growth (their return); takers draw a capped share; too many takers and the
-// temple is plundered — pool resets, takers leave empty-handed.
+// Public-goods pool that persists across windows — here the pool *is* the
+// place treasury. Givers are paid the pool's growth, takers draw a capped
+// share, and too many takers plunder the temple.
+//
+// The growth is drawn out of the pool rather than minted: the pool is the
+// source of the yield, so giving redistributes what earlier windows left
+// behind instead of printing it. Plunder can only shrink the pool.
 export function resolveCommons(
   placeName: string,
   visits: EngineVisit[],
@@ -22,6 +26,7 @@ export function resolveCommons(
   if (givers.length > 0) {
     let growth = (next * BigInt(COMMONS_GROWTH_PERCENT)) / 100n
     if (growth > COMMONS_GROWTH_CAP) growth = COMMONS_GROWTH_CAP
+    next -= growth
     const weights = givers.map(g => BigInt(weightOf(g.userId)))
     const total = weights.reduce((a, b) => a + b, 0n)
     givers.forEach((g, i) => growthPay.set(g.userId, total > 0n ? (growth * weights[i]) / total : 0n))
@@ -30,7 +35,8 @@ export function resolveCommons(
   const collapse = takers.length >= 3 && takers.length > givers.length
   let takePay = 0n
   if (collapse) {
-    next = seed / 2n
+    const half = seed / 2n
+    next = next < half ? next : half
   } else if (takers.length > 0) {
     const cap = stake * COMMONS_TAKE_CAP_MULTIPLIER
     const share = next / BigInt(takers.length)

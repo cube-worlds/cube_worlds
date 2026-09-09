@@ -1,4 +1,39 @@
-import type { EngineVisit, WeightOf } from './types'
+import type { EngineOutcome, EngineResult, EngineVisit, WeightOf } from './types'
+
+// Total staked into a window — the money the place is allowed to give back
+// before it has to touch its treasury.
+export function staked(visits: EngineVisit[]): bigint {
+  return visits.reduce((sum, v) => sum + v.stake, 0n)
+}
+
+// Nothing in Bali is minted. A window pays out what its visitors staked plus
+// at most `grant` from the place treasury, and whatever is not paid stays in
+// the treasury. Engines size their prizes against `grant` up front so the
+// numbers they write into the outcome text are the numbers actually paid —
+// the proportional scale-down here is a backstop, and emission.test.ts fails
+// if any engine ever leans on it.
+//
+// Refunds are stake returns, not prizes: they are paid in full before
+// anything is scaled, so a visitor the engine could not play is never shaved.
+export function treasury(outcomes: EngineOutcome[], visits: EngineVisit[], pool: bigint): EngineResult {
+  const budget = staked(visits) + pool
+  const refunded = outcomes.reduce((s, o) => s + (o.refund ? o.payout : 0n), 0n)
+  const wanted = outcomes.reduce((s, o) => s + (o.refund ? 0n : o.payout), 0n)
+  const left = budget - refunded
+  if (wanted <= left) return { outcomes, pool: left - wanted }
+  const scaled = outcomes.map(o => (o.refund ? o : { ...o, payout: (o.payout * left) / wanted }))
+  const paid = scaled.reduce((s, o) => s + (o.refund ? 0n : o.payout), 0n)
+  return { outcomes: scaled, pool: left - paid }
+}
+
+// What a place may add to this window's stakes: never more than the treasury
+// holds, and never more than the room has staked times POT_TURNOUT_MULT — so
+// two visitors to an empty place cannot walk off with a full pot.
+export function grantFor(pot: bigint, visits: EngineVisit[], pool: bigint, mult: bigint): bigint {
+  const byTurnout = staked(visits) * mult
+  const capped = pot < byTurnout ? pot : byTurnout
+  return capped < pool ? capped : pool
+}
 
 // Pairs visits: invited pairs first (both sides point at each other), the
 // rest shuffled and paired in order; an odd visitor is left alone.

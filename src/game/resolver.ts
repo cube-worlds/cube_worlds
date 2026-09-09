@@ -7,12 +7,13 @@ import { resolveAllPay } from '#root/game/engines/all-pay'
 import { resolveCommons } from '#root/game/engines/commons'
 import { resolveHawkDove } from '#root/game/engines/hawk-dove'
 import { resolveHeist } from '#root/game/engines/heist'
+import { grantFor } from '#root/game/engines/helpers'
 import { resolveMinority } from '#root/game/engines/minority'
 import { resolveSplitSteal } from '#root/game/engines/split-steal'
 import { resolveStagHunt } from '#root/game/engines/stag-hunt'
 import { resolveUltimatum } from '#root/game/engines/ultimatum'
 import { resolveVolunteer } from '#root/game/engines/volunteer'
-import { windowIdAt } from '#root/game/places'
+import { POT_TURNOUT_MULT, windowIdAt } from '#root/game/places'
 import { traitOf, weightOf } from '#root/game/traits'
 
 export interface HolderInfo { traits?: Traits, pass?: { index: number, name: string } }
@@ -44,27 +45,30 @@ export function buildResolver(deps: ResolverDependencies) {
     const weight = (userId: number) => weightOf(holders.get(userId)?.traits, place.traits)
     const trait = (userId: number, name: string) => traitOf(holders.get(userId)?.traits, name)
     const engineVisits = visits.map(toEngineVisit)
+    // Every place holds a treasury. Engines are handed what it can afford to
+    // add to this window's stakes and hand back what is left, so Bali as a
+    // whole can never pay out more than it has taken in.
+    const pool = await deps.getPool(place.id, place.seed)
+    const grant = grantFor(place.pot, engineVisits, pool, POT_TURNOUT_MULT)
     switch (place.engine) {
       case 'minority':
-        return resolveMinority(place.name, engineVisits, place.pot, weight)
+        return resolveMinority(place.name, engineVisits, grant, pool, weight)
       case 'split-steal':
-        return resolveSplitSteal(place.name, engineVisits, place.stake, place.bonus, trait, deps.rng)
-      case 'commons': {
-        const pool = await deps.getPool(place.id, place.seed)
+        return resolveSplitSteal(place.name, engineVisits, place.stake, place.bonus, grant, pool, trait, deps.rng)
+      case 'commons':
         return resolveCommons(place.name, engineVisits, place.stake, place.seed, pool, weight)
-      }
       case 'hawk-dove':
-        return resolveHawkDove(place.name, engineVisits, place.stake, weight, deps.rng)
+        return resolveHawkDove(place.name, engineVisits, place.stake, grant, pool, weight, deps.rng)
       case 'heist':
-        return resolveHeist(place.name, engineVisits, place.stake, place.pot, weight, trait)
+        return resolveHeist(place.name, engineVisits, grant, pool, weight, trait)
       case 'all-pay':
-        return resolveAllPay(place.name, engineVisits, place.pot, weight, deps.rng)
+        return resolveAllPay(place.name, engineVisits, place.pot, pool, weight, deps.rng)
       case 'volunteer':
-        return resolveVolunteer(place.name, engineVisits, place.stake, weight, deps.rng)
+        return resolveVolunteer(place.name, engineVisits, place.stake, grant, pool, weight, deps.rng)
       case 'stag-hunt':
-        return resolveStagHunt(place.name, engineVisits, place.stake, place.pot, weight)
+        return resolveStagHunt(place.name, engineVisits, place.stake, grant, pool, weight)
       case 'ultimatum':
-        return resolveUltimatum(place.name, engineVisits, place.stake, place.bonus, weight, deps.rng)
+        return resolveUltimatum(place.name, engineVisits, place.stake, place.bonus, grant, pool, weight, deps.rng)
       default:
         // rest / soon: nothing to play — give the stake back.
         return { outcomes: visits.map(v => ({ userId: v.userId, payout: v.stake, outcome: `${place.name} · closed · refunded ${v.stake}`, refund: true })) }

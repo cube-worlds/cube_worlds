@@ -8,7 +8,7 @@ type M = 'fair' | 'greedy' | 'strict'
 const v = (userId: number, move: M): EngineVisit => ({ userId, move, stake: 100n })
 const weights: Record<number, number> = { 1: 30, 2: 10 }
 const weightOf = (id: number) => weights[id] ?? 10
-const run = (visits: EngineVisit[], rng: () => number = () => 0) => resolveUltimatum('Gili Trawangan', visits, 100n, 100n, weightOf, rng)
+const run = (visits: EngineVisit[], rng: () => number = () => 0) => resolveUltimatum('Gili Trawangan', visits, 100n, 100n, 1000n, 5000n, weightOf, rng)
 const pay = (visits: EngineVisit[], rng?: () => number) => run(visits, rng).outcomes.map(o => [o.userId, o.payout])
 
 test('the heavier visitor proposes; fair or strict proposer splits 150/150 and is marked gave', () => {

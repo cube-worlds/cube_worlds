@@ -7,7 +7,7 @@ import { resolveAllPay } from '#root/game/engines/all-pay'
 const v = (userId: number, stake: bigint): EngineVisit => ({ userId, move: 'bid1', stake })
 const weights: Record<number, number> = { 1: 10, 2: 20 }
 const weightOf = (id: number) => weights[id] ?? 10
-const run = (visits: EngineVisit[], rng: () => number = () => 0) => resolveAllPay('Seminyak', visits, 3000n, weightOf, rng)
+const run = (visits: EngineVisit[], rng: () => number = () => 0) => resolveAllPay('Seminyak', visits, 3000n, 5000n, weightOf, rng)
 
 test('single bidder is refunded', () => {
   const { outcomes } = run([v(1, 5000n)])

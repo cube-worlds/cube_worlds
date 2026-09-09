@@ -7,7 +7,7 @@ import { resolveVolunteer } from '#root/game/engines/volunteer'
 const v = (userId: number, move: 'dive' | 'wait'): EngineVisit => ({ userId, move, stake: 100n })
 const weights: Record<number, number> = { 1: 30, 2: 10 }
 const weightOf = (id: number) => weights[id] ?? 10
-const run = (visits: EngineVisit[], rng: () => number = () => 0) => resolveVolunteer('Amed', visits, 100n, weightOf, rng)
+const run = (visits: EngineVisit[], rng: () => number = () => 0) => resolveVolunteer('Amed', visits, 100n, 1000n, 5000n, weightOf, rng)
 
 test('nobody dives: everyone loses the stake', () => {
   const { outcomes } = run([v(1, 'wait'), v(2, 'wait')])

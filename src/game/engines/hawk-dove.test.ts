@@ -7,7 +7,7 @@ import { resolveHawkDove } from '#root/game/engines/hawk-dove'
 const v = (userId: number, move: 'hawk' | 'dove'): EngineVisit => ({ userId, move, stake: 100n })
 const weights: Record<number, number> = { 1: 30, 2: 3 }
 const weightOf = (id: number) => weights[id] ?? 10
-const run = (visits: EngineVisit[], rng: () => number = () => 0) => resolveHawkDove('Kuta', visits, 100n, weightOf, rng)
+const run = (visits: EngineVisit[], rng: () => number = () => 0) => resolveHawkDove('Kuta', visits, 100n, 1000n, 5000n, weightOf, rng)
 
 test('dove/dove: both keep the stake plus the bonus, no rep', () => {
   const { outcomes } = run([v(1, 'dove'), v(2, 'dove')])

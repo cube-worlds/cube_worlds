@@ -50,8 +50,8 @@ test('resolves a window: pays each visit once, bumps rep, notifies, closes the w
   const { resolveWindow } = buildResolver(h.deps)
   assert.equal(await resolveWindow(W), 4)
   assert.deepEqual(h.paid.filter(p => p[1] > 0n).map(p => [p[0], p[1], p[2]]), [
-    [1, 750n, BalanceChangeType.Payout],
-    [2, 750n, BalanceChangeType.Payout],
+    [1, 400n, BalanceChangeType.Payout],
+    [2, 400n, BalanceChangeType.Payout],
     [3, 400n, BalanceChangeType.Payout],
   ])
   assert.deepEqual(h.reps, [[3, { stole: 1 }], [4, { helped: 1 }]])
@@ -68,8 +68,8 @@ test('zero payouts do not touch the ledger', async () => {
 test('commons pool is read with the seed and written back', async () => {
   const h = harness([visit(1, 'besakih', 'give'), visit(2, 'besakih', 'take')])
   await buildResolver(h.deps).resolveWindow(W)
-  // 5000+100=5100; growth min(1020,2000)=1020 to the single giver; taker min(300,5100)=300 → 4800
-  assert.equal(h.pools.besakih, 4800n)
+  // 5000+100=5100; growth min(1020,2000)=1020 comes OUT of the pool → 4080; taker min(300,4080)=300 → 3780
+  assert.equal(h.pools.besakih, 3780n)
   assert.deepEqual(h.paid.map(p => [p[0], p[1]]), [[1, 1020n], [2, 300n]])
 })
 
@@ -150,7 +150,7 @@ test('slice-2 engines are dispatched by place', async () => {
   const paid = Object.fromEntries(h.paid.map(p => [p[0], [p[1], p[2]]]))
   assert.deepEqual(paid[1], [120n, BalanceChangeType.Payout])
   assert.deepEqual(paid[2], [120n, BalanceChangeType.Payout])
-  assert.deepEqual(paid[3], [600n, BalanceChangeType.Payout]) // (200 + 1000) / 2
+  assert.deepEqual(paid[3], [400n, BalanceChangeType.Payout]) // (200 staked + 600 grant) / 2
   assert.deepEqual(paid[5], [200n, BalanceChangeType.Payout]) // lone diver is the hero
   assert.deepEqual(paid[6], [120n, BalanceChangeType.Payout])
   assert.deepEqual(paid[7], [50n, BalanceChangeType.Payout]) // equal weight; rng 0 shuffles 8 first and makes them propose greedy
