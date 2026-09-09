@@ -65,7 +65,9 @@ export function DailyClaim({ onBalance }: DailyClaimProps) {
       {claim.canClaim
         ? (
             <button type="button" className="px-btn" style={{ padding: '10px 0', fontSize: 8 }} disabled={busy} onClick={() => void onClaim()}>
-              {`CLAIM +${claim.rawClaimAmount}`}
+              {/* Sub-1 amounts are normal (60s cooldown, carry accumulates), so
+                  do not floor — "+0" reads like a bug. */}
+              {`CLAIM +${Number(claim.nextClaimAmount.toFixed(2))}`}
             </button>
           )
         : (
