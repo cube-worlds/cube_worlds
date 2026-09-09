@@ -21,7 +21,10 @@ jobs:
       - run: npm --prefix src/frontend ci
       - run: npm run lint
       - run: npm run typecheck
-      - run: npm --prefix src/frontend run build
+      # typecheck is `tsc` with noEmit, so it never exercises the emit that
+      # `build:bot` actually ships, and the landing build was not run at all.
+      # build:all covers both plus the frontend build this step used to do.
+      - run: npm run build:all
 
   backend-tests:
     runs-on: ubuntu-latest
