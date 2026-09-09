@@ -38,7 +38,11 @@ test('defaultValidateInitData reports expired initData as a ClientError', () => 
 
 test('defaultValidateInitData keeps a tampered signature generic', () => {
   process.env.BOT_TOKEN = BOT_TOKEN
-  const tampered = signInitData(new Date()).replace(/hash=\w/, 'hash=0')
+  // Overwrite the whole hash — flipping one character can be a no-op when it
+  // already holds the replacement value, which made this test 1-in-16 flaky.
+  const params = new URLSearchParams(signInitData(new Date()))
+  params.set('hash', '0'.repeat(64))
+  const tampered = params.toString()
   assert.throws(
     () => defaultValidateInitData(tampered),
     (err: unknown) => err instanceof Error && !(err instanceof ClientError),
