@@ -1,6 +1,6 @@
 import { getModelForClass, prop } from '@typegoose/typegoose'
 
-// Persistent per-place state — today only the commons pools.
+// Persistent per-place state — every place's treasury (see docs/BALI_SPEC.md).
 class PlaceState {
   @prop({ type: String, required: true, unique: true })
   place!: string
@@ -21,6 +21,15 @@ export async function getPool(place: string, seed: bigint): Promise<bigint> {
     { upsert: true, new: true },
   ).lean()
   return BigInt(doc!.pool)
+}
+
+// Read-only bulk read for /api/world/state, which needs all 14 treasuries at
+// once — getPool upserts, and 14 upserts per request on a 60/min route is not
+// worth it just to show a number. A place with no document yet is simply absent
+// and the caller falls back to its seed.
+export async function getPools(): Promise<Map<string, bigint>> {
+  const docs = await PlaceStateModel.find({}, { place: 1, pool: 1 }).lean()
+  return new Map(docs.map(d => [d.place, BigInt(d.pool)]))
 }
 
 // CAS on lastWindow so a resolver retry for a window that already committed

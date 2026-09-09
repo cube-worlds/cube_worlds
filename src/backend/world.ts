@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto'
-import { getPool } from '#root/common/models/PlaceState'
+import { getPools } from '#root/common/models/PlaceState'
 import {
   addPoints,
   debitVotes,
@@ -31,7 +31,7 @@ export function createWorldHandler() {
     now: () => Date.now(),
     places: PLACES,
     countVisitsByPlace,
-    getPool,
+    getPools,
     findVisit,
     lastResolvedVisit,
     findResolvedVisits,
