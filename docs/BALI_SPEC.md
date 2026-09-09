@@ -260,13 +260,16 @@ any you disagree with.
 
 Open, deferred to slice 3+:
 
-- **Treasury visibility.** A silently shrinking prize is bad UX. `/api/world/state`
-  should expose each place's treasury and the prize it can actually pay this
-  window, and the frontend should show it. Without this, players cannot tell a
-  rich place from a drained one.
-- **Seeding.** How much each treasury starts with, and whether an operator can
-  top one up (a deliberate, budgeted faucet under admin control) rather than
-  the engines minting implicitly.
+- ~~**Treasury visibility.**~~ Shipped (PR #316). `/api/world/state` returns
+  `pool` for all 14 places; the place sheet shows `TREASURY <n>` and, when the
+  treasury cannot cover the headline pot, `POT <n> OF <pot>` plus a line saying
+  why. The **turnout** half of the cap is deliberately not surfaced — it depends
+  on who has visited this window, which must stay hidden until it resolves.
+- ~~**Seeding / operator top-ups.**~~ Shipped (PR #317). Every place starts at
+  `TREASURY_SEED` (5000). Admin `/treasury` lists every pool and its total;
+  `/treasury <place> <amount>` moves one, capped at 1,000,000 per call, negative
+  drains and is floored at 0. This is the **only** faucet into Bali and the only
+  place $CUBE is created there — the engines never mint.
 - **Minority is not a minority game.** Ubud and its three siblings have no move;
   everyone who visits splits a pot by trait weight, so the name describes
   turnout, not strategy. Under the new rule the hook becomes "go where your
@@ -289,6 +292,5 @@ Open, deferred to slice 3+:
 7. `scripts/bali-emission.mjs` reworked to carry the treasury across windows
    and burn in the seed; new numbers in section 1.2.
 
-Still open: the three items at the end of section 4 — treasury visibility in
-`/api/world/state`, operator top-ups, and whether minority should get a real
-move.
+Follow-ups shipped the same day: treasury visibility (#316) and operator
+top-ups (#317). Still open: whether minority should get a real move.
