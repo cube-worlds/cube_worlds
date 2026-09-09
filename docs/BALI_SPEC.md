@@ -95,12 +95,12 @@ Aggregate, 3 windows/day:
 
 | turnout | visits/day | net | return on stake |
 |---|---|---|---|
-| 2 / place / window | 78 | **−1,722** | 84% |
-| 3 | 117 | −2,128 | 87% |
+| 2 / place / window | 78 | **−1,717** | 84% |
+| 3 | 117 | −2,183 | 87% |
 | 5 | 195 | −4,292 | 84% |
-| 10 | 390 | −12,341 | 77% |
-| 20 | 780 | −33,572 | 69% |
-| 40 | 1,560 | −78,915 | 64% |
+| 10 | 390 | −12,583 | 77% |
+| 20 | 780 | −34,106 | 69% |
+| 40 | 1,560 | −78,426 | 64% |
 
 The zeros are the design working, not a bug: a place whose treasury has drained
 to its floor redistributes exactly the stakes present — nobody is minted a coin,
@@ -211,7 +211,7 @@ single knob for "how big can a win be".
 
 | engine | change |
 |---|---|
-| minority | prize = `staked + grant` instead of a flat pot |
+| minority | prize = `staked + grant` instead of a flat pot (#318 then gave it two sides — the smaller one takes that prize) |
 | heist | loot = `staked + grant`; the `stake` parameter is gone (it was only used to re-derive the stakes) |
 | stag-hunt | half the grant is reserved for the hares and thins as more show up; the rest is the stag pot |
 | commons | `next -= growth` — the pool becomes the actual source of the yield (decision 3); plunder now clamps the pool *down* only |
@@ -270,11 +270,15 @@ Open, deferred to slice 3+:
   `/treasury <place> <amount>` moves one, capped at 1,000,000 per call, negative
   drains and is floored at 0. This is the **only** faucet into Bali and the only
   place $CUBE is created there — the engines never mint.
-- **Minority is not a minority game.** Ubud and its three siblings have no move;
-  everyone who visits splits a pot by trait weight, so the name describes
-  turnout, not strategy. Under the new rule the hook becomes "go where your
-  traits beat the crowd, and go when the crowd is thin". Worth either renaming
-  the engine or giving these places a real move.
+- ~~**Minority is not a minority game.**~~ Shipped (PR #318). Ubud, Batur,
+  Lovina and Tanah Lot now offer two shrines — `sunrise` / `sunset`. The
+  **smaller** side splits the whole room's stakes plus the grant by trait
+  weight; the crowded side loses its stake. A dead heat, a one-sided sweep, or
+  a lone visitor refunds everyone: no minority formed, nobody is charged for
+  showing up. A visit committed before the move existed reads as `sunset`, so
+  pre-#318 windows still settle. These are now the only places where reading
+  the crowd, rather than your own traits, is the game — weight decides only how
+  the winning side splits.
 
 ---
 
@@ -292,5 +296,8 @@ Open, deferred to slice 3+:
 7. `scripts/bali-emission.mjs` reworked to carry the treasury across windows
    and burn in the seed; new numbers in section 1.2.
 
-Follow-ups shipped the same day: treasury visibility (#316) and operator
-top-ups (#317). Still open: whether minority should get a real move.
+Follow-ups: treasury visibility (#316), operator top-ups (#317), and the real
+minority game (#318). Every open item from section 4 is now closed. The
+emission table in 1.2 was re-measured after #318 — the four minority places
+read 0 at every turnout, which is what a pure redistribution place looks like
+once its seed has been paid out.

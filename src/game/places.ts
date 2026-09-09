@@ -22,6 +22,7 @@ export type Engine = 'rest' | 'minority' | 'split-steal' | 'commons'
 export type Move = 'help' | 'steal' | 'give' | 'take'
   | 'hawk' | 'dove' | 'loyal' | 'betray' | 'bid1' | 'bid2' | 'bid3'
   | 'dive' | 'wait' | 'stag' | 'hare' | 'fair' | 'greedy' | 'strict'
+  | 'sunrise' | 'sunset'
 
 export interface PlaceDef {
   id: string
@@ -95,7 +96,7 @@ export function findPlace(id: string): PlaceDef | undefined {
 
 const MOVES: Record<Engine, readonly Move[]> = {
   'rest': [],
-  'minority': [],
+  'minority': ['sunrise', 'sunset'],
   'split-steal': ['help', 'steal'],
   'commons': ['give', 'take'],
   'hawk-dove': ['hawk', 'dove'],

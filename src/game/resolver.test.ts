@@ -46,16 +46,22 @@ function harness(visits: VisitRecord[], overrides: Partial<ResolverDependencies>
 }
 
 test('resolves a window: pays each visit once, bumps rep, notifies, closes the window', async () => {
-  const h = harness([visit(1, 'ubud'), visit(2, 'ubud'), visit(3, 'canggu', 'steal'), visit(4, 'canggu', 'help')])
+  const h = harness([
+    visit(1, 'ubud', 'sunrise'),
+    visit(2, 'ubud', 'sunset'),
+    visit(5, 'ubud', 'sunset'),
+    visit(3, 'canggu', 'steal'),
+    visit(4, 'canggu', 'help'),
+  ])
   const { resolveWindow } = buildResolver(h.deps)
-  assert.equal(await resolveWindow(W), 4)
+  assert.equal(await resolveWindow(W), 5)
   assert.deepEqual(h.paid.filter(p => p[1] > 0n).map(p => [p[0], p[1], p[2]]), [
-    [1, 400n, BalanceChangeType.Payout],
-    [2, 400n, BalanceChangeType.Payout],
+    // 300 staked + grant min(1500, 300*3, 5000)=900, all of it to the lone sunrise
+    [1, 1200n, BalanceChangeType.Payout],
     [3, 400n, BalanceChangeType.Payout],
   ])
   assert.deepEqual(h.reps, [[3, { stole: 1 }], [4, { helped: 1 }]])
-  assert.equal(h.notified.length, 4)
+  assert.equal(h.notified.length, 5)
   assert.deepEqual(h.windows, [['claim', W], ['resolved', W]])
 })
 
