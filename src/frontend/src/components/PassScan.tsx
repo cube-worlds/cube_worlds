@@ -1,8 +1,8 @@
 import type { LoginResponse, Pass } from '../api'
 import { useCallback, useEffect, useState } from 'react'
 import { scanPasses, selectPass } from '../api'
+import { shortAddress } from '../format'
 import { haptic } from '../telegram'
-import { shortAddress } from './WalletScreen'
 
 type ScanState =
   | { kind: 'scanning' }

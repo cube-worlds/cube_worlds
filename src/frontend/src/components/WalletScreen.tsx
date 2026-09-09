@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { shortAddress } from '../format'
 import { useWalletBind } from '../hooks/useWalletBind'
 import { haptic } from '../telegram'
 
@@ -10,10 +11,6 @@ interface WalletScreenProps {
   onBound: (address: string) => void
   onContinue: () => void
   onBack: () => void
-}
-
-export function shortAddress(address: string): string {
-  return `${address.slice(0, 4)}…${address.slice(-4)}`
 }
 
 const REASON_COPY = {
