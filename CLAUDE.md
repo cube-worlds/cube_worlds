@@ -87,6 +87,7 @@ Features (`src/bot/index.ts`): start, help, queue (admin: `/queue` browser + App
 - Rate limits: `/api/world/*` — `state` 60/min, `visit` 10/min, `history` 30/min, `pass/:index` (public) 60/min.
 
 ## Deploy notes
+- **Prod deploys are fenced**: `.kamal/hooks/pre-deploy` aborts any non-staging deploy unless `PROD_CUTOVER=yes` is in the environment (`PROD_CUTOVER=yes kamal deploy`). Never set it on the user's behalf — the cutover is their call. `-d staging` passes untouched.
 - Production still runs **v1**; this tree replaces it wholesale on cutover. Before deploy: `CHECK_MONGO_URI=<prod> npx tsx scripts/check-prod-users.ts` — read-only; blocks on duplicate wallets/ids (v3 unique indexes), non-BigInt-castable votes, unknown states; warns on v1 `WaitWallet`/`WaitDescription` (reset to `WaitNothing` at boot by `ensureLegacyStateMigration`), stuck mint claims, missing names, old-host `data/` paths.
 - `STAGING=true` boots API-only (no tx loop, no Telegram engagement).
 - Stale env keys from v2 (`XROCKET_*`, `ADSGRAM_*`, `SEASON_PASS_*`, `MINT_FLOOR_*`, …) are ignored by the config schema; new optional keys: `GENERATION_TRY_COST_VOTES`, `STARS_TOPUP_VOTES_PER_STAR`, `REFERRAL_MINT_REWARD_VOTES`.
