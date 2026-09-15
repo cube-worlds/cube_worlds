@@ -51,6 +51,7 @@ npm run smoke:api                                # boots the REAL app (STAGING, 
 - **Fatal startup errors**: the top-level catch in `main.ts` uses `console.error`, not `logger` — pino's worker-thread transport can't flush before `process.exit(1)`.
 - **`BOT_WEBHOOK_SECRET`** is only required in webhook mode (post-parse check in `config.ts`); empty is valid in polling mode.
 - **Model index conventions**: `unique: true` alone (it creates the index); single-field secondary indexes go in class-level `@index()` decorators; schemaless `meta` bags need `options: { allowMixed: Severity.ALLOW }`.
+- **The image is a prod-only install**: `Dockerfile` runs `npm ci --omit=dev` and boots `tsx ./src/main.ts`, so **tsx is a runtime dependency**. Never `npm i -D` a package that already lives in `dependencies` — npm moves it, every local check still passes (they install dev deps), and the container crash-loops on deploy. The last two steps of the `quality` CI job catch it.
 - **bigint in responses**: fastify's JSON serializer throws on bigint — always `.toString()` votes/costs in handler responses.
 
 ## Handler Pattern (DI)

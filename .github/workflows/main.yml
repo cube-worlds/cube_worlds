@@ -25,6 +25,11 @@ jobs:
       # `build:bot` actually ships, and the landing build was not run at all.
       # build:all covers both plus the frontend build this step used to do.
       - run: npm run build:all
+      # The image installs `npm ci --omit=dev` (Dockerfile) and boots
+      # `tsx ./src/main.ts`, so a runtime dep that drifts into devDependencies
+      # boots fine everywhere except production. Runs last: it wipes dev deps.
+      - run: npm ci --omit=dev
+      - run: ./node_modules/.bin/tsx --version
 
   backend-tests:
     runs-on: ubuntu-latest
