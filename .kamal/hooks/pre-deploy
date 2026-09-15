@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Prod cutover fence: production still runs v1 and this tree replaces it
+# wholesale (own schema, own data layout) — that must never happen because
+# someone typed `kamal deploy` in the wrong terminal. Staging (-d staging)
+# is unfenced; anything else needs an explicit opt-in in the environment:
+#
+#   PROD_CUTOVER=yes kamal deploy
+#
+# Kamal runs hooks LOCALLY before deploy/redeploy/rollback. Fail-closed: a
+# non-zero exit aborts with the old container still up. `--skip-hooks` also
+# skips the stop-old-first fence in pre-app-boot, so don't reach for it.
+set -euo pipefail
+
+if [ "${KAMAL_DESTINATION:-}" = "staging" ]; then
+    exit 0
+fi
+
+if [ "${PROD_CUTOVER:-}" != "yes" ]; then
+    echo "Refusing to deploy to PRODUCTION (destination: ${KAMAL_DESTINATION:-none})." >&2
+    echo "Pre-flight: CHECK_MONGO_URI=<prod> npx tsx scripts/check-prod-users.ts && npm run smoke:api" >&2
+    echo "Then, deliberately:  PROD_CUTOVER=yes kamal deploy" >&2
+    exit 1
+fi
