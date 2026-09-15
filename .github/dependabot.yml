@@ -4,3 +4,11 @@ updates:
     directory: /
     schedule:
       interval: daily
+    ignore:
+      # @typegoose/typegoose peer-pins mongoose to ~9.7.3 (still true at 13.4.0),
+      # so anything past 9.7.x is an ERESOLVE failure, not a bump we can take.
+      # Patches inside 9.7 still flow. Drop this once typegoose widens the pin.
+      - dependency-name: mongoose
+        update-types:
+          - version-update:semver-minor
+          - version-update:semver-major
