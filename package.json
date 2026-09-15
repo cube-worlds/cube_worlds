@@ -72,6 +72,7 @@
     "pino": "10.3.1",
     "pino-pretty": "13.1.3",
     "sharp": "^0.35.4",
+    "tsx": "4.23.13",
     "znv": "0.5.0"
   },
   "devDependencies": {
@@ -85,7 +86,6 @@
     "prettier": "3.9.6",
     "prettier-plugin-organize-imports": "4.3.0",
     "tsc-watch": "7.2.1",
-    "tsx": "4.23.13",
     "typescript": "6.0.3",
     "vite": "^8.2.2"
   },
