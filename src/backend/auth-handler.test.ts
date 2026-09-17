@@ -516,6 +516,38 @@ test('app deep-link referrals stamp firstLoginAt but pay no login drop', async (
   assert.deepEqual(ctx.inviterCredits, [])
 })
 
+test('a tipped stranger who later opens an app deep-link does not pay the deep-link referrer a chat-invite drop', async (t) => {
+  // markJoinedViaChat (give-tip.ts) sets joinedViaChat without ever touching
+  // referalId — unlike setChatReferral (a real invite-link join), which sets
+  // both together. So this user has joinedViaChat=true but no referalId yet.
+  const taggedStranger = createStubUser({ joinedViaChat: true, referalId: undefined, wallet: undefined })
+  const deepLinkReferrer = createStubUser({ id: 9009 })
+  const users = new Map<number, StubUser>([
+    [1001, taggedStranger],
+    [9009, deepLinkReferrer],
+  ])
+  const lookup = async (id: number) => {
+    const user = users.get(id)
+    return user ? toResolvedUser(user) : null
+  }
+  const ctx = await createAuthTestContext({ findUserById: lookup, findOrCreateUser: lookup })
+  t.after(() => ctx.app.close())
+
+  const response = await ctx.app.inject({
+    method: 'POST',
+    url: '/api/auth/login',
+    payload: { initData: 'x', referId: '9009' },
+  })
+
+  // The unrelated deep-link referral still gets recorded normally...
+  assert.equal(response.json().referalId, 9009)
+  assert.equal(taggedStranger.referalId, 9009)
+  // ...but the chat-invite login drop must never go to it: nobody actually
+  // sent this user a chat invite link.
+  assert.deepEqual(ctx.firstLogins, [1001])
+  assert.deepEqual(ctx.inviterCredits, [])
+})
+
 test('inviter credit failure is logged and does not fail the login', async (t) => {
   const ctx = await createAuthTestContext({ creditInviter: async () => { throw new Error('mongo down') } })
   t.after(() => ctx.app.close())

@@ -165,7 +165,7 @@ test('a plain message in a community chat is indexed and does not upsert the sen
   ;(update.message as { from: { id: number } }).from.id = 6161
   await bot.handleUpdate(update)
 
-  assert.equal(await findChatMessageAuthor(-100777, 10), 6161, 'indexer wrote the row')
+  assert.deepEqual(await findChatMessageAuthor(-100777, 10), { id: 6161, name: 'Tester' }, 'indexer wrote the row')
   assert.equal(await findUserById(6161), null, 'attachUser did not run for group traffic')
 })
 
@@ -202,6 +202,11 @@ test('a 🧊 reaction from a holder in a community chat credits the author', asy
   assert.ok(await findUserById(6262), 'stranger shell created')
   assert.ok(calls.some(c => c.method === 'setMessageReaction'), 'bot reacted 🔥')
   assert.ok(calls.some(c => c.method === 'sendMessage' && String(c.payload.text).includes('50 $CUBE')), 'newcomer nudged')
+  // The stranger's indexed message carries from.first_name 'Tester' (no
+  // username) — the nudge must mention them by that real name, never the old
+  // synthesized "@id6262".
+  assert.ok(calls.some(c => c.method === 'sendMessage' && String(c.payload.text).includes('@Tester')), 'nudge mentions the real name')
+  assert.ok(!calls.some(c => c.method === 'sendMessage' && String(c.payload.text).includes('id6262')), 'nudge never uses the synthesized id fallback')
 })
 
 test.after(async () => {

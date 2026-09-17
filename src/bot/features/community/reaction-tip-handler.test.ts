@@ -4,7 +4,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { buildReactionTipHandler } from '#root/bot/features/community/reaction-tip-handler'
 
-function ctx(author: number | null = 2) {
+function ctx(author: { id: number, name?: string } | null = { id: 2, name: 'bob' }) {
   const tips: Array<Record<string, unknown>> = []
   const handle = buildReactionTipHandler({
     tipEmoji: '🧊',
@@ -32,6 +32,13 @@ test('a newly added tip emoji tips the indexed author', async () => {
   assert.equal(tips[0].tipperId, 1)
   assert.equal(tips[0].recipientId, 2)
   assert.equal(tips[0].messageId, 55)
+  assert.equal(tips[0].recipientName, 'bob')
+})
+
+test('falls back to the bare id (never "id<number>") when the indexed row has no author name', async () => {
+  const { tips, handle } = ctx({ id: 2 })
+  await handle(update())
+  assert.equal(tips[0].recipientName, '2')
 })
 
 test('ignores other emojis, already-present emoji, anonymous reactors and unknown messages', async () => {

@@ -107,6 +107,12 @@ export function buildAuthHandler(
             await user.save()
           }
 
+          // Snapshot before the referrer block below can write user.referalId
+          // from an unrelated app deep-link — the chat-invite payout must only
+          // ever credit whoever sent the real invite-link join (Task 4), never
+          // a deep-link referrer who happens to land in the same field.
+          const chatInviterId = user.joinedViaChat ? user.referalId : undefined
+
           const userAlreadyInvited = user.wallet || user.referalId
           if (referId && !userAlreadyInvited) {
             const receiverId = Number(referId)
@@ -123,11 +129,11 @@ export function buildAuthHandler(
           // Community: first app login. The CAS makes a double login pay once;
           // only chat-invited shells earn their inviter the login drop.
           const firstLogin = await dependencies.setFirstLoginAt(user.id, new Date())
-          if (firstLogin && user.joinedViaChat && user.referalId) {
+          if (firstLogin && chatInviterId) {
             try {
-              await dependencies.creditInviter(user.referalId)
+              await dependencies.creditInviter(chatInviterId)
             } catch (err) {
-              dependencies.error(`Invite credit failed for inviter ${user.referalId} of ${user.id}: ${(err as Error).message}`)
+              dependencies.error(`Invite credit failed for inviter ${chatInviterId} of ${user.id}: ${(err as Error).message}`)
             }
           }
 

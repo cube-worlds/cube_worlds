@@ -112,7 +112,7 @@ try {
         host: config.BOT_SERVER_HOST,
         port: config.BOT_SERVER_PORT,
       })
-      await bot.start()
+      await bot.start({ allowed_updates: config.BOT_ALLOWED_UPDATES })
     }
   }
 } catch (error) {
