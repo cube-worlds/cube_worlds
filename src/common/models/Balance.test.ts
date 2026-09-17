@@ -41,3 +41,8 @@ test('getBalanceChangeTypeName maps the generation sink type', () => {
   assert.equal(getBalanceChangeTypeName(BalanceChangeType.Generation), 'Generation')
   assert.equal(getBalanceChangeTypeName(9), 'Generation')
 })
+
+test('Tip and Invite ledger types resolve to their names', () => {
+  assert.equal(getBalanceChangeTypeName(BalanceChangeType.Tip), 'Tip')
+  assert.equal(getBalanceChangeTypeName(BalanceChangeType.Invite), 'Invite')
+})

@@ -18,6 +18,8 @@ export enum BalanceChangeType {
   StarsTopup = 10, // CUBE faucet: purchased with Telegram Stars
   Stake = 11, // CUBE sink: Bali visit stake/fee (negative) or refund (positive)
   Payout = 12, // CUBE faucet: Bali window payout
+  Tip = 13, // CUBE faucet: received a holder's chat tip
+  Invite = 14, // CUBE faucet: an invited chat member opened the app for the first time
 }
 
 export function getBalanceChangeTypeName(
