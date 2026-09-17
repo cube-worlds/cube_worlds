@@ -16,6 +16,8 @@ interface StubUser {
   name?: string
   wallet?: string
   referalId?: number
+  joinedViaChat?: boolean
+  firstLoginAt?: Date
   votes: bigint
   minted: boolean
   state: string
@@ -33,6 +35,8 @@ interface AuthTestContext {
   verifyCalls: Array<{ passAddress: string, ownerAddress: string }>
   setPassCalls: Array<{ userId: number, index: number, verifiedAt: Date }>
   clearPassCalls: number[]
+  firstLogins: number[]
+  inviterCredits: number[]
 }
 
 function toResolvedUser(user: StubUser): ResolvedUser {
@@ -68,6 +72,8 @@ async function createAuthTestContext(
   const verifyCalls: Array<{ passAddress: string, ownerAddress: string }> = []
   const setPassCalls: Array<{ userId: number, index: number, verifiedAt: Date }> = []
   const clearPassCalls: number[] = []
+  const firstLogins: number[] = []
+  const inviterCredits: number[] = []
 
   const dependencies: AuthHandlerDependencies = {
     validateInitData: () => {},
@@ -104,6 +110,14 @@ async function createAuthTestContext(
     clearUserPass: async (userId) => {
       clearPassCalls.push(userId)
     },
+    setFirstLoginAt: async (userId: number) => {
+      const user = users.get(userId)
+      if (!user || user.firstLoginAt) return false
+      user.firstLoginAt = new Date()
+      firstLogins.push(userId)
+      return true
+    },
+    creditInviter: async (inviterId: number) => { inviterCredits.push(inviterId) },
     ...overrides,
   }
 
@@ -119,6 +133,8 @@ async function createAuthTestContext(
     verifyCalls,
     setPassCalls,
     clearPassCalls,
+    firstLogins,
+    inviterCredits,
   }
 }
 
@@ -471,6 +487,42 @@ test('login with a stale pass that left the wallet clears it', async (t) => {
   assert.equal(body.holder, false)
   assert.equal(body.pass, null)
   assert.deepEqual(ctx.clearPassCalls, [1001])
+})
+
+test('first login stamps firstLoginAt and pays the inviter for chat-invited users', async (t) => {
+  const ctx = await createAuthTestContext()
+  t.after(() => ctx.app.close())
+  ctx.users.set(1001, createStubUser({ joinedViaChat: true, referalId: 2002 }))
+  await ctx.app.inject({ method: 'POST', url: '/api/auth/login', payload: { initData: 'x' } })
+  assert.deepEqual(ctx.firstLogins, [1001])
+  assert.deepEqual(ctx.inviterCredits, [2002])
+})
+
+test('a second login pays nothing', async (t) => {
+  const ctx = await createAuthTestContext()
+  t.after(() => ctx.app.close())
+  ctx.users.set(1001, createStubUser({ joinedViaChat: true, referalId: 2002, firstLoginAt: new Date() }))
+  await ctx.app.inject({ method: 'POST', url: '/api/auth/login', payload: { initData: 'x' } })
+  assert.deepEqual(ctx.firstLogins, [])
+  assert.deepEqual(ctx.inviterCredits, [])
+})
+
+test('app deep-link referrals stamp firstLoginAt but pay no login drop', async (t) => {
+  const ctx = await createAuthTestContext()
+  t.after(() => ctx.app.close())
+  ctx.users.set(1001, createStubUser({ referalId: 2002 }))
+  await ctx.app.inject({ method: 'POST', url: '/api/auth/login', payload: { initData: 'x' } })
+  assert.deepEqual(ctx.firstLogins, [1001])
+  assert.deepEqual(ctx.inviterCredits, [])
+})
+
+test('inviter credit failure is logged and does not fail the login', async (t) => {
+  const ctx = await createAuthTestContext({ creditInviter: async () => { throw new Error('mongo down') } })
+  t.after(() => ctx.app.close())
+  ctx.users.set(1001, createStubUser({ joinedViaChat: true, referalId: 2002 }))
+  const response = await ctx.app.inject({ method: 'POST', url: '/api/auth/login', payload: { initData: 'x' } })
+  assert.equal(response.statusCode, 200)
+  assert.ok(ctx.errorLogs.some(m => m.includes('Invite credit failed')))
 })
 
 test('login keeps a stale pass when the provider fails', async (t) => {

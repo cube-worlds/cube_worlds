@@ -1,7 +1,9 @@
 import type { InitData } from '@telegram-apps/init-data-node'
 import type { FastifyInstance } from 'fastify'
 import type { Pass } from './login-payload'
-import { clearUserPass, findOrCreateUser, findUserById, setUserPass } from '#root/common/models/User'
+import { BalanceChangeType } from '#root/common/models/Balance'
+import { addPoints, clearUserPass, findOrCreateUser, findUserById, setFirstLoginAt, setUserPass } from '#root/common/models/User'
+import { config } from '#root/config'
 import { logger } from '#root/logger'
 import { defaultParseInitData, defaultValidateInitData } from './init-data'
 import { loginPayload } from './login-payload'
@@ -30,6 +32,10 @@ export interface AuthHandlerDependencies {
   verifyPassOwnership: (passAddress: string, ownerAddress: string) => Promise<boolean>
   setUserPass: (userId: number, pass: Pass, verifiedAt: Date) => Promise<void>
   clearUserPass: (userId: number) => Promise<void>
+  // Community: CAS stamp of the first app login (true ⇒ this call was first).
+  setFirstLoginAt: (userId: number, now: Date) => Promise<boolean>
+  // Pays INVITE_LOGIN_REWARD_VOTES to the inviter of a chat-invited user.
+  creditInviter: (inviterId: number) => Promise<void>
 }
 
 function createDefaultDependencies(): AuthHandlerDependencies {
@@ -44,6 +50,12 @@ function createDefaultDependencies(): AuthHandlerDependencies {
     verifyPassOwnership,
     setUserPass,
     clearUserPass,
+    setFirstLoginAt,
+    creditInviter: async (inviterId) => {
+      const votes = BigInt(config.INVITE_LOGIN_REWARD_VOTES)
+      if (votes <= 0n) return
+      await addPoints(inviterId, votes, BalanceChangeType.Invite)
+    },
   }
 }
 
@@ -105,6 +117,17 @@ export function buildAuthHandler(
               dependencies.info('Referrer added successfully')
             } else {
               dependencies.error('Referrer not found or same as user')
+            }
+          }
+
+          // Community: first app login. The CAS makes a double login pay once;
+          // only chat-invited shells earn their inviter the login drop.
+          const firstLogin = await dependencies.setFirstLoginAt(user.id, new Date())
+          if (firstLogin && user.joinedViaChat && user.referalId) {
+            try {
+              await dependencies.creditInviter(user.referalId)
+            } catch (err) {
+              dependencies.error(`Invite credit failed for inviter ${user.referalId} of ${user.id}: ${(err as Error).message}`)
             }
           }
 
