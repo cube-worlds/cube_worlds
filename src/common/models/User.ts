@@ -214,6 +214,7 @@ export async function ensureFirstLoginMigration(): Promise<number> {
   const res = await UserModel.updateMany(
     { firstLoginAt: { $exists: false }, joinedViaChat: { $ne: true } },
     [{ $set: { firstLoginAt: '$createdAt' } }],
+    { updatePipeline: true },
   )
   return res.modifiedCount
 }
