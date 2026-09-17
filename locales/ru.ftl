@@ -60,3 +60,11 @@ queue =
     .new_nft_dice = {$emoji1} Победа в кубиках! {$emoji2}
         Поздравляем победителя с получением нового NFT <strong>№{$number}</strong> в {$collectionLink}!
     .new_nft_button = Открыть NFT
+
+tip_command =
+    .description = 🧊 Ответь на сообщение, чтобы дать автору $CUBE
+community_nudge = 🧊 @{$name} получил {$votes} $CUBE от холдера. Открой @cube_worlds_bot, чтобы забрать.
+tip_invalid_target = Ответь командой /tip на сообщение участника, чтобы дать ему $CUBE.
+tip_holders_only = Давать $CUBE могут только держатели пропуска Cube Worlds.
+tip_no_allowance = На сегодня твои типы закончились. Играй на Бали, чтобы получить больше.
+tip_failed = Не получилось, попробуй позже.
