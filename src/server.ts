@@ -14,6 +14,7 @@ import authHandler from './backend/auth-handler'
 import { createAvatarHandler } from './backend/avatar'
 import balancesHandler from './backend/balances-handler'
 import claimHandler from './backend/claim-handler'
+import { createCommunityApiHandler } from './backend/community-api'
 import leaderboardHandler from './backend/leaderboard-handler'
 import { createMintHandler } from './backend/mint'
 import nftHandler from './backend/nft-handler'
@@ -34,6 +35,7 @@ const ROUTE_RATE_LIMITS: Record<string, { max: number, timeWindow: string }> = {
   '/api/users/leaderboard': { max: 60, timeWindow: '1 minute' },
   '/api/users/balances': { max: 60, timeWindow: '1 minute' },
   '/api/users/topup/invoice': { max: 10, timeWindow: '1 minute' },
+  '/api/users/community': { max: 30, timeWindow: '1 minute' },
   // Mint flow. /generate is the expensive one (paid Stability call).
   '/api/mint/quote': { max: 60, timeWindow: '1 minute' },
   '/api/mint/status': { max: 60, timeWindow: '1 minute' },
@@ -133,6 +135,7 @@ export async function createServer(bot: Bot) {
   await server.register(leaderboardHandler, { prefix: '/api/users' })
   await server.register(claimHandler, { prefix: '/api/users' })
   await server.register(createTopupInvoiceHandler(bot.api), { prefix: '/api/users' })
+  await server.register(createCommunityApiHandler(bot.api), { prefix: '/api/users' })
 
   await server.register(publicMetricsHandler, { prefix: '/api/public' })
 
@@ -146,6 +149,8 @@ export async function createServer(bot: Bot) {
     generationTryCostVotes: config.GENERATION_TRY_COST_VOTES,
     referralMintRewardVotes: config.REFERRAL_MINT_REWARD_VOTES,
     starsTopupVotesPerStar: config.STARS_TOPUP_VOTES_PER_STAR,
+    tipVotes: config.TIP_VOTES,
+    inviteLoginRewardVotes: config.INVITE_LOGIN_REWARD_VOTES,
   }))
 
   // TON Connect manifest. Wallets sign ton_proof over this url's host and
