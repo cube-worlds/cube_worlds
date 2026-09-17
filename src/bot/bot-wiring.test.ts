@@ -41,6 +41,7 @@ process.env.STABILITY_API_KEY = 'wiring-invalid-key'
 process.env.OPENAI_API_KEY = 'wiring-invalid-key'
 process.env.TELEMETREE_API_KEY = 'wiring'
 process.env.TELEMETREE_PROJECT_ID = 'wiring'
+process.env.COMMUNITY_CHAT_IDS = '[-100777]'
 
 const mongo = await MongoMemoryServer.create()
 process.env.MONGO = mongo.getUri()
@@ -152,6 +153,55 @@ test('an unknown command still reaches a handler instead of falling through', as
     calls.some((c) => c.method === 'sendMessage'),
     'unhandledFeature answered the unknown command',
   )
+})
+
+test('a plain message in a community chat is indexed and does not upsert the sender', async () => {
+  const { bot } = makeBot()
+  const { findUserById } = await import('#root/common/models/User')
+  const { findChatMessageAuthor } = await import('#root/common/models/ChatMessage')
+
+  const update = messageUpdate('hello world', 10)
+  ;(update.message as { chat: { id: number, type: string } }).chat = { id: -100777, type: 'supergroup' }
+  ;(update.message as { from: { id: number } }).from.id = 6161
+  await bot.handleUpdate(update)
+
+  assert.equal(await findChatMessageAuthor(-100777, 10), 6161, 'indexer wrote the row')
+  assert.equal(await findUserById(6161), null, 'attachUser did not run for group traffic')
+})
+
+test('a 🧊 reaction from a holder in a community chat credits the author', async () => {
+  const { bot, calls } = makeBot()
+  const { findOrCreateUser, findUserById, setUserPass } = await import('#root/common/models/User')
+  const { getAggregatedBalance } = await import('#root/common/models/Balance')
+
+  await findOrCreateUser(7001)
+  await setUserPass(7001, { index: 1, address: 'EQ_A', name: 'holder', image: '' }, new Date())
+
+  const msg = messageUpdate('tip me', 11)
+  ;(msg.message as { chat: { id: number, type: string } }).chat = { id: -100777, type: 'supergroup' }
+  ;(msg.message as { from: { id: number } }).from.id = 6262
+  await bot.handleUpdate(msg)
+
+  await bot.handleUpdate({
+    update_id: 12,
+    message_reaction: {
+      chat: { id: -100777, type: 'supergroup', title: 'EN' },
+      message_id: 11,
+      user: { id: 7001, is_bot: false, first_name: 'Holder' },
+      date: Math.floor(Date.now() / 1000),
+      old_reaction: [],
+      new_reaction: [{ type: 'emoji', emoji: '🧊' }],
+    },
+  } as unknown as Update)
+
+  // getAggregatedBalance is typed Promise<bigint>, but Mongo's $sum over a
+  // real (memory-server) aggregation hands back a plain number here, not a
+  // bigint — pre-existing Balance.ts behavior, unrelated to this feature.
+  // Compare numerically rather than against a bigint literal.
+  assert.equal(Number(await getAggregatedBalance(6262)), 50, 'author credited TIP_VOTES')
+  assert.ok(await findUserById(6262), 'stranger shell created')
+  assert.ok(calls.some(c => c.method === 'setMessageReaction'), 'bot reacted 🔥')
+  assert.ok(calls.some(c => c.method === 'sendMessage' && String(c.payload.text).includes('50 $CUBE')), 'newcomer nudged')
 })
 
 test.after(async () => {
