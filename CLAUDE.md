@@ -19,8 +19,10 @@ Every place is one game-theory engine reading the pass's 120 on-chain traits (`U
 - **Referrals** — `/start` param → `referId` on `/api/auth/login` stores `referalId`; the referrer is credited `REFERRAL_MINT_REWARD_VOTES` (default 200) **when the invitee's pass is minted** — human-gated ⇒ unfarmable. Wired inside the approve path (`rewardReferrer` dep, non-fatal, at-most-once via the mint CAS).
 - **TON donations** — watcher (`subscription-core.ts`/`subscription.ts`) credits votes for TON sent **from the bound wallet** (`findUserByAddress` → `addPoints(..., Donation)`). Donation target address = `COLLECTION_OWNER`, exposed via `GET /api/public/config`.
 - **Telegram Stars top-up** — `POST /api/users/topup/invoice` (pure `topup-invoice-handler.ts` + composer `topup-invoice.ts`, `createInvoiceLink` currency `XTR`); bot `topup` feature handles `pre_checkout_query` + `successful_payment`; payload `cube-topup:<userId>:<stars>:<votes>` round-trips through Telegram (tamper-proof, honors the quoted rate `STARS_TOPUP_VOTES_PER_STAR`, default 10/⭐). Idempotent on `telegram_payment_charge_id` via unique `StarsPurchase.chargeId` — record-then-credit, replay is a no-op.
+- **Community tips** — pass holders react `TIP_EMOJI` (default 🧊) or reply `/tip` in `COMMUNITY_CHAT_IDS`; the author gets `TIP_VOTES` (50) as `BalanceChangeType.Tip`. Allowance per holder per UTC day = `TIP_BASE_PER_DAY` (3) + floor((rep.helped+rep.gave)/`TIP_REP_PER_EXTRA` (100)); computed from the `Tip` ledger (unique on chat+message+tipper ⇒ re-reactions are no-ops, record-then-credit). Reactions need the bot as chat admin, a `ChatMessage` index (7-day TTL) supplies the author. Strangers get a `User` shell (`joinedViaChat`) and one chat nudge (`communityNudgedAt`). `src/bot/features/community/*`, pure `give-tip.ts`.
+- **Chat invites** — `POST /api/users/community` mints a personal `createChatInviteLink` per chat (name = user id, cached in `User.inviteLinks`); `chat_member` join sets `referalId` + `joinedViaChat` (first link wins, wallet-bound users untouched). `/api/auth/login` CAS-stamps `firstLoginAt`; on the first login of a `joinedViaChat` user the inviter gets `INVITE_LOGIN_REWARD_VOTES` (20) as `Invite`. Boot migration `ensureFirstLoginMigration` back-fills `firstLoginAt` for pre-existing users.
 
-`BalanceChangeType`: Initial, Deposit, Withdraw, Dice/Task/Trade (legacy), Referral, Donation, Claim, **Generation** (sink), **StarsTopup** (faucet).
+`BalanceChangeType`: Initial, Deposit, Withdraw, Dice/Task/Trade (legacy), Referral, Donation, Claim, **Generation** (sink), **StarsTopup** (faucet), **Stake**/**Payout** (Bali), **Tip**, **Invite**.
 
 ## Commands
 ```bash
@@ -75,9 +77,9 @@ All authenticated endpoints validate Telegram's `initData` (HMAC + 24h expiry) �
 4. `set-wallet` answers **409 `wallet_taken`** when the address belongs to another account; the frontend `post()` helper returns JSON envelopes for non-2xx so `code` reaches the UI.
 
 ## Bot
-Middleware order: `autoRetry → updateLogger (dev) → autoChatAction → hydrate → session → slapReaction → i18n → attachUser → queueMenu → [features]`.
+Middleware order: `autoRetry → updateLogger (dev) → autoChatAction → hydrate → session → slapReaction → i18n → community (group chats, swallows) → attachUser → queueMenu → [features]`.
 
-Features (`src/bot/index.ts`): start, help, queue (admin: `/queue` browser + Approve/Decline callbacks), parameters (admin), collection (admin), stats, whales, line, transaction (admin), user (admin), resolve (admin: `/resolve` forces the current Bali window on staging/dev), **topup** (Stars `pre_checkout_query` + `successful_payment`), then `removedCommandsFeature` (points `/dice`, `/mint`, `/play`… to the Mini App) and `unhandledFeature` last.
+Features (`src/bot/index.ts`): start, help, queue (admin: `/queue` browser + Approve/Decline callbacks), parameters (admin), collection (admin), stats, whales, line, transaction (admin), user (admin), resolve (admin: `/resolve` forces the current Bali window on staging/dev), **topup** (Stars `pre_checkout_query` + `successful_payment`), **community** (mounted before attachUser: message indexer, 🧊 reaction / `/tip` tips, invite-link joins — only in `COMMUNITY_CHAT_IDS`), then `removedCommandsFeature` (points `/dice`, `/mint`, `/play`… to the Mini App) and `unhandledFeature` last.
 
 ## Security
 - Leaderboard pagination: limit 1–100, skip ≥ 0.
@@ -86,12 +88,14 @@ Features (`src/bot/index.ts`): start, help, queue (admin: `/queue` browser + App
 - Rate limits per route in `server.ts` (`/api/mint/generate` 6/min — it's a paid Stability call).
 - Rate limits: `/api/pass/scan` and `/api/pass/select` 10/min (toncenter call).
 - Rate limits: `/api/world/*` — `state` 60/min, `visit` 10/min, `history` 30/min, `pass/:index` (public) 60/min.
+- Rate limits: `/api/users/community` 30/min (Telegram getChat/createChatInviteLink).
 
 ## Deploy notes
 - **Prod deploys are fenced**: `.kamal/hooks/pre-deploy` aborts any non-staging deploy unless `PROD_CUTOVER=yes` is in the environment (`PROD_CUTOVER=yes kamal deploy`). Never set it on the user's behalf — the cutover is their call. `-d staging` passes untouched.
 - Production still runs **v1**; this tree replaces it wholesale on cutover. Before deploy: `CHECK_MONGO_URI=<prod> npx tsx scripts/check-prod-users.ts` — read-only; blocks on duplicate wallets/ids (v3 unique indexes), non-BigInt-castable votes, unknown states; warns on v1 `WaitWallet`/`WaitDescription` (reset to `WaitNothing` at boot by `ensureLegacyStateMigration`), stuck mint claims, missing names, old-host `data/` paths.
 - `STAGING=true` boots API-only (no tx loop, no Telegram engagement).
-- Stale env keys from v2 (`XROCKET_*`, `ADSGRAM_*`, `SEASON_PASS_*`, `MINT_FLOOR_*`, …) are ignored by the config schema; new optional keys: `GENERATION_TRY_COST_VOTES`, `STARS_TOPUP_VOTES_PER_STAR`, `REFERRAL_MINT_REWARD_VOTES`.
+- Stale env keys from v2 (`XROCKET_*`, `ADSGRAM_*`, `SEASON_PASS_*`, `MINT_FLOOR_*`, …) are ignored by the config schema; new optional keys: `GENERATION_TRY_COST_VOTES`, `STARS_TOPUP_VOTES_PER_STAR`, `REFERRAL_MINT_REWARD_VOTES`, `TIP_EMOJI`, `TIP_VOTES`, `TIP_BASE_PER_DAY`, `TIP_REP_PER_EXTRA`, `COMMUNITY_CHAT_IDS`, `INVITE_LOGIN_REWARD_VOTES`.
+- **Community chats**: the bot must be admin in every `COMMUNITY_CHAT_IDS` chat with the "invite users" right, and `BOT_ALLOWED_UPDATES` must include `message`, `message_reaction`, `chat_member` (Telegram sends reactions/joins only to admin bots that ask). Deploy dark (`COMMUNITY_CHAT_IDS=[]`), then set the ids. Holders with anonymous reactions produce no update — `/tip` is the fallback.
 - Pre-deploy: `npm run smoke:api` (all secrets overridden with fakes — it can never hit a paid API or the live bot).
 - **Staging bot**: `kamal deploy -d staging` → @cubeworldsbot at https://staging.cubeworlds.club (`config/deploy.staging.yml` + `.kamal/secrets.staging`; own service name/DB `cube-worlds-bot-staging`/volume `/srv/cube_worlds_staging/data`). Shares chain keys + admins with prod, so an admin Approve there mints a real NFT.
 - `/tonconnect-manifest.json` is generated from `WEB_APP_URL` (ton_proof domain check), not a static landing file.
