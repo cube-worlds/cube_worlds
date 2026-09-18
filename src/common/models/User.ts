@@ -65,7 +65,7 @@ export class UserRep {
 }
 
 @index({ 'pass.index': 1 })
-@modelOptions({ schemaOptions: { timestamps: true, id: false } })
+@modelOptions({ schemaOptions: { timestamps: true, id: false }, options: { allowMixed: Severity.ALLOW } })
 export class User extends TimeStamps {
   @prop({ type: Number, required: true, unique: true })
   id!: number
@@ -124,6 +124,24 @@ export class User extends TimeStamps {
 
   @prop({ type: Date })
   mintedAt?: Date
+
+  // Community: stamped once by /api/auth/login. Missing ⇒ never opened the app
+  // (a shell created from a chat tip or a chat join).
+  @prop({ type: Date })
+  firstLoginAt?: Date
+
+  // Shell created by the community feature (join via invite link / tipped as
+  // a stranger). Login pays the inviter's drop only for these.
+  @prop({ type: Boolean })
+  joinedViaChat?: boolean
+
+  // The one-time "open the bot to claim" reply went out.
+  @prop({ type: Date })
+  communityNudgedAt?: Date
+
+  // chatId -> personal invite url, created lazily by /api/users/community.
+  @prop({ type: () => Object })
+  inviteLinks?: Record<string, string>
 
   @prop({ type: Boolean })
   diceWinner?: boolean
@@ -187,6 +205,63 @@ export async function ensureLegacyStateMigration(): Promise<number> {
     { $set: { state: UserState.WaitNothing } },
   )
   return res.modifiedCount
+}
+
+// Community: everyone who existed before the feature counts as "registered",
+// so nobody is nudged or pays an invite drop retroactively. Chat-created
+// shells carry joinedViaChat and are left alone. Idempotent; runs at boot.
+export async function ensureFirstLoginMigration(): Promise<number> {
+  const res = await UserModel.updateMany(
+    { firstLoginAt: { $exists: false }, joinedViaChat: { $ne: true } },
+    [{ $set: { firstLoginAt: '$createdAt' } }],
+    { updatePipeline: true },
+  )
+  return res.modifiedCount
+}
+
+// CAS: stamps firstLoginAt only when absent. True ⇒ this call was the first login.
+export async function setFirstLoginAt(userId: number, now: Date): Promise<boolean> {
+  const res = await UserModel.updateOne(
+    { id: userId, firstLoginAt: { $exists: false } },
+    { $set: { firstLoginAt: now } },
+  )
+  return res.modifiedCount === 1
+}
+
+// First invite link wins; wallet-bound users are never re-attributed.
+export async function setChatReferral(
+  joinerId: number,
+  inviterId: number,
+  language: 'en' | 'ru',
+): Promise<boolean> {
+  const res = await UserModel.updateOne(
+    { id: joinerId, wallet: { $exists: false }, referalId: { $exists: false } },
+    { $set: { referalId: inviterId, joinedViaChat: true, language, languageSelected: true } },
+  )
+  return res.modifiedCount === 1
+}
+
+export async function markJoinedViaChat(userId: number): Promise<void> {
+  await UserModel.updateOne(
+    { id: userId, firstLoginAt: { $exists: false } },
+    { $set: { joinedViaChat: true } },
+  )
+}
+
+export async function markCommunityNudged(userId: number, now: Date): Promise<void> {
+  await UserModel.updateOne({ id: userId }, { $set: { communityNudgedAt: now } })
+}
+
+export async function setInviteLink(userId: number, chatId: number, url: string): Promise<void> {
+  await UserModel.updateOne({ id: userId }, { $set: { [`inviteLinks.${chatId}`]: url } })
+}
+
+export async function countInvitedLoggedIn(userId: number): Promise<number> {
+  return UserModel.countDocuments({
+    referalId: userId,
+    joinedViaChat: true,
+    firstLoginAt: { $exists: true },
+  })
 }
 
 export async function findOrCreateUser(id: number): Promise<UserDoc | null> {

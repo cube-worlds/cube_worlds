@@ -1,7 +1,7 @@
-import type { PublicConfig } from '../api'
+import type { CommunityInfo, PublicConfig } from '../api'
 import { useTonConnectUI } from '@tonconnect/ui-react'
-import { useState } from 'react'
-import { topupInvoice } from '../api'
+import { useEffect, useState } from 'react'
+import { communityInfo, topupInvoice } from '../api'
 import { useWalletBind } from '../hooks/useWalletBind'
 import { haptic, openInvoice, openShare } from '../telegram'
 import { DailyClaim } from './DailyClaim'
@@ -33,6 +33,23 @@ export function EarnPanel({
 }: EarnPanelProps) {
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
+  const [community, setCommunity] = useState<CommunityInfo | null>(null)
+  useEffect(() => {
+    let alive = true
+    communityInfo().then((info) => { if (alive && !info.error) setCommunity(info) }).catch(() => {})
+    return () => { alive = false }
+  }, [])
+
+  async function copy(url: string) {
+    try {
+      await navigator.clipboard.writeText(url)
+      haptic('success')
+      setNotice('Link copied')
+    } catch {
+      openShare(url, 'Join the Cube Worlds chat')
+    }
+  }
+
   const [tonConnectUI] = useTonConnectUI()
   const { bindWallet } = useWalletBind(onWalletBound)
 
@@ -111,6 +128,41 @@ export function EarnPanel({
           SHARE INVITE LINK
         </button>
       </Card>
+
+      {community && (community.tips || community.invites.length > 0) && (
+        <Card title="COMMUNITY">
+          {community.tips && (
+            <div className="px-body" style={{ textAlign: 'center', marginBottom: 10 }}>
+              {`TIPS TODAY ${community.tips.left}/${community.tips.perDay} · react 🧊 in the chat to tip ${community.tips.votes} $CUBE`}
+            </div>
+          )}
+          {community.invites.length > 0 && (
+            <>
+              <div className="px-body" style={{ textAlign: 'center', marginBottom: 10 }}>
+                {config
+                  ? `+${config.inviteLoginRewardVotes} $CUBE when a friend joins the chat via your link and opens the app`
+                  : 'Friends who join the chat via your link earn you $CUBE'}
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                {community.invites.map(invite => (
+                  <button
+                    key={invite.chatId}
+                    type="button"
+                    className="px-btn-ghost"
+                    style={{ flex: 1 }}
+                    onClick={() => void copy(invite.url)}
+                  >
+                    {`COPY ${invite.title.toUpperCase()}`}
+                  </button>
+                ))}
+              </div>
+              <div className="px-body" style={{ textAlign: 'center', marginTop: 10, color: 'var(--cw-text-dim)' }}>
+                {`${community.invitedLoggedIn} friends joined via your link`}
+              </div>
+            </>
+          )}
+        </Card>
+      )}
 
       <Card title="STARS TOP-UP">
         <div style={{ display: 'flex', gap: 8 }}>

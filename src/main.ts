@@ -6,7 +6,7 @@ import { onShutdown } from 'node-graceful-shutdown'
 import { setMenuButton, syncBotCommands } from '#root/bot/handlers/commands/sync-commands'
 import { createBot } from '#root/bot/index'
 import { ensureClaimUniquenessMigration } from '#root/common/models/Claim'
-import { createInitialBalancesIfNotExists, ensureLegacyStateMigration } from '#root/common/models/User'
+import { createInitialBalancesIfNotExists, ensureFirstLoginMigration, ensureLegacyStateMigration } from '#root/common/models/User'
 import { config } from '#root/config'
 import { startResolver } from '#root/game/resolver-start'
 import { logger } from '#root/logger'
@@ -19,6 +19,8 @@ try {
   await createInitialBalancesIfNotExists()
   const legacyStates = await ensureLegacyStateMigration()
   if (legacyStates > 0) logger.info(`State migration: reset ${legacyStates} v1 mid-mint user(s) to WaitNothing`)
+  const firstLogins = await ensureFirstLoginMigration()
+  if (firstLogins > 0) logger.info(`Community migration: stamped firstLoginAt on ${firstLogins} pre-existing user(s)`)
   const migration = await ensureClaimUniquenessMigration()
   if (migration.duplicateGroups > 0) {
     logger.info(
@@ -110,7 +112,7 @@ try {
         host: config.BOT_SERVER_HOST,
         port: config.BOT_SERVER_PORT,
       })
-      await bot.start()
+      await bot.start({ allowed_updates: config.BOT_ALLOWED_UPDATES })
     }
   }
 } catch (error) {

@@ -76,6 +76,19 @@ function createConfigFromEnvironment(environment: NodeJS.ProcessEnv) {
     // $CUBE credited to the referrer when an invited user's pass is minted.
     // Mint approval is human-gated, which makes this reward unfarmable. 0 ⇒ off.
     REFERRAL_MINT_REWARD_VOTES: z.number().int().default(200),
+    // Community chats (EN/RU) where holder tips and personal invite links are
+    // active. Empty ⇒ the feature is off (no handlers fire, no links minted).
+    COMMUNITY_CHAT_IDS: z.array(z.number()).default([]),
+    // $CUBE credited to the author of a tipped message.
+    TIP_VOTES: z.number().int().min(0).default(50),
+    // Tips a pass holder may give per UTC day, before the rep bonus.
+    TIP_BASE_PER_DAY: z.number().int().min(0).default(3),
+    // +1 daily tip per this much cooperative rep (helped + gave).
+    TIP_REP_PER_EXTRA: z.number().int().min(1).default(100),
+    // The reaction emoji that tips.
+    TIP_EMOJI: z.string().default('🧊'),
+    // $CUBE credited to the inviter when a chat-invited user first opens the app.
+    INVITE_LOGIN_REWARD_VOTES: z.number().int().min(0).default(20),
   })
 
   if (config.BOT_MODE === 'webhook') {

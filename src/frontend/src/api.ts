@@ -53,6 +53,8 @@ export interface PublicConfig {
   generationTryCostVotes: number
   referralMintRewardVotes: number
   starsTopupVotesPerStar: number
+  tipVotes: number
+  inviteLoginRewardVotes: number
 }
 
 export async function publicConfig(): Promise<PublicConfig> {
@@ -280,4 +282,14 @@ export async function worldPass(index: number): Promise<PassPublic> {
   const json = await response.json().catch(() => null)
   if (json === null) throw new Error(`HTTP ${response.status}`)
   return json as PassPublic
+}
+
+export interface CommunityInfo extends ApiError {
+  tips: { perDay: number, left: number, votes: string } | null
+  invites: Array<{ chatId: string, title: string, url: string }>
+  invitedLoggedIn: number
+}
+
+export function communityInfo(): Promise<CommunityInfo> {
+  return post('/api/users/community')
 }

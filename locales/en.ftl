@@ -60,3 +60,11 @@ queue =
     .new_nft_dice = {$emoji1} Dice victory! {$emoji2}
         Congratulations to the winner on receiving a new NFT <strong>#{$number}</strong> in {$collectionLink}!
     .new_nft_button = Open NFT
+
+tip_command =
+    .description = 🧊 Reply to a message to tip its author $CUBE
+community_nudge = 🧊 @{$name} got {$votes} $CUBE from a holder. Open @cube_worlds_bot to claim it.
+tip_invalid_target = Reply to a member's message with /tip to tip them.
+tip_holders_only = Only Cube Worlds pass holders can tip.
+tip_no_allowance = You have used all your tips for today. Play in Bali to earn more.
+tip_failed = Tip failed, please try again later.

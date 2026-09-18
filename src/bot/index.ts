@@ -7,6 +7,7 @@ import { session, Bot as TelegramBot } from 'grammy'
 import { createContextConstructor } from '#root/bot/context'
 import {
   collectionFeature,
+  communityFeature,
   helpFeature,
   lineFeature,
   parametersFeature,
@@ -61,6 +62,7 @@ export function createBot(token: string, options: Options) {
   )
   protectedBot.use(slapReaction)
   protectedBot.use(i18n)
+  protectedBot.use(communityFeature) // group chats: must precede attachUser
   protectedBot.use(attachUser)
   protectedBot.use(queueMenu)
 

@@ -314,6 +314,13 @@ async function run() {
       expect(body.error !== 'API route not found', `route not registered: ${body.error}`)
     })
 
+    await step('POST /api/users/community answers with the envelope (no chats configured)', async () => {
+      const body = await post<Record<string, unknown>>('/api/users/community', { initData })
+      expect(body.tips === null, `tips should be null for a non-holder, got ${JSON.stringify(body.tips)}`)
+      expect(Array.isArray(body.invites) && (body.invites as unknown[]).length === 0, 'invites should be empty with COMMUNITY_CHAT_IDS unset')
+      expect(body.invitedLoggedIn === 0, 'invitedLoggedIn should be 0')
+    })
+
     await step('POST /api/pass/scan without a bound wallet returns 400 wallet_required', async () => {
       const response = await fetch(`${BASE}/api/pass/scan`, {
         method: 'POST',
