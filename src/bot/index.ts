@@ -26,6 +26,7 @@ import { errorHandler } from '#root/bot/handlers/index'
 import { queueMenu } from '#root/bot/keyboards/queue-menu'
 import attachUser from '#root/bot/middlewares/attach-user'
 import { updateLogger } from '#root/bot/middlewares/index'
+import { configureUmami } from '#root/common/helpers/umami'
 import { i18n } from '#root/common/i18n'
 import { config } from '#root/config'
 import { logger } from '#root/logger'
@@ -44,6 +45,7 @@ export function createBot(token: string, options: Options) {
     ContextConstructor: createContextConstructor({ logger }),
   })
   const protectedBot = bot.errorBoundary(errorHandler)
+  configureUmami(config.UMAMI_WEBSITE_ID)
 
   // Middlewares
   bot.api.config.use(autoRetry())

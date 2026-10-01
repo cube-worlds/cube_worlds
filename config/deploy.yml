@@ -57,6 +57,7 @@ env:
     PINATA_GATEWAY: https://tan-above-limpet-868.mypinata.cloud
     TESTNET: "false"              # mainnet in prod (config default is true — must override)
     TELEMETREE_PROJECT_ID: eda52fec-d310-43b5-a401-fb0d56e59708
+    UMAMI_WEBSITE_ID: 247a76a0-5aff-4cb6-b5d0-de808d2c05f8   # analytics.nextgensoft.co website "cube-worlds-bot" (public id)
   secret:                         # decrypted from SOPS via .kamal/secrets (Phase B)
     - MONGO                       # full URI incl. app-user creds (axveer mongo requires auth)
     - BOT_TOKEN

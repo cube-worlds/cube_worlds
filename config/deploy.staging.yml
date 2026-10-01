@@ -19,5 +19,6 @@ env:
   clear:
     BOT_NAME: cubeworldsbot
     WEB_APP_URL: https://staging.cubeworlds.club
+    UMAMI_WEBSITE_ID: ""            # staging must not pollute the prod Umami website
   # MONGO / BOT_TOKEN / BOT_WEBHOOK / BOT_WEBHOOK_SECRET come from
   # .kamal/secrets.staging (overrides secrets-common).
