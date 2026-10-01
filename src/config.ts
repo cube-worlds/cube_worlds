@@ -69,6 +69,8 @@ function createConfigFromEnvironment(environment: NodeJS.ProcessEnv) {
     OPENAI_API_KEY: z.string(),
     TELEMETREE_API_KEY: z.string(),
     TELEMETREE_PROJECT_ID: z.string(),
+    // Umami website id (public). Empty ⇒ no analytics events (dev, staging, tests).
+    UMAMI_WEBSITE_ID: z.string().default(''),
     // Price of one NFT-image generation try, in $CUBE (votes). Tunable.
     GENERATION_TRY_COST_VOTES: z.number().int().default(100),
     // Telegram Stars top-up: $CUBE (votes) credited per 1 Star. Tunable.
