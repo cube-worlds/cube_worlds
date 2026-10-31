@@ -69,6 +69,9 @@ export function composeGazette(windowId: number, reports: PlaceReport[], nameOf:
     const lines = events.slice(0, EVENT_LINES_PER_PLACE)
     let top: EngineOutcome | undefined
     for (const o of played) {
+      // A concealed thief (steal/betray with no rep.stole) never surfaces here either.
+      const concealed = (moves.get(o.userId) === 'steal' || moves.get(o.userId) === 'betray') && !o.rep?.stole
+      if (concealed) continue
       if (net(o) > 0n && (!top || net(o) > net(top))) top = o
     }
     if (top) {
@@ -114,7 +117,7 @@ export function renderGazetteText(g: Gazette, passLink: (pass: number) => string
     lines.push('')
   }
   if (g.fox) lines.push(`🦊 Fox of the window: ${name(g.fox)} +${g.fox.net}`)
-  while (lines.at(-1) === '') lines.pop()
+  while (lines[lines.length - 1] === '') lines.pop()
 
   let text = ''
   for (const line of lines) {

@@ -51,6 +51,31 @@ test('a visible steal names thief and victim; a concealed one names only the vic
   assert.deepEqual(g.fox, { pass: 10, name: 'Kadek', net: '200' })
 })
 
+test('a concealed thief with the highest net never wins Top or Fox', () => {
+  const report: PlaceReport = {
+    place: place('canggu'),
+    visits: [visit(1, 'canggu', 'steal', 200n), visit(2, 'canggu', 'help', 200n), visit(3, 'canggu', 'steal', 200n), visit(4, 'canggu', 'help', 200n)],
+    outcomes: [
+      out(1, 400n, { rep: { stole: 1 }, partnerId: 2 }),
+      out(2, 0n, { partnerId: 1 }),
+      out(3, 450n, { partnerId: 4 }), // concealed: no rep.stole, net 250 > Kadek's net 200
+      out(4, 0n, { partnerId: 3 }),
+    ],
+  }
+  const g = composeGazette(W, [report], nameOf)!
+  const [canggu] = g.places
+  assert.deepEqual(canggu.lines, [
+    { text: '{0} robbed {1}', passes: [{ pass: 10, name: 'Kadek' }, { pass: 20, name: 'Wayan' }] },
+    { text: 'Someone robbed {0}', passes: [{ pass: 40, name: 'Made <3' }] },
+    { text: 'Top: {0} +200', passes: [{ pass: 10, name: 'Kadek' }] },
+  ])
+  assert.deepEqual(g.fox, { pass: 10, name: 'Kadek', net: '200' })
+  // the concealed thief (Putu, pass 30) must never be named or linked anywhere in the gazette
+  const text = renderGazetteText(g, pass => `https://t.me/bot?startapp=pass_${pass}`)
+  assert.ok(!text.includes('Putu'))
+  assert.ok(!text.includes('pass_30'))
+})
+
 test('heist betrayal, shared pairs and commons counts are generic lines', () => {
   const heist: PlaceReport = {
     place: place('uluwatu'),
