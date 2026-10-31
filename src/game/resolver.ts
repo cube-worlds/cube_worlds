@@ -1,5 +1,6 @@
 import type { VisitRecord } from '#root/common/models/Visit'
 import type { EngineOutcome, EngineResult, EngineVisit, RepDelta } from '#root/game/engines/types'
+import type { Gazette, PlaceReport } from '#root/game/gazette'
 import type { PlaceDef } from '#root/game/places'
 import type { Traits } from '#root/game/traits'
 import { BalanceChangeType } from '#root/common/models/Balance'
@@ -13,6 +14,7 @@ import { resolveSplitSteal } from '#root/game/engines/split-steal'
 import { resolveStagHunt } from '#root/game/engines/stag-hunt'
 import { resolveUltimatum } from '#root/game/engines/ultimatum'
 import { resolveVolunteer } from '#root/game/engines/volunteer'
+import { composeGazette } from '#root/game/gazette'
 import { POT_TURNOUT_MULT, windowIdAt } from '#root/game/places'
 import { traitOf, weightOf } from '#root/game/traits'
 
@@ -32,6 +34,9 @@ export interface ResolverDependencies {
   setPool: (place: string, pool: bigint, windowId: number) => Promise<boolean>
   holdersOf: (userIds: number[]) => Promise<Map<number, HolderInfo>>
   notify: (userId: number, text: string, place: string) => Promise<void>
+  // The window's public recap — stored and posted by the composer. Called once
+  // per window with visits, before the window is marked resolved; never fatal.
+  publishGazette: (gazette: Gazette) => Promise<void>
   rng: () => number
   logError: (message: string) => void
 }
@@ -99,10 +104,12 @@ export function buildResolver(deps: ResolverDependencies) {
     for (const v of visits) byPlace.set(v.place, [...(byPlace.get(v.place) ?? []), v])
 
     let paid = 0
+    const reports: PlaceReport[] = []
     for (const [placeId, placeVisits] of byPlace) {
       const place = deps.places.find(p => p.id === placeId)
         ?? { id: placeId, name: placeId, engine: 'soon' as const, traits: [], stake: 0n, pot: 0n, seed: 0n, bonus: 0n, open: false, lat: 0, lon: 0 }
       const result = await runEngine(place, placeVisits, holders)
+      reports.push({ place, visits: placeVisits, outcomes: result.outcomes })
       if (result.pool !== undefined) await deps.setPool(place.id, result.pool, windowId)
       const byUser = new Map(placeVisits.map(v => [v.userId, v]))
       const settledIds = new Set<number>()
@@ -119,6 +126,17 @@ export function buildResolver(deps: ResolverDependencies) {
         if (settledIds.has(visit.userId)) continue
         const fallback = { userId: visit.userId, payout: visit.stake, outcome: `${place.name} · unresolved · refunded ${visit.stake}`, refund: true }
         if (await settle(visit, fallback, place.id)) paid += 1
+      }
+    }
+    const gazette = composeGazette(windowId, reports, (id) => {
+      const pass = holders.get(id)?.pass
+      return pass ? { pass: pass.index, name: pass.name } : undefined
+    })
+    if (gazette) {
+      try {
+        await deps.publishGazette(gazette)
+      } catch (err) {
+        deps.logError(`Bali gazette for window ${windowId} failed: ${(err as Error).message}`)
       }
     }
     await deps.markWindowResolved(windowId)
