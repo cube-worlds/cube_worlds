@@ -47,7 +47,8 @@ export function App() {
     const start = getStartParam()
     const bali = start?.startsWith('bali_') ? start.slice(5) : null
     const meet = start?.startsWith('meet_') ? start.slice(5) : null
-    const passIndex = start?.startsWith('pass_') ? Number(start.slice(5)) : Number.NaN
+    const passSuffix = start?.startsWith('pass_') ? start.slice(5) : null
+    const passIndex = passSuffix && /^\d+$/.test(passSuffix) ? Number(passSuffix) : Number.NaN
     const peekPass = Number.isInteger(passIndex) && passIndex >= 0 ? passIndex : null
     return { bali, meet, peekPass, referId: bali || meet || peekPass !== null ? undefined : start }
   })
