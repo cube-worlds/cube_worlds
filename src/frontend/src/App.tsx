@@ -6,6 +6,7 @@ import { Fork } from './components/Fork'
 import { HeroTab } from './components/HeroTab'
 import { Hub } from './components/Hub'
 import { MintFlow } from './components/MintFlow'
+import { PassPeek } from './components/PassPeek'
 import { PassScan } from './components/PassScan'
 import { TitleScreen } from './components/TitleScreen'
 import { expand, getStartParam, haptic } from './telegram'
@@ -22,7 +23,7 @@ const EarnPanel = lazy(() => import('./components/EarnPanel').then((m) => ({ def
 // forge → wallet(forge) → forge ; forge(minted) → scan
 // wallet(pass) → scan → hub
 // hub: tabs hub · bali · hero · earn ; hero → SWITCH PASS → scan
-// startapp bali_<place> → bali tab ; meet_<code> → bali tab with an invite
+// startapp bali_<place> → bali tab ; meet_<code> → bali tab with an invite ; pass_<index> → hub with that pass open
 type Screen =
   | { name: 'title' }
   | { name: 'fork' }
@@ -42,12 +43,15 @@ export function App() {
   const [balance, setBalance] = useState('0')
   const [error, setError] = useState<string | undefined>()
   const [tonMounted, setTonMounted] = useState(false)
-  const [{ bali, meet, referId }] = useState(() => {
+  const [{ bali, meet, peekPass, referId }] = useState(() => {
     const start = getStartParam()
     const bali = start?.startsWith('bali_') ? start.slice(5) : null
     const meet = start?.startsWith('meet_') ? start.slice(5) : null
-    return { bali, meet, referId: bali || meet ? undefined : start }
+    const passIndex = start?.startsWith('pass_') ? Number(start.slice(5)) : Number.NaN
+    const peekPass = Number.isInteger(passIndex) && passIndex >= 0 ? passIndex : null
+    return { bali, meet, peekPass, referId: bali || meet || peekPass !== null ? undefined : start }
   })
+  const [peek, setPeek] = useState<number | null>(peekPass)
 
   const boot = useCallback(() => {
     setPhase('loading')
@@ -214,7 +218,7 @@ export function App() {
         break
       }
       if (screen.tab === 'hub') {
-        body = <Hub pass={user.pass} username={user.username} onBalance={setBalance} onBali={() => goHub('bali')} onHero={() => goHub('hero')} onEarn={() => goHub('earn')} />
+        body = <Hub pass={user.pass} username={user.username} botName={config?.botName ?? ''} onBalance={setBalance} onBali={() => goHub('bali')} onHero={() => goHub('hero')} onEarn={() => goHub('earn')} />
       } else if (screen.tab === 'bali') {
         body = <BaliTab botName={config?.botName ?? ''} startPlace={bali} inviteCode={meet} onBalance={setBalance} />
       } else if (screen.tab === 'hero') {
@@ -252,6 +256,10 @@ export function App() {
             )
           : body}
       </main>
+
+      {inHub && peek !== null && (
+        <PassPeek index={peek} botName={config?.botName ?? ''} meetStake={null} onClose={() => setPeek(null)} />
+      )}
 
       {inHub && (
         <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, display: 'flex', background: 'var(--cw-bg)', borderTop: '2px solid var(--cw-border-dark)' }}>
