@@ -1,8 +1,10 @@
-import type { WorldState } from '../api'
+import type { Gazette, WorldState } from '../api'
 import { useCallback, useEffect, useState } from 'react'
-import { worldPass, worldState, worldVisit } from '../api'
+import { worldGazette, worldPass, worldState, worldVisit } from '../api'
 import { haptic } from '../telegram'
 import { BaliMap } from './BaliMap'
+import { GazetteCard } from './GazetteCard'
+import { PassPeek } from './PassPeek'
 import { PlaceSheet } from './PlaceSheet'
 
 interface BaliTabProps {
@@ -23,6 +25,8 @@ export function BaliTab({ botName, startPlace, inviteCode, onBalance }: BaliTabP
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [invite, setInvite] = useState<{ code: string, host: { name: string, index: number } | null } | null>(inviteCode ? { code: inviteCode, host: null } : null)
+  const [gazette, setGazette] = useState<Gazette | null>(null)
+  const [peek, setPeek] = useState<number | null>(null)
   const [, setTick] = useState(0)
 
   const refresh = useCallback(async () => {
@@ -35,6 +39,7 @@ export function BaliTab({ botName, startPlace, inviteCode, onBalance }: BaliTabP
     } catch {
       // keep previous snapshot
     }
+    void worldGazette().then(setGazette).catch(() => {})
   }, [onBalance])
 
   useEffect(() => {
@@ -86,6 +91,7 @@ export function BaliTab({ botName, startPlace, inviteCode, onBalance }: BaliTabP
         <div className="px-step">BALI · WINDOW {state.windowId % 3 === 0 ? 'NIGHT' : state.windowId % 3 === 1 ? 'MORNING' : 'AFTERNOON'}</div>
         <div className="px-label" style={{ fontSize: 7, color: 'var(--cw-gold)' }}>{`CLOSES IN ${countdown(state.endsAt - Date.now())}`}</div>
       </div>
+      {gazette && <GazetteCard gazette={gazette} onPeek={setPeek} />}
       <BaliMap places={state.places} myPlace={state.myVisit?.place ?? null} selected={selected} onSelect={(id) => { setSelected(id); setError(null) }} />
       {state.myVisit
         ? <div className="px-body" style={{ fontSize: 16 }}>{`You are at ${state.places.find(p => p.id === state.myVisit?.place)?.name ?? state.myVisit.place}. Come back after the window closes.`}</div>
@@ -103,6 +109,15 @@ export function BaliTab({ botName, startPlace, inviteCode, onBalance }: BaliTabP
           onVisit={visit}
           onClose={() => setSelected(null)}
           onBalance={onBalance}
+        />
+      )}
+      {peek !== null && (
+        <PassPeek
+          index={peek}
+          botName={botName}
+          meetStake={state.places.find(p => p.engine === 'split-steal')?.stake ?? null}
+          onVisited={() => { void refresh() }}
+          onClose={() => setPeek(null)}
         />
       )}
     </div>

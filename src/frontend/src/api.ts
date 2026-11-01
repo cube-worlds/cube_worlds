@@ -284,6 +284,31 @@ export async function worldPass(index: number): Promise<PassPublic> {
   return json as PassPublic
 }
 
+export interface Named { pass: number, name: string }
+export interface GazetteLine { text: string, passes: Named[] }
+export interface GazettePlace { place: string, name: string, visitors: number, lines: GazetteLine[] }
+export interface Gazette {
+  windowId: number
+  startsAt: number
+  endsAt: number
+  pilgrims: number
+  places: GazettePlace[]
+  fox?: Named & { net: string }
+}
+
+// Public: the latest resolved window's recap, null before the first one.
+export async function worldGazette(): Promise<Gazette | null> {
+  const response = await fetch('/api/world/gazette')
+  const json = await response.json().catch(() => null) as { gazette?: Gazette | null } | null
+  return json?.gazette ?? null
+}
+
+export interface ChallengeResponse extends ApiError { visit?: VisitView, delivered?: boolean }
+
+export function worldChallenge(index: number, move: 'help' | 'steal'): Promise<ChallengeResponse> {
+  return post('/api/world/challenge', { index, move })
+}
+
 export interface CommunityInfo extends ApiError {
   tips: { perDay: number, left: number, votes: string } | null
   invites: Array<{ chatId: string, title: string, url: string }>
