@@ -16,6 +16,7 @@ import {
   lastResolvedVisit,
   setPartner,
 } from '#root/common/models/Visit'
+import { findLatestRecap } from '#root/common/models/Window'
 import { PLACES } from '#root/game/places'
 import { logger } from '#root/logger'
 import { defaultParseInitData, defaultValidateInitData } from './init-data'
@@ -35,6 +36,7 @@ export function createWorldHandler() {
     findVisit,
     lastResolvedVisit,
     findResolvedVisits,
+    findLatestRecap,
     debitVotes,
     addPoints,
     createVisit,

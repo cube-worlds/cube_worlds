@@ -2,6 +2,7 @@
 import type { InitData } from '@telegram-apps/init-data-node'
 import type { WorldHandlerDependencies, WorldUser } from '#root/backend/world-handler'
 import type { VisitRecord } from '#root/common/models/Visit'
+import type { Gazette } from '#root/game/gazette'
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import fastify from 'fastify'
@@ -45,6 +46,7 @@ async function createCtx(overrides: Partial<WorldHandlerDependencies> = {}, user
     findVisit: async (userId, windowId) => visits.find(v => v.userId === userId && v.windowId === windowId) ?? null,
     lastResolvedVisit: async userId => visits.find(v => v.userId === userId && v.resolved) ?? null,
     findResolvedVisits: async (userId, limit) => visits.filter(v => v.userId === userId && v.resolved).slice(0, limit),
+    findLatestRecap: async () => null,
     debitVotes: async (userId, amount, reason) => {
       ctx.debits.push([userId, amount, reason])
       if (user.votes < amount) return null
@@ -296,4 +298,20 @@ test('GET /pass/:index is public and exposes rep, weights and top traits', async
   assert.equal(body.weights.length, 13)
   assert.equal(body.top.length, 4)
   assert.equal((await ctx.app.inject({ method: 'GET', url: '/api/world/pass/8' })).statusCode, 404)
+})
+
+const RECAP: Gazette = { windowId: 99, startsAt: 99 * WINDOW_MS, endsAt: 100 * WINDOW_MS, pilgrims: 2, places: [{ place: 'canggu', name: 'Canggu', visitors: 2, lines: [{ text: '{0} robbed {1}', passes: [{ pass: 7, name: 'alice' }, { pass: 9, name: 'bob' }] }] }], fox: { pass: 7, name: 'alice', net: '200' } }
+
+test('GET /gazette is public: null before any window, then the stored recap', async (t) => {
+  const empty = await createCtx()
+  t.after(() => empty.app.close())
+  const none = await empty.app.inject({ method: 'GET', url: '/api/world/gazette' })
+  assert.equal(none.statusCode, 200)
+  assert.deepEqual(none.json(), { gazette: null })
+
+  const ctx = await createCtx({ findLatestRecap: async () => RECAP })
+  t.after(() => ctx.app.close())
+  const res = await ctx.app.inject({ method: 'GET', url: '/api/world/gazette' })
+  assert.equal(res.statusCode, 200)
+  assert.deepEqual(res.json(), { gazette: RECAP })
 })

@@ -370,6 +370,13 @@ async function run() {
       expect(res.status === 404, `status=${res.status}`)
     })
 
+    await step('GET /api/world/gazette is public and null before any window resolved', async () => {
+      const res = await fetch(`${BASE}/api/world/gazette`)
+      expect(res.status === 200, `status=${res.status}`)
+      const body = await res.json() as { gazette?: unknown }
+      expect(body.gazette === null, `gazette=${JSON.stringify(body.gazette)}`)
+    })
+
     await step('unknown API route returns the 404 envelope', async () => {
       const response = await fetch(`${BASE}/api/definitely-not-a-route`)
       expect(response.status === 404, `HTTP ${response.status}`)

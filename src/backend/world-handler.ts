@@ -1,6 +1,7 @@
 import type { InitData } from '@telegram-apps/init-data-node'
 import type { FastifyInstance, FastifyReply } from 'fastify'
 import type { VisitRecord } from '#root/common/models/Visit'
+import type { Gazette } from '#root/game/gazette'
 import type { Move, PlaceDef } from '#root/game/places'
 import { BalanceChangeType } from '#root/common/models/Balance'
 import { ALL_MOVES, movesFor, stakeFor, windowEndsAt, windowIdAt } from '#root/game/places'
@@ -27,6 +28,7 @@ export interface WorldHandlerDependencies {
   findVisit: (userId: number, windowId: number) => Promise<VisitRecord | null>
   lastResolvedVisit: (userId: number) => Promise<VisitRecord | null>
   findResolvedVisits: (userId: number, limit: number) => Promise<VisitRecord[]>
+  findLatestRecap: () => Promise<Gazette | null>
   debitVotes: (userId: number, amount: bigint, reason: BalanceChangeType) => Promise<bigint | null>
   addPoints: (userId: number, amount: bigint, reason: BalanceChangeType) => Promise<unknown>
   createVisit: (input: { userId: number, windowId: number, place: string, move: Move | null, stake: bigint, inviteCode?: string }) => Promise<VisitRecord | 'duplicate'>
@@ -309,5 +311,14 @@ export function buildWorldHandler(deps: WorldHandlerDependencies) {
         }
       },
     )
+
+    // The latest window's public recap (also posted to the community chats).
+    fastify.get('/gazette', async () => {
+      try {
+        return { gazette: await deps.findLatestRecap() }
+      } catch (err) {
+        return safeErrorResponse(err, deps.logError)
+      }
+    })
   }
 }

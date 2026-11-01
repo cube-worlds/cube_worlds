@@ -53,6 +53,7 @@ const ROUTE_RATE_LIMITS: Record<string, { max: number, timeWindow: string }> = {
   '/api/world/visit': { max: 10, timeWindow: '1 minute' },
   '/api/world/history': { max: 30, timeWindow: '1 minute' },
   '/api/world/pass/:index': { max: 60, timeWindow: '1 minute' },
+  '/api/world/gazette': { max: 60, timeWindow: '1 minute' },
 }
 
 export async function createServer(bot: Bot) {
