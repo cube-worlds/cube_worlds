@@ -43,6 +43,10 @@ class Visit {
   @prop({ type: String })
   outcome?: string
 
+  // Challenge DMs sent from this (Canggu host) visit; capped by incChallenges.
+  @prop({ type: Number })
+  challengesSent?: number
+
   @prop({ type: Date })
   createdAt?: Date
 }
@@ -171,4 +175,15 @@ export async function findResolvedVisits(userId: number, limit: number): Promise
 export async function lastResolvedVisit(userId: number): Promise<VisitRecord | null> {
   const [doc] = await findResolvedVisits(userId, 1)
   return doc ?? null
+}
+
+// Count a challenge DM against the host's visit, refusing past `cap`. CAS so
+// parallel requests cannot overshoot.
+export async function incChallenges(visitId: string, cap: number): Promise<boolean> {
+  const updated = await VisitModel.findOneAndUpdate(
+    { _id: visitId, $or: [{ challengesSent: { $exists: false } }, { challengesSent: { $lt: cap } }] },
+    { $inc: { challengesSent: 1 } },
+    { new: true },
+  ).lean()
+  return updated !== null
 }

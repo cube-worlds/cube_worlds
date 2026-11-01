@@ -1,5 +1,6 @@
 /* eslint-disable test/no-import-node-test */
 import type { VisitRecord } from '#root/common/models/Visit'
+import type { Gazette } from '#root/game/gazette'
 import type { ResolverDependencies } from '#root/game/resolver'
 import assert from 'node:assert/strict'
 import test from 'node:test'
@@ -14,11 +15,11 @@ function visit(userId: number, place: string, move: VisitRecord['move'] = null, 
   return { id: `v${seq}`, userId, windowId: W, place, move, stake: 100n, resolved: false, ...extra }
 }
 
-interface Harness { deps: ResolverDependencies, store: Map<string, VisitRecord>, paid: Array<[number, bigint, BalanceChangeType]>, notified: Array<[number, string, string]>, reps: Array<[number, object]>, pools: Record<string, bigint>, windows: Array<[string, number]>, errors: string[] }
+interface Harness { deps: ResolverDependencies, store: Map<string, VisitRecord>, paid: Array<[number, bigint, BalanceChangeType]>, notified: Array<[number, string, string]>, reps: Array<[number, object]>, pools: Record<string, bigint>, windows: Array<[string, number]>, errors: string[], gazettes: Gazette[] }
 
 function harness(visits: VisitRecord[], overrides: Partial<ResolverDependencies> = {}): Harness {
   const store = new Map(visits.map(v => [v.id, { ...v }]))
-  const h: Harness = { store, paid: [], notified: [], reps: [], pools: { besakih: 5000n }, windows: [], errors: [], deps: null as unknown as ResolverDependencies }
+  const h: Harness = { store, paid: [], notified: [], reps: [], pools: { besakih: 5000n }, windows: [], errors: [], gazettes: [], deps: null as unknown as ResolverDependencies }
   h.deps = {
     now: () => (W + 1) * WINDOW_MS + 1,
     places: PLACES,
@@ -40,6 +41,7 @@ function harness(visits: VisitRecord[], overrides: Partial<ResolverDependencies>
     notify: async (u, text, place) => { h.notified.push([u, text, place]) },
     rng: () => 0,
     logError: m => h.errors.push(m),
+    publishGazette: async (g) => { h.gazettes.push(g) },
     ...overrides,
   }
   return h
@@ -177,4 +179,38 @@ test('all-pay: a lone bidder is refunded as a Stake row, losers are told who won
   const byUser = (id: number) => [...h.store.values()].find(v => v.userId === id)!
   assert.equal(byUser(2).partnerPass, undefined)
   assert.equal(byUser(1).partnerPass, 20)
+})
+
+test('publishes one gazette per resolved window, every played place, names from holders', async () => {
+  const h = harness([
+    visit(1, 'ubud', 'sunrise'),
+    visit(2, 'ubud', 'sunset'),
+    visit(5, 'ubud', 'sunset'),
+    visit(3, 'canggu', 'steal'),
+    visit(4, 'canggu', 'help'),
+  ])
+  await buildResolver(h.deps).resolveWindow(W)
+  assert.equal(h.gazettes.length, 1)
+  const [g] = h.gazettes
+  assert.equal(g.windowId, W)
+  assert.equal(g.pilgrims, 5)
+  assert.deepEqual(g.places.map(p => p.place), ['ubud', 'canggu'])
+  assert.deepEqual(g.places[1].lines[0], { text: '{0} robbed {1}', passes: [{ pass: 30, name: 'Cube #30' }, { pass: 40, name: 'Cube #40' }] })
+  // user 1: paid 1200 on a 100 stake
+  assert.deepEqual(g.fox, { pass: 10, name: 'Cube #10', net: '1100' })
+  // published before the window is marked resolved — a crash in between must not lose it
+  assert.deepEqual(h.windows, [['claim', W], ['resolved', W]])
+})
+
+test('a throwing publishGazette is logged and the window is still resolved', async () => {
+  const h = harness([visit(1, 'ubud', 'sunrise'), visit(2, 'ubud', 'sunset'), visit(5, 'ubud', 'sunset')], { publishGazette: async () => { throw new Error('chat down') } })
+  assert.equal(await buildResolver(h.deps).resolveWindow(W), 3)
+  assert.deepEqual(h.windows, [['claim', W], ['resolved', W]])
+  assert.ok(h.errors.some(e => e.includes('gazette') && e.includes('chat down')))
+})
+
+test('a window without visits publishes nothing', async () => {
+  const h = harness([])
+  await buildResolver(h.deps).resolveWindow(W)
+  assert.deepEqual(h.gazettes, [])
 })

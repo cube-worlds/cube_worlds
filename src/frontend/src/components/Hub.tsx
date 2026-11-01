@@ -8,6 +8,7 @@ import { PassImage } from './PassScan'
 interface HubProps {
   pass: Pass
   username: string | null
+  botName: string
   onBalance: (votes: string) => void
   onBali: () => void
   onHero: () => void
@@ -15,7 +16,7 @@ interface HubProps {
 }
 
 // Hub shell: hero card, daily claim, BALI activity, shortcuts.
-export function Hub({ pass, username, onBalance, onBali, onHero, onEarn }: HubProps) {
+export function Hub({ pass, username, botName, onBalance, onBali, onHero, onEarn }: HubProps) {
   const [outcome, setOutcome] = useState<VisitView | null>(null)
   const [peek, setPeek] = useState<number | null>(null)
   useEffect(() => {
@@ -52,7 +53,7 @@ export function Hub({ pass, username, onBalance, onBali, onHero, onEarn }: HubPr
           <button type="button" className="px-btn-ghost" onClick={() => { sessionStorage.setItem('cw.lastOutcomeSeen', outcome.id); setOutcome(null) }}>OK</button>
         </div>
       )}
-      {peek !== null && <PassPeek index={peek} onClose={() => setPeek(null)} />}
+      {peek !== null && <PassPeek index={peek} botName={botName} meetStake={null} onClose={() => setPeek(null)} />}
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         <div className="px-card" style={{ boxShadow: '0 4px 0 var(--cw-border-dark)', padding: 12 }}>

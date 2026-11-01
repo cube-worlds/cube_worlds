@@ -53,6 +53,8 @@ const ROUTE_RATE_LIMITS: Record<string, { max: number, timeWindow: string }> = {
   '/api/world/visit': { max: 10, timeWindow: '1 minute' },
   '/api/world/history': { max: 30, timeWindow: '1 minute' },
   '/api/world/pass/:index': { max: 60, timeWindow: '1 minute' },
+  '/api/world/gazette': { max: 60, timeWindow: '1 minute' },
+  '/api/world/challenge': { max: 5, timeWindow: '1 minute' },
 }
 
 export async function createServer(bot: Bot) {
@@ -127,7 +129,7 @@ export async function createServer(bot: Bot) {
   await server.register(setWalletHandler, { prefix: '/api/auth' })
   await server.register(walletNonceHandler, { prefix: '/api/auth' })
   await server.register(createPassHandler(), { prefix: '/api/pass' })
-  await server.register(createWorldHandler(), { prefix: '/api/world' })
+  await server.register(createWorldHandler(bot.api), { prefix: '/api/world' })
 
   await server.register(nftHandler, { prefix: '/api/nft' })
 

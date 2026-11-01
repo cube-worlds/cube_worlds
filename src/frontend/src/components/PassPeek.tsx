@@ -1,6 +1,7 @@
 import type { PassPublic } from '../api'
 import { useEffect, useState } from 'react'
-import { worldPass } from '../api'
+import { worldChallenge, worldPass } from '../api'
+import { haptic, openShare } from '../telegram'
 import { PassImage } from './PassScan'
 
 // Public face of a pass: Bali reputation and top traits (from /api/world/pass/:index).
@@ -27,8 +28,76 @@ export function usePublicPass(index: number | null): PassPublic | null {
   return pub
 }
 
-// Modal peek at another holder's pass.
-export function PassPeek({ index, onClose }: { index: number, onClose: () => void }) {
+type ChallengeState =
+  | { kind: 'idle' }
+  | { kind: 'pick' }
+  | { kind: 'busy' }
+  | { kind: 'sent' }
+  | { kind: 'undelivered', inviteCode: string }
+  | { kind: 'error', text: string }
+
+// CHALLENGE AT CANGGU: commits my Canggu visit (if I have none) and DMs this
+// pass the meet link. Spends the Canggu stake; the server refuses if I am
+// already somewhere else this window.
+function ChallengeBlock({ index, name, botName, meetStake, onVisited }: { index: number, name: string, botName: string, meetStake: string | null, onVisited?: () => void }) {
+  const [st, setSt] = useState<ChallengeState>({ kind: 'idle' })
+
+  const send = async (move: 'help' | 'steal') => {
+    setSt({ kind: 'busy' })
+    try {
+      const res = await worldChallenge(index, move)
+      if (res.error || !res.visit) {
+        haptic('error')
+        setSt({ kind: 'error', text: res.error ?? 'Challenge failed' })
+        return
+      }
+      haptic('success')
+      onVisited?.()
+      setSt(res.delivered ? { kind: 'sent' } : { kind: 'undelivered', inviteCode: res.visit.inviteCode ?? '' })
+    } catch {
+      setSt({ kind: 'error', text: 'Cannot reach Bali, try again' })
+    }
+  }
+
+  const label = `CHALLENGE AT CANGGU${meetStake ? ` · ${meetStake} $CUBE` : ''}`
+  switch (st.kind) {
+    case 'idle':
+      return <button type="button" className="px-btn" onClick={() => setSt({ kind: 'pick' })}>{label}</button>
+    case 'pick':
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div className="px-body" style={{ fontSize: 16 }}>{`Meet ${name} at Canggu — your move is sealed until the window closes.`}</div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button type="button" className="px-btn" onClick={() => void send('help')}>HELP</button>
+            <button type="button" className="px-btn-ghost" onClick={() => void send('steal')}>STEAL</button>
+          </div>
+          <button type="button" className="px-btn-ghost" onClick={() => setSt({ kind: 'idle' })}>CANCEL</button>
+        </div>
+      )
+    case 'busy':
+      return <div className="px-body" style={{ fontSize: 16 }}>Sending the challenge…</div>
+    case 'sent':
+      return <div className="px-body" style={{ fontSize: 16, color: 'var(--cw-green)' }}>{`Challenge sent. ${name} has until the window closes to accept.`}</div>
+    case 'undelivered':
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div className="px-body" style={{ fontSize: 16, color: 'var(--cw-gold)' }}>{`You are at Canggu, but ${name} could not be messaged. Send them the link yourself.`}</div>
+          <button type="button" className="px-btn-ghost" onClick={() => openShare(`https://t.me/${botName}?startapp=meet_${st.inviteCode}`, `Meet me at Canggu — help or steal?`)}>SHARE MEET LINK</button>
+        </div>
+      )
+    case 'error':
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div className="px-body" style={{ fontSize: 16, color: 'var(--cw-red-bright)' }}>{st.text}</div>
+          <button type="button" className="px-btn-ghost" onClick={() => setSt({ kind: 'idle' })}>BACK</button>
+        </div>
+      )
+  }
+}
+
+// Modal peek at another holder's pass. showChallenge=false for a non-holder (e.g. the Fork
+// screen reached via a pass_<index> deep link) — the challenge flow is holder-gated server-side.
+export function PassPeek({ index, botName, meetStake, showChallenge = true, onVisited, onClose }: { index: number, botName: string, meetStake: string | null, showChallenge?: boolean, onVisited?: () => void, onClose: () => void }) {
   const pub = usePublicPass(index)
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 20 }} onClick={onClose}>
@@ -42,6 +111,7 @@ export function PassPeek({ index, onClose }: { index: number, onClose: () => voi
                   <div className="px-label" style={{ fontSize: 7 }}>{`PASS #${pub.index}`}</div>
                 </div>
                 <PassPublicBlock pub={pub} />
+                {showChallenge && <ChallengeBlock index={pub.index} name={pub.name} botName={botName} meetStake={meetStake} onVisited={onVisited} />}
               </>
             )
           : <div className="px-body" style={{ fontSize: 16, textAlign: 'center' }}>{`Loading pass #${index}…`}</div>}

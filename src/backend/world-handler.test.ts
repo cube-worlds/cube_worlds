@@ -2,6 +2,7 @@
 import type { InitData } from '@telegram-apps/init-data-node'
 import type { WorldHandlerDependencies, WorldUser } from '#root/backend/world-handler'
 import type { VisitRecord } from '#root/common/models/Visit'
+import type { Gazette } from '#root/game/gazette'
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import fastify from 'fastify'
@@ -20,6 +21,8 @@ interface Ctx {
   credits: Array<[number, bigint, BalanceChangeType]>
   traitsSet: Array<[number, object]>
   errors: string[]
+  challenges: Array<[number, { hostName: string, hostIndex: number, inviteCode: string, endsAt: number }]>
+  challengeCounts: Map<string, number>
 }
 
 async function createCtx(overrides: Partial<WorldHandlerDependencies> = {}, userOverrides: Partial<WorldUser> = {}): Promise<Ctx> {
@@ -30,14 +33,15 @@ async function createCtx(overrides: Partial<WorldHandlerDependencies> = {}, user
     rep: { helped: 1, stole: 0, gave: 2, took: 0 },
     ...userOverrides,
   }
+  const bob: WorldUser = { id: 2002, votes: 0n, pass: { index: 9, address: 'EQ_B', name: 'bob', image: '' } }
   const visits: VisitRecord[] = []
-  const ctx: Ctx = { app: fastify(), user, visits, debits: [], credits: [], traitsSet: [], errors: [] }
+  const ctx: Ctx = { app: fastify(), user, visits, debits: [], credits: [], traitsSet: [], errors: [], challenges: [], challengeCounts: new Map() }
   let seq = 0
   const deps: WorldHandlerDependencies = {
     validateInitData: () => {},
     parseInitData: () => ({ user: { id: 1001, username: 'alice' } } as InitData),
     findUser: async id => (id === 1001 ? user : null),
-    findUserByPassIndex: async index => (index === 7 ? user : null),
+    findUserByPassIndex: async index => (index === 7 ? user : index === 9 ? bob : null),
     now: () => NOW,
     places: PLACES,
     countVisitsByPlace: async () => ({ ubud: 3 }),
@@ -45,6 +49,7 @@ async function createCtx(overrides: Partial<WorldHandlerDependencies> = {}, user
     findVisit: async (userId, windowId) => visits.find(v => v.userId === userId && v.windowId === windowId) ?? null,
     lastResolvedVisit: async userId => visits.find(v => v.userId === userId && v.resolved) ?? null,
     findResolvedVisits: async (userId, limit) => visits.filter(v => v.userId === userId && v.resolved).slice(0, limit),
+    findLatestRecap: async () => null,
     debitVotes: async (userId, amount, reason) => {
       ctx.debits.push([userId, amount, reason])
       if (user.votes < amount) return null
@@ -71,6 +76,13 @@ async function createCtx(overrides: Partial<WorldHandlerDependencies> = {}, user
     setPassTraits: async (userId, traits) => { ctx.traitsSet.push([userId, traits]) },
     randomCode: () => 'CODE1234',
     logError: m => ctx.errors.push(m),
+    incChallenges: async (visitId, cap) => {
+      const n = ctx.challengeCounts.get(visitId) ?? 0
+      if (n >= cap) return false
+      ctx.challengeCounts.set(visitId, n + 1)
+      return true
+    },
+    sendChallenge: async (targetId, c) => { ctx.challenges.push([targetId, c]) },
     ...overrides,
   }
   await ctx.app.register(buildWorldHandler(deps), { prefix: '/api/world' })
@@ -296,4 +308,112 @@ test('GET /pass/:index is public and exposes rep, weights and top traits', async
   assert.equal(body.weights.length, 13)
   assert.equal(body.top.length, 4)
   assert.equal((await ctx.app.inject({ method: 'GET', url: '/api/world/pass/8' })).statusCode, 404)
+})
+
+const RECAP: Gazette = { windowId: 99, startsAt: 99 * WINDOW_MS, endsAt: 100 * WINDOW_MS, pilgrims: 2, places: [{ place: 'canggu', name: 'Canggu', visitors: 2, lines: [{ text: '{0} robbed {1}', passes: [{ pass: 7, name: 'alice' }, { pass: 9, name: 'bob' }] }] }], fox: { pass: 7, name: 'alice', net: '200' } }
+
+test('GET /gazette is public: null before any window, then the stored recap', async (t) => {
+  const empty = await createCtx()
+  t.after(() => empty.app.close())
+  const none = await empty.app.inject({ method: 'GET', url: '/api/world/gazette' })
+  assert.equal(none.statusCode, 200)
+  assert.deepEqual(none.json(), { gazette: null })
+
+  const ctx = await createCtx({ findLatestRecap: async () => RECAP })
+  t.after(() => ctx.app.close())
+  const res = await ctx.app.inject({ method: 'GET', url: '/api/world/gazette' })
+  assert.equal(res.statusCode, 200)
+  assert.deepEqual(res.json(), { gazette: RECAP })
+})
+
+test('/challenge 404 for an unplayed pass and 400 for yourself, nothing debited', async (t) => {
+  const ctx = await createCtx()
+  t.after(() => ctx.app.close())
+  const missing = await post(ctx, '/challenge', { index: 123, move: 'help' })
+  assert.equal(missing.statusCode, 404)
+  assert.equal(missing.json().code, 'no_such_pass')
+  const self = await post(ctx, '/challenge', { index: 7, move: 'help' })
+  assert.equal(self.statusCode, 400)
+  assert.equal(self.json().code, 'self')
+  assert.deepEqual(ctx.debits, [])
+  assert.deepEqual(ctx.challenges, [])
+})
+
+test('/challenge creates my Canggu visit, debits the stake and DMs the target the meet link', async (t) => {
+  const ctx = await createCtx()
+  t.after(() => ctx.app.close())
+  const res = await post(ctx, '/challenge', { index: 9, move: 'steal' })
+  assert.equal(res.statusCode, 200)
+  const body = res.json()
+  assert.equal(body.delivered, true)
+  assert.equal(body.visit.place, 'canggu')
+  assert.equal(body.visit.move, 'steal')
+  assert.equal(body.visit.inviteCode, '7-CODE1234')
+  assert.deepEqual(ctx.debits, [[1001, 200n, BalanceChangeType.Stake]])
+  assert.deepEqual(ctx.challenges, [[2002, { hostName: 'alice', hostIndex: 7, inviteCode: '7-CODE1234', endsAt: (W + 1) * WINDOW_MS }]])
+})
+
+test('/challenge reuses my unpaired Canggu visit without a second debit', async (t) => {
+  const ctx = await createCtx()
+  t.after(() => ctx.app.close())
+  ctx.visits.push({ id: 'v0', userId: 1001, windowId: W, place: 'canggu', move: 'help', stake: 200n, inviteCode: '7-OLD', resolved: false })
+  const res = await post(ctx, '/challenge', { index: 9, move: 'steal' })
+  assert.equal(res.statusCode, 200)
+  assert.equal(res.json().visit.id, 'v0')
+  assert.equal(res.json().visit.move, 'help') // the move was committed earlier; the body move is ignored
+  assert.deepEqual(ctx.debits, [])
+  assert.equal(ctx.challenges[0][1].inviteCode, '7-OLD')
+})
+
+test('/challenge is 409 visit_locked when I am elsewhere or already paired', async (t) => {
+  const ctx = await createCtx()
+  t.after(() => ctx.app.close())
+  ctx.visits.push({ id: 'v0', userId: 1001, windowId: W, place: 'ubud', move: 'sunrise', stake: 100n, resolved: false })
+  const away = await post(ctx, '/challenge', { index: 9, move: 'help' })
+  assert.equal(away.statusCode, 409)
+  assert.equal(away.json().code, 'visit_locked')
+  ctx.visits[0] = { id: 'v0', userId: 1001, windowId: W, place: 'canggu', move: 'help', stake: 200n, inviteCode: '7-OLD', partnerId: 3003, resolved: false }
+  const paired = await post(ctx, '/challenge', { index: 9, move: 'help' })
+  assert.equal(paired.statusCode, 409)
+  assert.deepEqual(ctx.debits, [])
+  assert.deepEqual(ctx.challenges, [])
+})
+
+test('/challenge caps at three DMs per visit', async (t) => {
+  const ctx = await createCtx()
+  t.after(() => ctx.app.close())
+  for (let i = 0; i < 3; i++) assert.equal((await post(ctx, '/challenge', { index: 9, move: 'help' })).statusCode, 200)
+  const fourth = await post(ctx, '/challenge', { index: 9, move: 'help' })
+  assert.equal(fourth.statusCode, 429)
+  assert.equal(fourth.json().code, 'cap')
+  assert.equal(ctx.challenges.length, 3)
+  assert.equal(ctx.debits.length, 1)
+})
+
+test('/challenge keeps the visit and answers delivered:false when the DM fails', async (t) => {
+  const ctx = await createCtx({ sendChallenge: async () => { throw new Error('bot blocked') } })
+  t.after(() => ctx.app.close())
+  const res = await post(ctx, '/challenge', { index: 9, move: 'help' })
+  assert.equal(res.statusCode, 200)
+  assert.equal(res.json().delivered, false)
+  assert.equal(res.json().visit.inviteCode, '7-CODE1234')
+  assert.equal(ctx.visits.length, 1)
+  assert.ok(ctx.errors.some(e => e.includes('bot blocked')))
+})
+
+test('/challenge answers 402 no_cube and sends nothing when the stake is not covered', async (t) => {
+  const ctx = await createCtx({}, { votes: 50n })
+  t.after(() => ctx.app.close())
+  const res = await post(ctx, '/challenge', { index: 9, move: 'help' })
+  assert.equal(res.statusCode, 402)
+  assert.equal(res.json().code, 'no_cube')
+  assert.deepEqual(ctx.challenges, [])
+  assert.equal(ctx.visits.length, 0)
+})
+
+test('/challenge rejects a bad move or missing index with 400', async (t) => {
+  const ctx = await createCtx()
+  t.after(() => ctx.app.close())
+  assert.equal((await post(ctx, '/challenge', { index: 9, move: 'sunrise' })).statusCode, 400)
+  assert.equal((await post(ctx, '/challenge', { move: 'help' })).statusCode, 400)
 })
