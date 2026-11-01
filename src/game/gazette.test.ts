@@ -4,7 +4,7 @@ import type { EngineOutcome } from '#root/game/engines/types'
 import type { Gazette, GazettePlace, Named, PlaceReport } from '#root/game/gazette'
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { composeGazette, fillLine, GAZETTE_MAX_CHARS, renderGazetteText } from '#root/game/gazette'
+import { composeGazette, fillLine, GAZETTE_MAX_CHARS, isSharedPair, renderGazetteText } from '#root/game/gazette'
 import { PLACES, WINDOW_MS } from '#root/game/places'
 
 const W = 100
@@ -31,9 +31,9 @@ test('a visible steal names thief and victim; a concealed one names only the vic
     visits: [visit(1, 'canggu', 'steal', 200n), visit(2, 'canggu', 'help', 200n), visit(3, 'canggu', 'steal', 200n), visit(4, 'canggu', 'help', 200n)],
     outcomes: [
       out(1, 400n, { rep: { stole: 1 }, partnerId: 2 }),
-      out(2, 0n, { partnerId: 1 }),
+      out(2, 0n, { partnerId: 1, rep: { helped: 1 } }),
       out(3, 400n, { partnerId: 4 }), // concealed: no rep.stole
-      out(4, 0n, { partnerId: 3 }),
+      out(4, 0n, { partnerId: 3, rep: { helped: 1 } }),
     ],
   }
   const g = composeGazette(W, [report], nameOf)!
@@ -57,9 +57,9 @@ test('a concealed thief with the highest net never wins Top or Fox', () => {
     visits: [visit(1, 'canggu', 'steal', 200n), visit(2, 'canggu', 'help', 200n), visit(3, 'canggu', 'steal', 200n), visit(4, 'canggu', 'help', 200n)],
     outcomes: [
       out(1, 400n, { rep: { stole: 1 }, partnerId: 2 }),
-      out(2, 0n, { partnerId: 1 }),
+      out(2, 0n, { partnerId: 1, rep: { helped: 1 } }),
       out(3, 450n, { partnerId: 4 }), // concealed: no rep.stole, net 250 > Kadek's net 200
-      out(4, 0n, { partnerId: 3 }),
+      out(4, 0n, { partnerId: 3, rep: { helped: 1 } }),
     ],
   }
   const g = composeGazette(W, [report], nameOf)!
@@ -100,6 +100,41 @@ test('heist betrayal, shared pairs and commons counts are generic lines', () => 
   assert.deepEqual(g.places[1].lines[0], { text: '2 gave, 1 took', passes: [] })
   // fox is the first +200 in report order: the heist (Kadek) comes before the commons (Putu)
   assert.deepEqual(g.fox, { pass: 10, name: 'Kadek', net: '200' })
+})
+
+test('isSharedPair excludes a split-steal victim (rep.helped on the robbed side) from "shared"', () => {
+  // A genuine coop pair: both sides played help, both get rep.helped -> both "shared".
+  const coopMoves = new Map<number, VisitRecord['move']>([[1, 'help'], [2, 'help']])
+  assert.equal(isSharedPair(out(1, 250n, { rep: { helped: 1 }, partnerId: 2 }), coopMoves), true)
+  assert.equal(isSharedPair(out(2, 250n, { rep: { helped: 1 }, partnerId: 1 }), coopMoves), true)
+
+  // A steal/help pair: the real split-steal engine puts rep.helped on the ROBBED victim too
+  // (see src/game/engines/split-steal.ts), for both a revealed and a concealed thief. Neither
+  // the thief's nor the victim's outcome may ever count as "shared".
+  for (const thiefRep of [{ stole: 1 } as const, undefined]) {
+    const moves = new Map<number, VisitRecord['move']>([[3, 'steal'], [4, 'help']])
+    const thief = out(3, 400n, { partnerId: 4, ...(thiefRep ? { rep: thiefRep } : {}) })
+    const victim = out(4, 0n, { rep: { helped: 1 }, partnerId: 3 })
+    assert.equal(isSharedPair(thief, moves), false)
+    assert.equal(isSharedPair(victim, moves), false)
+  }
+
+  // Two theft pairs, zero genuine coop: the old `rep?.helped` filter alone would have counted
+  // both robbed victims as "shared" (2 -> "1 pair shared" on a window where nobody cooperated).
+  const theftMoves = new Map<number, VisitRecord['move']>([[1, 'steal'], [2, 'help'], [3, 'steal'], [4, 'help']])
+  const twoTheftPairs = [
+    out(1, 400n, { partnerId: 2 }), // concealed thief: no rep at all
+    out(2, 0n, { rep: { helped: 1 }, partnerId: 1 }),
+    out(3, 400n, { rep: { stole: 1 }, partnerId: 4 }), // revealed thief
+    out(4, 0n, { rep: { helped: 1 }, partnerId: 3 }),
+  ]
+  assert.equal(twoTheftPairs.filter(o => isSharedPair(o, theftMoves)).length, 0)
+})
+
+test('an empty-but-for-refunds window (a lone Canggu visitor) composes to null', () => {
+  const lonely: PlaceReport = { place: place('canggu'), visits: [visit(1, 'canggu', 'help', 200n)], outcomes: [out(1, 200n, { refund: true })] }
+  const g = composeGazette(W, [lonely], nameOf)
+  assert.equal(g, null)
 })
 
 test('minority places report both sides and the blessed one; refund-only places are omitted', () => {

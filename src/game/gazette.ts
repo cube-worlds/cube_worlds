@@ -24,6 +24,12 @@ const STRANGER: Named = { pass: -1, name: 'a stranger' }
 const EVENT_LINES_PER_PLACE = 2
 export const GAZETTE_MAX_CHARS = 3900
 
+// A split-steal victim also carries rep.helped (the engine's "robbed" marker reuses the same
+// flag as genuine cooperation) — so a pair only counts as "shared" when neither side stole.
+export function isSharedPair(o: EngineOutcome, moves: Map<number, VisitRecord['move']>): boolean {
+  return o.partnerId !== undefined && !!o.rep?.helped && moves.get(o.userId) !== 'steal' && moves.get(o.partnerId) !== 'steal'
+}
+
 export function composeGazette(windowId: number, reports: PlaceReport[], nameOf: (userId: number) => Named | undefined): Gazette | null {
   const pilgrims = reports.reduce((n, r) => n + r.visits.length, 0)
   if (pilgrims === 0) return null
@@ -60,7 +66,7 @@ export function composeGazette(windowId: number, reports: PlaceReport[], nameOf:
         events.push({ text: 'Someone robbed {0}', passes: [named(o.userId)] })
       }
     }
-    const shared = played.filter(o => o.partnerId !== undefined && o.rep?.helped).length
+    const shared = played.filter(o => isSharedPair(o, moves)).length
     if (shared >= 2) events.push({ text: `${Math.floor(shared / 2)} pair${shared >= 4 ? 's' : ''} shared`, passes: [] })
     const gave = played.filter(o => o.rep?.gave).length
     const took = played.filter(o => o.rep?.took).length
@@ -84,6 +90,7 @@ export function composeGazette(windowId: number, reports: PlaceReport[], nameOf:
     }
     places.push({ place: place.id, name: place.name, visitors: visits.length, lines })
   }
+  if (places.length === 0) return null
   places.sort((a, b) => b.visitors - a.visitors)
   return { windowId, startsAt: windowId * WINDOW_MS, endsAt: (windowId + 1) * WINDOW_MS, pilgrims, places, ...(fox ? { fox } : {}) }
 }
