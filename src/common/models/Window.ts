@@ -1,14 +1,21 @@
-import { getModelForClass, modelOptions, prop } from '@typegoose/typegoose'
+import type { Gazette } from '#root/game/gazette'
+import { getModelForClass, modelOptions, prop, Severity } from '@typegoose/typegoose'
 
 // Resolution lock per 8h window. Exists only so two resolver runs (overlapping
-// ticks, a second process) cannot both pay a window.
-@modelOptions({ schemaOptions: { timestamps: true } })
+// ticks, a second process) cannot both pay a window — plus the window's public
+// recap once it has been paid (see game/gazette.ts).
+@modelOptions({ schemaOptions: { timestamps: true }, options: { allowMixed: Severity.ALLOW } })
 class Window {
   @prop({ type: Number, required: true, unique: true })
   windowId!: number
 
   @prop({ type: String, required: true, default: 'open' })
   status!: 'open' | 'resolving' | 'resolved'
+
+  // JSON-safe (amounts are strings). Overwritten if a window is resolved twice
+  // (staging `/resolve` forcing the live window, then the natural tick).
+  @prop({ type: Object })
+  recap?: Gazette
 
   @prop({ type: Date })
   updatedAt?: Date
@@ -44,4 +51,13 @@ export async function markWindowResolved(windowId: number): Promise<void> {
 
 export async function markWindowOpen(windowId: number): Promise<void> {
   await WindowModel.updateOne({ windowId }, { $set: { status: 'open' } })
+}
+
+export async function setWindowRecap(windowId: number, recap: Gazette): Promise<void> {
+  await WindowModel.updateOne({ windowId }, { $set: { recap } })
+}
+
+export async function findLatestRecap(): Promise<Gazette | null> {
+  const doc = await WindowModel.findOne({ recap: { $exists: true } }).sort({ windowId: -1 }).lean()
+  return (doc?.recap as Gazette | undefined) ?? null
 }
