@@ -203,8 +203,8 @@ test('publishes one gazette per resolved window, every played place, names from 
 })
 
 test('a throwing publishGazette is logged and the window is still resolved', async () => {
-  const h = harness([visit(1, 'ubud', 'sunrise')], { publishGazette: async () => { throw new Error('chat down') } })
-  assert.equal(await buildResolver(h.deps).resolveWindow(W), 1)
+  const h = harness([visit(1, 'ubud', 'sunrise'), visit(2, 'ubud', 'sunset'), visit(5, 'ubud', 'sunset')], { publishGazette: async () => { throw new Error('chat down') } })
+  assert.equal(await buildResolver(h.deps).resolveWindow(W), 3)
   assert.deepEqual(h.windows, [['claim', W], ['resolved', W]])
   assert.ok(h.errors.some(e => e.includes('gazette') && e.includes('chat down')))
 })
