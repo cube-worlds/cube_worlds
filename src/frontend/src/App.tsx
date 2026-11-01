@@ -258,8 +258,8 @@ export function App() {
           : body}
       </main>
 
-      {inHub && peek !== null && (
-        <PassPeek index={peek} botName={config?.botName ?? ''} meetStake={null} onClose={() => setPeek(null)} />
+      {(inHub || screen.name === 'fork') && peek !== null && (
+        <PassPeek index={peek} botName={config?.botName ?? ''} meetStake={null} showChallenge={inHub} onClose={() => setPeek(null)} />
       )}
 
       {inHub && (

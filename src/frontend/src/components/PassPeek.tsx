@@ -95,8 +95,9 @@ function ChallengeBlock({ index, name, botName, meetStake, onVisited }: { index:
   }
 }
 
-// Modal peek at another holder's pass.
-export function PassPeek({ index, botName, meetStake, onVisited, onClose }: { index: number, botName: string, meetStake: string | null, onVisited?: () => void, onClose: () => void }) {
+// Modal peek at another holder's pass. showChallenge=false for a non-holder (e.g. the Fork
+// screen reached via a pass_<index> deep link) — the challenge flow is holder-gated server-side.
+export function PassPeek({ index, botName, meetStake, showChallenge = true, onVisited, onClose }: { index: number, botName: string, meetStake: string | null, showChallenge?: boolean, onVisited?: () => void, onClose: () => void }) {
   const pub = usePublicPass(index)
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 20 }} onClick={onClose}>
@@ -110,7 +111,7 @@ export function PassPeek({ index, botName, meetStake, onVisited, onClose }: { in
                   <div className="px-label" style={{ fontSize: 7 }}>{`PASS #${pub.index}`}</div>
                 </div>
                 <PassPublicBlock pub={pub} />
-                <ChallengeBlock index={pub.index} name={pub.name} botName={botName} meetStake={meetStake} onVisited={onVisited} />
+                {showChallenge && <ChallengeBlock index={pub.index} name={pub.name} botName={botName} meetStake={meetStake} onVisited={onVisited} />}
               </>
             )
           : <div className="px-body" style={{ fontSize: 16, textAlign: 'center' }}>{`Loading pass #${index}…`}</div>}
