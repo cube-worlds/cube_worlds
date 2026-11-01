@@ -365,6 +365,11 @@ async function run() {
       expect(BigInt(login.balance as string) === balanceAfterClaim, 'balance moved without a pass')
     })
 
+    await step('POST /api/world/challenge without a pass is refused before any debit', async () => {
+      const res = await fetch(`${BASE}/api/world/challenge`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ initData, index: 1, move: 'help' }) })
+      expect(res.status === 403, `status=${res.status}`)
+    })
+
     await step('GET /api/world/pass/:index is public and 404 for an unplayed pass', async () => {
       const res = await fetch(`${BASE}/api/world/pass/999999`)
       expect(res.status === 404, `status=${res.status}`)

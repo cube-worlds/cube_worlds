@@ -34,6 +34,8 @@ export interface WorldHandlerDependencies {
   createVisit: (input: { userId: number, windowId: number, place: string, move: Move | null, stake: bigint, inviteCode?: string }) => Promise<VisitRecord | 'duplicate'>
   bindInvite: (windowId: number, place: string, inviteCode: string, joinerId: number) => Promise<{ hostId: number } | 'expired' | 'taken'>
   setPartner: (visitId: string, partnerId: number) => Promise<void>
+  incChallenges: (visitId: string, cap: number) => Promise<boolean>
+  sendChallenge: (targetId: number, challenge: { hostName: string, hostIndex: number, inviteCode: string, endsAt: number }) => Promise<void>
   loadTraitsForPass: (passAddress: string) => Promise<Record<string, number>>
   setPassTraits: (userId: number, traits: Record<string, number>) => Promise<void>
   randomCode: () => string
@@ -41,6 +43,7 @@ export interface WorldHandlerDependencies {
 }
 
 const EMPTY_REP = { helped: 0, stole: 0, gave: 0, took: 0 }
+export const CHALLENGES_PER_WINDOW = 3
 
 // ponytail: in-process load shedding only (like the claim locks) — a failed
 // backfill is retried on the next process anyway, so no persistence needed.
@@ -80,6 +83,7 @@ export function visitView(v: VisitRecord, own: boolean): VisitView {
 interface Body { initData: string }
 interface VisitBody extends Body { place: string, move?: Move, inviteCode?: string }
 interface HistoryBody extends Body { limit: number }
+interface ChallengeBody extends Body { index: number, move: 'help' | 'steal' }
 
 export function buildWorldHandler(deps: WorldHandlerDependencies) {
   type Holder = WorldUser & { pass: NonNullable<WorldUser['pass']> }
@@ -121,6 +125,68 @@ export function buildWorldHandler(deps: WorldHandlerDependencies) {
 
   function placeTraits(place: PlaceDef, traits: Record<string, number> | undefined) {
     return place.traits.map(name => ({ name, value: traitOf(traits, name) }))
+  }
+
+  interface Committed { status: number, body: object, visit?: VisitRecord }
+
+  // Shared by /visit and /challenge: validate place and move, debit the stake,
+  // create the visit, bind an invite. Every refusal refunds what it debited.
+  async function commitVisit(user: Holder, placeId: string, move: Move | undefined, inviteCode: string | undefined): Promise<Committed> {
+    const place = deps.places.find(p => p.id === placeId)
+    if (!place || !place.open || place.engine === 'rest') {
+      return { status: 400, body: { error: 'This place is not open', code: 'bad_place' } }
+    }
+    const allowed = movesFor(place.engine)
+    if ((allowed.length === 0 && move) || (allowed.length > 0 && (!move || !allowed.includes(move)))) {
+      return { status: 400, body: { error: 'Pick a move for this place', code: 'bad_move' } }
+    }
+    const windowId = windowIdAt(deps.now())
+    if (await deps.findVisit(user.id, windowId)) {
+      return { status: 409, body: { error: 'You already went somewhere this window', code: 'already_visited' } }
+    }
+    if (inviteCode && place.engine !== 'split-steal') {
+      return { status: 400, body: { error: 'Invites only work at Canggu', code: 'bad_place' } }
+    }
+
+    const stake = stakeFor(place, move ?? null)
+    const left = await deps.debitVotes(user.id, stake, BalanceChangeType.Stake)
+    if (left === null) {
+      return { status: 402, body: { error: `You need ${stake} $CUBE for ${place.name}`, code: 'no_cube', stake: stake.toString() } }
+    }
+
+    let hostId: number | undefined
+    if (inviteCode) {
+      // Bind after the debit so a joiner who can't pay never strands the host's invite.
+      const bound = await deps.bindInvite(windowId, place.id, inviteCode, user.id)
+      if (bound === 'expired') {
+        await deps.addPoints(user.id, stake, BalanceChangeType.Stake)
+        return { status: 410, body: { error: 'That meet link has expired', code: 'invite_expired' } }
+      }
+      if (bound === 'taken') {
+        await deps.addPoints(user.id, stake, BalanceChangeType.Stake)
+        return { status: 409, body: { error: 'Someone already took that meet', code: 'invite_taken' } }
+      }
+      hostId = bound.hostId
+    }
+
+    const created = await deps.createVisit({
+      userId: user.id,
+      windowId,
+      place: place.id,
+      move: move ?? null,
+      stake,
+      // `<passIndex>-<random>`: the meet landing reads the host's public pass from the prefix.
+      inviteCode: place.engine === 'split-steal' && !inviteCode ? `${user.pass.index}-${deps.randomCode()}` : undefined,
+    })
+    if (created === 'duplicate') {
+      await deps.addPoints(user.id, stake, BalanceChangeType.Stake)
+      return { status: 409, body: { error: 'You already went somewhere this window', code: 'already_visited' } }
+    }
+    if (hostId !== undefined) {
+      await deps.setPartner(created.id, hostId)
+      created.partnerId = hostId
+    }
+    return { status: 201, body: visitView(created, true), visit: created }
   }
 
   return async function worldHandler(fastify: FastifyInstance) {
@@ -200,63 +266,66 @@ export function buildWorldHandler(deps: WorldHandlerDependencies) {
         try {
           const user = await holder(request.body?.initData, reply)
           if (!user) return reply
-          const { place: placeId, move, inviteCode } = request.body
-          const place = deps.places.find(p => p.id === placeId)
-          if (!place || !place.open || place.engine === 'rest') {
-            return reply.code(400).send({ error: 'This place is not open', code: 'bad_place' })
-          }
-          const allowed = movesFor(place.engine)
-          if ((allowed.length === 0 && move) || (allowed.length > 0 && (!move || !allowed.includes(move)))) {
-            return reply.code(400).send({ error: 'Pick a move for this place', code: 'bad_move' })
-          }
+          const { place, move, inviteCode } = request.body
+          const done = await commitVisit(user, place, move, inviteCode)
+          return reply.code(done.status).send(done.body)
+        } catch (err) {
+          return safeErrorResponse(err, deps.logError)
+        }
+      },
+    )
+
+    // Challenge a named pass to Canggu: my visit (created here if needed) plus
+    // a bot DM carrying the ordinary meet_<code> link. Pairing is unchanged.
+    fastify.post<{ Body: ChallengeBody }>(
+      '/challenge',
+      {
+        schema: {
+          body: {
+            type: 'object',
+            required: ['index', 'move'],
+            properties: {
+              initData: { type: 'string', maxLength: 8192 },
+              index: { type: 'integer', minimum: 0 },
+              move: { type: 'string', enum: ['help', 'steal'] },
+            },
+          },
+        },
+        attachValidation: true,
+      },
+      async (request, reply) => {
+        if (request.validationError) return reply.code(400).send({ error: 'Invalid request body', code: 'bad_move' })
+        try {
+          const user = await holder(request.body?.initData, reply)
+          if (!user) return reply
+          const meet = deps.places.find(p => p.engine === 'split-steal' && p.open)
+          if (!meet) return reply.code(400).send({ error: 'Canggu is closed', code: 'bad_place' })
+          const target = await deps.findUserByPassIndex(request.body.index)
+          if (!target?.pass) return reply.code(404).send({ error: 'No holder plays this pass', code: 'no_such_pass' })
+          if (target.id === user.id) return reply.code(400).send({ error: 'You cannot challenge yourself', code: 'self' })
+
           const windowId = windowIdAt(deps.now())
-          if (await deps.findVisit(user.id, windowId)) {
-            return reply.code(409).send({ error: 'You already went somewhere this window', code: 'already_visited' })
+          let visit = await deps.findVisit(user.id, windowId)
+          if (visit && (visit.place !== meet.id || !visit.inviteCode || visit.partnerId !== undefined)) {
+            return reply.code(409).send({ error: 'You already went somewhere this window', code: 'visit_locked' })
+          }
+          if (!visit) {
+            const done = await commitVisit(user, meet.id, request.body.move, undefined)
+            if (!done.visit) return reply.code(done.status).send(done.body)
+            visit = done.visit
+          }
+          if (!(await deps.incChallenges(visit.id, CHALLENGES_PER_WINDOW))) {
+            return reply.code(429).send({ error: `${CHALLENGES_PER_WINDOW} challenges per window`, code: 'cap' })
           }
 
-          if (inviteCode && place.engine !== 'split-steal') {
-            return reply.code(400).send({ error: 'Invites only work at Canggu', code: 'bad_place' })
+          let delivered = true
+          try {
+            await deps.sendChallenge(target.id, { hostName: user.pass.name, hostIndex: user.pass.index, inviteCode: visit.inviteCode as string, endsAt: windowEndsAt(windowId) })
+          } catch (err) {
+            delivered = false
+            deps.logError(`Challenge DM to ${target.id} failed: ${(err as Error).message}`)
           }
-
-          const stake = stakeFor(place, move ?? null)
-          const left = await deps.debitVotes(user.id, stake, BalanceChangeType.Stake)
-          if (left === null) {
-            return reply.code(402).send({ error: `You need ${stake} $CUBE for ${place.name}`, code: 'no_cube', stake: stake.toString() })
-          }
-
-          let hostId: number | undefined
-          if (inviteCode) {
-            // Bind after the debit so a joiner who can't pay never strands the host's invite.
-            const bound = await deps.bindInvite(windowId, place.id, inviteCode, user.id)
-            if (bound === 'expired') {
-              await deps.addPoints(user.id, stake, BalanceChangeType.Stake)
-              return reply.code(410).send({ error: 'That meet link has expired', code: 'invite_expired' })
-            }
-            if (bound === 'taken') {
-              await deps.addPoints(user.id, stake, BalanceChangeType.Stake)
-              return reply.code(409).send({ error: 'Someone already took that meet', code: 'invite_taken' })
-            }
-            hostId = bound.hostId
-          }
-
-          const created = await deps.createVisit({
-            userId: user.id,
-            windowId,
-            place: place.id,
-            move: move ?? null,
-            stake,
-            // `<passIndex>-<random>`: the meet landing reads the host's public pass from the prefix.
-            inviteCode: place.engine === 'split-steal' && !inviteCode ? `${user.pass.index}-${deps.randomCode()}` : undefined,
-          })
-          if (created === 'duplicate') {
-            await deps.addPoints(user.id, stake, BalanceChangeType.Stake)
-            return reply.code(409).send({ error: 'You already went somewhere this window', code: 'already_visited' })
-          }
-          if (hostId !== undefined) {
-            await deps.setPartner(created.id, hostId)
-            created.partnerId = hostId
-          }
-          return reply.code(201).send(visitView(created, true))
+          return { visit: visitView(visit, true), delivered }
         } catch (err) {
           return safeErrorResponse(err, deps.logError)
         }
